@@ -5,6 +5,19 @@
       "emoji": "🌍",
       "pages": [
         {
+          "title": "07. 불교의 성립과 인도의 통일 제국",
+          "path": "세계사/07-불교성립-인도통일제국/index.html",
+          "emoji": "☸️",
+          "description": "불교·자이나교의 성립, 마우리아 왕조(아소카왕), 쿠샨 왕조·대승 불교, 간다라 미술. 빈칸 클릭으로 정답 확인 가능.",
+          "tags": [
+            { "label": "인도", "color": "orange" },
+            { "label": "불교", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
           "title": "08. 굽타 왕조와 인도 고전 문화의 발전",
           "path": "세계사/08-굽타왕조/index.html",
           "emoji": "🕌",

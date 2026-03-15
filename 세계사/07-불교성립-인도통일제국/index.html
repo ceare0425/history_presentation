@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>07. 불교 성립, 인도 통일 제국</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* === 1. Reset & Variables === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --main:        #8B4513;
+      --dark:        #6B3010;
+      --light:       #FFF8E1;
+      --accent:      #C5A028;
+      --accent-light:#E8D080;
+      --white:       #FDF5E0;
+      --bg:          #F5E6C4;
+      --text:        #2C1A0E;
+      --text-sec:    #6B4226;
+      --border:      #A07850;
+      --card-bg:     #FDF5E0;
+      --gray-200:    #D4B896;
+      --gray-600:    #8B6540;
+    }
+
+    /* === 2. Base === */
+    html, body {
+      font-size: clamp(17px, 1.7vw, 30px);
+      font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif;
+      color: var(--text);
+      height: 100%;
+      overflow: hidden;
+    }
+    @media (max-width: 1024px) { html { font-size: clamp(15px, 2.2vw, 24px); } }
+    @media (max-width: 768px)  { html { font-size: clamp(14px, 3.2vw, 20px); } }
+
+    h1 { font-family: 'Nanum Myeongjo', serif; font-size: 2.4rem; font-weight: 800; letter-spacing: 0.04em; line-height: 1.3; }
+    h2 { font-family: 'Nanum Myeongjo', serif; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.04em; }
+    h3 { font-family: 'Nanum Myeongjo', serif; font-size: 1rem; font-weight: 700; }
+    p  { font-size: 0.95rem; line-height: 1.7; }
+
+    /* === 3. Parchment Background === */
+    body {
+      background-color: var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(160,120,60,0.04) 2px, rgba(160,120,60,0.04) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(140,100,40,0.06) 28px, rgba(140,100,40,0.06) 29px);
+    }
+
+    /* === 4. Slide Layout === */
+    .presentation {
+      position: fixed;
+      inset: 0;
+      bottom: 2.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.8rem;
+    }
+
+    .slide { display: none; width: 100%; max-width: 1600px; height: 100%; }
+    .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* === 5. Card (역사 수업 — double border) === */
+    .browser-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      outline: 4px solid var(--accent);
+      outline-offset: -7px;
+      border-radius: 4px;
+      box-shadow: 0 4px 28px rgba(44,26,14,0.2), inset 0 0 60px rgba(160,120,40,0.05);
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .browser-topbar {
+      background: linear-gradient(90deg, #8B4513 0%, #5C2808 45%, #8B4513 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: 0.4rem 1.1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .topbar-icon { font-size: 0.95rem; }
+    .browser-title {
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 0.82rem; font-weight: 700;
+      letter-spacing: 0.07em;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .browser-content {
+      flex: 1; overflow-y: auto;
+      padding: 1.1rem 1.8rem 1rem;
+      display: flex; flex-direction: column;
+    }
+    .browser-content::-webkit-scrollbar { width: 4px; }
+    .browser-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* === 6. Progress Bar === */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--main));
+      z-index: 1000; transition: width 0.3s;
+    }
+
+    /* === 7. Nav Bar === */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem; padding: 0.3rem 1.5rem;
+      background: rgba(30, 15, 6, 0.97);
+      border-top: 2px solid var(--accent);
+      z-index: 999; font-size: 14px;
+    }
+    .nav-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 1.7rem; height: 1.7rem;
+      border: 1.5px solid #8B6540; border-radius: 50%;
+      background: transparent; cursor: pointer;
+      color: var(--accent-light); transition: all 0.2s;
+      padding: 0; line-height: 1;
+    }
+    .nav-btn svg { width: 0.55rem; height: 0.55rem; fill: currentColor; display: block; }
+    .nav-btn:hover:not(:disabled) { background: var(--main); border-color: var(--accent); }
+    .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .nav-counter {
+      font-size: 13px; font-weight: 700; color: var(--accent-light);
+      min-width: 3rem; text-align: center;
+      display: flex; align-items: center; gap: 0.15rem; line-height: 1;
+    }
+    .slide-input {
+      width: 1.4rem; text-align: center; border: none;
+      border-bottom: 1.5px solid transparent;
+      background: transparent; font-size: 13px; font-weight: 700;
+      color: var(--accent-light); font-family: inherit;
+      padding: 0; outline: none; cursor: pointer;
+      transition: border-color 0.2s; line-height: 1;
+    }
+    .slide-input:hover { border-bottom-color: var(--accent); }
+    .slide-input:focus { border-bottom-color: var(--accent); background: rgba(139,69,19,0.3); border-radius: 3px; }
+
+    /* === 8. 공통 장식 요소 === */
+    .section-ornament { color: var(--accent); font-size: 0.72rem; letter-spacing: 0.5em; text-align: center; margin-bottom: 0.2rem; opacity: 0.75; }
+    .hist-divider { display: flex; align-items: center; gap: 0.4rem; margin: 0.35rem 0 0.6rem; }
+    .h-line { flex: 1; height: 1.5px; background: linear-gradient(90deg, transparent, var(--accent) 25%, var(--accent) 75%, transparent); }
+    .h-gem  { color: var(--accent); font-size: 0.7rem; line-height: 1; }
+
+    .era-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      border: 1px solid var(--accent);
+      padding: 0.08rem 0.45rem;
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em;
+      border-radius: 2px; white-space: nowrap;
+    }
+
+    /* === 9. 내용 카드 === */
+    .ruler-card { border: 1.5px solid var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem; }
+    .ruler-card-header {
+      background: linear-gradient(90deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 0.9rem;
+      padding: 0.35rem 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+    }
+    .ruler-card-body { padding: 0.5rem 0.8rem; background: var(--card-bg); }
+
+    .mini-card {
+      background: var(--light); border: 1.5px solid var(--border);
+      border-radius: 3px; padding: 0.55rem 0.75rem;
+    }
+    .mini-card h3 { font-size: 0.9rem; color: var(--main); margin-bottom: 0.25rem; }
+    .mini-card p  { font-size: 0.85rem; color: var(--text-sec); line-height: 1.55; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; }
+
+    .info-list { list-style: none; display: flex; flex-direction: column; gap: 0.38rem; }
+    .info-list li { display: flex; gap: 0.45rem; align-items: flex-start; font-size: 0.9rem; line-height: 1.6; }
+    .info-list li::before { content: '◆'; color: var(--accent); font-size: 0.65rem; margin-top: 0.38em; flex-shrink: 0; }
+
+    .highlight-box {
+      background: var(--light);
+      border-left: 4px solid var(--accent); border-right: 1px solid var(--border);
+      padding: 0.55rem 0.9rem 0.55rem 1rem;
+      margin: 0.4rem 0; border-radius: 0 3px 3px 0;
+      font-size: 0.88rem; line-height: 1.65;
+    }
+    .highlight-box strong { color: var(--main); }
+
+    /* === 10. 빈칸 (클릭 → 정답 공개) === */
+    .blank {
+      display: inline-block;
+      min-width: 4.5rem;
+      background: linear-gradient(135deg, var(--main) 0%, var(--dark) 100%);
+      color: transparent;
+      border: 1.5px solid var(--accent);
+      border-radius: 2px;
+      padding: 0.05em 0.55em;
+      cursor: pointer;
+      font-family: 'Nanum Myeongjo', serif;
+      font-weight: 700; font-size: inherit;
+      transition: all 0.35s ease;
+      vertical-align: baseline;
+      user-select: none; position: relative;
+      text-align: center;
+    }
+    .blank::after {
+      content: '?';
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: 0.85em; font-weight: 800;
+      pointer-events: none; transition: opacity 0.25s;
+    }
+    .blank.on {
+      background: var(--light);
+      color: var(--main);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .blank.on::after { opacity: 0; }
+
+    /* === 11. ○× 표시 === */
+    .ox {
+      display: inline-block;
+      min-width: 2.5rem;
+      background: linear-gradient(135deg, var(--main) 0%, var(--dark) 100%);
+      color: transparent;
+      border: 1.5px solid var(--accent);
+      border-radius: 2px;
+      padding: 0.05em 0.55em;
+      cursor: pointer;
+      font-family: 'Nanum Myeongjo', serif;
+      font-weight: 700; font-size: inherit;
+      transition: all 0.35s ease;
+      vertical-align: baseline;
+      user-select: none; position: relative;
+      text-align: center;
+    }
+    .ox::after {
+      content: '?';
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: 0.85em; font-weight: 800;
+      pointer-events: none; transition: opacity 0.25s;
+    }
+    .ox.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
+    .ox.on::after { opacity: 0; }
+
+    /* === 12. 퀴즈 스타일 === */
+    .quiz-wrap { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+
+    .quiz-row {
+      display: flex; align-items: flex-start; gap: 0.65rem;
+      border: 1.5px solid var(--border); border-radius: 3px;
+      padding: 0.5rem 0.8rem; background: var(--card-bg);
+    }
+    .q-num {
+      background: var(--main); color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 0.8rem;
+      min-width: 1.5rem; height: 1.5rem; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 0.1em;
+    }
+    .q-text { flex: 1; font-size: 0.88rem; line-height: 1.65; color: var(--text); }
+
+    /* 정답 버튼 */
+    .ans-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent);
+      border-radius: 2px; padding: 0.1em 0.9em;
+      cursor: pointer; font-family: 'Nanum Myeongjo', serif;
+      font-weight: 700; font-size: 0.88rem;
+      transition: all 0.35s; user-select: none;
+      position: relative; min-width: 3.5rem; text-align: center;
+      white-space: nowrap;
+    }
+    .ans-btn::after { content: '정답 ▼'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--accent-light); font-size: 0.72em; pointer-events: none; transition: opacity 0.25s; white-space: nowrap; }
+    .ans-btn.on { background: var(--light); color: var(--main); }
+    .ans-btn.on::after { opacity: 0; }
+
+    /* === 13. 표지 === */
+    .cover-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: 0.65rem; }
+
+    /* === 14. TOC === */
+    .toc-list { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 0.5rem; }
+    .toc-item {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.48rem 0.8rem;
+      border: 1px solid var(--gray-200); border-radius: 3px;
+      cursor: pointer; transition: all 0.2s; background: var(--card-bg);
+    }
+    .toc-item:hover { background: var(--light); border-color: var(--accent); transform: translateX(5px); }
+    .toc-num {
+      background: var(--main); color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 0.82rem;
+      min-width: 1.65rem; height: 1.65rem; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .toc-title { font-weight: 700; font-size: 0.9rem; }
+    .toc-desc  { font-size: 0.8rem; color: var(--text-sec); }
+
+    /* === 15. 흐름도 === */
+    .flow-wrap {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0; flex-wrap: wrap; margin: 0.5rem 0;
+    }
+    .flow-step {
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700;
+      font-size: 0.85rem; padding: 0.35rem 0.7rem;
+      border: 1.5px solid var(--accent); border-radius: 3px;
+      text-align: center; white-space: nowrap;
+    }
+    .flow-arrow {
+      color: var(--accent); font-size: 1rem; padding: 0 0.2rem;
+      font-weight: 700;
+    }
+
+    /* === 16. 비교 표 === */
+    .comp-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 0.4rem 0; }
+    .comp-table th { background: linear-gradient(90deg, var(--main), var(--dark)); color: var(--accent-light); padding: 0.4rem 0.6rem; font-family: 'Nanum Myeongjo', serif; font-weight: 700; text-align: left; }
+    .comp-table td { padding: 0.38rem 0.6rem; border-bottom: 1px solid var(--gray-200); line-height: 1.55; vertical-align: top; }
+    .comp-table tr:nth-child(even) td { background: var(--light); }
+
+    /* === 17. 해설 숨김/공개 === */
+    .hint { display: none; }
+    .ox.on + .hint { display: block; }
+
+    /* === 18. Responsive === */
+    @media (max-width: 768px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .browser-content { padding: 0.7rem 0.9rem; }
+      .flow-wrap { gap: 0.2rem; }
+    }
+
+    /* === 19. 보기 표 === */
+    .bogi-table { width: 100%; border-collapse: collapse; margin-bottom: 0.5rem; border: 1px solid var(--gray-200); }
+    .bogi-table td { padding: 0.3rem 0.6rem; font-size: 0.88rem; line-height: 1.6; background: var(--light); border: none; }
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="presentation" id="presentation">
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 1: 표지 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide active" data-slide="0">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">☸️</span>
+        <span class="browser-title">07. 불교 성립, 인도 통일 제국 · 세계사 Ⅰ-2</span>
+      </div>
+      <div class="browser-content">
+        <div class="cover-wrap">
+          <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+          <span class="era-badge">2학년 · 세계사</span>
+          <h1 style="margin-top:0.3rem;">4. 불교의 성립과 인도의 통일 제국</h1>
+          <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+          <p style="color:var(--text-sec); font-size:0.95rem; line-height:2;">Ⅰ-2. 동아시아, 인도 세계의 형성<br>교과서 34~37쪽</p>
+          <p style="color:var(--text-sec); font-size:0.82rem; margin-top:0.2rem;">
+            📌 화면의 <strong style="color:var(--main);">빈칸</strong>을 클릭하면 정답이 나타납니다
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 2: 목차 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="1">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">📜</span>
+        <span class="browser-title">학습 목차</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">학습 내용 정리</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <div class="toc-list">
+          <div class="toc-item" onclick="goToSlide(2)">
+            <div class="toc-num">1</div>
+            <div>
+              <div class="toc-title">불교와 자이나교의 성립</div>
+              <div class="toc-desc">기원전 6세기경 · 성립 배경 · 자이나교 · 불교</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(4)">
+            <div class="toc-num">2</div>
+            <div>
+              <div class="toc-title">마우리아 왕조의 발전과 쇠퇴</div>
+              <div class="toc-desc">찬드라굽타 마우리아 · 아소카왕 전성기 · 상좌부 불교</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(5)">
+            <div class="toc-num">3</div>
+            <div>
+              <div class="toc-title">쿠샨 왕조와 대승 불교의 발전</div>
+              <div class="toc-desc">쿠샨 왕조 · 카니슈카왕 · 대승 불교 · 중계 무역</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(6)">
+            <div class="toc-num">4</div>
+            <div>
+              <div class="toc-title">간다라 미술의 발달</div>
+              <div class="toc-desc">헬레니즘 + 인도 문화 융합 · 불상 · 동아시아 전파</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(8)">
+            <div class="toc-num">★</div>
+            <div>
+              <div class="toc-title">개념 확인 문제</div>
+              <div class="toc-desc">○× 문제 · 빈칸 채우기 · 객관식 — 클릭으로 정답 확인</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 3: 불교와 자이나교의 성립 ① 성립 배경 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="2">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🌱</span>
+        <span class="browser-title">1. 불교와 자이나교의 성립 ① — 성립 배경</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">1. 불교와 자이나교의 성립</h2>
+        <p style="text-align:center; font-size:0.88rem; color:var(--text-sec); margin-bottom:0.1rem;">기원전 6세기경</p>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card" style="margin-bottom:0;">
+          <div class="ruler-card-header">📌 성립 배경</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>도시 국가 간 전쟁 빈번 → <strong>크샤트리아, 바이샤</strong> 세력 성장</li>
+              <li><strong>브라만교</strong>의 형식화된 제사 의식에 반대</li>
+              <li><span class="era-badge">➊</span>&nbsp;<span class="blank" onclick="this.classList.toggle('on')" style="min-width:4.5rem; font-size:0.82rem;">카스트제</span>를 극복하고자 하는 움직임 → 자이나교, 불교의 등장</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 4: 불교와 자이나교의 성립 ② 자이나교 / 불교 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="3">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">☸️</span>
+        <span class="browser-title">1. 불교와 자이나교의 성립 ② — 자이나교와 불교</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">1. 불교와 자이나교의 성립</h2>
+        <p style="text-align:center; font-size:0.88rem; color:var(--text-sec); margin-bottom:0.1rem;">② 자이나교와 불교</p>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="grid-2">
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">🌿 자이나교</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li><strong>바르다마나</strong>(마하비라)가 창시</li>
+                <li>엄격한 계율과 <strong>고행</strong>을 통한 해탈 추구</li>
+              </ul>
+            </div>
+          </div>
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">☸️ 불교</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li><strong>고타마 싯다르타</strong>(석가모니)가 창시</li>
+                <li>권위주의, 엄격한 신분 차별 반대</li>
+                <li>인간의 <strong>평등</strong>과 윤리적 실천을 통한 해탈 강조</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="highlight-box" style="margin-top:0.6rem;">
+          <strong>비교:</strong> 자이나교는 <strong>고행</strong>, 불교는 <strong>윤리적 실천</strong>을 통한 해탈을 강조
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 5: 마우리아 왕조의 발전과 쇠퇴 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="4">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">👑</span>
+        <span class="browser-title">2. 마우리아 왕조의 발전과 쇠퇴</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">2. 마우리아 왕조의 발전과 쇠퇴</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏗️ 성립</div>
+          <div class="ruler-card-body">
+            <div class="flow-wrap" style="margin: 0.3rem 0 0.5rem;">
+              <div class="flow-step">알렉산드로스의<br>인더스강 침략</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">북인도<br>혼란</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">찬드라굽타 마우리아<br>왕조 수립</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">인도 북부<br>통일</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ruler-card" style="margin-bottom:0;">
+          <div class="ruler-card-header">⭐ 전성기 — 아소카왕</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>남부 일부를 제외한 <strong>인도 대부분 지역 통일</strong></li>
+              <li>불교 경전 정리, <strong>스투파</strong>(불탑) 건립</li>
+              <li>동남아시아에 <strong>포교단 파견</strong></li>
+              <li><span class="era-badge">➋</span>&nbsp;<span class="blank" onclick="this.classList.toggle('on')" style="min-width:4.5rem; font-size:0.82rem;">상좌부</span> 불교 발달 → 개인의 해탈을 강조</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 6: 쿠샨 왕조와 대승 불교의 발전 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="5">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🏺</span>
+        <span class="browser-title">3. 쿠샨 왕조와 대승 불교의 발전</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">3. 쿠샨 왕조와 대승 불교의 발전</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏗️ 발전</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>1세기경, <strong>이란 계통</strong>의 쿠샨 왕조가 인도 서북부 통일</li>
+              <li>중국 · 인도 · 서아시아를 연결하는 <strong>교역로 장악</strong> → 중계 무역으로 번영</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card" style="margin-bottom:0;">
+          <div class="ruler-card-header">⭐ 카니슈카왕의 통치</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>최대 영토 확보: <strong>북인도</strong>에서 <strong>중앙아시아</strong>에 이르는 지역</li>
+              <li><strong>대승 불교</strong> 발달: 중생의 구제를 목표로 함</li>
+              <li>부처를 <strong>초월적 존재</strong>로 신격화</li>
+            </ul>
+            <div class="highlight-box" style="margin-top:0.5rem;">
+              <strong>대승(大乘):</strong> '큰 수레' — 많은 중생을 함께 구제한다는 의미
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 7: 간다라 미술의 발달 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="6">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🗿</span>
+        <span class="browser-title">4. 간다라 미술의 발달</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">4. 간다라 미술의 발달</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">🌐 출현</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>알렉산드로스의 침략 이후 인도 <strong>서북부 간다라 지방</strong>에서 발달</li>
+              <li><strong>헬레니즘 문화</strong> + <strong>인도 문화</strong> 융합</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card" style="margin-bottom:0;">
+          <div class="ruler-card-header">✨ 특징 및 전파</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>인간적 · 사실적 <strong>불상</strong> 발달 (헬레니즘 문화의 영향)</li>
+              <li>간다라 미술이 대승 불교와 함께 전파</li>
+            </ul>
+            <div class="flow-wrap" style="margin: 0.6rem 0 0.2rem;">
+              <div class="flow-step">간다라<br>(인도 서북부)</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">중앙아시아</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">중국</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">한국 · 일본</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 8: 불교의 두 흐름 비교 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="7">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">⚖️</span>
+        <span class="browser-title">불교의 두 흐름 비교 — 상좌부 불교 vs 대승 불교</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">불교의 두 흐름 비교</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>상좌부 불교</th>
+              <th>대승 불교</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>발달 왕조</strong></td>
+              <td>마우리아 왕조 (아소카왕)</td>
+              <td>쿠샨 왕조 (카니슈카왕)</td>
+            </tr>
+            <tr>
+              <td><strong>핵심 목표</strong></td>
+              <td>개인의 해탈</td>
+              <td>중생의 구제</td>
+            </tr>
+            <tr>
+              <td><strong>부처 인식</strong></td>
+              <td>수행자</td>
+              <td>초월적 존재 (신격화)</td>
+            </tr>
+            <tr>
+              <td><strong>전파 지역</strong></td>
+              <td>동남아시아</td>
+              <td>중앙아시아 · 중국 · 한국 · 일본</td>
+            </tr>
+            <tr>
+              <td><strong>연관 미술</strong></td>
+              <td>—</td>
+              <td>간다라 미술과 함께 전파</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 9: 개념 확인 ① OX ⑴ -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="8">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✅</span>
+        <span class="browser-title">개념 확인 ① — ○× 문제 ⑴</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <p style="text-align:center; font-size:0.82rem; color:var(--text-sec); margin-bottom:0.2rem;">다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</p>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <div class="quiz-wrap">
+          <div class="quiz-row">
+            <div class="q-num">⑴</div>
+            <div class="q-text">
+              바르다마나(마하비라)가 창시한 <strong>불교</strong>는 엄격한 계율과 고행을 통한 해탈을 추구하였다.
+              &nbsp;<span class="ox" onclick="this.classList.toggle('on')">×</span>
+              <div class="hint" style="font-size:0.8rem; color:var(--main); margin-top:0.3rem;">
+                💡 바르다마나가 창시한 것은 <strong>자이나교</strong>이며, 엄격한 계율과 고행을 통한 해탈은 자이나교의 특징이다.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 10: 개념 확인 ① OX ⑵ -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="9">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✅</span>
+        <span class="browser-title">개념 확인 ① — ○× 문제 ⑵</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <p style="text-align:center; font-size:0.82rem; color:var(--text-sec); margin-bottom:0.2rem;">다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</p>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <div class="quiz-wrap">
+          <div class="quiz-row">
+            <div class="q-num">⑵</div>
+            <div class="q-text">
+              기원전 4세기경 찬드라굽타 마우리아가 마우리아 왕조를 세우고 인도 북부를 통일하였다.
+              &nbsp;<span class="ox" onclick="this.classList.toggle('on')">○</span>
+              <div class="hint" style="font-size:0.8rem; color:var(--main); margin-top:0.3rem;">
+                💡 찬드라굽타 마우리아는 알렉산드로스의 침략 이후 혼란을 수습하며 마우리아 왕조를 수립하였다.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 11: 개념 확인 ① OX ⑶ -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="10">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✅</span>
+        <span class="browser-title">개념 확인 ① — ○× 문제 ⑶</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <p style="text-align:center; font-size:0.82rem; color:var(--text-sec); margin-bottom:0.2rem;">다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</p>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <div class="quiz-wrap">
+          <div class="quiz-row">
+            <div class="q-num">⑶</div>
+            <div class="q-text">
+              이란 계통의 쿠샨 왕조는 인도 서북부를 통일하고, 중국·인도·서아시아를 연결하는 교역로를 장악하면서 중계 무역으로 번성하였다.
+              &nbsp;<span class="ox" onclick="this.classList.toggle('on')">○</span>
+              <div class="hint" style="font-size:0.8rem; color:var(--main); margin-top:0.3rem;">
+                💡 쿠샨 왕조는 동서 교역로를 장악하여 중계 무역으로 번영하였다.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 12: 개념 확인 ② 빈칸 채우기 ⑴⑵ -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="11">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✏️</span>
+        <span class="browser-title">개념 확인 ② — 빈칸 채우기 ⑴⑵</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <p style="text-align:center; font-size:0.82rem; color:var(--text-sec); margin-bottom:0.2rem;">빈칸에 들어갈 알맞은 말을 쓰시오.</p>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <div class="quiz-wrap">
+          <div class="quiz-row">
+            <div class="q-num">⑴</div>
+            <div class="q-text">
+              기원전 6세기 무렵 등장한 불교는 (<span class="blank" onclick="this.classList.toggle('on')" style="min-width:4rem; font-size:0.82rem;">브라만교</span>)의 지나친 권위주의와 엄격한 신분 차별 등에 반대하고, 인간의 평등과 윤리적 실천을 통한 해탈을 강조하였다.
+            </div>
+          </div>
+          <div class="quiz-row">
+            <div class="q-num">⑵</div>
+            <div class="q-text">
+              마우리아 왕조는 3대 (<span class="blank" onclick="this.classList.toggle('on')" style="min-width:4rem; font-size:0.82rem;">아소카</span>) 왕 때 남부 일부를 제외한 인도 전역을 통일하여 전성기를 맞이하였다.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 13: 개념 확인 ② 빈칸 채우기 ⑶⑷ -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="12">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✏️</span>
+        <span class="browser-title">개념 확인 ② — 빈칸 채우기 ⑶⑷</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <p style="text-align:center; font-size:0.82rem; color:var(--text-sec); margin-bottom:0.2rem;">빈칸에 들어갈 알맞은 말을 쓰시오.</p>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <div class="quiz-wrap">
+          <div class="quiz-row">
+            <div class="q-num">⑶</div>
+            <div class="q-text">
+              쿠샨 왕조의 카니슈카왕 시기에는 중생의 구제를 목표로 하고, 부처를 초월적인 존재로 신격화하는 (<span class="blank" onclick="this.classList.toggle('on')" style="min-width:3.5rem; font-size:0.82rem;">대승</span>) 불교가 발달하였다.
+            </div>
+          </div>
+          <div class="quiz-row">
+            <div class="q-num">⑷</div>
+            <div class="q-text">
+              쿠샨 왕조 시대에는 헬레니즘 문화와 인도 문화가 융합되어 (<span class="blank" onclick="this.classList.toggle('on')" style="min-width:4rem; font-size:0.82rem;">간다라</span>) 불교 미술이 발달하였다.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 14: 개념 확인 ③ 객관식 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="13">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">📝</span>
+        <span class="browser-title">개념 확인 ③ — 객관식</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card" style="margin-bottom:0;">
+          <div class="ruler-card-header">📌 마우리아 왕조에 대한 설명으로 옳은 것을 &lt;보기&gt;에서 있는 대로 고른 것은?</div>
+          <div class="ruler-card-body">
+            <!-- 보기: 한 표로 -->
+            <table class="bogi-table" style="margin-bottom:0.6rem;">
+              <tr>
+                <td>ㄱ. 《베다》 경전을 완성하였다.</td>
+                <td>ㄴ. 상좌부 불교가 발달하였다.</td>
+              </tr>
+              <tr>
+                <td>ㄷ. 전국에 수많은 '스투파'를 세웠다.</td>
+                <td>ㄹ. 카스트제라는 신분 제도를 만들었다.</td>
+              </tr>
+            </table>
+            <!-- 선택지: 모두 보이도록 표시 -->
+            <p style="font-size:0.88rem; margin-bottom:0.5rem;">
+              ① ㄱ, ㄴ &nbsp;&nbsp;&nbsp; ② ㄱ, ㄷ &nbsp;&nbsp;&nbsp; ③ ㄴ, ㄷ &nbsp;&nbsp;&nbsp; ④ ㄴ, ㄹ &nbsp;&nbsp;&nbsp; ⑤ ㄷ, ㄹ
+            </p>
+            <!-- 정답: 선택지와 별도로 공개 -->
+            <div style="display:flex; align-items:center; gap:0.6rem; margin-top:0.2rem;">
+              <span style="font-size:0.85rem; color:var(--text-sec); font-family:'Nanum Myeongjo',serif; font-weight:700;">정답</span>
+              <span class="blank" onclick="this.classList.toggle('on')" style="min-width:5rem; font-size:0.85rem;">③ ㄴ, ㄷ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 15: 핵심 정리 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="14">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">⭐</span>
+        <span class="browser-title">핵심 정리</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">핵심 정리</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card" style="margin-bottom:0;">
+          <div class="ruler-card-header">⭐ 단원 핵심 정리</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>기원전 6세기, 브라만교 반발 → <strong>불교·자이나교</strong> 성립</li>
+              <li><strong>마우리아 왕조</strong>: 찬드라굽타 수립 → 아소카왕 전성기, 상좌부 불교 발달</li>
+              <li><strong>쿠샨 왕조</strong>: 카니슈카왕, 대승 불교 발달, 중계 무역 번영</li>
+              <li><strong>간다라 미술</strong>: 헬레니즘 + 인도 문화 → 동아시아로 전파</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /presentation -->
+
+<!-- 네비게이션 바 -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="back()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
+    &nbsp;/&nbsp;
+    <span id="totalSlides">15</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="advance()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function updateSlide() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+    document.getElementById('slideInput').value = currentSlide + 1;
+    const revealed = getRevealables().filter(el => el.classList.contains('on'));
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && revealed.length === 0;
+    const hidden = getRevealables().filter(el => !el.classList.contains('on'));
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && hidden.length === 0;
+  }
+
+  function getRevealables() {
+    return [...slides[currentSlide].querySelectorAll('.blank, .ox, .ans-btn')];
+  }
+
+  function revealNext() {
+    const next = getRevealables().find(el => !el.classList.contains('on'));
+    if (next) { next.classList.add('on'); updateSlide(); return true; }
+    return false;
+  }
+
+  function hideLastRevealed() {
+    const list = getRevealables().filter(el => el.classList.contains('on'));
+    if (list.length > 0) { list[list.length - 1].classList.remove('on'); updateSlide(); return true; }
+    return false;
+  }
+
+  function nextSlide() { if (currentSlide < total - 1) { currentSlide++; updateSlide(); } }
+  function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlide(); } }
+  function goToSlide(i) { if (i >= 0 && i < total) { currentSlide = i; updateSlide(); } }
+
+  function advance() { if (!revealNext()) nextSlide(); }
+  function back() { if (!hideLastRevealed()) prevSlide(); }
+
+  document.addEventListener('keydown', e => {
+    if (e.target.id === 'slideInput') return;
+    if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); advance(); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); back(); }
+    if (e.key === 'Home') { goToSlide(0); }
+    if (e.key === 'End')  { goToSlide(total - 1); }
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) { diff > 0 ? advance() : back(); }
+  });
+
+  const si = document.getElementById('slideInput');
+  si.addEventListener('focus', () => si.select());
+  si.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const v = parseInt(si.value);
+      if (!isNaN(v) && v >= 1 && v <= total) goToSlide(v - 1);
+      else si.value = currentSlide + 1;
+      si.blur();
+    }
+    if (e.key === 'Escape') { si.value = currentSlide + 1; si.blur(); }
+  });
+  si.addEventListener('blur', () => {
+    const v = parseInt(si.value);
+    if (!isNaN(v) && v >= 1 && v <= total) goToSlide(v - 1);
+    else si.value = currentSlide + 1;
+  });
+
+  updateSlide();
+</script>
+</body>
+</html>
