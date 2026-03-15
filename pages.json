@@ -1,0 +1,23 @@
+{
+  "subjects": [
+    {
+      "name": "세계사",
+      "emoji": "🌍",
+      "pages": [
+        {
+          "title": "서아시아 여러 제국의 발전",
+          "path": "세계사/서아시아-여러제국의발전/index.html",
+          "emoji": "🏛️",
+          "description": "아시리아, 아케메네스 왕조 페르시아, 파르티아, 사산 왕조 페르시아의 발전과 멸망. 빈칸 클릭으로 정답 확인 가능.",
+          "tags": [
+            { "label": "서아시아", "color": "orange" },
+            { "label": "페르시아", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        }
+      ]
+    }
+  ]
+}

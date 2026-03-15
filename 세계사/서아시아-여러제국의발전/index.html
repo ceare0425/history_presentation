@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>서아시아 여러 제국의 발전</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* === 1. Reset & Variables === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --main:        #8B4513;
+      --dark:        #6B3010;
+      --light:       #FFF8E1;
+      --accent:      #C5A028;
+      --accent-light:#E8D080;
+      --white:       #FDF5E0;
+      --bg:          #F5E6C4;
+      --text:        #2C1A0E;
+      --text-sec:    #6B4226;
+      --border:      #A07850;
+      --card-bg:     #FDF5E0;
+      --gray-200:    #D4B896;
+      --gray-600:    #8B6540;
+    }
+
+    /* === 2. Base === */
+    html, body {
+      font-size: clamp(17px, 1.7vw, 30px);
+      font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif;
+      color: var(--text);
+      height: 100%;
+      overflow: hidden;
+    }
+    @media (max-width: 1024px) { html { font-size: clamp(15px, 2.2vw, 24px); } }
+    @media (max-width: 768px)  { html { font-size: clamp(14px, 3.2vw, 20px); } }
+
+    h1 { font-family: 'Nanum Myeongjo', serif; font-size: 2.4rem; font-weight: 800; letter-spacing: 0.04em; line-height: 1.3; }
+    h2 { font-family: 'Nanum Myeongjo', serif; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.04em; }
+    h3 { font-family: 'Nanum Myeongjo', serif; font-size: 1rem; font-weight: 700; }
+    p  { font-size: 0.95rem; line-height: 1.7; }
+
+    /* === 3. Parchment Background === */
+    body {
+      background-color: var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(160,120,60,0.04) 2px, rgba(160,120,60,0.04) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(140,100,40,0.06) 28px, rgba(140,100,40,0.06) 29px);
+    }
+
+    /* === 4. Slide Layout === */
+    .presentation {
+      position: fixed;
+      inset: 0;
+      bottom: 2.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.8rem;
+    }
+
+    .slide { display: none; width: 100%; max-width: 1600px; height: 100%; }
+    .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* === 5. Card (역사 수업 - double border) === */
+    .browser-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      outline: 4px solid var(--accent);
+      outline-offset: -7px;
+      border-radius: 4px;
+      box-shadow: 0 4px 28px rgba(44,26,14,0.2), inset 0 0 60px rgba(160,120,40,0.05);
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .browser-topbar {
+      background: linear-gradient(90deg, #8B4513 0%, #5C2808 45%, #8B4513 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: 0.4rem 1.1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .topbar-icon { font-size: 0.95rem; }
+    .browser-title {
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 0.82rem; font-weight: 700;
+      letter-spacing: 0.07em;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .browser-content {
+      flex: 1; overflow-y: auto;
+      padding: 1.1rem 1.8rem 1rem;
+      display: flex; flex-direction: column;
+    }
+    .browser-content::-webkit-scrollbar { width: 4px; }
+    .browser-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* === 6. Progress Bar === */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--main));
+      z-index: 1000; transition: width 0.3s;
+    }
+
+    /* === 7. Nav Bar === */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem; padding: 0.3rem 1.5rem;
+      background: rgba(30, 15, 6, 0.97);
+      border-top: 2px solid var(--accent);
+      z-index: 999; font-size: 14px;
+    }
+    .nav-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 1.7rem; height: 1.7rem;
+      border: 1.5px solid #8B6540; border-radius: 50%;
+      background: transparent; cursor: pointer;
+      color: var(--accent-light); transition: all 0.2s;
+      padding: 0; line-height: 1;
+    }
+    .nav-btn svg { width: 0.55rem; height: 0.55rem; fill: currentColor; display: block; }
+    .nav-btn:hover:not(:disabled) { background: var(--main); border-color: var(--accent); }
+    .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .nav-counter {
+      font-size: 13px; font-weight: 700; color: var(--accent-light);
+      min-width: 3rem; text-align: center;
+      display: flex; align-items: center; gap: 0.15rem; line-height: 1;
+    }
+    .slide-input {
+      width: 1.4rem; text-align: center; border: none;
+      border-bottom: 1.5px solid transparent;
+      background: transparent; font-size: 13px; font-weight: 700;
+      color: var(--accent-light); font-family: inherit;
+      padding: 0; outline: none; cursor: pointer;
+      transition: border-color 0.2s; line-height: 1;
+    }
+    .slide-input:hover { border-bottom-color: var(--accent); }
+    .slide-input:focus { border-bottom-color: var(--accent); background: rgba(139,69,19,0.3); border-radius: 3px; }
+
+    /* === 8. 공통 장식 요소 === */
+    .section-ornament { color: var(--accent); font-size: 0.72rem; letter-spacing: 0.5em; text-align: center; margin-bottom: 0.2rem; opacity: 0.75; }
+    .hist-divider { display: flex; align-items: center; gap: 0.4rem; margin: 0.35rem 0 0.6rem; }
+    .h-line { flex: 1; height: 1.5px; background: linear-gradient(90deg, transparent, var(--accent) 25%, var(--accent) 75%, transparent); }
+    .h-gem  { color: var(--accent); font-size: 0.7rem; line-height: 1; }
+
+    .era-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      border: 1px solid var(--accent);
+      padding: 0.08rem 0.45rem;
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em;
+      border-radius: 2px; white-space: nowrap;
+    }
+
+    /* === 9. 내용 카드 === */
+    .ruler-card { border: 1.5px solid var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem; }
+    .ruler-card-header {
+      background: linear-gradient(90deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 0.9rem;
+      padding: 0.35rem 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+    }
+    .ruler-card-body { padding: 0.5rem 0.8rem; background: var(--card-bg); }
+
+    .mini-card {
+      background: var(--light); border: 1.5px solid var(--border);
+      border-radius: 3px; padding: 0.55rem 0.75rem;
+    }
+    .mini-card h3 { font-size: 0.9rem; color: var(--main); margin-bottom: 0.25rem; }
+    .mini-card p  { font-size: 0.85rem; color: var(--text-sec); line-height: 1.55; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; }
+
+    .info-list { list-style: none; display: flex; flex-direction: column; gap: 0.38rem; }
+    .info-list li { display: flex; gap: 0.45rem; align-items: flex-start; font-size: 0.9rem; line-height: 1.6; }
+    .info-list li::before { content: '◆'; color: var(--accent); font-size: 0.65rem; margin-top: 0.38em; flex-shrink: 0; }
+
+    .highlight-box {
+      background: var(--light);
+      border-left: 4px solid var(--accent); border-right: 1px solid var(--border);
+      padding: 0.55rem 0.9rem 0.55rem 1rem;
+      margin: 0.4rem 0; border-radius: 0 3px 3px 0;
+      font-size: 0.88rem; line-height: 1.65;
+    }
+    .highlight-box strong { color: var(--main); }
+
+    /* === 10. 빈칸 (클릭 → 정답 공개) === */
+    .blank {
+      display: inline-block;
+      min-width: 4.5rem;
+      background: linear-gradient(135deg, var(--main) 0%, var(--dark) 100%);
+      color: transparent;
+      border: 1.5px solid var(--accent);
+      border-radius: 2px;
+      padding: 0.05em 0.55em;
+      cursor: pointer;
+      font-family: 'Nanum Myeongjo', serif;
+      font-weight: 700; font-size: inherit;
+      transition: all 0.35s ease;
+      vertical-align: baseline;
+      user-select: none; position: relative;
+      text-align: center;
+    }
+    .blank::after {
+      content: '?';
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: 0.85em; font-weight: 800;
+      pointer-events: none; transition: opacity 0.25s;
+    }
+    .blank.on {
+      background: var(--light);
+      color: var(--main);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .blank.on::after { opacity: 0; }
+
+    /* === 11. 퀴즈 스타일 === */
+    .quiz-wrap { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+
+    .quiz-row {
+      display: flex; align-items: flex-start; gap: 0.65rem;
+      border: 1.5px solid var(--border); border-radius: 3px;
+      padding: 0.5rem 0.8rem; background: var(--card-bg);
+    }
+    .q-num {
+      background: var(--main); color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 0.8rem;
+      min-width: 1.5rem; height: 1.5rem; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 0.1em;
+    }
+    .q-text { flex: 1; font-size: 0.88rem; line-height: 1.65; color: var(--text); }
+
+    /* OX 배지 */
+    .ox {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 1.9rem; height: 1.9rem; border-radius: 50%;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent);
+      cursor: pointer; font-family: 'Nanum Myeongjo', serif;
+      font-size: 1.05rem; font-weight: 800;
+      transition: all 0.35s; user-select: none;
+      position: relative; flex-shrink: 0; align-self: center;
+    }
+    .ox::after { content: '?'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--accent-light); font-size: 0.82rem; pointer-events: none; transition: opacity 0.25s; }
+    .ox.on { background: var(--light); }
+    .ox.on::after { opacity: 0; }
+    .ox.is-o.on { color: #2a6f2a; border-color: #2a6f2a; }
+    .ox.is-x.on { color: #c0392b; border-color: #c0392b; }
+
+    /* 정답 버튼 */
+    .ans-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent);
+      border-radius: 2px; padding: 0.1em 0.9em;
+      cursor: pointer; font-family: 'Nanum Myeongjo', serif;
+      font-weight: 700; font-size: 0.88rem;
+      transition: all 0.35s; user-select: none;
+      position: relative; min-width: 3.5rem; text-align: center;
+      white-space: nowrap;
+    }
+    .ans-btn::after { content: '정답 ▼'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--accent-light); font-size: 0.72em; pointer-events: none; transition: opacity 0.25s; white-space: nowrap; }
+    .ans-btn.on { background: var(--light); color: var(--main); }
+    .ans-btn.on::after { opacity: 0; }
+
+    /* === 12. 표지 === */
+    .cover-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: 0.65rem; }
+
+    /* === 13. TOC === */
+    .toc-list { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 0.5rem; }
+    .toc-item {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.48rem 0.8rem;
+      border: 1px solid var(--gray-200); border-radius: 3px;
+      cursor: pointer; transition: all 0.2s; background: var(--card-bg);
+    }
+    .toc-item:hover { background: var(--light); border-color: var(--accent); transform: translateX(5px); }
+    .toc-num {
+      background: var(--main); color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 0.82rem;
+      min-width: 1.65rem; height: 1.65rem; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .toc-title { font-weight: 700; font-size: 0.9rem; }
+    .toc-desc  { font-size: 0.8rem; color: var(--text-sec); }
+
+    /* === 14. Responsive === */
+    /* ⑶번 오류 설명: × 정답 공개 시에만 표시 */
+    #q3-exp { display: none; }
+    .quiz-row:has(.ox.is-x.on) #q3-exp { display: block; }
+
+    @media (max-width: 768px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .browser-content { padding: 0.7rem 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="presentation" id="presentation">
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 1: 표지 -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide active" data-slide="0">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🏛️</span>
+        <span class="browser-title">세계사 · Ⅰ-3. 서아시아, 지중해, 유럽 세계의 형성</span>
+      </div>
+      <div class="browser-content">
+        <div class="cover-wrap">
+          <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+          <span class="era-badge">2학년 · 세계사</span>
+          <h1 style="margin-top:0.3rem;">서아시아 여러 제국의<br>발전</h1>
+          <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+          <p style="color:var(--text-sec); font-size:0.95rem; line-height:2;">Ⅰ-3. 서아시아, 지중해, 유럽 세계의 형성<br>교과서 42~45쪽</p>
+          <p style="color:var(--text-sec); font-size:0.82rem; margin-top:0.2rem;">
+            📌 화면의 <strong style="color:var(--main);">빈칸</strong>을 클릭하면 정답이 나타납니다
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 2: 목차 -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="1">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">📜</span>
+        <span class="browser-title">학습 목차</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">학습 내용 정리</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <div class="toc-list">
+          <div class="toc-item" onclick="goToSlide(2)">
+            <div class="toc-num">1</div>
+            <div>
+              <div class="toc-title">아시리아의 발전</div>
+              <div class="toc-desc">기원전 7세기 통일 · 강압 통치 · 멸망</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(3)">
+            <div class="toc-num">2</div>
+            <div>
+              <div class="toc-title">아케메네스 왕조 페르시아의 발전</div>
+              <div class="toc-desc">키루스 2세 · 다리우스 1세 · 쇠퇴와 멸망</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(5)">
+            <div class="toc-num">3</div>
+            <div>
+              <div class="toc-title">파르티아와 사산 왕조 페르시아의 발전</div>
+              <div class="toc-desc">중계 무역 번영 · 이슬람 세력에 멸망</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(7)">
+            <div class="toc-num">4</div>
+            <div>
+              <div class="toc-title">조로아스터교와 페르시아 문화</div>
+              <div class="toc-desc">이원론 · 유일신 종교에 영향 · 문화 포용</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(8)">
+            <div class="toc-num">★</div>
+            <div>
+              <div class="toc-title">개념 확인 문제</div>
+              <div class="toc-desc">OX · 빈칸 채우기 · 서술형 — 클릭으로 정답 확인</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 3: 아시리아의 발전 -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="2">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">⚔️</span>
+        <span class="browser-title">1. 아시리아의 발전</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">1. 아시리아의 발전</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏹 발전</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li><span class="era-badge">기원전 7세기</span> 철제 무기와 전차로 무장한 기병 → 서아시아 대부분 <strong>통일</strong></li>
+              <li>정복지에 <strong>총독</strong> 파견 → 중앙 집권 통치 실시</li>
+              <li>수도 <strong>니네베</strong>에 왕립 도서관 건설 → 학문 발전 촉진</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">⚠️ 쇠퇴와 멸망</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>피지배 민족에 대한 <strong>강압적 통치</strong></li>
+              <li>각지의 <strong>반란</strong> 발생 → <strong>멸망</strong></li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 4: 아케메네스 왕조 — 키루스 2세 & 다리우스 1세 -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="3">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">👑</span>
+        <span class="browser-title">2. 아케메네스 왕조 페르시아 ① — 키루스 2세 · 다리우스 1세</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">2. 아케메네스 왕조 페르시아 ①</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="grid-2" style="margin-bottom:0.55rem;">
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">👑 키루스 2세</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li>서아시아 지역 <strong>통일</strong></li>
+                <li><strong>포용 정책</strong> 실시</li>
+                <li>다른 민족의 문화·종교 <strong>존중</strong></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">🗺️ 다리우스 1세</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li>전국 <strong>20여 개</strong> 행정 구역 → 총독 파견</li>
+                <li><strong>'왕의 눈', '왕의 귀'</strong> — 감찰 관리</li>
+                <li><strong>'왕의 길'</strong> 건설 · 역참제 정비</li>
+                <li>화폐 · 도량형 정비</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 5: 아케메네스 왕조 — 쇠퇴와 멸망 (빈칸 ➊) -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="4">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">📉</span>
+        <span class="browser-title">2. 아케메네스 왕조 페르시아 ② — 쇠퇴와 멸망</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">2. 아케메네스 왕조 페르시아 ②</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">⬇️ 쇠퇴 원인</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>
+                <span class="era-badge">➊</span>&nbsp;
+                <span class="blank" onclick="this.classList.toggle('on')">그리스·페르시아</span>
+                전쟁에서 <strong>패배</strong>
+              </li>
+              <li>지방 총독의 <strong>반란</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">💀 멸망</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li><span class="era-badge">기원전 4세기</span> <strong>알렉산드로스</strong>에게 멸망</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 6: 파르티아 (빈칸 ➋) -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="5">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🐎</span>
+        <span class="browser-title">3. 파르티아</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">3. 파르티아</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏗️ 건국</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li><strong>이란 계통의 유목민</strong>이 수립한 왕조</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">💰 번영</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>
+                중국과&nbsp;<span class="era-badge">➋</span>&nbsp;
+                <span class="blank" onclick="this.classList.toggle('on')">로마</span>
+                사이의 <strong>중계 무역</strong>으로 번영
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">💀 멸망</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li><strong>사산 왕조 페르시아</strong>에 의해 멸망</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 7: 사산 왕조 페르시아 (빈칸 ➌) -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="6">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🕌</span>
+        <span class="browser-title">3. 사산 왕조 페르시아</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">3. 사산 왕조 페르시아</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="grid-3" style="margin-bottom:0.5rem;">
+          <div class="mini-card">
+            <h3>① 성립</h3>
+            <p>아케메네스 왕조 <strong>부흥</strong>을 내걸고 수립<br><span class="era-badge" style="margin-top:0.2rem; display:inline-block;">3세기 초</span></p>
+          </div>
+          <div class="mini-card">
+            <h3>② 번영</h3>
+            <p>동서 교통 요충지 → <strong>중계 무역</strong>으로 번영</p>
+          </div>
+          <div class="mini-card">
+            <h3>③ 멸망</h3>
+            <p><span class="era-badge" style="display:inline-block; margin-bottom:0.2rem;">651년</span><br><strong>이슬람 세력</strong> 침입으로 멸망</p>
+          </div>
+        </div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">⬇️ 쇠퇴 원인</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>
+                <span class="era-badge">➌</span>&nbsp;
+                <span class="blank" onclick="this.classList.toggle('on')">비잔티움 제국</span>
+                과의 계속된 <strong>전쟁</strong>
+              </li>
+              <li>후계자 계승 문제로 인한 <strong>권력 다툼</strong></li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 8: 조로아스터교와 페르시아 문화 -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="7">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔥</span>
+        <span class="browser-title">4. 조로아스터교와 페르시아 문화</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">4. 조로아스터교와 페르시아 문화</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="grid-2" style="margin-bottom:0.5rem;">
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">🔥 조로아스터교</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li><strong>아후라 마즈다</strong> 신봉, 불을 신성시</li>
+                <li><strong>이원론적 세계관</strong><br>
+                  <span style="font-size:0.82rem; color:var(--text-sec);">선(광명) 아후라 마즈다 vs 악(암흑) 앙라 마이뉴</span></li>
+                <li>죽은 자의 <strong>부활</strong> · <strong>최후의 심판</strong></li>
+                <li><strong>유대교 · 크리스트교 · 이슬람교</strong>에 영향</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">🌍 페르시아 문화</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li>피정복민의 <strong>문화 · 종교 · 언어</strong> 존중</li>
+                <li>인도, 유럽, 동아시아에 전파</li>
+                <li>동서 문화 교류의 <strong>가교</strong> 역할</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="highlight-box" style="border-left-color:var(--main);">
+          <span style="color:var(--accent); font-size:1.1rem; line-height:1;">"</span>
+          <span style="font-style:italic; font-size:0.9rem;"> 선(광명)과 악(암흑)의 대립 — 조로아스터교의 이원론적 세계관은 유대교·크리스트교·이슬람교에 깊은 영향을 미쳤다.</span>
+          <span style="color:var(--accent); font-size:1.1rem; line-height:1;">"</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 9: 개념 확인 ① OX 문제 -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="8">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✏️</span>
+        <span class="browser-title">개념 확인 문제 ① — OX 문제</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.1rem;">개념 확인 문제 ①</h2>
+        <p style="text-align:center; font-size:0.82rem; color:var(--text-sec); margin-bottom:0.2rem;">다음 내용이 옳으면 ○, 틀리면 × — <strong>원을 클릭</strong>하면 정답이 나타납니다.</p>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="quiz-wrap">
+          <div class="quiz-row">
+            <div class="q-num">⑴</div>
+            <div class="q-text">아시리아는 기원전 7세기에 <strong>철제 무기와 전차</strong>로 무장한 기병을 앞세워 서아시아를 대부분 통일하였다.</div>
+            <span class="ox is-o" onclick="this.classList.toggle('on')">○</span>
+          </div>
+
+          <div class="quiz-row">
+            <div class="q-num">⑵</div>
+            <div class="q-text">아케메네스 왕조 페르시아는 <strong>그리스·페르시아 전쟁</strong>에서 패배하여 쇠퇴하다가, <strong>알렉산드로스</strong>에게 멸망하였다.</div>
+            <span class="ox is-o" onclick="this.classList.toggle('on')">○</span>
+          </div>
+
+          <div class="quiz-row" style="flex-direction:column; gap:0.4rem;">
+            <div style="display:flex; align-items:flex-start; gap:0.65rem; width:100%;">
+              <div class="q-num">⑶</div>
+              <div class="q-text">파르티아는 중국과 로마 사이의 중계 무역으로 번영하였으나 <u>로마와의 대립으로 쇠퇴하였고</u>, 사산 왕조 페르시아에게 멸망하였다.</div>
+              <span class="ox is-x" onclick="this.classList.toggle('on')">×</span>
+            </div>
+            <div id="q3-exp" style="background:var(--light); border-left:3px solid #c0392b; padding:0.35rem 0.7rem; border-radius:0 2px 2px 0; font-size:0.82rem; color:var(--text-sec); margin-left:2.3rem;">
+              <strong style="color:#c0392b;">오류 부분</strong>: 파르티아의 쇠퇴 원인은 교과서에서 '로마와의 대립'이 아닌 <strong>사산 왕조 페르시아</strong>에 의한 멸망으로 서술됨.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 10: 개념 확인 ② 빈칸 채우기 -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="9">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✏️</span>
+        <span class="browser-title">개념 확인 문제 ② — 빈칸 채우기</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.1rem;">개념 확인 문제 ②</h2>
+        <p style="text-align:center; font-size:0.82rem; color:var(--text-sec); margin-bottom:0.2rem;">빈칸에 들어갈 알맞은 말을 쓰시오. — <strong>빈칸을 클릭</strong>하면 정답이 나타납니다.</p>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="quiz-wrap">
+          <div class="quiz-row" style="flex-direction:column; align-items:flex-start;">
+            <div style="display:flex; gap:0.65rem; width:100%;">
+              <div class="q-num">⑴</div>
+              <div class="q-text">
+                아시리아는 정복지에 총독을 파견하는 등 중앙 집권 통치를 실시하였으며, 수도
+                <span class="blank" onclick="this.classList.toggle('on')" style="min-width:3.5rem;">니네베</span>에
+                왕립 도서관을 세워 수많은 문헌을 모으는 등 학문의 발전을 촉진하기도 하였다.
+              </div>
+            </div>
+          </div>
+
+          <div class="quiz-row" style="flex-direction:column; align-items:flex-start;">
+            <div style="display:flex; gap:0.65rem; width:100%;">
+              <div class="q-num">⑵</div>
+              <div class="q-text">
+                아케메네스 왕조 페르시아의
+                <span class="blank" onclick="this.classList.toggle('on')" style="min-width:5rem;">키루스 2세</span>는
+                기원전 6세기 중엽 서아시아 지역을 통일하였으며, 다른 민족의 문화와 종교를 존중하는 관용 정책을 통해 제국을 성장시켰다.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 11: 개념 확인 ③ 서술형 -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="10">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✏️</span>
+        <span class="browser-title">개념 확인 문제 ③ — 서술형</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.1rem;">개념 확인 문제 ③</h2>
+        <p style="text-align:center; font-size:0.82rem; color:var(--text-sec); margin-bottom:0.2rem;">'이 종교'·'이 국가'의 명칭 — <strong>정답 버튼</strong>을 클릭하면 나타납니다.</p>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="quiz-wrap">
+          <div class="quiz-row" style="flex-direction:column; align-items:flex-start; gap:0.45rem;">
+            <div style="display:flex; gap:0.65rem; width:100%;">
+              <div class="q-num">3</div>
+              <p class="q-text" style="font-size:0.85rem; line-height:1.65;">
+                이 <u>종교</u>는 페르시아인들이 널리 믿었던 종교이다. 이 종교에서는 세상을 선(광명)의 신 <strong>아후라 마즈다</strong>와 악(암흑)의 신 앙라 마이뉴(아리만)의 대립으로 보았다. 이 종교의 이원론적 세계관, 죽은 자의 부활과 최후의 심판 등의 교리는 이후 유대교, 크리스트교, 이슬람교 등에 영향을 미쳤다.
+              </p>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-left:2.3rem;">
+              <span style="font-size:0.88rem; font-weight:700; color:var(--text-sec);">정답 :</span>
+              <span class="ans-btn" onclick="this.classList.toggle('on')">조로아스터교</span>
+            </div>
+          </div>
+
+          <div class="quiz-row" style="flex-direction:column; align-items:flex-start; gap:0.45rem;">
+            <div style="display:flex; gap:0.65rem; width:100%;">
+              <div class="q-num">4</div>
+              <p class="q-text" style="font-size:0.85rem; line-height:1.65;">
+                이 <u>국가</u>는 아케메네스 왕조 페르시아의 <strong>부흥</strong>을 내걸고 건국된 국가로, 로마와 경쟁을 하는 가운데 메소포타미아에서 인더스강에 이르는 대제국을 건설하였다. 지방에 총독을 파견하여 중앙 집권 체제를 확립하였으며, 동서 교통의 요충지를 차지하여 중계 무역으로 번영하였다. 이 국가는 <strong>비잔티움 제국</strong>과의 계속된 전쟁과 후계자 계승 문제로 인한 권력 다툼으로 쇠퇴하였으며, <strong>이슬람 세력</strong>에 의해 멸망하였다.
+              </p>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-left:2.3rem;">
+              <span style="font-size:0.88rem; font-weight:700; color:var(--text-sec);">정답 :</span>
+              <span class="ans-btn" onclick="this.classList.toggle('on')">사산 왕조 페르시아</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 12: 핵심 정리 -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="11">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">📋</span>
+        <span class="browser-title">핵심 정리</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">핵심 정리</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="grid-2" style="margin-bottom:0.5rem;">
+          <div class="mini-card">
+            <h3>⚔️ 아시리아</h3>
+            <p>기원전 7세기 서아시아 통일 → <strong>강압 통치</strong> → 반란 → 멸망</p>
+          </div>
+          <div class="mini-card">
+            <h3>👑 아케메네스 왕조 페르시아</h3>
+            <p><strong>키루스 2세</strong> 포용 정책 + <strong>다리우스 1세</strong> 제도 정비 → <strong>그리스·페르시아 전쟁</strong> 패배 → 알렉산드로스에 멸망</p>
+          </div>
+          <div class="mini-card">
+            <h3>🐎 파르티아</h3>
+            <p>이란 유목민 수립 → 중국–<strong>로마</strong> 중계 무역 번영 → <strong>사산 왕조</strong>에 멸망</p>
+          </div>
+          <div class="mini-card">
+            <h3>🕌 사산 왕조 페르시아</h3>
+            <p>3세기 초 수립 · 중계 무역 → <strong>비잔티움 제국</strong>과 전쟁 + 계승 분쟁 → <strong>651년 이슬람</strong>에 멸망</p>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <strong>🔥 조로아스터교</strong>: 아후라 마즈다 신봉 · 이원론적 세계관 · 유대교·크리스트교·이슬람교에 영향
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .presentation -->
+
+<!-- Navigation Bar -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="back()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
+    / <span id="totalSlides">12</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="advance()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function updateSlide() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+    document.getElementById('slideInput').value = currentSlide + 1;
+    // 이전 버튼: 슬라이드 첫 장이고 공개된 빈칸도 없을 때만 비활성화
+    const revealed = getRevealables().filter(el => el.classList.contains('on'));
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && revealed.length === 0;
+    // 다음 버튼: 마지막 슬라이드이고 남은 빈칸도 없을 때만 비활성화
+    const hidden = getRevealables().filter(el => !el.classList.contains('on'));
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && hidden.length === 0;
+  }
+
+  // 현재 슬라이드의 모든 빈칸/정답 요소 (DOM 순서)
+  function getRevealables() {
+    return [...slides[currentSlide].querySelectorAll('.blank, .ox, .ans-btn')];
+  }
+
+  // 다음 숨겨진 요소 공개 → 공개했으면 true
+  function revealNext() {
+    const next = getRevealables().find(el => !el.classList.contains('on'));
+    if (next) { next.classList.add('on'); updateSlide(); return true; }
+    return false;
+  }
+
+  // 마지막 공개된 요소 숨김 → 숨겼으면 true
+  function hideLastRevealed() {
+    const list = getRevealables().filter(el => el.classList.contains('on'));
+    if (list.length > 0) { list[list.length - 1].classList.remove('on'); updateSlide(); return true; }
+    return false;
+  }
+
+  function nextSlide() { if (currentSlide < total - 1) { currentSlide++; updateSlide(); } }
+  function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlide(); } }
+  function goToSlide(i) { if (i >= 0 && i < total) { currentSlide = i; updateSlide(); } }
+
+  // 앞으로: 빈칸 순서대로 공개 → 다 공개되면 다음 슬라이드
+  function advance() { if (!revealNext()) nextSlide(); }
+
+  // 뒤로: 마지막 공개된 빈칸 숨김 → 없으면 이전 슬라이드
+  function back() { if (!hideLastRevealed()) prevSlide(); }
+
+  // 키보드 & 프레젠테이션 포인터 (PageDown/PageUp)
+  document.addEventListener('keydown', e => {
+    if (e.target.id === 'slideInput') return;
+    if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); advance(); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); back(); }
+    if (e.key === 'Home') { goToSlide(0); }
+    if (e.key === 'End')  { goToSlide(total - 1); }
+  });
+
+  // 터치 스와이프
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) { diff > 0 ? advance() : back(); }
+  });
+
+  // 슬라이드 번호 직접 입력
+  const si = document.getElementById('slideInput');
+  si.addEventListener('focus', () => si.select());
+  si.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const v = parseInt(si.value);
+      if (!isNaN(v) && v >= 1 && v <= total) goToSlide(v - 1);
+      else si.value = currentSlide + 1;
+      si.blur();
+    }
+    if (e.key === 'Escape') { si.value = currentSlide + 1; si.blur(); }
+  });
+  si.addEventListener('blur', () => {
+    const v = parseInt(si.value);
+    if (!isNaN(v) && v >= 1 && v <= total) goToSlide(v - 1);
+    else si.value = currentSlide + 1;
+  });
+
+  updateSlide();
+</script>
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수업 자료 관리</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #F7F3EE;
+      --surface:  #FFFFFF;
+      --header-bg:#2C1A0E;
+      --accent:   #C5A028;
+      --main:     #8B4513;
+      --text:     #1A1208;
+      --text-sec: #6B5740;
+      --border:   #E2D5C3;
+      --shadow:   0 2px 12px rgba(44,26,14,0.10);
+      --radius:   10px;
+    }
+
+    html, body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      background: var(--header-bg);
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(197,160,40,0.04) 3px, rgba(197,160,40,0.04) 6px);
+      border-bottom: 3px solid var(--accent);
+      padding: 1.4rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .header-left { display: flex; align-items: center; gap: 0.9rem; }
+    .header-logo {
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      line-height: 1.2;
+    }
+    .header-sub {
+      font-size: 0.78rem;
+      color: rgba(232,208,128,0.65);
+      letter-spacing: 0.04em;
+      margin-top: 0.1rem;
+    }
+    .header-stats {
+      display: flex;
+      gap: 1.2rem;
+    }
+    .stat-chip {
+      background: rgba(197,160,40,0.15);
+      border: 1px solid rgba(197,160,40,0.35);
+      border-radius: 20px;
+      padding: 0.25rem 0.8rem;
+      font-size: 0.78rem;
+      color: var(--accent);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* ── Search ── */
+    .search-wrap {
+      padding: 1.4rem 2rem 0;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.9rem;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+    }
+    .search-box svg { width: 16px; height: 16px; fill: var(--text-sec); flex-shrink: 0; }
+    .search-box input {
+      border: none; outline: none; background: transparent;
+      font-family: inherit; font-size: 0.88rem; color: var(--text);
+      width: 100%;
+    }
+    .search-box input::placeholder { color: #B0A090; }
+
+    /* ── Main ── */
+    .main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.4rem 2rem 3rem;
+    }
+
+    /* ── Subject Section ── */
+    .subject-section { margin-bottom: 2.5rem; }
+
+    .subject-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--border);
+    }
+    .subject-emoji { font-size: 1.3rem; line-height: 1; }
+    .subject-name {
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .subject-count {
+      background: var(--main);
+      color: #FDF5E0;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 20px;
+      padding: 0.15rem 0.55rem;
+      margin-left: 0.2rem;
+    }
+
+    /* ── Card Grid ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.1rem;
+    }
+
+    /* ── Presentation Card ── */
+    .pres-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+    }
+    .pres-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(44,26,14,0.15);
+      border-color: var(--accent);
+    }
+
+    .card-banner {
+      height: 6px;
+    }
+
+    .card-body {
+      padding: 1rem 1.1rem 0.8rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .card-title-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    .card-emoji { font-size: 1.4rem; line-height: 1.2; flex-shrink: 0; }
+    .card-title {
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .card-desc {
+      font-size: 0.8rem;
+      color: var(--text-sec);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.1rem;
+    }
+    .tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 4px;
+      padding: 0.15rem 0.45rem;
+      white-space: nowrap;
+    }
+    .tag-blue   { background: #E3F2FD; color: #1565C0; }
+    .tag-green  { background: #E8F5E9; color: #2E7D32; }
+    .tag-purple { background: #F3E5F5; color: #6A1B9A; }
+    .tag-orange { background: #FFF3E0; color: #BF360C; }
+    .tag-default{ background: #F5F0E8; color: #5D4037; }
+
+    .card-footer {
+      padding: 0.65rem 1.1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .card-path {
+      font-size: 0.72rem;
+      color: #B0A090;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 65%;
+    }
+    .open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: var(--main);
+      color: #FDF5E0;
+      border: none;
+      border-radius: 6px;
+      padding: 0.35rem 0.8rem;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .open-btn:hover { background: var(--accent); color: #2C1A0E; }
+    .open-btn svg { width: 12px; height: 12px; fill: currentColor; }
+
+    /* ── Empty / Error / Loading ── */
+    .status-box {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-sec);
+    }
+    .status-box .icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+    .status-box h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text); }
+    .status-box p  { font-size: 0.85rem; line-height: 1.7; }
+    .status-box code {
+      display: inline-block;
+      background: #F0E8DC;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.8rem;
+      color: var(--main);
+      margin-top: 0.5rem;
+    }
+
+    /* ── No results ── */
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-sec);
+      font-size: 0.88rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .site-header { flex-direction: column; align-items: flex-start; padding: 1rem 1.2rem; }
+      .main, .search-wrap { padding-left: 1.2rem; padding-right: 1.2rem; }
+      .card-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-left">
+      <div>
+        <div class="header-logo">📚 수업 자료 관리</div>
+        <div class="header-sub">프레젠테이션 대시보드 · pages.json으로 관리</div>
+      </div>
+    </div>
+    <div class="header-stats" id="headerStats"></div>
+  </header>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="text" id="searchInput" placeholder="자료 검색..." oninput="filterCards()">
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main class="main" id="mainContent">
+    <div class="status-box">
+      <div class="icon">⏳</div>
+      <h3>불러오는 중...</h3>
+    </div>
+  </main>
+
+  <script>
+    let allData = null;
+
+    async function loadPages() {
+      try {
+        const res = await fetch('pages.json');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allData = await res.json();
+        renderAll(allData);
+      } catch (err) {
+        showError(err);
+      }
+    }
+
+    function renderAll(data) {
+      const subjects = data.subjects || [];
+      const totalPages = subjects.reduce((s, sub) => s + (sub.pages || []).length, 0);
+
+      // Header stats
+      document.getElementById('headerStats').innerHTML = `
+        <span class="stat-chip">📂 과목 ${subjects.length}개</span>
+        <span class="stat-chip">📄 자료 ${totalPages}개</span>
+      `;
+
+      const main = document.getElementById('mainContent');
+      if (subjects.length === 0) {
+        main.innerHTML = `<div class="status-box"><div class="icon">📭</div><h3>등록된 자료가 없습니다</h3><p>pages.json에 수업 자료를 추가하면 여기에 표시됩니다.</p></div>`;
+        return;
+      }
+
+      main.innerHTML = subjects.map(sub => renderSubject(sub)).join('');
+    }
+
+    function renderSubject(sub) {
+      const pages = sub.pages || [];
+      return `
+        <section class="subject-section" data-subject="${esc(sub.name)}">
+          <div class="subject-header">
+            <span class="subject-emoji">${sub.emoji || '📁'}</span>
+            <span class="subject-name">${esc(sub.name)}</span>
+            <span class="subject-count">${pages.length}</span>
+          </div>
+          <div class="card-grid">
+            ${pages.map(p => renderCard(p)).join('')}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderCard(p) {
+      const tags = (p.tags || []).map(t =>
+        `<span class="tag tag-${t.color || 'default'}">${esc(t.label)}</span>`
+      ).join('');
+
+      const gradient = p.gradient || 'linear-gradient(90deg, #8B4513, #C5A028)';
+
+      return `
+        <div class="pres-card" data-title="${esc(p.title)}" data-desc="${esc(p.description || '')}">
+          <div class="card-banner" style="background:${gradient};"></div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <span class="card-emoji">${p.emoji || '📄'}</span>
+              <span class="card-title">${esc(p.title)}</span>
+            </div>
+            ${p.description ? `<p class="card-desc">${esc(p.description)}</p>` : ''}
+            ${tags ? `<div class="card-tags">${tags}</div>` : ''}
+          </div>
+          <div class="card-footer">
+            <span class="card-path">${esc(p.path)}</span>
+            <a class="open-btn" href="${esc(p.path)}" target="_blank">
+              <svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+              열기
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
+    function filterCards() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      document.querySelectorAll('.pres-card').forEach(card => {
+        const title = (card.dataset.title || '').toLowerCase();
+        const desc  = (card.dataset.desc  || '').toLowerCase();
+        card.style.display = (!q || title.includes(q) || desc.includes(q)) ? '' : 'none';
+      });
+      // 섹션 내 카드 전부 숨겨지면 섹션도 숨김
+      document.querySelectorAll('.subject-section').forEach(sec => {
+        const visible = [...sec.querySelectorAll('.pres-card')].some(c => c.style.display !== 'none');
+        sec.style.display = visible ? '' : 'none';
+      });
+    }
+
+    function showError(err) {
+      document.getElementById('mainContent').innerHTML = `
+        <div class="status-box">
+          <div class="icon">⚠️</div>
+          <h3>pages.json을 불러올 수 없습니다</h3>
+          <p>
+            브라우저에서 직접 파일을 열면 보안 정책으로 JSON을 읽을 수 없습니다.<br>
+            아래 명령어로 로컬 서버를 실행한 후 접속해 주세요.
+          </p>
+          <code>python -m http.server 8000</code>
+          <p style="margin-top:0.6rem;">→ 브라우저에서 <strong>http://localhost:8000</strong> 접속</p>
+          <p style="margin-top:0.4rem; font-size:0.75rem; color:#B0A090;">${err.message}</p>
+        </div>
+      `;
+    }
+
+    function esc(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    loadPages();
+  </script>
+</body>
+</html>
