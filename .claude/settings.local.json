@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Skill(presentation-builder)"
+      "Skill(presentation-builder)",
+      "Bash(cd:*)",
+      "Bash(python -c \":*)",
+      "Read(//tmp/**)"
     ]
   }
 }
