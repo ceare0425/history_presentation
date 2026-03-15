@@ -5,6 +5,19 @@
       "emoji": "🌍",
       "pages": [
         {
+          "title": "10. 그리스 세계의 발전",
+          "path": "세계사/10-그리스/index.html",
+          "emoji": "🏛️",
+          "description": "폴리스의 성립, 스파르타와 아테네의 발전, 알렉산드로스 제국, 헬레니즘 문화. 빈칸 클릭으로 정답 확인 가능.",
+          "tags": [
+            { "label": "그리스", "color": "blue" },
+            { "label": "헬레니즘", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
           "title": "09. 서아시아 여러 제국의 발전",
           "path": "세계사/09-서아시아-여러제국의발전/index.html",
           "emoji": "🏛️",
