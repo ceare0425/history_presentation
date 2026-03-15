@@ -5,13 +5,13 @@
       "emoji": "🌍",
       "pages": [
         {
-          "title": "10. 그리스 세계의 발전",
-          "path": "세계사/10-그리스/index.html",
-          "emoji": "🏛️",
-          "description": "폴리스의 성립, 스파르타와 아테네의 발전, 알렉산드로스 제국, 헬레니즘 문화. 빈칸 클릭으로 정답 확인 가능.",
+          "title": "08. 굽타 왕조와 인도 고전 문화의 발전",
+          "path": "세계사/08-굽타왕조/index.html",
+          "emoji": "🕌",
+          "description": "굽타 왕조의 북인도 통일, 힌두교 성립, 인도 고전 문화(산스크리트 문학·굽타 양식·영0과 10진법), 델리 술탄 왕조. 빈칸 클릭으로 정답 확인 가능.",
           "tags": [
-            { "label": "그리스", "color": "blue" },
-            { "label": "헬레니즘", "color": "purple" },
+            { "label": "인도", "color": "orange" },
+            { "label": "힌두교", "color": "purple" },
             { "label": "2학년", "color": "blue" },
             { "label": "역사 수업", "color": "green" }
           ],
@@ -25,6 +25,19 @@
           "tags": [
             { "label": "서아시아", "color": "orange" },
             { "label": "페르시아", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
+          "title": "10. 그리스 세계의 발전",
+          "path": "세계사/10-그리스/index.html",
+          "emoji": "🏛️",
+          "description": "폴리스의 성립, 스파르타와 아테네의 발전, 알렉산드로스 제국, 헬레니즘 문화. 빈칸 클릭으로 정답 확인 가능.",
+          "tags": [
+            { "label": "그리스", "color": "blue" },
+            { "label": "헬레니즘", "color": "purple" },
             { "label": "2학년", "color": "blue" },
             { "label": "역사 수업", "color": "green" }
           ],
