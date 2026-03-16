@@ -4,7 +4,23 @@
       "Skill(presentation-builder)",
       "Bash(cd:*)",
       "Bash(python -c \":*)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(pdftotext:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Read(//usr/**)",
+      "Read(//usr/local/**)",
+      "Bash(cmd /c \"python --version\" 2>&1)",
+      "Bash(cmd /c \"python -c \\\\\"print\\('test'\\)\\\\\"\" 2>&1)",
+      "Bash(cmd /c \"where python\" 2>&1)",
+      "Read(//c/Users/user/AppData/Local/Programs/**)",
+      "Read(//c/Users/user/AppData/Local/Microsoft/WindowsApps/**)",
+      "Bash(/c/Users/user/AppData/Local/Microsoft/WindowsApps/python3.exe --version 2>&1)",
+      "Bash(ls /c/Python*)",
+      "Read(//c/Users/user/anaconda3/**)",
+      "Read(//c/Users/user/miniconda3/**)",
+      "Bash(node:*)",
+      "Read(//c/Users/user/**)"
     ]
   }
 }

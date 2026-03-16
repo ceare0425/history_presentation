@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>01. 문명의 형성</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* === 1. Reset & Variables === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --main:        #8B4513;
+      --dark:        #6B3010;
+      --light:       #FFF8E1;
+      --accent:      #C5A028;
+      --accent-light:#E8D080;
+      --white:       #FDF5E0;
+      --bg:          #F5E6C4;
+      --text:        #2C1A0E;
+      --text-sec:    #6B4226;
+      --border:      #A07850;
+      --card-bg:     #FDF5E0;
+      --gray-200:    #D4B896;
+      --gray-600:    #8B6540;
+    }
+
+    /* === 2. Base === */
+    html, body {
+      font-size: clamp(17px, 1.7vw, 30px);
+      font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif;
+      color: var(--text);
+      height: 100%;
+      overflow: hidden;
+    }
+    @media (max-width: 1024px) { html { font-size: clamp(15px, 2.2vw, 24px); } }
+    @media (max-width: 768px)  { html { font-size: clamp(14px, 3.2vw, 20px); } }
+
+    h1 { font-family: 'Nanum Myeongjo', serif; font-size: 2.4rem; font-weight: 800; letter-spacing: 0.04em; line-height: 1.3; }
+    h2 { font-family: 'Nanum Myeongjo', serif; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.04em; }
+    h3 { font-family: 'Nanum Myeongjo', serif; font-size: 1rem; font-weight: 700; }
+    p  { font-size: 0.95rem; line-height: 1.7; }
+
+    /* === 3. Parchment Background === */
+    body {
+      background-color: var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(160,120,60,0.04) 2px, rgba(160,120,60,0.04) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(140,100,40,0.06) 28px, rgba(140,100,40,0.06) 29px);
+    }
+
+    /* === 4. Slide Layout === */
+    .presentation {
+      position: fixed;
+      inset: 0;
+      bottom: 2.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.8rem;
+    }
+
+    .slide { display: none; width: 100%; max-width: 1600px; height: 100%; }
+    .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* === 5. Card (역사 수업 — double border) === */
+    .browser-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      outline: 4px solid var(--accent);
+      outline-offset: -7px;
+      border-radius: 4px;
+      box-shadow: 0 4px 28px rgba(44,26,14,0.2), inset 0 0 60px rgba(160,120,40,0.05);
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .browser-topbar {
+      background: linear-gradient(90deg, #8B4513 0%, #5C2808 45%, #8B4513 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: 0.4rem 1.1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .topbar-icon { font-size: 0.95rem; }
+    .browser-title {
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 0.82rem; font-weight: 700;
+      letter-spacing: 0.07em;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .browser-content {
+      flex: 1; overflow-y: auto;
+      padding: 1.1rem 1.8rem 1rem;
+      display: flex; flex-direction: column;
+    }
+    .browser-content::-webkit-scrollbar { width: 4px; }
+    .browser-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* === 6. Progress Bar === */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--main));
+      z-index: 1000; transition: width 0.3s;
+    }
+
+    /* === 7. Nav Bar === */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem; padding: 0.3rem 1.5rem;
+      background: rgba(30, 15, 6, 0.97);
+      border-top: 2px solid var(--accent);
+      z-index: 999; font-size: 14px;
+    }
+    .nav-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 1.7rem; height: 1.7rem;
+      border: 1.5px solid #8B6540; border-radius: 50%;
+      background: transparent; cursor: pointer;
+      color: var(--accent-light); transition: all 0.2s;
+      padding: 0; line-height: 1;
+    }
+    .nav-btn svg { width: 0.55rem; height: 0.55rem; fill: currentColor; display: block; }
+    .nav-btn:hover:not(:disabled) { background: var(--main); border-color: var(--accent); }
+    .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .nav-counter {
+      font-size: 13px; font-weight: 700; color: var(--accent-light);
+      min-width: 3rem; text-align: center;
+      display: flex; align-items: center; gap: 0.15rem; line-height: 1;
+    }
+    .slide-input {
+      width: 1.4rem; text-align: center; border: none;
+      border-bottom: 1.5px solid transparent;
+      background: transparent; font-size: 13px; font-weight: 700;
+      color: var(--accent-light); font-family: inherit;
+      padding: 0; outline: none; cursor: pointer;
+      transition: border-color 0.2s; line-height: 1;
+    }
+    .slide-input:hover { border-bottom-color: var(--accent); }
+    .slide-input:focus { border-bottom-color: var(--accent); background: rgba(139,69,19,0.3); border-radius: 3px; }
+
+    /* === 8. 공통 장식 요소 === */
+    .section-ornament { color: var(--accent); font-size: 0.72rem; letter-spacing: 0.5em; text-align: center; margin-bottom: 0.2rem; opacity: 0.75; }
+    .hist-divider { display: flex; align-items: center; gap: 0.4rem; margin: 0.35rem 0 0.6rem; }
+    .h-line { flex: 1; height: 1.5px; background: linear-gradient(90deg, transparent, var(--accent) 25%, var(--accent) 75%, transparent); }
+    .h-gem  { color: var(--accent); font-size: 0.7rem; line-height: 1; }
+
+    .era-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      border: 1px solid var(--accent);
+      padding: 0.08rem 0.45rem;
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em;
+      border-radius: 2px; white-space: nowrap;
+    }
+
+    /* === 9. 내용 카드 === */
+    .ruler-card { border: 1.5px solid var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem; }
+    .ruler-card-header {
+      background: linear-gradient(90deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 0.9rem;
+      padding: 0.35rem 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+    }
+    .ruler-card-body { padding: 0.5rem 0.8rem; background: var(--card-bg); }
+
+    .mini-card {
+      background: var(--light); border: 1.5px solid var(--border);
+      border-radius: 3px; padding: 0.55rem 0.75rem;
+    }
+    .mini-card h3 { font-size: 0.9rem; color: var(--main); margin-bottom: 0.25rem; }
+    .mini-card p  { font-size: 0.85rem; color: var(--text-sec); line-height: 1.55; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.65rem; }
+
+    .info-list { list-style: none; display: flex; flex-direction: column; gap: 0.38rem; }
+    .info-list li { display: flex; gap: 0.45rem; align-items: flex-start; font-size: 0.9rem; line-height: 1.6; }
+    .info-list li::before { content: '◆'; color: var(--accent); font-size: 0.65rem; margin-top: 0.38em; flex-shrink: 0; }
+
+    .highlight-box {
+      background: var(--light);
+      border-left: 4px solid var(--accent); border-right: 1px solid var(--border);
+      padding: 0.55rem 0.9rem 0.55rem 1rem;
+      margin: 0.4rem 0; border-radius: 0 3px 3px 0;
+      font-size: 0.88rem; line-height: 1.65;
+    }
+    .highlight-box strong { color: var(--main); }
+
+    /* === 10. 빈칸 (클릭 → 정답 공개) === */
+    .blank {
+      display: inline-block;
+      min-width: 4.5rem;
+      background: linear-gradient(135deg, var(--main) 0%, var(--dark) 100%);
+      color: transparent;
+      border: 1.5px solid var(--accent);
+      border-radius: 2px;
+      padding: 0.05em 0.55em;
+      cursor: pointer;
+      font-family: 'Nanum Myeongjo', serif;
+      font-weight: 700; font-size: inherit;
+      transition: all 0.35s ease;
+      vertical-align: baseline;
+      user-select: none; position: relative;
+      text-align: center;
+    }
+    .blank::after {
+      content: '?';
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: 0.85em; font-weight: 800;
+      pointer-events: none; transition: opacity 0.25s;
+    }
+    .blank.on {
+      background: var(--light);
+      color: var(--main);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .blank.on::after { opacity: 0; }
+
+    /* === 11. ○× 표시 === */
+    .ox {
+      display: inline-block;
+      min-width: 2.5rem;
+      background: linear-gradient(135deg, var(--main) 0%, var(--dark) 100%);
+      color: transparent;
+      border: 1.5px solid var(--accent);
+      border-radius: 2px;
+      padding: 0.05em 0.55em;
+      cursor: pointer;
+      font-family: 'Nanum Myeongjo', serif;
+      font-weight: 700; font-size: inherit;
+      transition: all 0.35s ease;
+      vertical-align: baseline;
+      user-select: none; position: relative;
+      text-align: center;
+    }
+    .ox::after {
+      content: '?';
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: 0.85em; font-weight: 800;
+      pointer-events: none; transition: opacity 0.25s;
+    }
+    .ox.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
+    .ox.on::after { opacity: 0; }
+
+    /* === 12. 퀴즈 스타일 === */
+    .quiz-wrap { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.4rem; }
+    .quiz-row {
+      display: flex; align-items: flex-start; gap: 0.65rem;
+      border: 1.5px solid var(--border); border-radius: 3px;
+      padding: 0.5rem 0.8rem; background: var(--card-bg);
+    }
+    .q-num {
+      background: var(--main); color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 0.8rem;
+      min-width: 1.5rem; height: 1.5rem; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 0.1em;
+    }
+    .q-text { flex: 1; font-size: 0.88rem; line-height: 1.65; color: var(--text); }
+    .ans-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent);
+      border-radius: 2px; padding: 0.1em 0.9em;
+      cursor: pointer; font-family: 'Nanum Myeongjo', serif;
+      font-weight: 700; font-size: 0.88rem;
+      transition: all 0.35s; user-select: none;
+      position: relative; min-width: 3.5rem; text-align: center;
+      white-space: nowrap;
+    }
+    .ans-btn::after { content: '정답 ▼'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--accent-light); font-size: 0.72em; pointer-events: none; transition: opacity 0.25s; white-space: nowrap; }
+    .ans-btn.on { background: var(--light); color: var(--main); }
+    .ans-btn.on::after { opacity: 0; }
+
+    /* === 13. 표지 === */
+    .cover-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: 0.65rem; }
+
+    /* === 14. TOC === */
+    .toc-list { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 0.5rem; }
+    .toc-item {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.48rem 0.8rem;
+      border: 1px solid var(--gray-200); border-radius: 3px;
+      cursor: pointer; transition: all 0.2s; background: var(--card-bg);
+    }
+    .toc-item:hover { background: var(--light); border-color: var(--accent); transform: translateX(5px); }
+    .toc-num {
+      background: var(--main); color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 0.82rem;
+      min-width: 1.65rem; height: 1.65rem; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .toc-title { font-weight: 700; font-size: 0.9rem; }
+    .toc-desc  { font-size: 0.8rem; color: var(--text-sec); }
+
+    /* === 15. 흐름도 === */
+    .flow-wrap {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0; flex-wrap: wrap; margin: 0.5rem 0;
+    }
+    .flow-step {
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700;
+      font-size: 0.85rem; padding: 0.35rem 0.7rem;
+      border: 1.5px solid var(--accent); border-radius: 3px;
+      text-align: center; white-space: nowrap;
+    }
+    .flow-arrow {
+      color: var(--accent); font-size: 1rem; padding: 0 0.2rem;
+      font-weight: 700;
+    }
+
+    /* === 16. Responsive === */
+    @media (max-width: 768px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .browser-content { padding: 0.7rem 0.9rem; }
+      .flow-wrap { gap: 0.2rem; }
+    }
+
+    /* === 17. 핵심 정리 표 === */
+    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 0.4rem 0; }
+    .summary-table th { background: linear-gradient(90deg, var(--main), var(--dark)); color: var(--accent-light); padding: 0.45rem 0.7rem; font-family: 'Nanum Myeongjo', serif; font-weight: 700; text-align: center; border: 1px solid var(--border); }
+    .summary-table td { padding: 0.4rem 0.7rem; border: 1px solid var(--gray-200); line-height: 1.6; vertical-align: top; }
+    .summary-table tr:nth-child(even) td { background: var(--light); }
+    .summary-table td:first-child { background: linear-gradient(135deg, rgba(139,69,19,0.12), rgba(107,48,16,0.08)); font-family: 'Nanum Myeongjo', serif; font-weight: 700; color: var(--main); text-align: center; white-space: nowrap; }
+
+    /* === 18. 구분선 레이블 === */
+    .sub-label {
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 0.85rem; font-weight: 700; color: var(--main);
+      margin-bottom: 0.3rem; margin-top: 0.1rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="presentation" id="presentation">
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 1: 표지 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide active" data-slide="0">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🏺</span>
+        <span class="browser-title">01. 문명의 형성 · 세계사 Ⅰ-1</span>
+      </div>
+      <div class="browser-content">
+        <div class="cover-wrap">
+          <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+          <span class="era-badge">2학년 · 세계사</span>
+          <h1 style="margin-top:0.3rem;">Ⅰ-1. 현생 인류와 문명의 형성</h1>
+          <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+          <p style="color:var(--text-sec); font-size:0.95rem; line-height:2;">01 선사 시대와 문명의 탄생<br>교과서 10~13쪽</p>
+          <p style="color:var(--text-sec); font-size:0.82rem; margin-top:0.2rem;">
+            📌 화면의 <strong style="color:var(--main);">빈칸</strong>을 클릭하면 정답이 나타납니다
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 2: 목차 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="1">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">📜</span>
+        <span class="browser-title">학습 목차</span>
+      </div>
+      <div class="browser-content" style="justify-content:center;">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">학습 내용 정리</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <div class="toc-list" style="gap:0.35rem;">
+          <div class="toc-item" onclick="goToSlide(2)">
+            <div class="toc-num">1</div>
+            <div>
+              <div class="toc-title">⑴ 인류의 탄생</div>
+              <div class="toc-desc">수백만 년 전 아프리카 등장 · 호모 사피엔스 · 세계 각지 이동</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(3)">
+            <div class="toc-num">2</div>
+            <div>
+              <div class="toc-title">⑵ 구석기 시대</div>
+              <div class="toc-desc">인류 출현 ~ 약 1만 년 전 · 수렵·채집 · 이동 생활 · 뗀석기</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(4)">
+            <div class="toc-num">3</div>
+            <div>
+              <div class="toc-title">신석기 문화의 발전 — 전환 배경 · 생활</div>
+              <div class="toc-desc">약 1만 년 전~ · 농경·목축 · 정착 생활 · 애니미즘</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(5)">
+            <div class="toc-num">4</div>
+            <div>
+              <div class="toc-title">신석기 문화의 발전 — 사회 · 유물</div>
+              <div class="toc-desc">촌락·씨족 사회 · 간석기 · 토기 · 스톤헨지</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(6)">
+            <div class="toc-num">5</div>
+            <div>
+              <div class="toc-title">⑴ 문명의 탄생 (기원전 3500년경)</div>
+              <div class="toc-desc">4대 문명 · 청동기 · 계급 분화 · 도시 형성</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(7)">
+            <div class="toc-num">6</div>
+            <div>
+              <div class="toc-title">⑵ 초기 문명의 특징</div>
+              <div class="toc-desc">문자 발명 · 사유 재산 · 직업 분화 · 역사 시대</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 3: ⑴ 인류의 탄생 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="2">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🦴</span>
+        <span class="browser-title">1. 인류의 탄생과 구석기 시대 — ⑴ 인류의 탄생</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">1. 인류의 탄생과 구석기 시대</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">⑴ 인류의 탄생</div>
+          <div class="ruler-card-body">
+            <ul class="info-list" style="gap:0.6rem;">
+              <li>
+                <div>
+                  <strong>① 탄생:</strong> 수백만 년 전 아프리카에서 처음 등장
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>② 현생 인류:</strong> 약 20~30만 년 전
+                  <span class="blank" onclick="this.classList.toggle('on')">호모 사피엔스</span>
+                  가 아프리카에서 등장
+                </div>
+              </li>
+              <li>
+                <div>세계 각지로 이동 → 기후·풍토에 따라 피부색 등이 다양하게 분화, 구석기 문화 주도</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card" style="margin-top:0.3rem;">
+          <div class="ruler-card-header">📌 인류의 이동 경로</div>
+          <div class="ruler-card-body">
+            <div class="flow-wrap">
+              <div class="flow-step">수백만 년 전<br>아프리카 등장</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step">약 20~30만 년 전<br>호모 사피엔스 등장</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step">세계 각지로 이동</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step">기후·풍토에 따라<br>인종 분화</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 4: ⑵ 구석기 시대 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="3">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔥</span>
+        <span class="browser-title">1. 인류의 탄생과 구석기 시대 — ⑵ 구석기 시대</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">⑵ 구석기 시대
+          <span style="font-size:0.75rem; font-weight:400; color:var(--text-sec); margin-left:0.5rem;">(인류 출현 ~ 약 1만 년 전까지)</span>
+        </h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="grid-2" style="gap:0.7rem;">
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">【 생활 】</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li>수렵(사냥)·채집 생활 → 먹을 것을 찾아 이동 생활</li>
+                <li>주거: 동굴이나 숲속에서 생활</li>
+                <li>언어, 도구, 불 등을 사용</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">【 유물 】</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li>비너스 조각상</li>
+                <li>뗀석기 (돌을 깨뜨려 만든 도구)</li>
+                <li>동굴 벽화 (알타미라 동굴 벽화 등)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 5: 신석기 — 전환 배경 + 생활 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="4">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🌾</span>
+        <span class="browser-title">2. 신석기 문화의 발전 — 전환 배경 · 생활</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">2. 신석기 문화의 발전
+          <span style="font-size:0.8rem; font-weight:400; color:var(--text-sec); margin-left:0.5rem;">(약 1만 년 전~)</span>
+        </h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">📌 신석기 시대로의 전환 배경</div>
+          <div class="ruler-card-body">
+            <div class="flow-wrap">
+              <div class="flow-step">지구 기온 상승</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step">식물 분포 변화<br>어패류·작은 짐승 번성</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step">정교한 도구 필요</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step">간석기·토기 제작</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">【 생활 】</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>
+                <span class="blank" onclick="this.classList.toggle('on')">농경</span>과
+                목축 시작: 자연을 이용하여 식량을 <strong style="color:var(--main);">'생산'</strong>하는 단계로 진입
+              </li>
+              <li>정착 생활 (움집 제작)</li>
+              <li>베틀 제작 → 옷 제작에 활용</li>
+              <li>종교: 애니미즘 (자연 현상의 중시, 자연물에 깃든 정령 숭배), 거석 유적 조성 (스톤헨지 등)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 6: 신석기 — 사회 + 유물 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="5">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🏘️</span>
+        <span class="browser-title">2. 신석기 문화의 발전 — 사회 · 유물</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">2. 신석기 문화의 발전
+          <span style="font-size:0.8rem; font-weight:400; color:var(--text-sec); margin-left:0.5rem;">사회 · 유물</span>
+        </h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="grid-2" style="gap:0.7rem;">
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">【 사회 】</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li>촌락 형성</li>
+                <li>씨족 사회 형성
+                  <ul style="list-style:none; padding-left:0.8rem; margin-top:0.3rem; display:flex; flex-direction:column; gap:0.2rem;">
+                    <li style="font-size:0.85rem; color:var(--text-sec);">· 공동 조상 숭배</li>
+                    <li style="font-size:0.85rem; color:var(--text-sec);">· 공동 신 숭배</li>
+                    <li style="font-size:0.85rem; color:var(--text-sec);">· 생산물 분배</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">【 대표 유물 】</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li>간석기 (돌을 갈아 만든 도구)</li>
+                <li>토기 (식량 보관·조리)</li>
+                <li>스톤헨지 (영국, 거석 유적)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 7: ⑴ 문명의 탄생 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="6">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🏛️</span>
+        <span class="browser-title">3. 청동기 문화의 등장과 문명의 탄생 — ⑴ 문명의 탄생</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">3. 청동기 문화의 등장과 문명의 탄생</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">⑴ 문명의 탄생 (기원전 3500~기원전 3000년경)</div>
+          <div class="ruler-card-body">
+            <ul class="info-list" style="gap:0.55rem;">
+              <li>
+                <div>
+                  <strong>① 지리적 특징:</strong> 메소포타미아, 이집트, 인도, 중국 등 큰 강 유역 → 농업 발달, 물자 교류가 활발한 지역
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>② 청동기 사용:</strong> 청동 무기 (정복 전쟁), 청동 제사 도구 (제사장, 신권 정치)
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>③ 계급 분화:</strong> 대규모 관개 농업 발달 → 농업의 체계적 관리를 위한 계급 형성 → 국가 출현
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>④ 도시 형성:</strong> 외부 침입 대비 목적 → 성벽으로 둘러싼 도시 건설
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="grid-4" style="margin-top:0.4rem;">
+          <div class="mini-card" style="text-align:center;">
+            <h3>메소포타미아</h3>
+            <p>티그리스강<br>유프라테스강</p>
+          </div>
+          <div class="mini-card" style="text-align:center;">
+            <h3>이집트</h3>
+            <p>나일강</p>
+          </div>
+          <div class="mini-card" style="text-align:center;">
+            <h3>인더스</h3>
+            <p>인더스강</p>
+          </div>
+          <div class="mini-card" style="text-align:center;">
+            <h3>황허</h3>
+            <p>황허(황하)강</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 8: ⑵ 초기 문명의 특징 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="7">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">📝</span>
+        <span class="browser-title">3. 청동기 문화의 등장과 문명의 탄생 — ⑵ 초기 문명의 특징</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">⑵ 초기 문명의 특징</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">초기 문명의 3대 특징</div>
+          <div class="ruler-card-body">
+            <ul class="info-list" style="gap:0.65rem;">
+              <li>
+                <div>
+                  <strong>① 문자 발명:</strong> 선사 시대 → 역사 시대
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>② 사유 재산</strong> 제도 발달
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>③ 직업의 분화:</strong> 지배층 (제사장, 전사) / 피지배층 (농민, 노예)
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card" style="margin-top:0.3rem;">
+          <div class="ruler-card-header">📌 선사 시대 → 역사 시대 전환의 기준</div>
+          <div class="ruler-card-body">
+            <div class="flow-wrap">
+              <div class="flow-step">선사 시대<br>(문자 이전)</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step">문자 발명</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step">역사 시대<br>(기록 시작)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 9: 핵심 정리 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="8">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">📋</span>
+        <span class="browser-title">핵심 정리 · 시대별 비교</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">핵심 정리</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th style="width:15%;">시대</th>
+              <th style="width:20%;">도구</th>
+              <th style="width:25%;">생활 방식</th>
+              <th style="width:40%;">주요 특징</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>구석기 시대</td>
+              <td>뗀석기</td>
+              <td>수렵·채집, 이동 생활</td>
+              <td>동굴·숲속 거주, 언어·불 사용, 동굴 벽화</td>
+            </tr>
+            <tr>
+              <td>신석기 시대</td>
+              <td>간석기·토기</td>
+              <td>농경·목축, 정착 생활</td>
+              <td>움집·베틀, 애니미즘, 씨족 사회, 촌락 형성</td>
+            </tr>
+            <tr>
+              <td>청동기 시대</td>
+              <td>청동기</td>
+              <td>계급 분화</td>
+              <td>관개 농업, 도시·국가 출현, 신권 정치</td>
+            </tr>
+            <tr>
+              <td>문명 탄생</td>
+              <td colspan="2">큰 강 유역 (기원전 3500년경~)</td>
+              <td>문자 발명, 사유 재산, 직업 분화 → 역사 시대</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="grid-3" style="margin-top:0.5rem; gap:0.5rem;">
+          <div class="mini-card" style="text-align:center;">
+            <h3>🦴 구석기</h3>
+            <p>뗀석기 · 이동 · 수렵채집</p>
+          </div>
+          <div class="mini-card" style="text-align:center;">
+            <h3>🌾 신석기</h3>
+            <p>간석기·토기 · 정착 · 농경목축</p>
+          </div>
+          <div class="mini-card" style="text-align:center;">
+            <h3>🏛️ 청동기</h3>
+            <p>청동기 · 계급 · 도시국가</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 10: 개념 확인 문제 1 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="9">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✏️</span>
+        <span class="browser-title">개념 확인 문제 1</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">1 &nbsp;다음 빈칸에 들어갈 알맞은 내용을 쓰시오.</div>
+          <div class="ruler-card-body">
+            <div class="quiz-wrap">
+              <div class="quiz-row">
+                <div class="q-num">⑴</div>
+                <div class="q-text">
+                  현생 인류인 (<span class="blank" onclick="this.classList.toggle('on')">호모 사피엔스</span>)은/는 약 20~30만 년 전에 아프리카에서 등장하여 아시아, 유럽 등지로 퍼져 나갔다.
+                </div>
+              </div>
+              <div class="quiz-row">
+                <div class="q-num">⑵</div>
+                <div class="q-text">
+                  마지막 빙하기가 끝나고 작은 짐승과 어패류가 번성하자 인류는 이에 적응하기 위하여 돌을 갈아 (<span class="blank" onclick="this.classList.toggle('on')">간석기</span>)을/를 만들고, (<span class="blank" onclick="this.classList.toggle('on')">토기</span>)을/를 제작하여 보관을 하면서 신석기 시대로 진입하였다.
+                </div>
+              </div>
+              <div class="quiz-row">
+                <div class="q-num">⑶</div>
+                <div class="q-text">
+                  메소포타미아, 이집트, 인도, 중국 등 큰 강 유역에서는 대규모 관개 농업을 관리하는 과정에서 (<span class="blank" onclick="this.classList.toggle('on')">계급</span>)이/가 발생하였으며, 지배층이 피지배층을 체계적으로 관리하는 과정에서 국가가 출현하였다.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 11: 개념 확인 문제 2 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="10">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✏️</span>
+        <span class="browser-title">개념 확인 문제 2</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">2 &nbsp;다음 내용이 구석기 시대에 해당하면 '구', 신석기 시대에 해당하면 '신'으로 표시하시오.</div>
+          <div class="ruler-card-body">
+            <div class="quiz-wrap">
+              <div class="quiz-row">
+                <div class="q-num">⑴</div>
+                <div class="q-text">
+                  동굴이나 숲속에 살면서 먹을 것을 찾아서 이동 생활을 하였다. &nbsp;(<span class="ox" onclick="this.classList.toggle('on')">구</span>)
+                </div>
+              </div>
+              <div class="quiz-row">
+                <div class="q-num">⑵</div>
+                <div class="q-text">
+                  농경과 목축을 통해 식량을 생산하기 시작하였다. &nbsp;(<span class="ox" onclick="this.classList.toggle('on')">신</span>)
+                </div>
+              </div>
+              <div class="quiz-row">
+                <div class="q-num">⑶</div>
+                <div class="q-text">
+                  움집 등을 제작하여 정착 생활을 하였으며, 베틀을 만들어 옷을 제작하였다. &nbsp;(<span class="ox" onclick="this.classList.toggle('on')">신</span>)
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 12: 개념 확인 문제 3 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="11">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✏️</span>
+        <span class="browser-title">개념 확인 문제 3</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">3 &nbsp;청동기 문화와 문명의 탄생에 대한 설명이 옳으면 'O', 틀리면 'X'로 표시하시오.</div>
+          <div class="ruler-card-body">
+            <div class="quiz-wrap">
+              <div class="quiz-row">
+                <div class="q-num">⑴</div>
+                <div class="q-text">
+                  돌을 깨뜨려 만든 뗀석기를 사용하기 시작하였다. &nbsp;(<span class="ox" onclick="this.classList.toggle('on')">X</span>)
+                </div>
+              </div>
+              <div class="quiz-row">
+                <div class="q-num">⑵</div>
+                <div class="q-text">
+                  지배층은 청동 제사 도구를 활용하여 제사장으로서 신권 정치를 실시하였다. &nbsp;(<span class="ox" onclick="this.classList.toggle('on')">O</span>)
+                </div>
+              </div>
+              <div class="quiz-row">
+                <div class="q-num">⑶</div>
+                <div class="q-text">
+                  외부의 침입에 대비해 성벽을 쌓고 도시를 형성하였다. &nbsp;(<span class="ox" onclick="this.classList.toggle('on')">O</span>)
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="back()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
+    / <span id="totalSlides">12</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="advance()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function updateSlide() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+    document.getElementById('slideInput').value = currentSlide + 1;
+    const revealed = getRevealables().filter(el => el.classList.contains('on'));
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && revealed.length === 0;
+    const hidden = getRevealables().filter(el => !el.classList.contains('on'));
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && hidden.length === 0;
+  }
+
+  function getRevealables() {
+    return [...slides[currentSlide].querySelectorAll('.blank, .ox, .ans-btn')];
+  }
+
+  function revealNext() {
+    const next = getRevealables().find(el => !el.classList.contains('on'));
+    if (next) { next.classList.add('on'); updateSlide(); return true; }
+    return false;
+  }
+
+  function hideLastRevealed() {
+    const list = getRevealables().filter(el => el.classList.contains('on'));
+    if (list.length > 0) { list[list.length - 1].classList.remove('on'); updateSlide(); return true; }
+    return false;
+  }
+
+  function nextSlide() { if (currentSlide < total - 1) { currentSlide++; updateSlide(); } }
+  function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlide(); } }
+  function goToSlide(i) { if (i >= 0 && i < total) { currentSlide = i; updateSlide(); } }
+
+  function advance() { if (!revealNext()) nextSlide(); }
+  function back() { if (!hideLastRevealed()) prevSlide(); }
+
+  document.addEventListener('keydown', e => {
+    if (e.target.id === 'slideInput') return;
+    if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); advance(); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); back(); }
+    if (e.key === 'Home') { goToSlide(0); }
+    if (e.key === 'End')  { goToSlide(total - 1); }
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) { diff > 0 ? advance() : back(); }
+  });
+
+  const si = document.getElementById('slideInput');
+  si.addEventListener('focus', () => si.select());
+  si.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const v = parseInt(si.value);
+      if (!isNaN(v) && v >= 1 && v <= total) goToSlide(v - 1);
+      else si.value = currentSlide + 1;
+      si.blur();
+    }
+    if (e.key === 'Escape') { si.value = currentSlide + 1; si.blur(); }
+  });
+  si.addEventListener('blur', () => {
+    const v = parseInt(si.value);
+    if (!isNaN(v) && v >= 1 && v <= total) goToSlide(v - 1);
+    else si.value = currentSlide + 1;
+  });
+
+  updateSlide();
+</script>
+</body>
+</html>
