@@ -229,7 +229,7 @@
       text-align: center;
     }
     .q-blank::after {
-      content: '(         )';
+      content: '정답';
       position: absolute; left: 50%; top: 50%;
       transform: translate(-50%, -50%);
       color: var(--accent-light); font-size: 0.75em;
@@ -251,14 +251,15 @@
       font-family: 'Nanum Myeongjo', serif;
       font-weight: 700; font-size: 0.95em;
       transition: all 0.4s; user-select: none;
-      position: relative; min-width: 2rem; text-align: center;
+      position: relative; min-width: 3.5rem; text-align: center;
     }
     .ox-reveal::after {
-      content: '( )';
+      content: '정답';
       position: absolute; left: 50%; top: 50%;
       transform: translate(-50%, -50%);
       color: var(--accent-light); font-size: 0.8em;
       pointer-events: none; transition: opacity 0.25s;
+      white-space: nowrap;
     }
     .ox-reveal.on { background: var(--light); color: var(--main); }
     .ox-reveal.on::after { opacity: 0; }
@@ -403,8 +404,8 @@
           <div class="toc-item" onclick="goToSlide(3)">
             <div class="toc-num">2</div>
             <div>
-              <div class="toc-title">인도 문명 — 아리아인의 이동 <span style="color:var(--accent); font-size:0.8em;">빈칸 ➊</span></div>
-              <div class="toc-desc">카스트제 · ➊ 브라만교 · 《베다》</div>
+              <div class="toc-title">인도 문명 — 아리아인의 이동</div>
+              <div class="toc-desc">카스트제 · 브라만교 · 《베다》</div>
             </div>
           </div>
           <div class="toc-item" onclick="goToSlide(4)">
@@ -417,8 +418,8 @@
           <div class="toc-item" onclick="goToSlide(5)">
             <div class="toc-num">4</div>
             <div>
-              <div class="toc-title">중국 문명 — 주 왕조 <span style="color:var(--accent); font-size:0.8em;">빈칸 ➋</span></div>
-              <div class="toc-desc">➋ 봉건제 · 종법 제도</div>
+              <div class="toc-title">중국 문명 — 주 왕조</div>
+              <div class="toc-desc">봉건제 · 종법 제도</div>
             </div>
           </div>
           <div class="toc-item" onclick="goToSlide(6)">
@@ -476,11 +477,6 @@
               </tbody>
             </table>
           </div>
-        </div>
-
-        <div class="highlight-box" style="margin-top:0.6rem;">
-          💡 인더스 문명은 포장 도로·하수도를 갖춘 체계적 <strong>계획 도시</strong>가 특징입니다.<br>
-          대표 도시: <strong>하라파</strong>와 <strong>모헨조다로</strong>
         </div>
 
         <div class="flow-wrap" style="margin-top:0.7rem;">
@@ -555,7 +551,6 @@
           <div class="flow-arrow">→</div>
           <div class="flow-step">카스트제 · 브라만교 성립</div>
         </div>
-        <p class="hint-msg">▶ 버튼을 누르면 빈칸 ➊의 정답이 표시됩니다</p>
       </div>
     </div>
   </div>
@@ -671,7 +666,6 @@
           <div class="flow-arrow">→</div>
           <div class="flow-step">종법 제도 발전</div>
         </div>
-        <p class="hint-msg">▶ 버튼을 누르면 빈칸 ➋의 정답이 표시됩니다</p>
       </div>
     </div>
   </div>
@@ -711,7 +705,7 @@
             <div class="ruler-card-body">
               <ul class="info-list">
                 <li>기원전 <strong>1000년경</strong> <strong>유카탄반도</strong>를 중심으로 발전</li>
-                <li>수백 개의 도시 국가 형성<br>(<strong>티칼</strong>, <strong>치첸이트사</strong> 번영)</li>
+                <li>수백 개의 도시 국가 형성(<strong>티칼</strong>, <strong>치첸이트사</strong> 번영)</li>
                 <li><strong>피라미드형 신전</strong> 건설</li>
                 <li>수학·천문학 발달, <strong>'영(0)'</strong> 개념 사용</li>
                 <li>일식과 월식 계산</li>
@@ -769,7 +763,6 @@
             </div>
           </div>
         </div>
-        <p class="hint-msg">▶ 버튼을 누르면 정답이 표시됩니다</p>
       </div>
     </div>
   </div>
@@ -814,7 +807,6 @@
             </div>
           </div>
         </div>
-        <p class="hint-msg">▶ 버튼을 누르면 정답이 표시됩니다</p>
       </div>
     </div>
   </div>
@@ -863,7 +855,6 @@
 
           </div>
         </div>
-        <p class="hint-msg">▶ 버튼을 누르면 정답이 표시됩니다</p>
       </div>
     </div>
   </div>
@@ -904,7 +895,6 @@
 
           </div>
         </div>
-        <p class="hint-msg">▶ 버튼을 누르면 정답이 표시됩니다</p>
       </div>
     </div>
   </div>
@@ -913,14 +903,14 @@
 
 <!-- ── 네비게이션 바 ── -->
 <div class="nav-bar">
-  <button class="nav-btn" id="prevBtn" onclick="prevSlide()" disabled aria-label="이전">
+  <button class="nav-btn" id="prevBtn" onclick="back()" disabled aria-label="이전">
     <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
   </button>
   <span class="nav-counter">
     <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
     / <span id="totalSlides">11</span>
   </span>
-  <button class="nav-btn" id="nextBtn" onclick="nextSlide()" aria-label="다음">
+  <button class="nav-btn" id="nextBtn" onclick="advance()" aria-label="다음">
     <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
   </button>
 </div>
@@ -931,74 +921,82 @@
   const total = slides.length;
   document.getElementById('totalSlides').textContent = total;
 
-  /* 현재 슬라이드에 숨겨진 정답 요소가 있는지 확인 */
-  function hasHiddenAnswers(slideEl) {
-    return slideEl.querySelectorAll('.blank:not(.on), .q-blank:not(.on), .ox-reveal:not(.on), .answer-reveal:not(.on)').length > 0;
-  }
-
-  /* 현재 슬라이드의 모든 정답 공개 */
-  function revealAll(slideEl) {
-    slideEl.querySelectorAll('.blank, .q-blank, .ox-reveal, .answer-reveal').forEach(el => el.classList.add('on'));
-  }
-
-  function updateUI() {
+  function updateSlide() {
     slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
-    document.getElementById('prevBtn').disabled = currentSlide === 0;
-    document.getElementById('nextBtn').disabled = currentSlide === total - 1;
-    document.getElementById('slideInput').value = currentSlide + 1;
     document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+    document.getElementById('slideInput').value = currentSlide + 1;
+    const revealed = getRevealables().filter(el => el.classList.contains('on'));
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && revealed.length === 0;
+    const hidden = getRevealables().filter(el => !el.classList.contains('on'));
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && hidden.length === 0;
   }
 
-  function goToSlide(index) {
-    if (index >= 0 && index < total) { currentSlide = index; updateUI(); }
+  function getRevealables() {
+    return [...slides[currentSlide].querySelectorAll('.blank, .q-blank, .ox-reveal, .answer-reveal')];
   }
 
-  /* ▶ 버튼: 숨겨진 정답이 있으면 먼저 공개, 없으면 다음 슬라이드 이동 */
-  function nextSlide() {
-    const cur = slides[currentSlide];
-    if (hasHiddenAnswers(cur)) {
-      revealAll(cur);
-    } else {
-      goToSlide(currentSlide + 1);
+  /* 현재 슬라이드에서 다음 숨겨진 정답 하나 공개 */
+  function revealNext() {
+    const next = getRevealables().find(el => !el.classList.contains('on'));
+    if (next) { next.classList.add('on'); updateSlide(); return true; }
+    return false;
+  }
+
+  /* 현재 슬라이드에서 마지막으로 공개된 정답 하나 숨기기 */
+  function hideLastRevealed() {
+    const list = getRevealables().filter(el => el.classList.contains('on'));
+    if (list.length > 0) { list[list.length - 1].classList.remove('on'); updateSlide(); return true; }
+    return false;
+  }
+
+  function nextSlide() { if (currentSlide < total - 1) { currentSlide++; updateSlide(); } }
+  function prevSlide() {
+    if (currentSlide > 0) {
+      currentSlide--;
+      updateSlide();
+      /* 이동한 슬라이드의 모든 정답 숨기기 */
+      slides[currentSlide].querySelectorAll('.blank, .q-blank, .ox-reveal, .answer-reveal').forEach(el => el.classList.remove('on'));
+      updateSlide();
     }
   }
+  function goToSlide(i) { if (i >= 0 && i < total) { currentSlide = i; updateSlide(); } }
 
-  /* ◀ 버튼: 그냥 이전 슬라이드로 이동 */
-  function prevSlide() {
-    goToSlide(currentSlide - 1);
-  }
+  /* 앞으로: 정답 공개 우선, 없으면 다음 슬라이드 */
+  function advance() { if (!revealNext()) nextSlide(); }
+  /* 뒤로: 공개된 정답 숨기기 우선, 없으면 이전 슬라이드 */
+  function back() { if (!hideLastRevealed()) prevSlide(); }
 
-  /* 키보드 네비게이션 */
+  /* 키보드 & 포인터 기기 (PageDown/PageUp/Enter 포함) */
   document.addEventListener('keydown', e => {
-    if (e.target === document.getElementById('slideInput')) return;
-    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
-    if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
-    if (e.key === 'Home') { e.preventDefault(); goToSlide(0); }
-    if (e.key === 'End') { e.preventDefault(); goToSlide(total - 1); }
-  });
-
-  /* 슬라이드 번호 직접 입력 */
-  const input = document.getElementById('slideInput');
-  input.addEventListener('focus', () => input.select());
-  input.addEventListener('keydown', e => {
-    e.stopPropagation();
-    if (e.key === 'Enter') { const v = parseInt(input.value) - 1; if (!isNaN(v)) goToSlide(v); input.blur(); }
-    if (e.key === 'Escape') { input.value = currentSlide + 1; input.blur(); }
-  });
-  input.addEventListener('blur', () => {
-    const v = parseInt(input.value) - 1;
-    if (!isNaN(v) && v >= 0 && v < total) goToSlide(v); else input.value = currentSlide + 1;
+    if (e.target.id === 'slideInput') return;
+    if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); advance(); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); back(); }
+    if (e.key === 'Home') { goToSlide(0); }
+    if (e.key === 'End')  { goToSlide(total - 1); }
   });
 
   /* 터치 스와이프 */
   let touchStartX = 0;
   document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
   document.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 50) { dx < 0 ? nextSlide() : prevSlide(); }
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) { diff > 0 ? advance() : back(); }
   }, { passive: true });
 
-  updateUI();
+  /* 슬라이드 번호 직접 입력 */
+  const si = document.getElementById('slideInput');
+  si.addEventListener('focus', () => si.select());
+  si.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { const v = parseInt(si.value); if (!isNaN(v) && v >= 1 && v <= total) goToSlide(v - 1); else si.value = currentSlide + 1; si.blur(); }
+    if (e.key === 'Escape') { si.value = currentSlide + 1; si.blur(); }
+  });
+  si.addEventListener('blur', () => {
+    const v = parseInt(si.value);
+    if (!isNaN(v) && v >= 1 && v <= total) goToSlide(v - 1); else si.value = currentSlide + 1;
+  });
+
+  updateSlide();
 </script>
 </body>
 </html>
