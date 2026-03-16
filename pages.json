@@ -31,6 +31,19 @@
           "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
         },
         {
+          "title": "03. 인도, 중국, 메소아메리카 문명",
+          "path": "세계사/03-인도-중국-메소아메리카/index.html",
+          "emoji": "🌏",
+          "description": "인더스 문명(드라비다인·하라파·모헨조다로), 아리아인의 이동과 카스트제·브라만교, 중국의 하·상·주 왕조(갑골문·봉건제), 메소아메리카의 올메카·마야 문명. 빈칸 클릭으로 정답 확인 가능.",
+          "tags": [
+            { "label": "인도", "color": "orange" },
+            { "label": "중국", "color": "blue" },
+            { "label": "메소아메리카", "color": "purple" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
           "title": "07. 불교의 성립과 인도의 통일 제국",
           "path": "세계사/07-불교성립-인도통일제국/index.html",
           "emoji": "☸️",
