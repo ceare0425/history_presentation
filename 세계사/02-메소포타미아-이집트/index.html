@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>02. 메소포타미아, 이집트, 지중해 문명</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --main:        #8B4513;
+      --dark:        #6B3010;
+      --light:       #FFF8E1;
+      --accent:      #C5A028;
+      --accent-light:#E8D080;
+      --white:       #FDF5E0;
+      --bg:          #F5E6C4;
+      --text:        #2C1A0E;
+      --text-sec:    #6B4226;
+      --border:      #A07850;
+      --card-bg:     #FDF5E0;
+      --gray-200:    #D4B896;
+      --gray-600:    #8B6540;
+    }
+
+    html, body {
+      font-size: clamp(17px, 1.7vw, 30px);
+      font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif;
+      color: var(--text);
+      height: 100%;
+      overflow: hidden;
+    }
+    @media (max-width: 1024px) { html { font-size: clamp(15px, 2.2vw, 24px); } }
+    @media (max-width: 768px)  { html { font-size: clamp(14px, 3.2vw, 20px); } }
+
+    h1 { font-family: 'Nanum Myeongjo', serif; font-size: 2.4rem; font-weight: 800; letter-spacing: 0.04em; line-height: 1.3; }
+    h2 { font-family: 'Nanum Myeongjo', serif; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.04em; }
+    h3 { font-family: 'Nanum Myeongjo', serif; font-size: 1rem; font-weight: 700; }
+    p  { font-size: 0.95rem; line-height: 1.7; }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(160,120,60,0.04) 2px, rgba(160,120,60,0.04) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(140,100,40,0.06) 28px, rgba(140,100,40,0.06) 29px);
+    }
+
+    .presentation {
+      position: fixed; inset: 0; bottom: 2.2rem;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0.8rem;
+    }
+
+    .slide { display: none; width: 100%; max-width: 1600px; height: 100%; }
+    .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .browser-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      outline: 4px solid var(--accent);
+      outline-offset: -7px;
+      border-radius: 4px;
+      box-shadow: 0 4px 28px rgba(44,26,14,0.2), inset 0 0 60px rgba(160,120,40,0.05);
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .browser-topbar {
+      background: linear-gradient(90deg, #8B4513 0%, #5C2808 45%, #8B4513 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: 0.4rem 1.1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .topbar-icon { font-size: 0.95rem; }
+    .browser-title {
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 0.82rem; font-weight: 700;
+      letter-spacing: 0.07em;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .browser-content {
+      flex: 1; overflow-y: auto;
+      padding: 1.1rem 1.8rem 1rem;
+      display: flex; flex-direction: column;
+    }
+    .browser-content::-webkit-scrollbar { width: 4px; }
+    .browser-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--main));
+      z-index: 1000; transition: width 0.3s;
+    }
+
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem; padding: 0.3rem 1.5rem;
+      background: rgba(30, 15, 6, 0.97);
+      border-top: 2px solid var(--accent);
+      z-index: 999; font-size: 14px;
+    }
+    .nav-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 1.7rem; height: 1.7rem;
+      border: 1.5px solid #8B6540; border-radius: 50%;
+      background: transparent; cursor: pointer;
+      color: var(--accent-light); transition: all 0.2s;
+      padding: 0; line-height: 1;
+    }
+    .nav-btn svg { width: 0.55rem; height: 0.55rem; fill: currentColor; display: block; }
+    .nav-btn:hover:not(:disabled) { background: var(--main); border-color: var(--accent); }
+    .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .nav-counter {
+      font-size: 13px; font-weight: 700; color: var(--accent-light);
+      min-width: 3rem; text-align: center;
+      display: flex; align-items: center; gap: 0.15rem; line-height: 1;
+    }
+    .slide-input {
+      width: 1.4rem; text-align: center; border: none;
+      border-bottom: 1.5px solid transparent;
+      background: transparent; font-size: 13px; font-weight: 700;
+      color: var(--accent-light); font-family: inherit;
+      padding: 0; outline: none; cursor: pointer;
+      transition: border-color 0.2s; line-height: 1;
+    }
+    .slide-input:hover { border-bottom-color: var(--accent); }
+    .slide-input:focus { border-bottom-color: var(--accent); background: rgba(139,69,19,0.3); border-radius: 3px; }
+
+    .section-ornament { color: var(--accent); font-size: 0.72rem; letter-spacing: 0.5em; text-align: center; margin-bottom: 0.2rem; opacity: 0.75; }
+    .hist-divider { display: flex; align-items: center; gap: 0.4rem; margin: 0.35rem 0 0.6rem; }
+    .h-line { flex: 1; height: 1.5px; background: linear-gradient(90deg, transparent, var(--accent) 25%, var(--accent) 75%, transparent); }
+    .h-gem  { color: var(--accent); font-size: 0.7rem; line-height: 1; }
+
+    .era-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      border: 1px solid var(--accent);
+      padding: 0.08rem 0.45rem;
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em;
+      border-radius: 2px; white-space: nowrap;
+    }
+
+    .ruler-card { border: 1.5px solid var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem; }
+    .ruler-card-header {
+      background: linear-gradient(90deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 0.9rem;
+      padding: 0.35rem 0.8rem; display: flex; align-items: center; gap: 0.4rem;
+    }
+    .ruler-card-body { padding: 0.5rem 0.8rem; background: var(--card-bg); }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+
+    .info-list { list-style: none; display: flex; flex-direction: column; gap: 0.38rem; }
+    .info-list li { display: flex; gap: 0.45rem; align-items: flex-start; font-size: 0.9rem; line-height: 1.6; }
+    .info-list li::before { content: '◆'; color: var(--accent); font-size: 0.65rem; margin-top: 0.38em; flex-shrink: 0; }
+
+    .highlight-box {
+      background: var(--light);
+      border-left: 4px solid var(--accent); border-right: 1px solid var(--border);
+      padding: 0.55rem 0.9rem 0.55rem 1rem;
+      margin: 0.4rem 0; border-radius: 0 3px 3px 0;
+      font-size: 0.88rem; line-height: 1.65;
+    }
+    .highlight-box strong { color: var(--main); }
+
+    .blank {
+      display: inline-block;
+      min-width: 4.5rem;
+      background: linear-gradient(135deg, var(--main) 0%, var(--dark) 100%);
+      color: transparent;
+      border: 1.5px solid var(--accent);
+      border-radius: 2px;
+      padding: 0.05em 0.55em;
+      cursor: pointer;
+      font-family: 'Nanum Myeongjo', serif;
+      font-weight: 700; font-size: inherit;
+      transition: all 0.35s ease;
+      vertical-align: baseline;
+      user-select: none; position: relative;
+      text-align: center;
+    }
+    .blank::after {
+      content: '?';
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: 0.85em; font-weight: 800;
+      pointer-events: none; transition: opacity 0.25s;
+    }
+    .blank.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
+    .blank.on::after { opacity: 0; }
+
+    .quiz-wrap { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.4rem; }
+    .quiz-row {
+      display: flex; align-items: flex-start; gap: 0.65rem;
+      border: 1.5px solid var(--border); border-radius: 3px;
+      padding: 0.5rem 0.8rem; background: var(--card-bg);
+    }
+    .q-num {
+      background: var(--main); color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 0.8rem;
+      min-width: 1.5rem; height: 1.5rem; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 0.1em;
+    }
+    .q-text { flex: 1; font-size: 0.88rem; line-height: 1.65; color: var(--text); }
+    .ans-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent);
+      border-radius: 2px; padding: 0.1em 0.9em;
+      cursor: pointer; font-family: 'Nanum Myeongjo', serif;
+      font-weight: 700; font-size: 0.88rem;
+      transition: all 0.35s; user-select: none;
+      position: relative; min-width: 3.5rem; text-align: center;
+      white-space: nowrap;
+    }
+    .ans-btn::after { content: '정답 ▼'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--accent-light); font-size: 0.72em; pointer-events: none; transition: opacity 0.25s; white-space: nowrap; }
+    .ans-btn.on { background: var(--light); color: var(--main); }
+    .ans-btn.on::after { opacity: 0; }
+
+    .cover-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: 0.65rem; }
+
+    .toc-list { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
+    .toc-item {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.48rem 0.8rem;
+      border: 1px solid var(--gray-200); border-radius: 3px;
+      cursor: pointer; transition: all 0.2s; background: var(--card-bg);
+    }
+    .toc-item:hover { background: var(--light); border-color: var(--accent); transform: translateX(5px); }
+    .toc-num {
+      background: var(--main); color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 0.82rem;
+      min-width: 1.65rem; height: 1.65rem; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .toc-title { font-weight: 700; font-size: 0.9rem; }
+    .toc-desc  { font-size: 0.8rem; color: var(--text-sec); }
+
+    .flow-wrap { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; margin: 0.5rem 0; }
+    .flow-step {
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700;
+      font-size: 0.85rem; padding: 0.35rem 0.7rem;
+      border: 1.5px solid var(--accent); border-radius: 3px;
+      text-align: center; white-space: nowrap;
+    }
+    .flow-arrow { color: var(--accent); font-size: 1rem; padding: 0 0.2rem; font-weight: 700; }
+
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .browser-content { padding: 0.7rem 0.9rem; }
+    }
+
+    .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0.4rem 0; }
+    .summary-table th { background: linear-gradient(90deg, var(--main), var(--dark)); color: var(--accent-light); padding: 0.45rem 0.7rem; font-family: 'Nanum Myeongjo', serif; font-weight: 700; text-align: center; border: 1px solid var(--border); }
+    .summary-table td { padding: 0.4rem 0.7rem; border: 1px solid var(--gray-200); line-height: 1.6; vertical-align: top; }
+    .summary-table tr:nth-child(even) td { background: var(--light); }
+    .summary-table td:first-child { background: linear-gradient(135deg, rgba(139,69,19,0.12), rgba(107,48,16,0.08)); font-family: 'Nanum Myeongjo', serif; font-weight: 700; color: var(--main); text-align: center; white-space: nowrap; }
+
+    .answer-row {
+      display: flex; align-items: center; gap: 0.5rem;
+      margin-top: 0.3rem; padding: 0.25rem 0;
+      font-size: 0.82rem; color: var(--text-sec);
+    }
+    .answer-row .ans-label { font-family: 'Nanum Myeongjo', serif; font-weight: 700; color: var(--main); }
+  </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="presentation" id="presentation">
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 1: 표지 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide active" data-slide="0">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🏛️</span>
+        <span class="browser-title">02. 메소포타미아, 이집트, 지중해 문명 · 세계사 Ⅰ-1</span>
+      </div>
+      <div class="browser-content">
+        <div class="cover-wrap">
+          <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+          <span class="era-badge">2학년 · 세계사</span>
+          <h1 style="margin-top:0.3rem;">2. 메소포타미아, 이집트, 지중해 문명</h1>
+          <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+          <p style="color:var(--text-sec); font-size:0.95rem; line-height:2;">
+            02 메소포타미아, 이집트, 지중해 문명<br>교과서 14~17쪽
+          </p>
+          <p style="color:var(--text-sec); font-size:0.82rem; margin-top:0.2rem;">
+            📌 화면의 <strong style="color:var(--main);">빈칸</strong>을 클릭하면 정답이 나타납니다
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 2: 목차 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="1">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">📜</span>
+        <span class="browser-title">학습 목차</span>
+      </div>
+      <div class="browser-content" style="justify-content:center;">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">학습 내용 정리</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <div class="toc-list">
+          <div class="toc-item" onclick="goToSlide(2)">
+            <div class="toc-num">1</div>
+            <div>
+              <div class="toc-title">메소포타미아 문명 — 성립 · 발전</div>
+              <div class="toc-desc">비옥한 초승달 지대 · 수메르 → 아카드 → 아무르</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(3)">
+            <div class="toc-num">2</div>
+            <div>
+              <div class="toc-title">메소포타미아 문명 — 바빌로니아 왕국</div>
+              <div class="toc-desc">함무라비왕 · 함무라비 법전 · 쐐기 문자</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(4)">
+            <div class="toc-num">3</div>
+            <div>
+              <div class="toc-title">메소포타미아 문명 — 문화</div>
+              <div class="toc-desc">지구라트 · 신정 정치 · 쐐기 문자 · 태음력 · 60진법</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(5)">
+            <div class="toc-num">4</div>
+            <div>
+              <div class="toc-title">이집트 문명 — 성립 · 발전</div>
+              <div class="toc-desc">나일강 유역 · 파라오 · 폐쇄적 지형 · 안정적 왕조</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(6)">
+            <div class="toc-num">5</div>
+            <div>
+              <div class="toc-title">이집트 문명 — 문화</div>
+              <div class="toc-desc">내세적 세계관 · 미라 · 기하학 · 태양력 · 상형 문자</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(7)">
+            <div class="toc-num">6</div>
+            <div>
+              <div class="toc-title">동부 지중해 연안 국가들</div>
+              <div class="toc-desc">히타이트 · 페니키아 · 헤브라이</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(10)">
+            <div class="toc-num">7</div>
+            <div>
+              <div class="toc-title">에게 문명</div>
+              <div class="toc-desc">크레타(미노스) 문명 · 미케네 문명</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(11)">
+            <div class="toc-num">8</div>
+            <div>
+              <div class="toc-title">핵심 비교 정리</div>
+              <div class="toc-desc">메소포타미아 vs 이집트 비교표</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 3: 메소포타미아 문명 — 성립·발전 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="2">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🏺</span>
+        <span class="browser-title">1. 메소포타미아 문명 — 성립 · 발전</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">1. 메소포타미아 문명
+          <span style="font-size:0.75rem; font-weight:400; color:var(--text-sec); margin-left:0.5rem;">(기원전 3500년경)</span>
+        </h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">【 성립 】</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>티그리스강과 유프라테스강 사이의 <strong>'비옥한 초승달 지대'</strong>에서 발생</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">【 발전 】</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li><strong>지리적 특징:</strong> 비옥한 토지 → 농업 발달, 개방적 지형 → 교역 발달</li>
+              <li><strong>정치적 특징:</strong> 개방적 지형 → 지배 세력의 잦은 교체</li>
+            </ul>
+            <div class="flow-wrap" style="margin-top:0.55rem;">
+              <div class="flow-step" style="font-size:0.82rem; padding:0.3rem 0.6rem;">수메르인</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step" style="font-size:0.82rem; padding:0.3rem 0.6rem;">아카드인</div>
+              <span class="flow-arrow">→</span>
+              <div class="flow-step" style="font-size:0.82rem; padding:0.3rem 0.6rem;">아무르인</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 4: 메소포타미아 문명 — 바빌로니아 왕국 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="3">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">📜</span>
+        <span class="browser-title">1. 메소포타미아 문명 — 바빌로니아 왕국</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">바빌로니아 왕국 & 함무라비 법전</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">【 바빌로니아 왕국 】</div>
+          <div class="ruler-card-body">
+            <ul class="info-list" style="gap:0.5rem;">
+              <li>
+                <div>
+                  <span class="blank" onclick="this.classList.toggle('on')">바빌로니아 왕국</span>
+                  : 아무르인이 건국, <strong>함무라비왕</strong> 때 전성기
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">【 《함무라비 법전》 편찬 】</div>
+          <div class="ruler-card-body">
+            <ul class="info-list" style="gap:0.5rem;">
+              <li><strong>쐐기 문자</strong>로 기록</li>
+              <li>당시 사회상 확인 가능</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 5: 메소포타미아 문명 — 문화 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="4">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🛕</span>
+        <span class="browser-title">1. 메소포타미아 문명 — 문화</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">메소포타미아 문명의 문화</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="grid-2" style="gap:0.6rem;">
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">🏯 종교 · 정치</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li><strong>지구라트</strong> 건설</li>
+                <li><strong>신정 정치</strong> 발달 — 왕 = 지배자, 제사장</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">📝 문자 · 학문</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li><strong>쐐기 문자</strong> 사용</li>
+                <li><strong>태음력</strong> 사용</li>
+                <li><strong>60진법</strong> 기본으로 한 숫자 체계 사용</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 6: 이집트 문명 — 성립·발전 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="5">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">𓂀</span>
+        <span class="browser-title">2. 이집트 문명 — 성립 · 발전</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">2. 이집트 문명
+          <span style="font-size:0.75rem; font-weight:400; color:var(--text-sec); margin-left:0.5rem;">(기원전 3000년경)</span>
+        </h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">【 성립 】</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>기원전 3000년경 <strong>나일강 유역</strong>에서 발생</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">🌊 지리적 특징</div>
+          <div class="ruler-card-body">
+            <div class="flow-wrap" style="justify-content:flex-start; flex-wrap:wrap; gap:0.2rem;">
+              <span class="flow-step" style="font-size:0.82rem; padding:0.3rem 0.55rem;">나일강 주기적 범람</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-step" style="font-size:0.82rem; padding:0.3rem 0.55rem;">대규모 관개 사업</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-step" style="font-size:0.82rem; padding:0.3rem 0.55rem;">지배층 형성</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-step" style="font-size:0.82rem; padding:0.3rem 0.55rem;">도시 국가 형성</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-step" style="font-size:0.82rem; padding:0.3rem 0.55rem;">통일 왕국 출현</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏜️ 정치적 특징</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>폐쇄적 지형(사막과 바다로 둘러싸인 지형) → 이민족의 침입 어려움 → 비교적 <strong>안정적인 왕조 유지</strong></li>
+              <li>
+                <span class="blank" onclick="this.classList.toggle('on')">파라오</span>
+                (태양신 '라'의 아들)가 신으로 군림
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 7: 이집트 문명 — 문화 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="6">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔺</span>
+        <span class="browser-title">2. 이집트 문명 — 문화</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">이집트 문명의 문화</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="grid-2" style="gap:0.6rem;">
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">⚰️ 종교</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li>내세적 세계관 — 사후 세계에 대한 관념 발달</li>
+                <li><strong>피라미드</strong> — 파라오의 무덤</li>
+                <li><strong>《사자의 서》</strong> 제작</li>
+                <li><strong>미라</strong> 제작</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="ruler-card" style="margin-bottom:0;">
+            <div class="ruler-card-header">🔬 학문 · 문자</div>
+            <div class="ruler-card-body">
+              <ul class="info-list">
+                <li>기하학, 측량술, 건축학, 의학 발달</li>
+                <li><strong>태양력</strong> 사용</li>
+                <li><strong>10진법</strong> 사용</li>
+                <li><strong>상형 문자</strong> — 파피루스에 기록</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 8: 히타이트 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="7">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">⚔️</span>
+        <span class="browser-title">3. 동부 지중해 연안 국가들 — 히타이트 (1/3)</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">3. 동부 지중해 연안 국가들
+          <span style="font-size:0.8rem; font-weight:400; color:var(--text-sec); margin-left:0.5rem;">(1/3)</span>
+        </h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">【 지리적 특징 】</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>메소포타미아·이집트 문명과 인접, <strong>교역상의 요지</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">⚔️ 히타이트</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li><strong>철제 무기</strong>, <strong>전차</strong> 이용한 정복 활동</li>
+              <li>철기 문화를 서아시아 등지로 전파</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 9: 페니키아 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="8">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">⛵</span>
+        <span class="browser-title">3. 동부 지중해 연안 국가들 — 페니키아 (2/3)</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">3. 동부 지중해 연안 국가들
+          <span style="font-size:0.8rem; font-weight:400; color:var(--text-sec); margin-left:0.5rem;">(2/3)</span>
+        </h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">⛵ 페니키아</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>지중해 연안 각지를 연결하는 해상 무역으로 번영 → <strong>카르타고</strong> 등 식민지 건설</li>
+              <li>
+                <span class="blank" onclick="this.classList.toggle('on')">표음 문자</span>
+                사용 → 오늘날 문자 체계에 영향(유럽에 전파)
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 10: 헤브라이 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="9">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✡️</span>
+        <span class="browser-title">3. 동부 지중해 연안 국가들 — 헤브라이 (3/3)</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">3. 동부 지중해 연안 국가들
+          <span style="font-size:0.8rem; font-weight:400; color:var(--text-sec); margin-left:0.5rem;">(3/3)</span>
+        </h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">✡️ 헤브라이</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>기원전 11세기 팔레스타인 지역에 <strong>이스라엘 왕국</strong> 건설 (수도: 예루살렘)</li>
+              <li>
+                <span class="blank" onclick="this.classList.toggle('on')">유대교</span>
+                (유일신 신앙) 창시 → 크리스트교와 이슬람교에 영향
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 11: 에게 문명 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="10">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🌊</span>
+        <span class="browser-title">4. 에게 문명</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">⑵ 에게 문명</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏝️ 크레타(미노스) 문명</div>
+          <div class="ruler-card-body">
+            <ul class="info-list" style="gap:0.45rem;">
+              <li>기원전 20세기경 성립</li>
+              <li><strong>해양 교역</strong> 발달</li>
+              <li><strong>크노소스 궁전</strong> 건설</li>
+              <li>기원전 14세기 <strong>미케네인</strong>과 자연재해에 의해 멸망</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="ruler-card" style="margin-top:0.35rem;">
+          <div class="ruler-card-header">⚔️ 미케네 문명</div>
+          <div class="ruler-card-body">
+            <ul class="info-list" style="gap:0.45rem;">
+              <li>기원전 14세기경 그리스 지역에서 남하해 각지에 여러 왕국 건설</li>
+              <li>크레타 문명 계승</li>
+              <li>기원전 12세기경 <strong>도리스인의 이주</strong>와 해상 민족의 침입으로 몰락</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="flow-wrap" style="margin-top:0.5rem;">
+          <div class="flow-step" style="font-size:0.8rem;">크레타 문명<br><span style="font-size:0.72rem; opacity:0.8;">기원전 20세기~</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step" style="font-size:0.8rem;">미케네인 정복<br><span style="font-size:0.72rem; opacity:0.8;">기원전 14세기</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step" style="font-size:0.8rem;">미케네 문명<br><span style="font-size:0.72rem; opacity:0.8;">기원전 14세기~</span></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step" style="font-size:0.8rem;">도리스인 침입<br><span style="font-size:0.72rem; opacity:0.8;">기원전 12세기 멸망</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 12: 핵심 비교 정리 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="11">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">📊</span>
+        <span class="browser-title">핵심 비교 정리</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">메소포타미아 vs 이집트 비교</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>메소포타미아</th>
+              <th>이집트</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>발생지</td>
+              <td>티그리스·유프라테스강<br>('비옥한 초승달 지대')</td>
+              <td>나일강 유역</td>
+            </tr>
+            <tr>
+              <td>지형</td>
+              <td>개방적 → 지배 세력 잦은 교체</td>
+              <td>폐쇄적(사막·바다) → 안정적 왕조</td>
+            </tr>
+            <tr>
+              <td>최고 통치자</td>
+              <td>왕 = 지배자, 제사장 (신정 정치)</td>
+              <td>파라오 (태양신 '라'의 아들)</td>
+            </tr>
+            <tr>
+              <td>세계관</td>
+              <td>현세 중시</td>
+              <td>내세적 (사후 세계 중시)</td>
+            </tr>
+            <tr>
+              <td>문자</td>
+              <td>쐐기 문자</td>
+              <td>상형 문자 (파피루스에 기록)</td>
+            </tr>
+            <tr>
+              <td>역법·수학</td>
+              <td>태음력 · 60진법</td>
+              <td>태양력 · 10진법</td>
+            </tr>
+            <tr>
+              <td>대표 건축</td>
+              <td>지구라트</td>
+              <td>피라미드 (파라오의 무덤)</td>
+            </tr>
+            <tr>
+              <td>대표 법전</td>
+              <td>《함무라비 법전》</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 13: 개념 확인 문제 1 (괄호 알맞은 말) -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="12">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✏️</span>
+        <span class="browser-title">개념 확인 문제 1</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">1 &nbsp;괄호 안의 내용 중 알맞은 말에 ○표를 하시오.</div>
+          <div class="ruler-card-body">
+            <div class="quiz-wrap">
+              <div class="quiz-row">
+                <div class="q-num">⑴</div>
+                <div class="q-text">
+                  ( 메소포타미아 · 이집트 ) 문명은 티그리스강과 유프라테스 강 사이의 '비옥한 초승달 지대'에서 발전하였다.
+                  <div class="answer-row">
+                    <span class="ans-label">정답:</span>
+                    <span class="ans-btn" onclick="this.classList.toggle('on')">메소포타미아</span>
+                  </div>
+                </div>
+              </div>
+              <div class="quiz-row">
+                <div class="q-num">⑵</div>
+                <div class="q-text">
+                  ( 이집트 · 히타이트 )는 최고 통치자인 '파라오'가 신으로 군림하였으며, 무덤으로 피라미드를 건설하였다.
+                  <div class="answer-row">
+                    <span class="ans-label">정답:</span>
+                    <span class="ans-btn" onclick="this.classList.toggle('on')">이집트</span>
+                  </div>
+                </div>
+              </div>
+              <div class="quiz-row">
+                <div class="q-num">⑶</div>
+                <div class="q-text">
+                  ( 페니키아 · 헤브라이 )는 지중해 연안 각지를 연결하는 해상 무역으로 크게 번영하였으며 식민 도시를 세웠다.
+                  <div class="answer-row">
+                    <span class="ans-label">정답:</span>
+                    <span class="ans-btn" onclick="this.classList.toggle('on')">페니키아</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 14: 개념 확인 문제 2 (빈칸 채우기) -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="13">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✏️</span>
+        <span class="browser-title">개념 확인 문제 2</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">2 &nbsp;다음 문장의 빈칸에 들어갈 알맞은 단어를 쓰시오.</div>
+          <div class="ruler-card-body">
+            <div class="quiz-wrap">
+              <div class="quiz-row">
+                <div class="q-num">⑴</div>
+                <div class="q-text">
+                  메소포타미아 문명에서는 (<span class="blank" onclick="this.classList.toggle('on')">지구라트</span>)라는 거대한 신전을 건축하였으며,
+                  왕이 제사장의 역할도 수행하는 신정 정치가 발달하였다.
+                </div>
+              </div>
+              <div class="quiz-row">
+                <div class="q-num">⑵</div>
+                <div class="q-text">
+                  이집트인은 사후 세계에 대한 관념이 발달하여 &lt;사자의 서&gt;를 제작하였고,
+                  (<span class="blank" onclick="this.classList.toggle('on')">미라</span>)을/를 제작하여 시체를 오래 보존하였다.
+                </div>
+              </div>
+              <div class="quiz-row">
+                <div class="q-num">⑶</div>
+                <div class="q-text">
+                  헤브라이인은 유일신 신앙의 (<span class="blank" onclick="this.classList.toggle('on')">유대교</span>)을/를 창시하여
+                  크리스트교와 이슬람교의 형성에 영향을 미쳤다.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 15: 개념 확인 문제 3 (선다형) -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="14">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✏️</span>
+        <span class="browser-title">개념 확인 문제 3</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">3 &nbsp;동부 지중해 연안 국가들에 대한 설명으로 옳지 않은 것은?</div>
+          <div class="ruler-card-body">
+            <div class="quiz-wrap">
+              <div class="quiz-row" style="flex-direction:column; gap:0.35rem;">
+                <div class="q-text" style="font-size:0.9rem; line-height:1.8;">
+                  ① 히타이트는 철제 무기와 전차를 바탕으로 활발한 정복 활동을 펼쳤다.<br>
+                  ② 페니키아는 표음 문자를 사용하였으며 오늘날 문자 체계에 영향을 주었다.<br>
+                  ③ 헤브라이인은 기원전 11세기에 예루살렘을 중심으로 이스라엘 왕국을 건설하였다.<br>
+                  ④ 크레타 문명은 나일강 유역을 중심으로 도시 국가를 형성하였고 이후 통일 왕국으로 발전하였다.<br>
+                  ⑤ 미케네 문명은 기원전 14세기경 그리스 본토를 중심으로 발전하였으나 도리스인의 이주로 멸망하였다.
+                </div>
+                <div class="answer-row">
+                  <span class="ans-label">정답:</span>
+                  <span class="ans-btn" onclick="this.classList.toggle('on')">④</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 16: 개념 확인 문제 4 (선다형) -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="15">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">✏️</span>
+        <span class="browser-title">개념 확인 문제 4</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">개념 확인 문제</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">4 &nbsp;다음 법전이 제작된 문명으로 옳은 것은?</div>
+          <div class="ruler-card-body">
+            <div class="highlight-box" style="margin-bottom:0.5rem; font-size:0.88rem; font-style:italic;">
+              제196조 &nbsp;만약 한 자유인이 다른 자유인의 눈을 멀게 하였다면, 그의 눈을 멀게 할 것이다.<br>
+              제198조 &nbsp;자유인이 평민의 눈이나 다리를 상하게 하면 은화 1미나를 바쳐야 한다.<br>
+              제205조 &nbsp;만약 한 자유인의 노예가 자유인의 뺨을 때렸다면, 그의 귀를 잘라낼 것이다.
+            </div>
+            <div class="quiz-wrap">
+              <div class="quiz-row" style="flex-direction:column; gap:0.35rem;">
+                <div class="q-text" style="font-size:0.9rem; line-height:1.8;">
+                  ① 페니키아 &nbsp;&nbsp;&nbsp; ② 헤브라이 &nbsp;&nbsp;&nbsp; ③ 에게 문명 &nbsp;&nbsp;&nbsp; ④ 이집트 문명 &nbsp;&nbsp;&nbsp; ⑤ 메소포타미아 문명
+                </div>
+                <div class="answer-row">
+                  <span class="ans-label">정답:</span>
+                  <span class="ans-btn" onclick="this.classList.toggle('on')">⑤</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="back()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
+    / <span id="totalSlides">16</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="advance()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function updateSlide() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+    document.getElementById('slideInput').value = currentSlide + 1;
+    const revealed = getRevealables().filter(el => el.classList.contains('on'));
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && revealed.length === 0;
+    const hidden = getRevealables().filter(el => !el.classList.contains('on'));
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && hidden.length === 0;
+  }
+
+  function getRevealables() {
+    return [...slides[currentSlide].querySelectorAll('.blank, .ans-btn')];
+  }
+
+  function revealNext() {
+    const next = getRevealables().find(el => !el.classList.contains('on'));
+    if (next) { next.classList.add('on'); updateSlide(); return true; }
+    return false;
+  }
+
+  function hideLastRevealed() {
+    const list = getRevealables().filter(el => el.classList.contains('on'));
+    if (list.length > 0) { list[list.length - 1].classList.remove('on'); updateSlide(); return true; }
+    return false;
+  }
+
+  function nextSlide() { if (currentSlide < total - 1) { currentSlide++; updateSlide(); } }
+  function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlide(); } }
+  function goToSlide(i) { if (i >= 0 && i < total) { currentSlide = i; updateSlide(); } }
+
+  function advance() { if (!revealNext()) nextSlide(); }
+  function back() { if (!hideLastRevealed()) prevSlide(); }
+
+  document.addEventListener('keydown', e => {
+    if (e.target.id === 'slideInput') return;
+    if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); advance(); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); back(); }
+    if (e.key === 'Home') { goToSlide(0); }
+    if (e.key === 'End')  { goToSlide(total - 1); }
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) { diff > 0 ? advance() : back(); }
+  });
+
+  const si = document.getElementById('slideInput');
+  si.addEventListener('focus', () => si.select());
+  si.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const v = parseInt(si.value);
+      if (!isNaN(v) && v >= 1 && v <= total) goToSlide(v - 1);
+      else si.value = currentSlide + 1;
+      si.blur();
+    }
+    if (e.key === 'Escape') { si.value = currentSlide + 1; si.blur(); }
+  });
+  si.addEventListener('blur', () => {
+    const v = parseInt(si.value);
+    if (!isNaN(v) && v >= 1 && v <= total) goToSlide(v - 1);
+    else si.value = currentSlide + 1;
+  });
+
+  updateSlide();
+</script>
+</body>
+</html>

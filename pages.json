@@ -5,6 +5,32 @@
       "emoji": "🌍",
       "pages": [
         {
+          "title": "01. 문명의 형성",
+          "path": "세계사/01-문명의형성/index.html",
+          "emoji": "🏺",
+          "description": "선사 시대와 문명의 탄생. 구석기·신석기·청동기 시대 비교, 4대 문명 발상지, 문자 발명과 역사 시대의 시작. 빈칸 클릭으로 정답 확인 가능.",
+          "tags": [
+            { "label": "선사 시대", "color": "orange" },
+            { "label": "문명", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
+          "title": "02. 메소포타미아, 이집트, 지중해 문명",
+          "path": "세계사/02-메소포타미아-이집트/index.html",
+          "emoji": "🏛️",
+          "description": "메소포타미아 문명(바빌로니아·함무라비 법전), 이집트 문명(파라오·피라미드), 동부 지중해(히타이트·페니키아·헤브라이), 에게 문명. 빈칸 클릭으로 정답 확인 가능.",
+          "tags": [
+            { "label": "메소포타미아", "color": "orange" },
+            { "label": "이집트", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
           "title": "07. 불교의 성립과 인도의 통일 제국",
           "path": "세계사/07-불교성립-인도통일제국/index.html",
           "emoji": "☸️",
