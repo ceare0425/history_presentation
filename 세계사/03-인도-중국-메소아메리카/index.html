@@ -295,6 +295,11 @@
     .choice-list li.correct { background: var(--light); border-color: var(--accent); }
     .choice-num { font-family: 'Nanum Myeongjo', serif; font-weight: 700; color: var(--main); flex-shrink: 0; }
 
+    /* ── 선택지 2열 그리드 ── */
+    .choice-list-grid { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0.28rem; margin-top: 0.4rem; }
+    .choice-list-grid li { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.9rem; line-height: 1.6; padding: 0.28rem 0.6rem; border-radius: 3px; border: 1.5px solid transparent; }
+    .choice-list-grid li.correct { background: var(--light); border-color: var(--accent); }
+
     /* ── 표지 ── */
     .cover-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: 0.65rem; }
 
@@ -838,7 +843,7 @@
               </ul>
             </div>
 
-            <ul class="choice-list">
+            <ul class="choice-list-grid">
               <li><span class="choice-num">①</span> ㄱ</li>
               <li><span class="choice-num">②</span> ㄴ</li>
               <li><span class="choice-num">③</span> ㄱ, ㄷ</li>
@@ -877,7 +882,7 @@
           <div class="ruler-card-header">4 &nbsp;문명의 명칭과 해당 문명에 대한 설명의 연결이 옳은 것은? &nbsp;( &nbsp;&nbsp;&nbsp; )</div>
           <div class="ruler-card-body">
 
-            <ul class="choice-list">
+            <ul class="choice-list-grid">
               <li><span class="choice-num">①</span> 인도 문명 – 피라미드를 건축하였다.</li>
               <li><span class="choice-num">②</span> 인도 문명 – 카르타고와 같은 식민 도시를 건설하였다.</li>
               <li><span class="choice-num">③</span> 중국 문명 – 봉건제를 실시하였다.</li>
