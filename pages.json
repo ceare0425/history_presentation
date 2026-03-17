@@ -94,6 +94,19 @@
             { "label": "역사 수업", "color": "green" }
           ],
           "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
+          "title": "11. 로마의 발전과 크리스트교",
+          "path": "세계사/11-로마/index.html",
+          "emoji": "🏛️",
+          "description": "로마 공화정의 발달과 쇠퇴, 삼두 정치·제정 발전(Pax Romana)·쇠퇴, 크리스트교 등장과 확산, 실용적 로마 문화(법률·토목·건축). 빈칸 클릭으로 정답 확인 가능.",
+          "tags": [
+            { "label": "로마", "color": "orange" },
+            { "label": "크리스트교", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
         }
       ]
     }
