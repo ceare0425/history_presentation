@@ -1,6 +1,25 @@
 {
   "subjects": [
     {
+      "name": "한국사",
+      "emoji": "🏯",
+      "pages": [
+        {
+          "title": "선사 시대와 고조선 (8~23쪽)",
+          "path": "한국사/선사시대-고조선/index.html",
+          "emoji": "📜",
+          "description": "선사 시대(구석기·신석기·청동기·철기), 고조선 건국과 8조법, 삼국 통일과 발해, 고려 건국, 무신 정변과 몽골 침입. 빈칸을 포인터로 하나씩 열어 복습.",
+          "tags": [
+            { "label": "선사 시대", "color": "orange" },
+            { "label": "고조선", "color": "purple" },
+            { "label": "고려", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        }
+      ]
+    },
+    {
       "name": "세계사",
       "emoji": "🌍",
       "pages": [

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>한국사 복습 (8~23쪽)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --main:         #8B4513;
+      --dark:         #6B3010;
+      --light:        #FFF8E1;
+      --accent:       #C5A028;
+      --accent-light: #E8D080;
+      --bg:           #F5E6C4;
+      --text:         #2C1A0E;
+      --text-sec:     #6B4226;
+      --border:       #A07850;
+      --card-bg:      #FDF5E0;
+      --gray-200:     #D4B896;
+    }
+
+    html, body {
+      font-size: clamp(19px, 2vw, 34px);
+      font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif;
+      color: var(--text);
+      height: 100%;
+      overflow: hidden;
+    }
+    @media (max-width: 1024px) { html { font-size: clamp(16px, 2.4vw, 26px); } }
+    @media (max-width: 768px)  { html { font-size: clamp(14px, 3.4vw, 21px); } }
+
+    h1 { font-family: 'Nanum Myeongjo', serif; font-size: 2.2rem; font-weight: 800; letter-spacing: 0.04em; line-height: 1.3; }
+    h2 { font-family: 'Nanum Myeongjo', serif; font-size: 1.32rem; font-weight: 700; letter-spacing: 0.03em; }
+    p  { font-size: 1rem; line-height: 1.8; }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(160,120,60,0.04) 2px, rgba(160,120,60,0.04) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(140,100,40,0.06) 28px, rgba(140,100,40,0.06) 29px);
+    }
+
+    /* === 슬라이드 레이아웃 === */
+    .presentation {
+      position: fixed; inset: 0; bottom: 2.1rem;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0.65rem;
+    }
+    .slide { display: none; width: 100%; max-width: 1600px; height: 100%; }
+    .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+    /* === 카드 === */
+    .browser-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      outline: 4px solid var(--accent);
+      outline-offset: -7px;
+      border-radius: 4px;
+      box-shadow: 0 4px 28px rgba(44,26,14,0.2), inset 0 0 60px rgba(160,120,40,0.05);
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .browser-topbar {
+      background: linear-gradient(90deg, #8B4513 0%, #5C2808 45%, #8B4513 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: 0.36rem 1.1rem;
+      display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
+    }
+    .topbar-icon { font-size: 0.92rem; }
+    .browser-title {
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.07em;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+    .browser-content {
+      flex: 1; overflow-y: auto;
+      padding: 0.9rem 2rem 0.8rem;
+      display: flex; flex-direction: column;
+      justify-content: center;
+    }
+    .browser-content::-webkit-scrollbar { width: 4px; }
+    .browser-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* === 프로그레스 바 === */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--main));
+      z-index: 1000; transition: width 0.3s;
+    }
+
+    /* === 네비 바 === */
+    .nav-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem; padding: 0.28rem 1.5rem;
+      background: rgba(30,15,6,0.97);
+      border-top: 2px solid var(--accent);
+      z-index: 999; font-size: 14px;
+    }
+    .nav-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 1.7rem; height: 1.7rem;
+      border: 1.5px solid #8B6540; border-radius: 50%;
+      background: transparent; cursor: pointer;
+      color: var(--accent-light); transition: all 0.2s;
+      padding: 0; line-height: 1;
+    }
+    .nav-btn svg { width: 0.55rem; height: 0.55rem; fill: currentColor; display: block; }
+    .nav-btn:hover:not(:disabled) { background: var(--main); border-color: var(--accent); }
+    .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .nav-counter {
+      font-size: 13px; font-weight: 700; color: var(--accent-light);
+      min-width: 3rem; text-align: center;
+      display: flex; align-items: center; gap: 0.15rem; line-height: 1;
+    }
+    .slide-input {
+      width: 1.4rem; text-align: center; border: none;
+      border-bottom: 1.5px solid transparent;
+      background: transparent; font-size: 13px; font-weight: 700;
+      color: var(--accent-light); font-family: inherit;
+      padding: 0; outline: none; cursor: pointer; transition: border-color 0.2s; line-height: 1;
+    }
+    .slide-input:hover { border-bottom-color: var(--accent); }
+    .slide-input:focus { border-bottom-color: var(--accent); background: rgba(139,69,19,0.3); border-radius: 3px; }
+
+    /* === 장식 === */
+    .section-ornament { color: var(--accent); font-size: 0.7rem; letter-spacing: 0.5em; text-align: center; margin-bottom: 0.12rem; opacity: 0.75; }
+    .hist-divider { display: flex; align-items: center; gap: 0.4rem; margin: 0.22rem 0 0.45rem; }
+    .h-line { flex: 1; height: 1.5px; background: linear-gradient(90deg, transparent, var(--accent) 25%, var(--accent) 75%, transparent); }
+    .h-gem  { color: var(--accent); font-size: 0.68rem; line-height: 1; }
+    .era-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      border: 1px solid var(--accent);
+      padding: 0.06rem 0.42rem;
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em;
+      border-radius: 2px; white-space: nowrap;
+    }
+    .sec-label {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 0.82rem;
+      padding: 0.18rem 0.65rem; border-radius: 2px;
+      border: 1px solid var(--accent); margin-bottom: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    /* === 빈칸 === */
+    .blank {
+      display: inline-block;
+      min-width: 3.8rem;
+      background: linear-gradient(135deg, var(--main) 0%, var(--dark) 100%);
+      color: transparent;
+      border: 1.5px solid var(--accent);
+      border-radius: 2px;
+      padding: 0.04em 0.48em;
+      cursor: pointer;
+      font-family: 'Nanum Myeongjo', serif;
+      font-weight: 700; font-size: inherit;
+      transition: all 0.35s ease;
+      vertical-align: baseline;
+      user-select: none; position: relative;
+      text-align: center;
+    }
+    .blank::after {
+      content: '?';
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: 0.83em; font-weight: 800;
+      pointer-events: none; transition: opacity 0.25s;
+    }
+    .blank.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
+    .blank.on::after { opacity: 0; }
+
+    /* === 내용 리스트 === */
+    .content-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+    .content-list li {
+      display: flex; gap: 0.48rem; align-items: flex-start;
+      font-size: 1rem; line-height: 1.78;
+    }
+    .content-list li::before { content: '◆'; color: var(--accent); font-size: 0.68rem; margin-top: 0.5em; flex-shrink: 0; }
+
+    /* === 표지 === */
+    .cover-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: 0.5rem; }
+
+    /* === 목차 === */
+    .toc-list { display: flex; flex-direction: column; gap: 0.32rem; margin-top: 0.35rem; }
+    .toc-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.38rem 0.75rem;
+      border: 1px solid var(--gray-200); border-radius: 3px;
+      cursor: pointer; transition: all 0.2s; background: var(--card-bg);
+    }
+    .toc-item:hover { background: var(--light); border-color: var(--accent); transform: translateX(4px); }
+    .toc-num {
+      background: var(--main); color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: 0.8rem;
+      min-width: 1.55rem; height: 1.55rem; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .toc-title { font-weight: 700; font-size: 0.9rem; }
+    .toc-desc  { font-size: 0.78rem; color: var(--text-sec); }
+
+    /* === 미니 카드 그리드 === */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .mini-card {
+      background: var(--light); border: 1.5px solid var(--border);
+      border-radius: 3px; padding: 0.45rem 0.65rem;
+    }
+    .mini-card h3 { font-family: 'Nanum Myeongjo', serif; font-size: 0.88rem; color: var(--main); margin-bottom: 0.18rem; font-weight: 700; }
+    .mini-card p  { font-size: 0.82rem; color: var(--text-sec); line-height: 1.6; }
+
+    /* === 힌트 박스 === */
+    .hint-box {
+      background: rgba(197,160,40,0.07);
+      border-left: 4px solid var(--accent);
+      padding: 0.38rem 0.8rem 0.38rem 0.9rem;
+      margin-top: 0.55rem; border-radius: 0 3px 3px 0;
+      font-size: 0.85rem; line-height: 1.65; color: var(--text-sec);
+      flex-shrink: 0;
+    }
+
+    /* === 마무리 === */
+    .end-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: 0.45rem; }
+
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .browser-content { padding: 0.65rem 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ══ 슬라이드 1: 표지 ══ -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📜</span>
+      <span class="browser-title">한국사 교과서 복습 · 8~23쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">한국사 · 교과서 8~23쪽</span>
+        <h1 style="margin-top:0.25rem;">고대 국가의 성장<br>고려의 통치 체제와 정치 변동</h1>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec); font-size:0.93rem; line-height:2.0;">
+          선사 시대 · 고조선 · 여러 나라 · 삼국 발전<br>
+          삼국 통일 · 발해 · 고려 건국 · 무신 정변
+        </p>
+        <p style="color:var(--text-sec); font-size:0.82rem; margin-top:0.25rem;">
+          📌 <strong style="color:var(--main);">포인터 다음 버튼</strong>을 누르면 빈칸이 하나씩 열립니다
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 2: 목차 ══ -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📋</span>
+      <span class="browser-title">학습 목차</span>
+    </div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center; margin-bottom:0.12rem;">학습 내용</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="toc-list">
+        <div class="toc-item" onclick="goToSlide(2)">
+          <div class="toc-num">1</div>
+          <div><div class="toc-title">선사 시대 — 구석기·신석기·청동기·철기</div><div class="toc-desc">pp.8~9</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(4)">
+          <div class="toc-num">2</div>
+          <div><div class="toc-title">고조선의 성립·발전·멸망 + 여러 나라</div><div class="toc-desc">pp.9~10</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(6)">
+          <div class="toc-num">3</div>
+          <div><div class="toc-title">삼국의 발전과 통치 체제 정비</div><div class="toc-desc">pp.11~13</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(8)">
+          <div class="toc-num">4</div>
+          <div><div class="toc-title">신라의 삼국 통일 + 통일 신라 + 발해</div><div class="toc-desc">pp.14~16</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(11)">
+          <div class="toc-num">5</div>
+          <div><div class="toc-title">고려 건국·통일·통치 체제</div><div class="toc-desc">pp.18~20</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(13)">
+          <div class="toc-num">6</div>
+          <div><div class="toc-title">이자겸·묘청·무신 정변·몽골 침입</div><div class="toc-desc">pp.21~23</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 선사 시대 ① — 구석기·신석기 ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🪨</span>
+      <span class="browser-title">선사 시대 — 구석기·신석기 시대 | pp.8~9</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">선사 문화의 전개</div>
+      <ul class="content-list">
+        <li>만주와 한반도 일대에서는 약 <span class="blank">70만</span> 년 전부터 사람들이 살기 시작하면서 구석기 문화가 성장하였다.</li>
+        <li>구석기인은 <span class="blank">뗀석기</span>를 사용하였고, 채집과 사냥 등으로 식량을 구하였다. 이들은 주로 동굴이나 바위 그늘에 거주하며 무리 지어 이동 생활을 하였다.</li>
+        <li>만주와 한반도 일대의 신석기 문화는 약 <span class="blank">1만</span> 년 전부터 시작되었다. 신석기인은 <span class="blank">간석기</span>를 사용하였으며, 토기를 만들어 곡식을 보관하고 음식을 조리하였다.</li>
+        <li>이들은 <span class="blank">농경</span>과 목축을 시작하면서 한곳에 정착하였는데, 주로 강가나 바닷가에 움집을 짓고 씨족 단위로 마을을 형성하였다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 선사 시대 ② — 청동기·철기 ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚔️</span>
+      <span class="browser-title">선사 시대 — 청동기·철기 시대 | pp.8~9</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">청동기 문화의 발달</div>
+      <ul class="content-list">
+        <li>만주 지역에서는 기원전 <span class="blank">2000</span>년경에서 기원전 <span class="blank">1500</span>년경에 청동기 문화가 시작되었다. 청동기 시대에는 생산력이 높아져 잉여 생산물이 생겼고, 마을의 규모가 커졌다.</li>
+        <li>이 과정에서 <span class="blank">계급</span>이 발생하고, <span class="blank">군장</span>이 등장하였으며, 집단 간 세력의 차이도 생겼다.</li>
+        <li>기원전 5세기경부터 만주와 한반도 지역에서 철기 문화가 성장하였다. <span class="blank">철제 농기구</span>의 사용으로 농업 생산력이 더욱 증가하였고, 철제 무기가 보급되면서 부족 간 전쟁이 늘어났다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 고조선 성립 ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏛️</span>
+      <span class="browser-title">고조선의 성립과 발전 | pp.9</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">고조선의 성립과 발전</div>
+      <ul class="content-list">
+        <li>만주와 한반도 서북부 지역에서 청동기 문화가 발전하는 가운데 우리 역사상 최초의 국가인 <span class="blank">고조선</span>이 성립하였다.</li>
+        <li>'<span class="blank">단군왕검</span>'이라는 제정일치의 지배자가 통치하였다. 고조선에는 <span class="blank">8조법</span>이 있었는데, 현재 전하는 법 조항들로 고조선의 사회 모습을 짐작할 수 있다.</li>
+        <li>기원전 2세기경 중국에서 건너온 <span class="blank">위만</span>은 세력을 키워 준왕을 몰아내고 왕위를 차지하였다. 이후 고조선은 철기 문화를 본격적으로 수용하였으며, 중계 무역을 실시하여 경제적으로 성장하였다.</li>
+        <li>그러나 중국의 <span class="blank">한(漢)</span>이 고조선을 침략하였고, 고조선은 1년여 동안 항쟁하다가 멸망하였다(기원전 <span class="blank">108</span>).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 여러 나라의 성장 ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🗺️</span>
+      <span class="browser-title">여러 나라의 성장 | pp.10</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">여러 나라의 성장</div>
+      <ul class="content-list">
+        <li>만주 쑹화강의 평야 지대에 자리 잡은 <span class="blank">부여</span>는 왕이 중앙을 다스렸고, 여러 가(加)들이 <span class="blank">사출도</span>를 관할하며 지배력을 행사하였다.</li>
+        <li>함경도와 강원도의 해안 지역에 자리 잡은 옥저와 <span class="blank">동예</span>는 왕이 없었고, <span class="blank">읍군</span>이나 삼로라 불린 군장이 부족을 다스렸다.</li>
+        <li>한반도 남부에서는 마한, 진한, 변한의 <span class="blank">삼한</span>이 성립하였다. 삼한은 정치와 종교가 분리된 사회로, <span class="blank">천군</span>이라는 제사장이 천신에 대한 제사를 주관하였으며, <span class="blank">소도</span>라는 신성 지역도 있었다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 삼국의 발전 ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔱</span>
+      <span class="browser-title">삼국의 발전 | pp.12</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">삼국의 발전과 경쟁</div>
+      <ul class="content-list">
+        <li>백제는 3세기경 <span class="blank">고이왕</span> 때 마한의 소국들을 공격하여 한강 유역을 장악하였다. 4세기 중엽 <span class="blank">근초고왕</span>은 마한의 남은 세력을 복속시키고 고구려의 평양성을 공격하는 등 최대 영토를 확보하였다.</li>
+        <li>4세기 말 고구려 <span class="blank">광개토 대왕</span>은 백제를 공격하여 한강 이북의 영토를 차지하는 한편, 신라에 침입한 왜를 물리치고 금관가야까지 공격하였다.</li>
+        <li>신라 <span class="blank">진흥왕</span>은 인재를 양성하고자 <span class="blank">화랑도</span>를 국가적 조직으로 개편하고, 영토를 확장하여 한강 유역을 모두 장악하였다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: 삼국 통치 체제 정비 ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📜</span>
+      <span class="browser-title">삼국의 통치 체제 정비 | pp.13</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">삼국의 통치 체제 정비</div>
+      <ul class="content-list">
+        <li>삼국은 국가 운영의 기틀이 되는 <span class="blank">율령</span>을 반포하고, <span class="blank">관등제</span>를 정비하여 각 부의 지배 세력을 중앙 귀족으로 만들었다.</li>
+        <li>백제는 <span class="blank">무령왕</span> 때 지방 22<span class="blank">담로</span>에 왕족을 보냈고, 성왕 때는 전국을 5개의 방으로 나누었다.</li>
+        <li>신라 <span class="blank">법흥왕</span> 때는 율령을 반포하고 관리의 공복을 정하였으며, <span class="blank">상대등</span>을 설치하여 국정을 총괄하고 귀족 회의를 주재하게 하였다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 신라의 삼국 통일 ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌟</span>
+      <span class="browser-title">신라의 삼국 통일 | pp.14</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">신라의 삼국 통일</div>
+      <ul class="content-list">
+        <li>7세기 중반 백제가 신라를 공격하자 신라는 <span class="blank">당(唐)</span>과 동맹을 맺었다. 나당 연합군은 먼저 백제를 공격하여 사비성을 함락하였다(<span class="blank">660</span>).</li>
+        <li>이어 고구려를 공격하여 평양성을 함락하였다(<span class="blank">668</span>).</li>
+        <li>이후 당이 한반도 전체를 지배하려 하자 신라는 고구려 유민 등과 힘을 합쳐 당의 세력을 내몰고 삼국을 통일하였다(<span class="blank">676</span>).</li>
+      </ul>
+      <div class="hint-box">흐름: 나당 연합 결성 → 백제 멸망(660) → 고구려 멸망(668) → 매소성·기벌포 전투 → 삼국 통일(676)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 10: 통일 신라의 통치 체제 ══ -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏯</span>
+      <span class="browser-title">통일 신라의 통치 체제 | pp.14~15</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">통일 신라의 통치 체제 정비</div>
+      <ul class="content-list">
+        <li>통일 이후 신라는 중앙 정치 조직을 왕의 직속 기구인 <span class="blank">집사부</span>를 중심으로 운영하였으며, 그 장관인 <span class="blank">시중</span>이 왕명을 받들어 국정을 책임지게 하였다.</li>
+        <li>신라는 지방 행정 조직을 <span class="blank">9주 5소경</span> 체제로 정비하였다. 전국을 9주로 나누고, 지방 행정의 요충지에는 5소경을 설치하였다.</li>
+        <li>군사 조직도 정비하여 중앙군으로 <span class="blank">9서당</span>, 지방군으로 <span class="blank">10정</span>을 설치하였다. 9서당에는 신라인뿐만 아니라 고구려 유민, 백제 유민, 말갈인도 포함하였다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 11: 발해의 성장 ══ -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌊</span>
+      <span class="browser-title">발해의 성장 | pp.16</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">발해의 성장과 멸망</div>
+      <ul class="content-list">
+        <li>고구려 멸망 이후 <span class="blank">대조영</span>은 고구려 유민과 말갈인을 이끌고 만주 <span class="blank">동모산</span>에서 발해를 세웠다(<span class="blank">698</span>). 발해는 고구려인이 지배층의 핵심을 이루어 고구려 계승 의식이 강하였다.</li>
+        <li>9세기 <span class="blank">선왕</span> 때 최대 영토를 확보한 발해는 '바다 동쪽의 융성한 나라'라는 뜻의 '<span class="blank">해동성국</span>'으로 불리며 전성기를 맞았다.</li>
+        <li>그러나 10세기경 동아시아의 정세 변화에 적절히 대응하지 못하여 결국 <span class="blank">거란</span>에 멸망하였다(<span class="blank">926</span>).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 12: 고려 건국과 통일 ══ -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👑</span>
+      <span class="browser-title">고려의 건국과 후삼국 통일 | pp.18</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">고려가 후삼국을 통일하다</div>
+      <ul class="content-list">
+        <li>호족들은 <span class="blank">왕건</span>을 왕으로 추대하였다. 태조 왕건은 나라 이름을 고려라 정하고(<span class="blank">918</span>), 이듬해 수도를 <span class="blank">송악</span>(개성)으로 옮겼다.</li>
+        <li>신라의 경순왕이 고려에 통합을 요청하자 이를 받아들였다(<span class="blank">935</span>). 마침내 고려군은 후백제군을 격파하고 후삼국을 통일하였다(<span class="blank">936</span>).</li>
+        <li>후삼국 통일로 고려는 민족의 재통합을 이루었고, 민족 문화 발전의 토대를 마련하였다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 13: 고려 왕권 강화와 통치 체제 ══ -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚖️</span>
+      <span class="browser-title">고려의 왕권 강화와 통치 체제 | pp.19~20</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">왕권 강화와 체제 안정</div>
+      <ul class="content-list">
+        <li><span class="blank">광종</span>은 <span class="blank">노비안검법</span>을 실시하고, <span class="blank">과거제</span>를 도입하는 등 개혁을 추진하였다. 또한 황제를 칭하였으며, 독자적인 연호를 제정하였다.</li>
+        <li>고려는 당의 3성 6부제를 나라의 실정에 맞게 고쳐 <span class="blank">2성 6부</span>의 중앙 정치 제도를 갖추었다. <span class="blank">중서문하성</span>이 국정을 총괄하였고, 상서성이 6부를 관리하며 정책을 집행하였다.</li>
+        <li>고려는 전국을 경기, <span class="blank">5도</span>와 <span class="blank">양계</span>로 나누어 통치하였다. 일반 행정 구역인 5도에는 <span class="blank">안찰사</span>를 보내 행정을 살폈고, 군사적으로 중요한 양계에는 병마사를 보냈다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 14: 이자겸의 난·묘청의 난 ══ -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚡</span>
+      <span class="browser-title">이자겸의 난·묘청의 서경 천도 운동 | pp.21</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">문벌 사회가 무너지다</div>
+      <ul class="content-list">
+        <li>대표적 문벌 출신인 <span class="blank">이자겸</span>이 왕실의 외척으로 막강한 권력을 누리자, <span class="blank">척준경</span> 등과 반란을 일으켜 스스로 왕이 되려 하였다(이자겸의 난, <span class="blank">1126</span>).</li>
+        <li>이자겸의 난 이후 서경 세력인 <span class="blank">묘청</span>은 풍수 도참사상을 내세워 서경으로 천도하고 금을 정벌할 것을 주장하였다. 결국 인종이 서경 천도를 포기하자 묘청은 서경에서 반란을 일으켰다(<span class="blank">1135</span>).</li>
+        <li><span class="blank">김부식</span>이 이끄는 관군은 토벌에 나서 서경을 함락하고 묘청 세력을 진압하였다.</li>
+      </ul>
+      <div class="hint-box">흐름: 이자겸의 난(1126) → 묘청의 난(1135) → 무신 정변(1170)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 15: 무신 정변과 봉기 ══ -->
+<div class="slide" data-slide="14">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🛡️</span>
+      <span class="browser-title">무신 정변과 농민·천민의 봉기 | pp.22</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">무신 정권의 수립</div>
+      <ul class="content-list">
+        <li>무신에 대한 차별에 불만을 품고 있던 <span class="blank">정중부</span>·이의방 등의 무신은 의종의 보현원 행차 때 <span class="blank">무신 정변</span>을 일으켜 무신 정권을 수립하였다(<span class="blank">1170</span>).</li>
+        <li><span class="blank">최충헌</span>은 사병 조직인 도방을 확대하고, <span class="blank">교정도감</span>을 설치하여 정책을 결정하였다. 집권한 <span class="blank">최우</span>는 자신의 집에 <span class="blank">정방</span>을 설치하여 인사권을 장악하였다.</li>
+        <li>사노비인 <span class="blank">만적</span>도 누구나 고위 관리가 될 수 있다고 주장하며 개경에서 신분 해방 운동을 시도하였으나 사전에 발각되어 실패하였다(<span class="blank">1198</span>).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 16: 몽골 침입과 무신 정권의 몰락 ══ -->
+<div class="slide" data-slide="15">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏹</span>
+      <span class="browser-title">몽골의 침입과 무신 정권의 몰락 | pp.23</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-label">무신 정권의 몰락</div>
+      <ul class="content-list">
+        <li>13세기경 <span class="blank">몽골</span>이 고려를 침입하자, 최우는 수도를 <span class="blank">강화도</span>로 옮겨 몽골에 항전하였다.</li>
+        <li>그러나 전쟁이 길어지자 일부 무신과 문신들은 항전을 주장하는 최씨 정권을 무너뜨리고 몽골과의 강화를 추진하였다.</li>
+        <li>당시 고려 태자였던 원종은 쿠빌라이와 강화를 맺었고, 이후 고려 정부는 <span class="blank">개경</span>으로 돌아왔다(<span class="blank">1270</span>).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 17: 핵심 연표 정리 ══ -->
+<div class="slide" data-slide="16">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✦</span>
+      <span class="browser-title">핵심 연표 정리</span>
+    </div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center; margin-bottom:0.1rem;">핵심 연표 정리</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2" style="margin-top:0.2rem;">
+        <div class="mini-card">
+          <h3>선사 시대</h3>
+          <p>약 70만 년 전 구석기 시작<br>약 1만 년 전 신석기 시작<br>기원전 2000~1500년경 청동기 시작</p>
+        </div>
+        <div class="mini-card">
+          <h3>고조선 · 여러 나라</h3>
+          <p>단군왕검 고조선 건국(기원전 2333)<br>위만 집권 → 한에 멸망(기원전 108)<br>부여·옥저·동예·삼한 성립</p>
+        </div>
+        <div class="mini-card">
+          <h3>삼국 통일 · 발해</h3>
+          <p>백제 멸망(660) · 고구려 멸망(668)<br>신라 삼국 통일(676)<br>발해 건국(698) · 거란에 멸망(926)</p>
+        </div>
+        <div class="mini-card">
+          <h3>고려</h3>
+          <p>왕건 고려 건국(918) · 후삼국 통일(936)<br>이자겸의 난(1126) · 묘청의 난(1135)<br>무신 정변(1170) · 만적(1198) · 개경 환도(1270)</p>
+        </div>
+      </div>
+      <p style="text-align:center; color:var(--text-sec); font-size:0.82rem; margin-top:0.55rem;">수고하셨습니다 ◆</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="back()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호"> / <span id="totalSlides">17</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="advance()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const total  = slides.length;
+  let currentSlide = 0;
+
+  document.getElementById('totalSlides').textContent = total;
+
+  function getRevealables() {
+    return [...slides[currentSlide].querySelectorAll('.blank')];
+  }
+
+  function revealNext() {
+    const next = getRevealables().find(el => !el.classList.contains('on'));
+    if (next) { next.classList.add('on'); updateSlide(); return true; }
+    return false;
+  }
+
+  function hideLastRevealed() {
+    const list = getRevealables().filter(el => el.classList.contains('on'));
+    if (list.length > 0) { list[list.length - 1].classList.remove('on'); updateSlide(); return true; }
+    return false;
+  }
+
+  function nextSlide() { if (currentSlide < total - 1) { currentSlide++; updateSlide(); } }
+  function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlide(); } }
+  function goToSlide(i) { if (i >= 0 && i < total) { currentSlide = i; updateSlide(); } }
+
+  function advance() { if (!revealNext()) nextSlide(); }
+  function back() {
+    const list = getRevealables().filter(el => el.classList.contains('on'));
+    if (list.length > 0) hideLastRevealed();
+    else prevSlide();
+  }
+
+  function updateSlide() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+    document.getElementById('slideInput').value = currentSlide + 1;
+    const revealed = getRevealables().filter(el => el.classList.contains('on'));
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && revealed.length === 0;
+    const hidden = getRevealables().filter(el => !el.classList.contains('on'));
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && hidden.length === 0;
+  }
+
+  // 빈칸 클릭으로 개별 토글
+  document.addEventListener('click', e => {
+    if (e.target.classList.contains('blank')) {
+      e.target.classList.toggle('on');
+      updateSlide();
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.target.id === 'slideInput') return;
+    if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); advance(); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); back(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End')  goToSlide(total - 1);
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) { diff > 0 ? advance() : back(); }
+  });
+
+  const si = document.getElementById('slideInput');
+  si.addEventListener('focus', () => si.select());
+  si.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const v = parseInt(si.value);
+      if (!isNaN(v) && v >= 1 && v <= total) goToSlide(v - 1);
+      else si.value = currentSlide + 1;
+      si.blur();
+    }
+    if (e.key === 'Escape') { si.value = currentSlide + 1; si.blur(); }
+  });
+  si.addEventListener('blur', () => {
+    const v = parseInt(si.value);
+    if (!isNaN(v) && v >= 1 && v <= total) goToSlide(v - 1);
+    else si.value = currentSlide + 1;
+  });
+
+  updateSlide();
+</script>
+</body>
+</html>
