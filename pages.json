@@ -126,6 +126,19 @@
             { "label": "역사 수업", "color": "green" }
           ],
           "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
+          "title": "12. 서유럽 봉건 사회와 비잔티움 제국의 발전",
+          "path": "세계사/12-서유럽봉건사회와비잔티움제국/index.html",
+          "emoji": "🏰",
+          "description": "프랑크 왕국(카롤루스 마르텔·카롤루스 대제), 서유럽 봉건 사회 성립, 교황과 황제의 대립(카노사의 굴욕·보름스 협약), 중세 문화(로마네스크·고딕), 비잔티움 제국 발전과 멸망. 빈칸 클릭으로 정답 확인 가능.",
+          "tags": [
+            { "label": "봉건 사회", "color": "orange" },
+            { "label": "비잔티움", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
         }
       ]
     }

@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>12. 서유럽 봉건 사회와 비잔티움 제국의 발전</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main:#8B4513; --dark:#6B3010; --light:#FFF8E1; --accent:#C5A028;
+      --accent-light:#E8D080; --bg:#F5E6C4; --text:#2C1A0E; --text-sec:#6B4226;
+      --border:#A07850; --card-bg:#FDF5E0;
+    }
+    html, body { font-size: clamp(20px, 2.2vw, 36px); font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif; color: var(--text); height: 100%; overflow: hidden; }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+    h1 { font-family:'Nanum Myeongjo',serif; font-size:2.3rem; font-weight:800; letter-spacing:.04em; line-height:1.3; }
+    h2 { font-family:'Nanum Myeongjo',serif; font-size:1.35rem; font-weight:700; letter-spacing:.04em; }
+    h3 { font-family:'Nanum Myeongjo',serif; font-size:1rem; font-weight:700; }
+    p  { font-size:.95rem; line-height:1.7; }
+
+    body { background-color:var(--bg); background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(160,120,60,.04) 2px,rgba(160,120,60,.04) 4px), repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(140,100,40,.06) 28px,rgba(140,100,40,.06) 29px); }
+
+    .presentation { position:fixed; inset:0; bottom:2.2rem; display:flex; align-items:center; justify-content:center; padding:.8rem; }
+    .slide { display:none; width:100%; max-width:1600px; height:100%; }
+    .slide.active { display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    .browser-card { background:var(--card-bg); border:2px solid var(--border); outline:4px solid var(--accent); outline-offset:-7px; border-radius:4px; box-shadow:0 4px 28px rgba(44,26,14,.2),inset 0 0 60px rgba(160,120,40,.05); width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    .browser-topbar { background:linear-gradient(90deg,#8B4513 0%,#5C2808 45%,#8B4513 100%); border-bottom:2px solid var(--accent); padding:.4rem 1.1rem; display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+    .topbar-icon { font-size:.95rem; }
+    .browser-title { color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-size:.82rem; font-weight:700; letter-spacing:.07em; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+    .browser-content { flex:1; overflow-y:auto; padding:.9rem 1.8rem; display:flex; flex-direction:column; }
+    .browser-content::-webkit-scrollbar { width:4px; }
+    .browser-content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+    .progress-bar { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--main)); z-index:1000; transition:width .3s; }
+    .nav-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.3rem 1.5rem; background:rgba(30,15,6,.97); border-top:2px solid var(--accent); z-index:999; font-size:14px; }
+    .nav-btn { display:flex; align-items:center; justify-content:center; width:1.7rem; height:1.7rem; border:1.5px solid #8B6540; border-radius:50%; background:transparent; cursor:pointer; color:var(--accent-light); transition:all .2s; padding:0; }
+    .nav-btn svg { width:.55rem; height:.55rem; fill:currentColor; display:block; }
+    .nav-btn:hover:not(:disabled) { background:var(--main); border-color:var(--accent); }
+    .nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .nav-counter { font-size:13px; font-weight:700; color:var(--accent-light); min-width:3rem; text-align:center; display:flex; align-items:center; gap:.15rem; }
+    .slide-input { width:1.4rem; text-align:center; border:none; border-bottom:1.5px solid transparent; background:transparent; font-size:13px; font-weight:700; color:var(--accent-light); font-family:inherit; padding:0; outline:none; cursor:pointer; transition:border-color .2s; }
+    .slide-input:hover { border-bottom-color:var(--accent); }
+    .slide-input:focus { border-bottom-color:var(--accent); background:rgba(139,69,19,.3); border-radius:3px; }
+
+    .section-ornament { color:var(--accent); font-size:.72rem; letter-spacing:.5em; text-align:center; margin-bottom:.2rem; opacity:.75; }
+    .hist-divider { display:flex; align-items:center; gap:.4rem; margin:.25rem 0 .55rem; }
+    .h-line { flex:1; height:1.5px; background:linear-gradient(90deg,transparent,var(--accent) 25%,var(--accent) 75%,transparent); }
+    .h-gem  { color:var(--accent); font-size:.7rem; }
+    .era-badge { display:inline-block; background:linear-gradient(135deg,var(--main),var(--dark)); color:var(--accent-light); border:1px solid var(--accent); padding:.05rem .4rem; font-family:'Nanum Myeongjo',serif; font-size:.8rem; font-weight:700; border-radius:2px; white-space:nowrap; }
+
+    .ruler-card { border:1.5px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:.5rem; }
+    .ruler-card-header { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.9rem; padding:.35rem .8rem; display:flex; align-items:center; gap:.4rem; }
+    .ruler-card-body { padding:.6rem .9rem; background:var(--card-bg); }
+    .mini-card { background:var(--light); border:1.5px solid var(--border); border-radius:3px; padding:.55rem .8rem; }
+    .mini-card h3 { font-size:.92rem; color:var(--main); margin-bottom:.22rem; }
+    .mini-card p  { font-size:.9rem; color:var(--text-sec); line-height:1.6; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }
+    .info-list { list-style:none; display:flex; flex-direction:column; gap:.48rem; }
+    .info-list li { display:flex; gap:.45rem; align-items:flex-start; font-size:.95rem; line-height:1.65; }
+    .info-list li::before { content:'◆'; color:var(--accent); font-size:.62rem; margin-top:.42em; flex-shrink:0; }
+    .highlight-box { background:var(--light); border-left:4px solid var(--accent); border-right:1px solid var(--border); padding:.52rem .9rem .52rem 1rem; margin:.35rem 0 0; border-radius:0 3px 3px 0; font-size:.92rem; line-height:1.65; }
+    .highlight-box strong { color:var(--main); }
+    .flow-list { display:flex; flex-direction:column; gap:.3rem; }
+    .flow-item { display:flex; align-items:flex-start; gap:.45rem; font-size:.92rem; line-height:1.6; }
+    .flow-arrow { color:var(--accent); font-size:.75rem; flex-shrink:0; margin-top:.32em; }
+
+    .blank { display:inline-block; min-width:4.5rem; background:linear-gradient(135deg,var(--main),var(--dark)); color:transparent; border:1.5px solid var(--accent); border-radius:2px; padding:.05em .55em; cursor:pointer; font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:inherit; transition:all .35s; user-select:none; position:relative; text-align:center; vertical-align:baseline; }
+    .blank::after { content:'?'; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); color:var(--accent-light); font-size:.85em; font-weight:800; pointer-events:none; transition:opacity .25s; }
+    .blank.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .blank.on::after { opacity:0; }
+
+    .ans-btn { display:inline-block; background:linear-gradient(135deg,var(--main),var(--dark)); color:transparent; border:1.5px solid var(--accent); border-radius:2px; padding:.1em .85em; cursor:pointer; font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.88rem; transition:all .35s; user-select:none; position:relative; text-align:center; white-space:nowrap; vertical-align:baseline; }
+    .ans-btn::after { content:'정답'; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); color:var(--accent-light); font-size:.78em; font-weight:700; pointer-events:none; transition:opacity .25s; white-space:nowrap; }
+    .ans-btn.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity:0; }
+
+    .quiz-wrap { display:flex; flex-direction:column; gap:.45rem; margin-top:.3rem; }
+    .quiz-row { display:flex; align-items:flex-start; gap:.65rem; border:1.5px solid var(--border); border-radius:3px; padding:.48rem .85rem; background:var(--card-bg); }
+    .quiz-row.col { flex-direction:column; gap:.3rem; }
+    .quiz-row.col .inner { display:flex; gap:.65rem; align-items:flex-start; }
+    .quiz-row.col .opts { padding-left:2.15rem; font-size:.88rem; line-height:1.7; }
+    .q-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.8rem; min-width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.12em; }
+    .q-text { flex:1; font-size:.9rem; line-height:1.75; }
+    .bogi { border:1px solid var(--border); border-radius:2px; padding:.25rem .6rem; margin:.25rem 0; font-size:.88rem; line-height:1.7; background:var(--light); }
+
+    .cover-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.65rem; }
+    .toc-list { display:flex; flex-direction:column; gap:.42rem; margin-top:.35rem; }
+    .toc-item { display:flex; align-items:center; gap:.7rem; padding:.45rem .85rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); cursor:pointer; transition:all .2s; }
+    .toc-item:hover { background:var(--light); border-color:var(--accent); transform:translateX(4px); }
+    .toc-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.82rem; min-width:1.65rem; height:1.65rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .toc-title { font-weight:700; font-size:.92rem; }
+    .toc-desc  { font-size:.82rem; color:var(--text-sec); }
+
+    .sum-table { width:100%; border-collapse:collapse; font-size:.88rem; }
+    .sum-table th { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); padding:.38rem .7rem; text-align:left; font-family:'Nanum Myeongjo',serif; }
+    .sum-table td { padding:.38rem .7rem; border-bottom:1px solid var(--border); line-height:1.6; vertical-align:top; }
+    .sum-table tr:nth-child(even) td { background:var(--light); }
+
+    .quiz-wrap.plain .quiz-row { border:none; background:transparent; padding:.4rem 0; }
+    .quiz-wrap.plain .quiz-row.col { border:none; background:transparent; padding:.4rem 0; }
+
+    @media (max-width:768px) { .grid-2 { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- 1. 표지 -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏰</span><span class="browser-title">세계사 · Ⅰ-3. 서아시아·지중해·유럽 세계의 형성</span></div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 56~60쪽</span>
+        <h1 style="margin-top:.3rem;">4. 서유럽 봉건 사회와<br>비잔티움 제국의 발전</h1>
+        <div class="hist-divider" style="width:60%;margin:0 auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.95rem;line-height:2;">프랑크 왕국 · 봉건 사회 · 크리스트교 · 비잔티움 제국</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. 목차 -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">📋</span><span class="browser-title">학습 내용 목차</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.2rem;">학습 내용 목차</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="toc-list">
+        <div class="toc-item" onclick="goToSlide(2)"><div class="toc-num">1</div><div><div class="toc-title">프랑크 왕국의 성립과 발전</div><div class="toc-desc">메로베우스 왕조 · 카롤루스 대제 · 3국 분열</div></div></div>
+        <div class="toc-item" onclick="goToSlide(6)"><div class="toc-num">2</div><div><div class="toc-title">서유럽 봉건 사회의 성립</div><div class="toc-desc">노르만족 이동 · 주종 관계 · 장원제</div></div></div>
+        <div class="toc-item" onclick="goToSlide(8)"><div class="toc-num">3</div><div><div class="toc-title">크리스트교의 성장</div><div class="toc-desc">성상 숭배 금지령 · 로마 가톨릭 vs 그리스 정교회</div></div></div>
+        <div class="toc-item" onclick="goToSlide(10)"><div class="toc-num">4</div><div><div class="toc-title">교황과 황제의 대립</div><div class="toc-desc">클뤼니 수도원 · 카노사의 굴욕 · 보름스 협약</div></div></div>
+        <div class="toc-item" onclick="goToSlide(12)"><div class="toc-num">5</div><div><div class="toc-title">중세 서유럽의 문화</div><div class="toc-desc">교부 철학 · 스콜라 철학 · 로마네스크 · 고딕 양식</div></div></div>
+        <div class="toc-item" onclick="goToSlide(14)"><div class="toc-num">6</div><div><div class="toc-title">비잔티움 제국의 발전과 문화</div><div class="toc-desc">유스티니아누스 · 군관구제 · 그리스 정교 · 성 소피아 성당</div></div></div>
+        <div class="toc-item" onclick="goToSlide(19)"><div class="toc-num">✏</div><div><div class="toc-title">개념 확인 문제</div><div class="toc-desc">26쪽 4문제 · 28쪽 3문제</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. 프랑크 왕국의 등장 -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏰</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">1. 프랑크 왕국의 성립과 발전</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(1) 프랑크 왕국의 등장</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ 프랑크 왕국의 등장</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>게르만족의 이동: <span class="era-badge">4세기 후반</span>부터 이동 → 서로마 제국 곳곳에 국가 건립</li>
+            <li>프랑크 왕국: <strong>갈리아 지방</strong>에서 성장</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. 메로베우스 왕조 -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏰</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">1. 프랑크 왕국의 성립과 발전</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 메로베우스 왕조</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 메로베우스 왕조</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>클로비스</strong>: 메로베우스 왕조 건립, <strong>로마 가톨릭</strong>으로 개종</li>
+            <li><span class="blank">카롤루스 마르텔</span>: 궁재(宮宰)로서 실권 장악
+              → <strong>투르·푸아티에 전투</strong> <span class="era-badge">732년</span> 승리 — 이슬람 세력 격퇴</li>
+            <li><strong>피핀</strong>: 카롤루스 마르텔의 아들, 새 왕조 건립
+              → 이탈리아 중부 지역을 교황에게 헌납 → <strong>교황령의 시초</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. 카롤루스 대제 -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏰</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">1. 프랑크 왕국의 성립과 발전</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(3) 카롤루스 왕조 — 카롤루스 대제</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚜️ 카롤루스 대제 (Charlemagne)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>영토 확장 → 서유럽 대부분 통합</li>
+            <li><span class="blank">크리스트교</span> 보급 + 궁정 학교 건립 → <strong>카롤루스 르네상스</strong></li>
+            <li><span class="era-badge">800년</span> 교황에게 <strong>서로마 황제</strong>로 대관(戴冠) — 교회와 왕권의 결합</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6. 3국 분열 + 역사적 의미 -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏰</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">1. 프랑크 왕국의 성립과 발전</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(4) 카롤루스 대제 사후 — 3국 분열</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🗺️ 카롤루스 대제 사후 — 3국 분열</div>
+        <div class="ruler-card-body">
+          <div class="flow-list">
+            <div class="flow-item"><span class="flow-arrow">▶</span> <strong>서프랑크</strong> → 프랑스의 기원</div>
+            <div class="flow-item"><span class="flow-arrow">▶</span> <strong>중프랑크</strong> → 이탈리아의 기원</div>
+            <div class="flow-item"><span class="flow-arrow">▶</span> <strong>동프랑크</strong> → 독일(신성 로마 제국)의 기원</div>
+          </div>
+        </div>
+      </div>
+      <div class="highlight-box">📜 <strong>역사적 의미</strong>: 게르만 문화 + 로마 문화 + 크리스트교 → <strong>중세 서유럽 문화의 기틀</strong> 마련</div>
+    </div>
+  </div>
+</div>
+
+<!-- 7. 봉건 사회 — 배경 -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">⚔️</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">2. 서유럽 봉건 사회의 성립</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(1) 배경 — 외침의 혼란</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌊 배경 — 외침의 혼란</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>노르만족</strong>의 이동: 9세기경 북유럽 → 남쪽으로 이동
+              → 키예프 공국 · 노르망디 공국 · 노르만 왕조 등 성립</li>
+            <li><strong>마자르족</strong>, <strong>이슬람 세력</strong>의 침입으로 혼란 가중</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8. 봉건 사회 — 성립 -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">⚔️</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">2. 서유럽 봉건 사회의 성립</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 봉건 사회의 성립</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🛡️ 봉건 사회의 성립</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>유력자들이 스스로 무장 → <strong>기사 계급</strong>화, 지역민 보호 ↔ 예속 농민화</li>
+            <li>기사 계급 사이의 <strong>주종 관계</strong> 확산 → 지방 분권 가속화</li>
+            <li>→ <span class="blank">봉건제</span> 성립</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight-box">⚖️ <strong>봉건제의 구조</strong> — 정치: <strong>주종 관계</strong> (쌍무적 계약) &nbsp;|&nbsp; 경제: <strong>장원제</strong> (자급자족적 농업 경제)</div>
+    </div>
+  </div>
+</div>
+
+<!-- 9. 크리스트교 — 로마 교회 + 성상 숭배 금지령 -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✝️</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">3. 크리스트교의 성장</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(1) 로마 교회의 성장</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="mini-card">
+          <h3>🏛️ 로마 교회의 위상</h3>
+          <p>5대 교구 중 <strong>서유럽 유일</strong><br>교황 = 로마 교회의 주교<br>서유럽 교회 전체를 주도<br>중세인의 정신세계 · 일상생활에 영향</p>
+        </div>
+        <div class="mini-card">
+          <h3>🚫 성상 숭배 금지령</h3>
+          <p>비잔티움 황제 <strong>레오 3세</strong>의 금지령<br>→ 로마 교회가 이를 <strong>거부</strong><br>→ 동·서 교회 대립 격화</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10. 크리스트교 — 교회 분열 -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✝️</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">3. 크리스트교의 성장</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 로마 가톨릭과 그리스 정교회의 분열</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⛪ 교회의 분열 <span class="era-badge" style="font-size:.75rem;">1054년</span></div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>비잔티움 황제 레오 3세의 성상 숭배 금지령 → 로마 교회 거부 → 이후 동서 교회 분열</li>
+            <li><strong>서유럽</strong> → <strong>로마 가톨릭</strong> 교회 (교황 중심)</li>
+            <li><strong>동유럽</strong> → <strong>그리스 정교회</strong> (비잔티움 황제 영향)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 11. 교황과 황제 — 세속화 + 클뤼니 개혁 -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">⚖️</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">4. 교황과 황제의 대립</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(1) 로마 가톨릭의 세속화와 개혁</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="mini-card">
+          <h3>⛪ 교회 세속화</h3>
+          <p>성직자의 분봉(分封)<br>성직자 임명권을 <strong>세속 권력</strong>이 행사<br>→ 교회 부패 심화</p>
+        </div>
+        <div class="mini-card">
+          <h3>🕊️ 교회 개혁</h3>
+          <p><span class="blank">클뤼니</span> 수도원 주도<br>(10세기 초) 교회 개혁 운동<br>→ 성직 서임권 분쟁으로 발전</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 12. 교황과 황제 — 카노사의 굴욕 -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">⚖️</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">4. 교황과 황제의 대립</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 카노사의 굴욕</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏔️ 카노사의 굴욕 <span class="era-badge" style="font-size:.75rem;">1077년</span></div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>배경</strong>: 교황 그레고리우스 7세 — 세속 권력의 성직자 임명 금지</li>
+            <li><strong>전개</strong>: 신성 로마 제국 황제 하인리히 4세 무시
+              → 교황이 황제 <strong>파문</strong> → 제후 · 주교 지지 약화
+              → <strong>하인리히 4세</strong>, 카노사에서 사죄</li>
+            <li><strong>결과</strong>: <span class="era-badge">1122년</span> <span class="blank">보름스 협약</span> → 교황의 <strong>서임권</strong> 확정</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13. 중세 문화 — 학문 -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🎨</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">5. 중세 서유럽의 문화</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(1) 학문 — 신학 중심 발달 (전성기 12~13세기)</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📚 학문 — 신학 중심 발달</div>
+        <div class="ruler-card-body">
+          <div class="grid-2">
+            <div>
+              <p style="font-size:.9rem;font-weight:700;color:var(--main);margin-bottom:.18rem;">교부 철학 (중세 초기)</p>
+              <p style="font-size:.9rem;color:var(--text-sec);">아우구스티누스<br>신앙 우위 · 교회 교리 정립</p>
+            </div>
+            <div>
+              <p style="font-size:.9rem;font-weight:700;color:var(--main);margin-bottom:.18rem;">스콜라 철학 (십자군 전쟁 이후)</p>
+              <p style="font-size:.9rem;color:var(--text-sec);">토마스 아퀴나스<br>신앙 + 이성의 조화 추구</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 14. 중세 문화 — 건축 양식 -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🎨</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">5. 중세 서유럽의 문화</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 건축 양식의 변화</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏛️ 건축 양식의 변화</div>
+        <div class="ruler-card-body">
+          <div class="grid-2">
+            <div class="mini-card" style="background:var(--card-bg);">
+              <h3>🏟️ 로마네스크 양식 <span class="era-badge">11세기경</span></h3>
+              <p style="font-size:.88rem;">두꺼운 벽 · 돔 · 아치 중심<br>묵직하고 어두운 내부<br>대표: <strong>피사 대성당</strong></p>
+            </div>
+            <div class="mini-card" style="background:var(--card-bg);">
+              <h3>🗼 고딕 양식 <span class="era-badge">12세기경~</span></h3>
+              <p style="font-size:.88rem;"><strong>첨탑</strong> · <strong>스테인드글라스</strong><br>높고 밝은 내부 공간<br>대표: <strong>샤르트르 대성당</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 15. 비잔티움 — 성립 -->
+<div class="slide" data-slide="14">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏛️</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">6. 비잔티움 제국의 발전과 쇠퇴</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(1) 비잔티움 제국의 성립</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌟 비잔티움 제국의 성립</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>서로마 멸망 이후 남은 <strong>동로마 제국</strong>이 이후 약 <strong>1,000년</strong>간 유지</li>
+            <li>정치: <strong>황제권 강함</strong> (황제가 교회에 영향력 행사)</li>
+            <li>경제: 동서 교통의 중심으로 <strong>무역 번영</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 16. 비잔티움 — 유스티니아누스 황제 -->
+<div class="slide" data-slide="15">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏛️</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">6. 비잔티움 제국의 발전과 쇠퇴</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 전성기 — 유스티니아누스 황제</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚜️ 전성기 — 유스티니아누스 황제 <span class="era-badge" style="font-size:.75rem;">6세기</span></div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>로마 제국 영토 대부분 회복</li>
+            <li>로마법 집대성 → <strong>유스티니아누스 법전</strong> 편찬</li>
+            <li>제도: <strong>군관구제</strong>와 <strong>둔전병제</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 17. 비잔티움 — 쇠퇴와 멸망 -->
+<div class="slide" data-slide="16">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏛️</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">6. 비잔티움 제국의 발전과 쇠퇴</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(3) 쇠퇴와 멸망</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📉 쇠퇴와 멸망</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><span class="blank">사산왕조 페르시아</span>와 이슬람 세력의 계속된 침입 → 군관구제와 둔전병제 점차 붕괴</li>
+            <li>황제권 약화, 셀주크 튀르크의 공격</li>
+            <li><span class="era-badge">1453년</span> <strong>오스만 제국</strong>의 공격으로 멸망</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 18. 비잔티움 — 문화 -->
+<div class="slide" data-slide="17">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🎨</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">6. 비잔티움 제국의 발전과 쇠퇴</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(4) 비잔티움 제국의 문화</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🎨 비잔티움 제국의 문화</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>특징</strong>: 그리스 정교를 바탕으로 그리스·로마 문화 + 헬레니즘 문화를 융합한 독자적 문화</li>
+            <li><strong>공용어</strong>: 그리스어</li>
+            <li><strong>비잔티움 양식</strong>: 외부의 웅장한 돔 + 내부 모자이크 벽화 → 대표: <strong>성 소피아 성당</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 19. 핵심 정리 -->
+<div class="slide" data-slide="18">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">📋</span><span class="browser-title">핵심 정리</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.25rem;">학습 내용 정리</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <table class="sum-table">
+        <thead><tr><th style="width:18%;">주제</th><th>핵심 내용</th></tr></thead>
+        <tbody>
+          <tr><td><strong>프랑크 왕국</strong></td><td>클로비스(메로베우스) → 카롤루스 마르텔(투르·푸아티에 732) → 피핀 → <strong>카롤루스 대제</strong>(서로마 황제 800) → 3국 분열</td></tr>
+          <tr><td><strong>봉건 사회</strong></td><td>노르만족·마자르족·이슬람 침입 → 기사 계급 → <strong>주종 관계</strong>(정치) + <strong>장원제</strong>(경제)</td></tr>
+          <tr><td><strong>교회 분열</strong></td><td>레오 3세 성상 금지령 → <strong>로마 가톨릭</strong>(서) vs <strong>그리스 정교회</strong>(동) — 1054년</td></tr>
+          <tr><td><strong>교황·황제</strong></td><td><strong>클뤼니</strong> 개혁 → <strong>카노사의 굴욕</strong>(1077) → <strong>보름스 협약</strong>(1122)</td></tr>
+          <tr><td><strong>중세 문화</strong></td><td>아우구스티누스(교부 철학) → 토마스 아퀴나스(스콜라 철학) / 로마네스크(피사) → 고딕(샤르트르)</td></tr>
+          <tr><td><strong>비잔티움</strong></td><td>동로마 1,000년 · 유스티니아누스(영토·법전·군관구제) · 1453 오스만 멸망 / 그리스 정교 · 비잔티움 양식</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 개념 확인 문제 — 26쪽 ===== -->
+
+<!-- 20. 26쪽 1번 OX -->
+<div class="slide" data-slide="19">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 26쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 26쪽</span></h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="quiz-wrap plain">
+        <div class="quiz-row">
+          <div class="q-num">1</div>
+          <div class="q-text">
+            다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.<br>
+            ⑴ 클로비스는 메로베우스 왕조를 세우고 로마 가톨릭으로 개종하였다. &nbsp;<span class="ans-btn">○</span><br>
+            ⑵ 비잔티움 제국 레오 3세의 성상 숭배 금지령을 계기로 동서 교회의 대립이 격화되었고, 로마 가톨릭과 그리스 정교회로 분열되었다. &nbsp;<span class="ans-btn">○</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 21. 26쪽 2번 빈칸 -->
+<div class="slide" data-slide="20">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 26쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 26쪽</span></h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="quiz-wrap plain">
+        <div class="quiz-row">
+          <div class="q-num">2</div>
+          <div class="q-text">
+            빈칸에 들어갈 알맞은 말을 쓰시오.<br>
+            ⑴ 궁재인 카롤루스 마르텔은 메로베우스 왕조의 실권을 장악하고 ( <span class="ans-btn">투르·푸아티에</span> ) 전투에서 승리하여 이슬람 세력의 침략을 물리쳤다.<br>
+            ⑵ 카롤루스 대제는 궁정 학교를 세우고 고전을 연구하는 등 ( <span class="ans-btn">카롤루스 르네상스</span> )을/를 일으켰다.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 22. 26쪽 3번 (가)(나) -->
+<div class="slide" data-slide="21">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 26쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 26쪽</span></h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="quiz-wrap plain">
+        <div class="quiz-row">
+          <div class="q-num">3</div>
+          <div class="q-text">
+            (가), (나)에 들어갈 알맞은 말을 쓰시오.<br>
+            9세기 무렵 노르만족의 남하, 마자르족, 이슬람 세력의 침입을 배경으로 서유럽 지역에서는 봉건 사회의 질서가 성립하였다. 이 시기 봉건제는 정치적으로는 기사 계급 사이의 (가), 경제적으로는 자급자족적 성격의 (나)을/를 바탕으로 운영되었다.<br>
+            (가): <span class="ans-btn">주종 관계</span> &emsp; (나): <span class="ans-btn">장원제</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 23. 26쪽 4번 선다형 -->
+<div class="slide" data-slide="22">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 26쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 26쪽</span></h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="quiz-wrap plain">
+        <div class="quiz-row col">
+          <div class="inner">
+            <div class="q-num">4</div>
+            <div class="q-text">
+              프랑크 왕국의 각 인물과 설명이 옳게 짝지어진 것을 &lt;보기&gt;에서 있는 대로 고른 것은? <span class="ans-btn">⑤ ㄷ, ㄹ</span>
+            </div>
+          </div>
+          <div class="bogi">
+            ㄱ. 클로비스 — '밀라노 칙령'을 반포하였다.<br>
+            ㄴ. 카롤루스 마르텔 — 악티움 해전에서 승리하였다.<br>
+            ㄷ. 피핀 — 교황에게 이탈리아 중부 지역을 기증하였다.<br>
+            ㄹ. 카롤루스 대제 — 교황에게 서로마 황제로 대관을 받았다.
+          </div>
+          <div class="opts">① ㄱ, ㄴ &ensp; ② ㄱ, ㄷ &ensp; ③ ㄴ, ㄷ &ensp; ④ ㄴ, ㄹ &ensp; ⑤ ㄷ, ㄹ</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 개념 확인 문제 — 28쪽 ===== -->
+
+<!-- 24. 28쪽 1번 OX -->
+<div class="slide" data-slide="23">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 28쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 28쪽</span></h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="quiz-wrap plain">
+        <div class="quiz-row">
+          <div class="q-num">1</div>
+          <div class="q-text">
+            다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.<br>
+            ⑴ 클뤼니 수도원 출신의 교황 그레고리우스 7세는 세속 군주의 성직자 서임을 금지하였다. &nbsp;<span class="ans-btn">○</span><br>
+            ⑵ 중세 학문은 신학을 중심으로 발달하였으며, 중세 초기에는 아우구스티누스의 교부 철학이 발전하였다. &nbsp;<span class="ans-btn">○</span><br>
+            ⑶ 비잔티움 제국은 그리스 정교를 바탕으로 그리스·로마 문화와 헬레니즘 문화를 융합하여 독자적인 문화를 발전시켰다. &nbsp;<span class="ans-btn">○</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 25. 28쪽 2번 빈칸 -->
+<div class="slide" data-slide="24">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 28쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 28쪽</span></h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="quiz-wrap plain">
+        <div class="quiz-row">
+          <div class="q-num">2</div>
+          <div class="q-text">
+            빈칸에 들어갈 알맞은 말을 쓰시오.<br>
+            ⑴ 교황과 세속 군주가 성직자 서임권을 두고 대립하였으며, ( <span class="ans-btn">보름스</span> ) 협약을 통해 교황이 성직자 서임권을 차지하게 되었다.<br>
+            ⑵ 십자군 전쟁 이후 이슬람 세계를 통해 아리스토텔레스의 철학이 유럽으로 전해졌으며, 이러한 배경 속에서 토마스 아퀴나스는 신앙과 이성의 조화를 꾀하는 ( <span class="ans-btn">스콜라 철학</span> )을/를 집대성하였다.<br>
+            ⑶ 비잔티움 제국은 영역을 ( <span class="ans-btn">군관구</span> )로/으로 나누고, 황제가 임명한 군사령관에게 군사권, 행정권, 사법권을 부여한 제도를 실시하였다.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 26. 28쪽 3번 선다형 -->
+<div class="slide" data-slide="25">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 28쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 28쪽</span></h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="quiz-wrap plain">
+        <div class="quiz-row col">
+          <div class="inner">
+            <div class="q-num">3</div>
+            <div class="q-text">
+              (가), (나)에 해당하는 내용끼리 옳게 짝지어진 것은? <span class="ans-btn">② 고딕 양식 / 비잔티움 양식</span><br>
+              (가) 첨탑과 스테인드글라스를 특징으로 하며, 12세기경부터 중세 서유럽에서 유행하였다.<br>
+              (나) 외부의 웅장한 돔과 내부를 장식한 모자이크 벽화를 특징으로 하며, 성 소피아 대성당이 대표적이다.
+            </div>
+          </div>
+          <div class="opts">① 고딕 양식 — 간다라 양식 &ensp; ② 고딕 양식 — 비잔티움 양식 &ensp; ③ 로마네스크 양식 — 고딕 양식 &ensp; ④ 로마네스크 양식 — 헬레니즘 양식 &ensp; ⑤ 비잔티움 양식 — 고딕 양식</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevSlide()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1"> / <span id="totalEl">26</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextSlide()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const TOTAL  = slides.length;
+  document.getElementById('totalEl').textContent = TOTAL;
+
+  const QUIZ_START = 19; /* 퀴즈 슬라이드 시작 인덱스 (0-based) */
+
+  function hasUnrevealed() {
+    return slides[cur].querySelectorAll('.blank:not(.on), .ans-btn:not(.on)').length > 0;
+  }
+  function revealAll() {
+    slides[cur].querySelectorAll('.blank, .ans-btn').forEach(b => b.classList.add('on'));
+  }
+  function revealNext() {
+    const el = slides[cur].querySelector('.blank:not(.on), .ans-btn:not(.on)');
+    if (el) el.classList.add('on');
+  }
+  function resetAll(idx) {
+    slides[idx].querySelectorAll('.blank, .ans-btn').forEach(b => b.classList.remove('on'));
+  }
+
+  function updateUI() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === cur));
+    document.getElementById('prevBtn').disabled = cur === 0;
+    document.getElementById('nextBtn').disabled = cur === TOTAL - 1;
+    document.getElementById('slideInput').value  = cur + 1;
+    document.getElementById('progressBar').style.width = ((cur + 1) / TOTAL * 100) + '%';
+  }
+
+  function nextSlide() {
+    if (hasUnrevealed()) {
+      cur >= QUIZ_START ? revealNext() : revealAll();
+    } else if (cur < TOTAL - 1) {
+      resetAll(cur); cur++; updateUI();
+    }
+  }
+  function prevSlide() {
+    const revealed = slides[cur].querySelectorAll('.blank.on, .ans-btn.on');
+    if (revealed.length > 0) {
+      revealed[revealed.length - 1].classList.remove('on');
+    } else if (cur > 0) {
+      cur--; updateUI();
+    }
+  }
+  function goToSlide(idx) {
+    resetAll(cur);
+    cur = Math.max(0, Math.min(idx, TOTAL - 1));
+    updateUI();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.target.classList.contains('slide-input')) return;
+    switch (e.key) {
+      case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown': e.preventDefault(); nextSlide(); break;
+      case 'ArrowLeft':  case 'ArrowUp':             case 'PageUp':   e.preventDefault(); prevSlide(); break;
+      case 'Home': goToSlide(0);       break;
+      case 'End':  goToSlide(TOTAL-1); break;
+    }
+  });
+
+  const si = document.getElementById('slideInput');
+  si.addEventListener('focus',   () => si.select());
+  si.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter')  { goToSlide((parseInt(si.value)||1)-1); si.blur(); }
+    if (e.key === 'Escape') { si.value = cur+1; si.blur(); }
+  });
+  si.addEventListener('blur', () => goToSlide((parseInt(si.value)||1)-1));
+
+  let tx = 0;
+  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive:true });
+  document.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) { dx < 0 ? nextSlide() : prevSlide(); }
+  });
+
+  document.querySelectorAll('.blank, .ans-btn').forEach(el => {
+    el.addEventListener('click', () => el.classList.toggle('on'));
+  });
+
+  updateUI();
+</script>
+</body>
+</html>
