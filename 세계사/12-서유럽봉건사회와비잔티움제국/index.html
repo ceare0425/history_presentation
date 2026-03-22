@@ -24,7 +24,7 @@
     body { background-color:var(--bg); background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(160,120,60,.04) 2px,rgba(160,120,60,.04) 4px), repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(140,100,40,.06) 28px,rgba(140,100,40,.06) 29px); }
 
     .presentation { position:fixed; inset:0; bottom:2.2rem; display:flex; align-items:center; justify-content:center; padding:.8rem; }
-    .slide { display:none; width:100%; max-width:1600px; height:100%; }
+    .slide { display:none; aspect-ratio:16/9; width:min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height:auto; }
     .slide.active { display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; }
     @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
 
@@ -83,10 +83,10 @@
     .quiz-row { display:flex; align-items:flex-start; gap:.65rem; border:1.5px solid var(--border); border-radius:3px; padding:.48rem .85rem; background:var(--card-bg); }
     .quiz-row.col { flex-direction:column; gap:.3rem; }
     .quiz-row.col .inner { display:flex; gap:.65rem; align-items:flex-start; }
-    .quiz-row.col .opts { padding-left:2.15rem; font-size:.88rem; line-height:1.7; }
+    .quiz-row.col .opts { padding-left:2.15rem; font-size:.96rem; line-height:1.7; }
     .q-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.8rem; min-width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.12em; }
-    .q-text { flex:1; font-size:.9rem; line-height:1.75; }
-    .bogi { border:1px solid var(--border); border-radius:2px; padding:.25rem .6rem; margin:.25rem 0; font-size:.88rem; line-height:1.7; background:var(--light); }
+    .q-text { flex:1; font-size:1rem; line-height:1.75; }
+    .bogi { border:1px solid var(--border); border-radius:2px; padding:.25rem .6rem; margin:.25rem 0; font-size:.96rem; line-height:1.7; background:var(--light); }
 
     .cover-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.65rem; }
     .toc-list { display:flex; flex-direction:column; gap:.42rem; margin-top:.35rem; }
