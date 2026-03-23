@@ -139,6 +139,19 @@
             { "label": "역사 수업", "color": "green" }
           ],
           "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
+          "title": "13. 이슬람 세계의 성립과 발전",
+          "path": "세계사/13-이슬람세계의성립과발전/index.html",
+          "emoji": "🕌",
+          "description": "무함마드의 이슬람교 정립(헤지라), 정통 칼리프·우마이야·아바스 왕조의 성립과 발전, 이슬람 세계의 분열(후우마이야·파티마), 이슬람 사회·문화(지즈야·모스크·아라베스크). 빈칸 클릭으로 정답 확인 가능.",
+          "tags": [
+            { "label": "이슬람", "color": "orange" },
+            { "label": "무함마드", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
         }
       ]
     }

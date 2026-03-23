@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>13. 이슬람 세계의 성립과 발전</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main:#8B4513; --dark:#6B3010; --light:#FFF8E1; --accent:#C5A028;
+      --accent-light:#E8D080; --bg:#F5E6C4; --text:#2C1A0E; --text-sec:#6B4226;
+      --border:#A07850; --card-bg:#FDF5E0;
+    }
+    html, body { font-size: clamp(20px, 2.2vw, 36px); font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif; color: var(--text); height: 100%; overflow: hidden; }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+    h1 { font-family:'Nanum Myeongjo',serif; font-size:2.3rem; font-weight:800; letter-spacing:.04em; line-height:1.3; }
+    h2 { font-family:'Nanum Myeongjo',serif; font-size:1.35rem; font-weight:700; letter-spacing:.04em; }
+    h3 { font-family:'Nanum Myeongjo',serif; font-size:1rem; font-weight:700; }
+    p  { font-size:.95rem; line-height:1.7; }
+
+    body { background-color:var(--bg); background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(160,120,60,.04) 2px,rgba(160,120,60,.04) 4px), repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(140,100,40,.06) 28px,rgba(140,100,40,.06) 29px); }
+
+    .presentation { position:fixed; inset:0; bottom:2.2rem; display:flex; align-items:center; justify-content:center; padding:.8rem; }
+    .slide { display:none; aspect-ratio:16/9; width:min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height:auto; }
+    .slide.active { display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    .browser-card { background:var(--card-bg); border:2px solid var(--border); outline:4px solid var(--accent); outline-offset:-7px; border-radius:4px; box-shadow:0 4px 28px rgba(44,26,14,.2),inset 0 0 60px rgba(160,120,40,.05); width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    .browser-topbar { background:linear-gradient(90deg,#8B4513 0%,#5C2808 45%,#8B4513 100%); border-bottom:2px solid var(--accent); padding:.4rem 1.1rem; display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+    .topbar-icon { font-size:.95rem; }
+    .browser-title { color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-size:.82rem; font-weight:700; letter-spacing:.07em; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+    .browser-content { flex:1; overflow-y:auto; padding:.9rem 1.8rem; display:flex; flex-direction:column; }
+    .browser-content::-webkit-scrollbar { width:4px; }
+    .browser-content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+    .progress-bar { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--main)); z-index:1000; transition:width .3s; }
+    .nav-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.3rem 1.5rem; background:rgba(30,15,6,.97); border-top:2px solid var(--accent); z-index:999; font-size:14px; }
+    .nav-btn { display:flex; align-items:center; justify-content:center; width:1.7rem; height:1.7rem; border:1.5px solid #8B6540; border-radius:50%; background:transparent; cursor:pointer; color:var(--accent-light); transition:all .2s; padding:0; }
+    .nav-btn svg { width:.55rem; height:.55rem; fill:currentColor; display:block; }
+    .nav-btn:hover:not(:disabled) { background:var(--main); border-color:var(--accent); }
+    .nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .nav-counter { font-size:13px; font-weight:700; color:var(--accent-light); min-width:3rem; text-align:center; display:flex; align-items:center; gap:.15rem; }
+    .slide-input { width:1.4rem; text-align:center; border:none; border-bottom:1.5px solid transparent; background:transparent; font-size:13px; font-weight:700; color:var(--accent-light); font-family:inherit; padding:0; outline:none; cursor:pointer; transition:border-color .2s; }
+    .slide-input:hover { border-bottom-color:var(--accent); }
+    .slide-input:focus { border-bottom-color:var(--accent); background:rgba(139,69,19,.3); border-radius:3px; }
+
+    .section-ornament { color:var(--accent); font-size:.72rem; letter-spacing:.5em; text-align:center; margin-bottom:.2rem; opacity:.75; }
+    .hist-divider { display:flex; align-items:center; gap:.4rem; margin:.25rem 0 .55rem; }
+    .h-line { flex:1; height:1.5px; background:linear-gradient(90deg,transparent,var(--accent) 25%,var(--accent) 75%,transparent); }
+    .h-gem  { color:var(--accent); font-size:.7rem; }
+    .era-badge { display:inline-block; background:linear-gradient(135deg,var(--main),var(--dark)); color:var(--accent-light); border:1px solid var(--accent); padding:.05rem .4rem; font-family:'Nanum Myeongjo',serif; font-size:.8rem; font-weight:700; border-radius:2px; white-space:nowrap; }
+
+    .ruler-card { border:1.5px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:.5rem; }
+    .ruler-card-header { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.9rem; padding:.35rem .8rem; display:flex; align-items:center; gap:.4rem; }
+    .ruler-card-body { padding:.6rem .9rem; background:var(--card-bg); }
+    .mini-card { background:var(--light); border:1.5px solid var(--border); border-radius:3px; padding:.55rem .8rem; }
+    .mini-card h3 { font-size:.92rem; color:var(--main); margin-bottom:.22rem; }
+    .mini-card p  { font-size:.9rem; color:var(--text-sec); line-height:1.6; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }
+    .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.6rem; }
+    .info-list { list-style:none; display:flex; flex-direction:column; gap:.48rem; }
+    .info-list li { display:flex; gap:.45rem; align-items:flex-start; font-size:.95rem; line-height:1.65; }
+    .info-list li::before { content:'◆'; color:var(--accent); font-size:.62rem; margin-top:.42em; flex-shrink:0; }
+    .highlight-box { background:var(--light); border-left:4px solid var(--accent); border-right:1px solid var(--border); padding:.52rem .9rem .52rem 1rem; margin:.35rem 0 0; border-radius:0 3px 3px 0; font-size:.92rem; line-height:1.65; }
+    .highlight-box strong { color:var(--main); }
+    .flow-list { display:flex; flex-direction:column; gap:.3rem; }
+    .flow-item { display:flex; align-items:flex-start; gap:.45rem; font-size:.92rem; line-height:1.6; }
+    .flow-arrow { color:var(--accent); font-size:.75rem; flex-shrink:0; margin-top:.32em; }
+
+    /* 빈칸: 정답 포함, 네비게이션으로 공개 */
+    .blank {
+      display:inline-block; min-width:4.5rem;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent;
+      border:1.5px solid var(--accent); border-radius:2px;
+      padding:.05em .55em;
+      font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:inherit;
+      transition:all .35s; user-select:none; position:relative;
+      text-align:center; vertical-align:baseline;
+    }
+    .blank::after {
+      content:'?'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.85em; font-weight:800;
+      pointer-events:none; transition:opacity .25s;
+    }
+    .blank.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .blank.on::after { opacity:0; }
+
+    /* 클릭형 정답 버튼 (문제 1·3·4용) */
+    .ans-btn {
+      display:inline-block;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent;
+      border:1.5px solid var(--accent); border-radius:2px;
+      padding:.1em .85em; cursor:pointer;
+      font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.88rem;
+      transition:all .35s; user-select:none; position:relative;
+      text-align:center; white-space:nowrap; vertical-align:baseline;
+    }
+    .ans-btn::after {
+      content:'정답'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.78em; font-weight:700;
+      pointer-events:none; transition:opacity .25s; white-space:nowrap;
+    }
+    .ans-btn.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity:0; }
+
+    .quiz-wrap { display:flex; flex-direction:column; gap:.45rem; margin-top:.3rem; }
+    .quiz-row { display:flex; align-items:flex-start; gap:.65rem; border:1.5px solid var(--border); border-radius:3px; padding:.48rem .85rem; background:var(--card-bg); }
+    .quiz-row.col { flex-direction:column; gap:.3rem; }
+    .quiz-row.col .inner { display:flex; gap:.65rem; align-items:flex-start; }
+    .q-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.8rem; min-width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.12em; }
+    .q-text { flex:1; font-size:1rem; line-height:1.75; }
+    .bogi { border:1px solid var(--border); border-radius:2px; padding:.25rem .6rem; margin:.25rem 0; font-size:.96rem; line-height:1.7; background:var(--light); }
+
+    .cover-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.65rem; }
+    .toc-list { display:flex; flex-direction:column; gap:.42rem; margin-top:.35rem; }
+    .toc-item { display:flex; align-items:center; gap:.7rem; padding:.45rem .85rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); cursor:pointer; transition:all .2s; }
+    .toc-item:hover { background:var(--light); border-color:var(--accent); transform:translateX(4px); }
+    .toc-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.82rem; min-width:1.65rem; height:1.65rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .toc-title { font-weight:700; font-size:.92rem; }
+    .toc-desc  { font-size:.82rem; color:var(--text-sec); }
+
+    .sum-table { width:100%; border-collapse:collapse; font-size:.88rem; }
+    .sum-table th { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); padding:.38rem .7rem; text-align:left; font-family:'Nanum Myeongjo',serif; }
+    .sum-table td { padding:.38rem .7rem; border-bottom:1px solid var(--border); line-height:1.6; vertical-align:top; }
+    .sum-table tr:nth-child(even) td { background:var(--light); }
+
+    @media (max-width:768px) { .grid-2,.grid-3 { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- 1. 표지 -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🕌</span><span class="browser-title">세계사 · Ⅰ-3. 서아시아, 지중해, 유럽 세계의 형성</span></div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 61~65쪽</span>
+        <h1 style="margin-top:.3rem;">5. 이슬람 세계의 성립과 발전</h1>
+        <div class="hist-divider" style="width:60%;margin:0 auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.95rem;line-height:2;">무함마드 · 이슬람 제국 · 이슬람 문화</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. 목차 -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">📋</span><span class="browser-title">학습 내용 목차</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.2rem;">학습 내용 목차</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="toc-list">
+        <div class="toc-item" onclick="goToSlide(2)"><div class="toc-num">1</div><div><div class="toc-title">이슬람교를 전파한 무함마드</div><div class="toc-desc">서아시아 세계의 변화 · 이슬람교 정립 · 헤지라(➊)</div></div></div>
+        <div class="toc-item" onclick="goToSlide(4)"><div class="toc-num">2</div><div><div class="toc-title">이슬람 제국의 성립과 발전</div><div class="toc-desc">정통 칼리프 시대 · 우마이야 왕조(➋) · 아바스 왕조(➌) · 이슬람 세계의 분열</div></div></div>
+        <div class="toc-item" onclick="goToSlide(8)"><div class="toc-num">3</div><div><div class="toc-title">이슬람 세계의 사회와 문화</div><div class="toc-desc">종교 중심 사회 · 이슬람 문화의 발달</div></div></div>
+        <div class="toc-item" onclick="goToSlide(10)"><div class="toc-num">✏</div><div><div class="toc-title">개념 확인 문제</div><div class="toc-desc">29~30쪽 — ○× · 빈칸(➊~➌) · 연결 · 객관식</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. 서아시아 세계의 변화 -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🌍</span><span class="browser-title">1. 이슬람교를 전파한 무함마드 — (1) 서아시아 세계의 변화</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.15rem;">(1) 서아시아 세계의 변화</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2" style="margin-bottom:.5rem;">
+        <div class="mini-card">
+          <h3>⚔️ 국제 정세</h3>
+          <p><strong>사산 왕조 페르시아</strong>와 <strong>비잔티움 제국</strong>의 갈등 고조</p>
+        </div>
+        <div class="mini-card">
+          <h3>🏙️ 도시의 번영</h3>
+          <p>새로운 무역로 발달로 <strong>메카</strong>, <strong>메디나</strong> 등의 도시 번영</p>
+        </div>
+      </div>
+      <div class="highlight-box">
+        💡 두 강대국의 갈등으로 생겨난 새로운 무역로가 아라비아반도 도시들을 번영시키며 이슬람교 성장의 기반이 되었다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. 이슬람교의 정립 + 헤지라 (빈칸 ➊) -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">☪️</span><span class="browser-title">1. 이슬람교를 전파한 무함마드 — (2) 이슬람교의 정립</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.15rem;">(2) 이슬람교의 정립</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card" style="margin-bottom:.5rem;">
+        <div class="ruler-card-header">☪️ 이슬람교의 특징</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 창시: 무함마드가 이슬람교를 정립</li>
+            <li>② 특징: <strong>우상 숭배 배격</strong>, 유일신 <strong>알라</strong>에 대해 복종, <strong>신 앞에서의 평등</strong> 주장</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">➊ &nbsp;<span class="blank" data-answer="헤지라">헤지라</span>&nbsp;: 메카 귀족의 탄압으로 무함마드와 추종자들 메디나로 이주</div>
+        <div class="ruler-card-body">
+          <div class="flow-list">
+            <div class="flow-item"><span class="flow-arrow">▶</span><span>메카 귀족의 탄압 → 무함마드와 추종자들이 <strong>메디나로 이주</strong></span></div>
+            <div class="flow-item"><span class="flow-arrow">▶</span><span>메디나에서 세력을 키워 <strong>메카 장악</strong></span></div>
+            <div class="flow-item"><span class="flow-arrow">▶</span><span>정복 전쟁을 통해 <strong>아라비아반도 대부분 통일</strong></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. 정통 칼리프 시대 -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">👑</span><span class="browser-title">2. 이슬람 제국의 성립과 발전 — 정통 칼리프 시대</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.15rem;">정통 칼리프 시대</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 정통 칼리프 시대 (제1대 ~ 제4대)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>무함마드 사망 이후 <strong>합의에 의해 칼리프 선출</strong></li>
+            <li><strong>예루살렘</strong>과 <strong>이집트</strong> 정복</li>
+            <li><strong>사산 왕조 페르시아</strong>를 멸망시킴</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:.4rem;">
+        <strong>칼리프(Caliph):</strong> "후계자"를 뜻하며, 이슬람 공동체의 최고 종교·정치 지도자를 가리킨다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6. 우마이야 왕조 (빈칸 ➋) -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏛️</span><span class="browser-title">2. 이슬람 제국의 성립과 발전 — 우마이야 왕조</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.15rem;">우마이야 왕조</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏛️ 우마이야 왕조의 수립과 발전</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>수립:</strong> 무아위야가 왕조 수립 후 <strong>칼리프직 세습</strong> → 칼리프 선출을 둘러싼 내분으로 수니파와 시아파가 나뉘어 대립</li>
+            <li><strong>발전:</strong> 수도 <span class="blank" data-answer="다마스쿠스">다마스쿠스</span>를 중심으로 영토 확장</li>
+            <li><strong>멸망:</strong> 아랍인 우월주의 정책에 대한 반발, 비아랍인과 시아파 세력의 반란으로 멸망</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:.4rem;">
+        ⚠️ <strong>아랍인 우월주의:</strong> 우마이야 왕조는 아랍인을 우대·비아랍인 차별 → 비아랍 무슬림의 반발로 아바스 왕조 수립에 협력하였다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7. 아바스 왕조 (빈칸 ➌) -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🕌</span><span class="browser-title">2. 이슬람 제국의 성립과 발전 — 아바스 왕조</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.15rem;">아바스 왕조</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🕌 아바스 왕조의 특징</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>특징:</strong> 비아랍인에 대한 차별을 없애 <strong>범이슬람 제국</strong> 지향</li>
+            <li><strong>동서 교역 주도권 장악:</strong> 당(唐)과의 <span class="blank" data-answer="탈라스">탈라스</span> 전투에서 승리</li>
+            <li>수도 <strong>바그다드</strong>를 중심으로 광대한 제국 통치</li>
+            <li>바그다드 — 동서 교역과 문화의 <strong>중심지</strong>로 성장</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:.4rem;">
+        <strong>탈라스 전투(751):</strong> 아바스 왕조 vs 당나라. 포로가 된 당나라 기술자들을 통해 <strong>제지술이 이슬람 세계로 전파</strong>되었다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8. 이슬람 세계의 분열 -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🗺️</span><span class="browser-title">2. 이슬람 제국의 성립과 발전 — 이슬람 세계의 분열</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.15rem;">이슬람 세계의 분열</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <table class="sum-table">
+        <thead>
+          <tr><th>왕조</th><th>수도</th><th>특징</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>정통 칼리프</strong></td><td>메디나</td><td>합의로 칼리프 선출, 이집트·페르시아 정복</td></tr>
+          <tr><td><strong>우마이야</strong></td><td>다마스쿠스</td><td>칼리프 세습, 아랍인 우월주의 → 수니·시아 분열</td></tr>
+          <tr><td><strong>아바스</strong></td><td>바그다드</td><td>범이슬람 제국, 탈라스 전투 승리, 동서 교역 주도</td></tr>
+          <tr><td><strong>후우마이야</strong></td><td>코르도바</td><td>우마이야 일파가 이베리아반도에 수립</td></tr>
+          <tr><td><strong>파티마</strong></td><td>카이로</td><td>북아프리카 → 이집트 정복, 시아파 왕조</td></tr>
+        </tbody>
+      </table>
+      <div class="highlight-box" style="margin-top:.35rem;font-size:.88rem;">
+        세 명의 칼리프가 병립하는 <strong>분열의 시기</strong> 전개 (아바스 · 후우마이야 · 파티마)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9. 이슬람 사회 -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🕌</span><span class="browser-title">3. 이슬람 세계의 사회와 이슬람 문화 — 사회</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.15rem;">이슬람 세계의 사회</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🕌 사회</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>《쿠란》의 가르침이 <strong>일상을 지배</strong>하는 종교 중심 사회</li>
+            <li>피정복민에게 <strong>지즈야(인두세)</strong>를 거두는 대신 피정복민의 종교 인정</li>
+            <li>→ 이슬람 세력이 <strong>빠르게 성장</strong></li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:.45rem;">
+        <strong>지즈야(Jizya):</strong> 비무슬림 피정복민에게 부과한 인두세. 세금을 내면 종교의 자유를 허용 → 이슬람 세력의 빠른 확산에 기여
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10. 이슬람 문화 -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🎨</span><span class="browser-title">3. 이슬람 세계의 사회와 이슬람 문화 — 문화</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.15rem;">이슬람 문화</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🎨 문화</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>문학·건축·미술·과학 등에서 <strong>이슬람 문화 발달</strong></li>
+            <li><strong>모스크</strong> 양식, <strong>아라베스크</strong> 무늬 유행</li>
+            <li>《<strong>아라비안나이트</strong>》 등 문학 발달</li>
+            <li>유럽 문화에 자극을 주어 <strong>르네상스에 영향</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 11. 개념 확인 문제 1 — ○× -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✏️</span><span class="browser-title">개념 확인 문제 1 — 옳으면 ○, 틀리면 × 하시오</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.15rem;">문제 1 &nbsp;—&nbsp; 다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <div class="q-num">⑴</div>
+          <div class="q-text">7세기 초 무함마드는 이슬람교를 정립하였으며, 우상 숭배를 배격하고 유일신 알라에 대한 절대 복종을 강조하였다. &nbsp;<span class="ans-btn">○</span></div>
+        </div>
+        <div class="quiz-row">
+          <div class="q-num">⑵</div>
+          <div class="q-text">우마이야 왕조는 비아랍인에 대한 차별을 없애고 인종을 초월한 범이슬람 제국을 지향하였다. &nbsp;<span class="ans-btn">× (아바스 왕조)</span></div>
+        </div>
+        <div class="quiz-row">
+          <div class="q-num">⑶</div>
+          <div class="q-text">이베리아반도로 탈출한 우마이야 왕조의 일파는 코르도바를 수도로 삼고 파티마 왕조를 건설하였다. &nbsp;<span class="ans-btn">× (후우마이야 왕조)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 12. 개념 확인 문제 2 — 빈칸 (➊헤지라 ➋탈라스 ➌지즈야) -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✏️</span><span class="browser-title">개념 확인 문제 2 — 빈칸에 알맞은 말을 쓰시오</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.15rem;">문제 2 &nbsp;—&nbsp; 빈칸에 알맞은 말을 쓰시오.</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner">
+            <div class="q-num">⑴</div>
+            <div class="q-text">( <span class="blank" data-answer="헤지라">헤지라</span> )은/는 무함마드 세력이 메카의 귀족들의 탄압을 피하여 메디나로 이주한 사건이다. 이후 무함마드는 메디나에서 세력을 키워 메카를 장악하고, 정복 전쟁을 통해 아라비아 반도의 대부분을 통일하였다.</div>
+          </div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner">
+            <div class="q-num">⑵</div>
+            <div class="q-text">아바스 왕조는 당과의 ( <span class="blank" data-answer="탈라스">탈라스</span> ) 전투에서 승리하여 동서 교역 주도권을 장악하였으며, 그 결과 수도인 바그다드는 동서 교역과 문화의 중심지로 성장하였다.</div>
+          </div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner">
+            <div class="q-num">⑶</div>
+            <div class="q-text">이슬람 사회에서는 ( <span class="blank" data-answer="지즈야">지즈야</span> )을/를 거두는 대신 피정복민의 종교를 인정하였다.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13. 개념 확인 문제 3 — 연결 -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✏️</span><span class="browser-title">개념 확인 문제 3 — 시기와 관련 내용 연결하기</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.15rem;">문제 3 &nbsp;—&nbsp; 다음 시기와 관련된 내용으로 옳은 것끼리 선으로 연결하시오.</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <div class="q-num">⑴</div>
+          <div class="q-text">정통 칼리프 시대 &nbsp;→&nbsp; <span class="ans-btn">사산 왕조 페르시아를 멸망시킴</span></div>
+        </div>
+        <div class="quiz-row">
+          <div class="q-num">⑵</div>
+          <div class="q-text">후우마이야 왕조 &nbsp;→&nbsp; <span class="ans-btn">코르도바를 수도로 삼음</span></div>
+        </div>
+        <div class="quiz-row">
+          <div class="q-num">⑶</div>
+          <div class="q-text">파티마 왕조 &nbsp;→&nbsp; <span class="ans-btn">아바스 왕조의 권위를 부정함</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 14. 개념 확인 문제 4 — 객관식 -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✏️</span><span class="browser-title">개념 확인 문제 4 — 이슬람 문화에 대한 설명으로 옳지 않은 것은?</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="margin-bottom:.15rem;">문제 4 &nbsp;—&nbsp; 이슬람 문화에 대한 설명으로 옳지 않은 것은?</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="quiz-wrap">
+        <div class="quiz-row"><div class="q-num">①</div><div class="q-text">굽타 양식의 형성에 영향을 미쳤다.</div></div>
+        <div class="quiz-row"><div class="q-num">②</div><div class="q-text">아랍어로 쓰인 《쿠란》의 번역을 금지하였다.</div></div>
+        <div class="quiz-row"><div class="q-num">③</div><div class="q-text">모스크 양식과 아라베스크 무늬가 유행하였다.</div></div>
+        <div class="quiz-row"><div class="q-num">④</div><div class="q-text">여러 지역의 설화를 모은 《아라비안나이트》가 널리 읽혔다.</div></div>
+        <div class="quiz-row"><div class="q-num">⑤</div><div class="q-text">화려한 세밀화가 유행하여 이슬람 전통 미술로 발전하였다.</div></div>
+      </div>
+      <div class="highlight-box" style="margin-top:.35rem;">
+        <span class="ans-btn">정답: ①</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 15. 핵심 정리 -->
+<div class="slide" data-slide="14">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">📌</span><span class="browser-title">단원 마무리 — 핵심 정리</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">05. 이슬람 세계의 성립과 발전 — 핵심 정리</h2>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <table class="sum-table">
+        <thead>
+          <tr><th>주제</th><th>핵심 내용</th><th>키워드</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>이슬람교 정립</strong></td><td>무함마드가 유일신 알라 신앙을 바탕으로 이슬람교 창시</td><td>헤지라, 알라, 우상 숭배 배격</td></tr>
+          <tr><td><strong>정통 칼리프</strong></td><td>합의로 칼리프 선출, 이집트·페르시아 정복</td><td>수니·시아 분열</td></tr>
+          <tr><td><strong>우마이야 왕조</strong></td><td>칼리프 세습, 아랍인 우월주의, 수도 다마스쿠스</td><td>아랍인 우월주의</td></tr>
+          <tr><td><strong>아바스 왕조</strong></td><td>범이슬람 제국, 탈라스 전투, 수도 바그다드</td><td>탈라스 전투, 제지술 전파</td></tr>
+          <tr><td><strong>이슬람 사회·문화</strong></td><td>지즈야로 종교 자유, 모스크·아라베스크, 르네상스에 영향</td><td>지즈야, 《쿠란》, 《아라비안나이트》</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력"> / <span id="totalSlides">15</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  let revealedCount = 0;
+  const slides = document.querySelectorAll('.slide');
+  const TOTAL = slides.length;
+  document.getElementById('totalSlides').textContent = TOTAL;
+  // TOTAL is computed dynamically from slides.length
+
+  function getBlanks(idx) {
+    return [...slides[idx].querySelectorAll('.blank, .ans-btn')];
+  }
+  function resetBlanks(idx) {
+    getBlanks(idx).forEach(b => b.classList.remove('on'));
+  }
+  function revealAllBlanks(idx) {
+    getBlanks(idx).forEach(b => b.classList.add('on'));
+  }
+
+  function updateUI() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+    document.getElementById('slideInput').value = currentSlide + 1;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / TOTAL * 100) + '%';
+    updateNav();
+  }
+  function updateNav() {
+    const blanks = getBlanks(currentSlide);
+    const atStart = currentSlide === 0 && revealedCount === 0;
+    const atEnd   = currentSlide === TOTAL - 1 && revealedCount >= blanks.length;
+    document.getElementById('prevBtn').disabled = atStart;
+    document.getElementById('nextBtn').disabled = atEnd;
+  }
+
+  function nextAction() {
+    const blanks = getBlanks(currentSlide);
+    if (revealedCount < blanks.length) {
+      blanks[revealedCount].classList.add('on');
+      revealedCount++;
+      updateNav();
+    } else if (currentSlide < TOTAL - 1) {
+      resetBlanks(currentSlide);
+      currentSlide++;
+      revealedCount = 0;
+      updateUI();
+    }
+  }
+  function prevAction() {
+    if (revealedCount > 0) {
+      revealedCount--;
+      getBlanks(currentSlide)[revealedCount].classList.remove('on');
+      updateNav();
+    } else if (currentSlide > 0) {
+      currentSlide--;
+      revealAllBlanks(currentSlide);
+      revealedCount = getBlanks(currentSlide).length;
+      updateUI();
+    }
+  }
+
+  function goToSlide(idx) {
+    if (idx < 0 || idx >= TOTAL) return;
+    resetBlanks(currentSlide);
+    currentSlide = idx;
+    revealedCount = 0;
+    updateUI();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (document.activeElement === document.getElementById('slideInput')) return;
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); nextAction(); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); prevAction(); }
+    else if (e.key === 'Home') goToSlide(0);
+    else if (e.key === 'End') goToSlide(TOTAL - 1);
+  });
+
+  (function initTouch() {
+    let sx = 0;
+    const p = document.getElementById('presentation');
+    p.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+    p.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 50) dx < 0 ? nextAction() : prevAction();
+    }, { passive: true });
+  })();
+
+  const inp = document.getElementById('slideInput');
+  inp.addEventListener('focus', () => inp.select());
+  inp.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { const v = parseInt(inp.value); if (!isNaN(v)) goToSlide(v - 1); inp.blur(); }
+    else if (e.key === 'Escape') { inp.value = currentSlide + 1; inp.blur(); }
+  });
+  inp.addEventListener('blur', () => { const v = parseInt(inp.value); if (!isNaN(v) && v >= 1 && v <= TOTAL) goToSlide(v - 1); else inp.value = currentSlide + 1; });
+
+  updateUI();
+</script>
+</body>
+</html>
