@@ -152,6 +152,19 @@
             { "label": "역사 수업", "color": "green" }
           ],
           "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
+          "title": "14. 크리스트교 세계와 이슬람 세계의 충돌",
+          "path": "세계사/14-크리스트교이슬람충돌/index.html",
+          "emoji": "⚔️",
+          "description": "셀주크 튀르크의 등장(술탄 칭호·비잔티움 제국과 대립), 십자군 전쟁의 배경(우르바누스 2세)과 전개(제1차·제4차), 십자군 전쟁의 영향(봉건제 동요·왕권 강화·이탈리아 도시 성장·동서 문화 교류). 빈칸 클릭으로 정답 확인 가능.",
+          "tags": [
+            { "label": "십자군", "color": "orange" },
+            { "label": "셀주크 튀르크", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
         }
       ]
     }
