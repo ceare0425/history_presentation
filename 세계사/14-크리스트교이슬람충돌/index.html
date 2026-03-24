@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>6. 크리스트교 세계와 이슬람 세계의 충돌</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main:#8B4513; --dark:#6B3010; --light:#FFF8E1; --accent:#C5A028;
+      --accent-light:#E8D080; --bg:#F5E6C4; --text:#2C1A0E; --text-sec:#6B4226;
+      --border:#A07850; --card-bg:#FDF5E0;
+    }
+    html, body { font-size: clamp(20px, 2.2vw, 36px); font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif; color: var(--text); height: 100%; overflow: hidden; }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+    h1 { font-family:'Nanum Myeongjo',serif; font-size:2.3rem; font-weight:800; letter-spacing:.04em; line-height:1.3; }
+    h2 { font-family:'Nanum Myeongjo',serif; font-size:1.35rem; font-weight:700; letter-spacing:.04em; }
+    h3 { font-family:'Nanum Myeongjo',serif; font-size:1rem; font-weight:700; }
+    p  { font-size:.95rem; line-height:1.7; }
+
+    body { background-color:var(--bg); background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(160,120,60,.04) 2px,rgba(160,120,60,.04) 4px), repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(140,100,40,.06) 28px,rgba(140,100,40,.06) 29px); }
+
+    .presentation { position:fixed; inset:0; bottom:2.2rem; display:flex; align-items:center; justify-content:center; padding:.8rem; }
+    .slide { display:none; aspect-ratio:16/9; width:min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height:auto; }
+    .slide.active { display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    .browser-card { background:var(--card-bg); border:2px solid var(--border); outline:4px solid var(--accent); outline-offset:-7px; border-radius:4px; box-shadow:0 4px 28px rgba(44,26,14,.2),inset 0 0 60px rgba(160,120,40,.05); width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    .browser-topbar { background:linear-gradient(90deg,#8B4513 0%,#5C2808 45%,#8B4513 100%); border-bottom:2px solid var(--accent); padding:.4rem 1.1rem; display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+    .topbar-icon { font-size:.95rem; }
+    .browser-title { color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-size:.82rem; font-weight:700; letter-spacing:.07em; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+    .browser-content { flex:1; overflow-y:auto; padding:.9rem 1.8rem; display:flex; flex-direction:column; }
+    .browser-content::-webkit-scrollbar { width:4px; }
+    .browser-content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+    .progress-bar { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--main)); z-index:1000; transition:width .3s; }
+    .nav-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.3rem 1.5rem; background:rgba(30,15,6,.97); border-top:2px solid var(--accent); z-index:999; font-size:14px; }
+    .nav-btn { display:flex; align-items:center; justify-content:center; width:1.7rem; height:1.7rem; border:1.5px solid #8B6540; border-radius:50%; background:transparent; cursor:pointer; color:var(--accent-light); transition:all .2s; padding:0; }
+    .nav-btn svg { width:.55rem; height:.55rem; fill:currentColor; display:block; }
+    .nav-btn:hover:not(:disabled) { background:var(--main); border-color:var(--accent); }
+    .nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .nav-counter { font-size:13px; font-weight:700; color:var(--accent-light); min-width:3rem; text-align:center; display:flex; align-items:center; gap:.15rem; }
+    .slide-input { width:1.4rem; text-align:center; border:none; border-bottom:1.5px solid transparent; background:transparent; font-size:13px; font-weight:700; color:var(--accent-light); font-family:inherit; padding:0; outline:none; cursor:pointer; transition:border-color .2s; }
+    .slide-input:hover { border-bottom-color:var(--accent); }
+    .slide-input:focus { border-bottom-color:var(--accent); background:rgba(139,69,19,.3); border-radius:3px; }
+
+    .section-ornament { color:var(--accent); font-size:.72rem; letter-spacing:.5em; text-align:center; margin-bottom:.2rem; opacity:.75; }
+    .hist-divider { display:flex; align-items:center; gap:.4rem; margin:.25rem 0 .55rem; }
+    .h-line { flex:1; height:1.5px; background:linear-gradient(90deg,transparent,var(--accent) 25%,var(--accent) 75%,transparent); }
+    .h-gem  { color:var(--accent); font-size:.7rem; }
+    .era-badge { display:inline-block; background:linear-gradient(135deg,var(--main),var(--dark)); color:var(--accent-light); border:1px solid var(--accent); padding:.05rem .45rem; font-family:'Nanum Myeongjo',serif; font-size:.8rem; font-weight:700; border-radius:2px; white-space:nowrap; }
+
+    /* ── 빈칸: 순차 공개 (nav 제어) ── */
+    .blank {
+      display:inline-block; min-width:5rem;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.05em .6em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:inherit; user-select:none; position:relative;
+      text-align:center; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .blank::after {
+      content:'?'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.85em; font-weight:800;
+      pointer-events:none; transition:opacity .25s;
+    }
+    .blank.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .blank.on::after { opacity:0; }
+
+    /* ── 정답 버튼: 순차 공개 (nav 제어) ── */
+    .ans-btn {
+      display:inline-block;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.08em .9em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:.88rem; user-select:none; position:relative;
+      text-align:center; white-space:nowrap; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .ans-btn::after {
+      content:'정답'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.78em; font-weight:700;
+      pointer-events:none; transition:opacity .25s; white-space:nowrap;
+    }
+    .ans-btn.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity:0; }
+
+    .cover-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.65rem; }
+    .toc-list { display:flex; flex-direction:column; gap:.38rem; margin-top:.3rem; }
+    .toc-item { display:flex; align-items:center; gap:.7rem; padding:.42rem .85rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); cursor:pointer; transition:all .2s; }
+    .toc-item:hover { background:var(--light); border-color:var(--accent); transform:translateX(4px); }
+    .toc-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.82rem; min-width:1.65rem; height:1.65rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .toc-title { font-weight:700; font-size:.92rem; }
+    .toc-desc  { font-size:.82rem; color:var(--text-sec); }
+
+    .ruler-card { border:1.5px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:.45rem; }
+    .ruler-card-header { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.9rem; padding:.32rem .8rem; display:flex; align-items:center; gap:.4rem; }
+    .ruler-card-body { padding:.55rem .9rem; background:var(--card-bg); }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+    .info-list { list-style:none; display:flex; flex-direction:column; gap:.42rem; }
+    .info-list li { display:flex; gap:.45rem; align-items:flex-start; font-size:.93rem; line-height:1.65; }
+    .info-list li::before { content:'◆'; color:var(--accent); font-size:.62rem; margin-top:.42em; flex-shrink:0; }
+    .highlight-box { background:var(--light); border-left:4px solid var(--accent); border-right:1px solid var(--border); padding:.5rem .9rem .5rem 1rem; margin:.38rem 0 0; border-radius:0 3px 3px 0; font-size:.9rem; line-height:1.65; }
+    .highlight-box strong { color:var(--main); }
+
+    .quiz-wrap { display:flex; flex-direction:column; gap:.42rem; margin-top:.3rem; }
+    .quiz-row { display:flex; align-items:flex-start; gap:.65rem; border:1.5px solid var(--border); border-radius:3px; padding:.45rem .85rem; background:var(--card-bg); }
+    .quiz-row.col { flex-direction:column; gap:.28rem; }
+    .quiz-row.col .inner { display:flex; gap:.65rem; align-items:flex-start; }
+    .q-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.8rem; min-width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.12em; }
+    .q-text { flex:1; font-size:.93rem; line-height:1.75; }
+    .bogi { border:1px solid var(--border); border-radius:2px; padding:.3rem .75rem; margin:.2rem 0; font-size:.9rem; line-height:1.75; background:var(--light); font-style:italic; }
+
+    .sum-table { width:100%; border-collapse:collapse; font-size:.88rem; }
+    .sum-table th { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); padding:.38rem .7rem; text-align:left; font-family:'Nanum Myeongjo',serif; }
+    .sum-table td { padding:.38rem .7rem; border-bottom:1px solid var(--border); line-height:1.6; vertical-align:middle; }
+    .sum-table tr:nth-child(even) td { background:var(--light); }
+
+    @media (max-width:768px) { .grid-2 { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- 슬라이드 1: 표지 -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚔️</span>
+      <span class="browser-title">세계사 · Ⅰ-3. 서아시아, 지중해, 유럽 세계의 형성 — 학습지 31-32쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 66~69쪽</span>
+        <h1 style="margin-top:.3rem;">6. 크리스트교 세계와<br>이슬람 세계의 충돌</h1>
+        <div class="hist-divider" style="width:60%;margin:0 auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;">셀주크 튀르크의 등장 · 십자군 전쟁 배경과 전개 · 십자군 전쟁의 영향</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 2: 목차 -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📋</span>
+      <span class="browser-title">목차</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="text-align:center;margin-bottom:.5rem;">학습 내용</h2>
+      <div class="toc-list">
+        <div class="toc-item" onclick="goToSlide(2)">
+          <span class="toc-num">1</span>
+          <div><div class="toc-title">셀주크 튀르크의 등장</div><div class="toc-desc">이슬람 수용 · 술탄 칭호 · ➊ 제국과 대립</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(3)">
+          <span class="toc-num">2</span>
+          <div><div class="toc-title">십자군 전쟁의 배경</div><div class="toc-desc">삼포제 확산 · 교황 ➋ 의 성지 회복 호소</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(4)">
+          <span class="toc-num">3</span>
+          <div><div class="toc-title">십자군 전쟁의 전개</div><div class="toc-desc">제1차 (예루살렘 왕국) · 제4차 (라틴 제국)</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(5)">
+          <span class="toc-num">4</span>
+          <div><div class="toc-title">십자군 전쟁의 영향</div><div class="toc-desc">➌ 동요 · 도시 성장 · 동서 문화 교류</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(6)">
+          <span class="toc-num">5</span>
+          <div><div class="toc-title">개념 확인 문제 ① — OX</div><div class="toc-desc">셀주크 튀르크 · 교황 · 십자군 전쟁</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(7)">
+          <span class="toc-num">6</span>
+          <div><div class="toc-title">개념 확인 문제 ② — 빈칸 채우기</div><div class="toc-desc">비잔티움 · 봉건제 · 레콩키스타</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(8)">
+          <span class="toc-num">7</span>
+          <div><div class="toc-title">개념 확인 문제 ③ — 자료 분석</div><div class="toc-desc">클레르몽 공의회 연설문 (㉠~㉢)</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 3: 셀주크 튀르크의 등장 -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🐎</span>
+      <span class="browser-title">학습지 31쪽 — 1. 셀주크 튀르크의 등장</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">1. 셀주크 튀르크의 등장</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🐎 셀주크 튀르크의 성장</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>중앙아시아에서 활약하던 <strong>튀르크인</strong>이 이슬람 세계와 접촉하여 <strong>이슬람교 수용</strong></li>
+            <li>셀주크 튀르크가 <strong>바그다드에 입성</strong>하여 아바스 왕조의 칼리프 보호
+              → 칼리프로부터 <strong>술탄</strong>의 칭호를 인정받음</li>
+            <li>소아시아 지역으로 세력을 확장하는 과정에서
+              <span class="blank" data-reveal>비잔티움</span> 제국과 대립</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 4: 십자군 전쟁의 배경 -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✝️</span>
+      <span class="browser-title">학습지 31쪽 — 2. 십자군 전쟁 (1) 배경</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">2. 십자군 전쟁 — 배경</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📜 십자군 전쟁의 배경</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>11세기경부터 서유럽 세계에 <strong>삼포제</strong> 확산 → 농업 생산력 향상, 인구 증가</li>
+            <li>셀주크 튀르크의 세력 확대 → <strong>비잔티움 제국</strong>이 로마 교황에게 도움 요청</li>
+            <li>교황 <span class="blank" data-reveal>우르바누스 2세</span>가 성지 회복 호소
+              → 제후·기사·상인·농민 등이 호응</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 5: 십자군 전쟁의 전개 -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚔️</span>
+      <span class="browser-title">학습지 31쪽 — 2. 십자군 전쟁 (2) 전개</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">2. 십자군 전쟁 — 전개</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ 주요 십자군의 결과</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>제1차 십자군</strong> : 예루살렘 점령 → <strong>예루살렘 왕국</strong> 건설</li>
+            <li><strong>제4차 십자군</strong> : 콘스탄티노폴리스 점령 → <strong>라틴 제국</strong> 수립</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 6: 십자군 전쟁의 영향 -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏙️</span>
+      <span class="browser-title">학습지 32쪽 — 3. 십자군 전쟁의 영향</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">3. 십자군 전쟁의 영향</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏰 봉건 사회의 변화</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><span class="blank" data-reveal>봉건제</span>의 동요 :
+              교황의 권위 추락, 제후와 기사 계층의 몰락 → <strong>왕권의 강화</strong></li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏙️ 도시의 성장 · 문화 발달</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>지중해를 통한 동방과의 교역 활발 → <strong>상공업의 발달</strong> → <strong>이탈리아 도시</strong>의 성장</li>
+            <li>비잔티움 문화, 이슬람 문화와의 접촉 → 서유럽 세계, 문화적 자극을 받음</li>
+            <li>이슬람 세계의 작물과 재배법, 문화가 서유럽 세계에 유입</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 7: 개념 확인 문제 1번 (OX) -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📝</span>
+      <span class="browser-title">학습지 32쪽 — 개념 확인 문제 1번 (OX)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 — 1번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.4rem;">다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">⑴</span>
+          <div class="q-text">셀주크 튀르크는 아바스 왕조의 칼리프로부터 술탄의 칭호를 받아 이슬람 세계의 실질적인 지배자가 되었다.</div>
+          <span class="ans-btn" data-reveal>○</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <div class="q-text">교황 그레고리우스 7세는 교황권 확대 의도를 가지고 성지인 예루살렘을 되찾자고 호소하였으며, 이에 제후와 기사, 상인, 농민 등이 호응하면서 십자군 전쟁이 시작되었다.</div>
+          <span class="ans-btn" data-reveal>× (우르바누스 2세)</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑶</span>
+          <div class="q-text">제1차 십자군은 콘스탄티노폴리스를 점령하고 라틴 제국을 세우는 세속적인 목적에 따라 진행되었다.</div>
+          <span class="ans-btn" data-reveal>× (제4차 십자군)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 8: 개념 확인 문제 2번 (빈칸) -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📝</span>
+      <span class="browser-title">학습지 32쪽 — 개념 확인 문제 2번 (빈칸 채우기)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 — 2번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.4rem;">빈칸에 들어갈 알맞은 말을 쓰시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner"><span class="q-num">⑴</span>
+            <div class="q-text">셀주크 튀르크는 소아시아 지역으로 세력을 확장하는 과정에서
+              <span class="ans-btn" data-reveal>비잔티움</span> 제국과 대립하였으며,
+              이는 십자군 전쟁이 일어나는 계기가 되었다.</div>
+          </div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner"><span class="q-num">⑵</span>
+            <div class="q-text">십자군 전쟁의 실패로 교황의 권위 추락, 제후와 기사 계층의 몰락이 이루어지면서
+              <span class="ans-btn" data-reveal>봉건제</span>이/가 동요하고 왕권이 강화되었다.</div>
+          </div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner"><span class="q-num">⑶</span>
+            <div class="q-text"><span class="ans-btn" data-reveal>레콩키스타</span>은/는
+              8세기 초부터 15세기 말까지 이베리아반도 북부의 크리스트교 국가들이
+              이베리아반도 남부의 이슬람 국가들을 몰아내고 영토를 회복하려는 국토 회복 운동을 의미한다.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 9: 개념 확인 문제 3번 (자료 분석) -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📜</span>
+      <span class="browser-title">학습지 32쪽 — 개념 확인 문제 3번 (자료 분석)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 — 3번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.35rem;">제시된 자료의 ㉠~㉢에 해당하는 명칭을 쓰시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="bogi" style="margin:0 0 .15rem;">
+            지금 여러분이 해야 할 일은 동방의 형제들을 구하기 위해 즉각 나서야 한다는 것입니다.
+            여러분이 알고 있듯이 <strong>㉠ 튀르크인들</strong>이 형제들의 나라를 침략했습니다. ……
+            이교도들과의 전투에서 죽게 될 사람들, <strong>㉡ 나</strong>는 신으로부터 부여받은 권위로써
+            <strong>㉢ 이 전쟁</strong>에 참가한 이들에게 사면을 허락합니다.
+            <div style="text-align:right;font-size:.82rem;margin-top:.3rem;font-style:normal;">— 교황 ㉡ 의 클레르몽 공의회 연설문 —</div>
+          </div>
+          <div style="font-size:.93rem;line-height:2.2;">
+            ㉠ : <span class="ans-btn" data-reveal>셀주크 튀르크</span>
+            &nbsp;&nbsp;
+            ㉡ : <span class="ans-btn" data-reveal>우르바누스 2세</span>
+            &nbsp;&nbsp;
+            ㉢ : <span class="ans-btn" data-reveal>십자군</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</div><!-- /presentation -->
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
+    / <span id="totalSlides">9</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  /* 슬라이드 내 순차 공개 대상 요소 목록 */
+  function revealItems(slideEl) {
+    return Array.from(slideEl.querySelectorAll('[data-reveal]'));
+  }
+
+  /* 슬라이드의 현재 공개 수 */
+  function getRC(slideEl) { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n) { slideEl.dataset.rc = n; }
+
+  /* rc 값에 따라 on 클래스 적용 */
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => el.classList.toggle('on', i < n));
+  }
+
+  /* 네비게이션 버튼 상태 갱신 */
+  function updateNav() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && n === 0;
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && n === items.length;
+    document.getElementById('slideInput').value = currentSlide + 1;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+  }
+
+  /* TOC 등 직접 이동: 해당 슬라이드의 공개 수를 0으로 초기화 */
+  function goToSlide(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = idx;
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+
+  /* 다음: 빈칸 공개 → (모두 공개 후) 다음 슬라이드 */
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1);
+      applyReveal(el);
+      updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+
+  /* 이전: 빈칸 가리기 → (모두 가려진 후) 이전 슬라이드(전부 공개 상태) */
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1);
+      applyReveal(el);
+      updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length); /* 이전 슬라이드: 전부 공개 */
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  /* 키보드: 화살표, Space, PageDown/PageUp, Home, End */
+  document.addEventListener('keydown', e => {
+    if (e.target === document.getElementById('slideInput')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextAction(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End') goToSlide(total - 1);
+  });
+
+  /* 슬라이드 번호 직접 입력 */
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const n = parseInt(slideInput.value) - 1;
+      if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+      slideInput.blur();
+    }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('blur', () => {
+    const n = parseInt(slideInput.value) - 1;
+    if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+  });
+
+  /* 터치 스와이프 */
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) { if (dx < 0) nextAction(); else prevAction(); }
+  }, { passive: true });
+
+  updateNav();
+</script>
+</body>
+</html>
