@@ -346,7 +346,7 @@
     }
 
     function renderSubject(sub) {
-      const pages = (sub.pages || []).slice().sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+      const pages = (sub.pages || []).slice();
       return `
         <section class="subject-section" data-subject="${esc(sub.name)}">
           <div class="subject-header">
