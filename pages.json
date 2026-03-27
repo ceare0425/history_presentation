@@ -167,6 +167,19 @@
           "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
         },
         {
+          "title": "Ⅰ단원 대단원 복습 (학습지 1~32쪽)",
+          "path": "세계사/대단원복습-1단원/index.html",
+          "emoji": "🌍",
+          "description": "Ⅰ-1 현생 인류와 문명의 형성 · Ⅰ-2 동아시아·인도 세계 · Ⅰ-3 서아시아·지중해·유럽 세계. 14개 소단원 핵심 개념을 빈칸 순차 공개로 복습.",
+          "tags": [
+            { "label": "대단원 복습", "color": "orange" },
+            { "label": "Ⅰ단원", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
           "title": "15. 이슬람 교역망의 확대",
           "path": "세계사/15-이슬람교역망/index.html",
           "emoji": "🕌",

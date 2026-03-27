@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ⅰ단원 대단원 복습 — 세계사</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main:#8B4513; --dark:#6B3010; --light:#FFF8E1; --accent:#C5A028;
+      --accent-light:#E8D080; --bg:#F5E6C4; --text:#2C1A0E; --text-sec:#6B4226;
+      --border:#A07850; --card-bg:#FDF5E0;
+    }
+    html, body { font-size: clamp(20px, 2.2vw, 36px); font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif; color: var(--text); height: 100%; overflow: hidden; }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.8vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 25px); } }
+    h1 { font-family:'Nanum Myeongjo',serif; font-size:2.2rem; font-weight:800; letter-spacing:.04em; line-height:1.3; }
+    h2 { font-family:'Nanum Myeongjo',serif; font-size:1.25rem; font-weight:700; letter-spacing:.04em; }
+    h3 { font-family:'Nanum Myeongjo',serif; font-size:.95rem; font-weight:700; }
+    p  { font-size:.9rem; line-height:1.7; }
+
+    body { background-color:var(--bg); background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(160,120,60,.04) 2px,rgba(160,120,60,.04) 4px), repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(140,100,40,.06) 28px,rgba(140,100,40,.06) 29px); }
+
+    .presentation { position:fixed; inset:0; bottom:2.2rem; display:flex; align-items:center; justify-content:center; padding:.7rem; }
+    .slide { display:none; aspect-ratio:16/9; width:min(100%, calc((100vh - 2.2rem - 1.4rem) * (16/9))); height:auto; }
+    .slide.active { display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    .browser-card { background:var(--card-bg); border:2px solid var(--border); outline:4px solid var(--accent); outline-offset:-7px; border-radius:4px; box-shadow:0 4px 28px rgba(44,26,14,.22),inset 0 0 60px rgba(160,120,40,.05); width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    .browser-topbar { background:linear-gradient(90deg,#8B4513 0%,#5C2808 45%,#8B4513 100%); border-bottom:2px solid var(--accent); padding:.35rem 1rem; display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+    .topbar-icon { font-size:.9rem; }
+    .browser-title { color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-size:.76rem; font-weight:700; letter-spacing:.07em; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+    .browser-content { flex:1; overflow-y:auto; padding:.75rem 1.5rem; display:flex; flex-direction:column; }
+    .browser-content::-webkit-scrollbar { width:4px; }
+    .browser-content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+    .progress-bar { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--main)); z-index:1000; transition:width .3s; }
+    .nav-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.3rem 1.5rem; background:rgba(30,15,6,.97); border-top:2px solid var(--accent); z-index:999; font-size:14px; }
+    .nav-btn { display:flex; align-items:center; justify-content:center; width:1.7rem; height:1.7rem; border:1.5px solid #8B6540; border-radius:50%; background:transparent; cursor:pointer; color:var(--accent-light); transition:all .2s; padding:0; }
+    .nav-btn svg { width:.55rem; height:.55rem; fill:currentColor; display:block; }
+    .nav-btn:hover:not(:disabled) { background:var(--main); border-color:var(--accent); }
+    .nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .nav-counter { font-size:13px; font-weight:700; color:var(--accent-light); min-width:3rem; text-align:center; display:flex; align-items:center; gap:.15rem; }
+    .slide-input { width:1.4rem; text-align:center; border:none; border-bottom:1.5px solid transparent; background:transparent; font-size:13px; font-weight:700; color:var(--accent-light); font-family:inherit; padding:0; outline:none; cursor:pointer; transition:border-color .2s; }
+    .slide-input:hover { border-bottom-color:var(--accent); }
+    .slide-input:focus { border-bottom-color:var(--accent); background:rgba(139,69,19,.3); border-radius:3px; }
+
+    .section-ornament { color:var(--accent); font-size:.68rem; letter-spacing:.5em; text-align:center; margin-bottom:.2rem; opacity:.75; }
+    .hist-divider { display:flex; align-items:center; gap:.4rem; margin:.2rem 0 .45rem; }
+    .h-line { flex:1; height:1.5px; background:linear-gradient(90deg,transparent,var(--accent) 25%,var(--accent) 75%,transparent); }
+    .h-gem  { color:var(--accent); font-size:.68rem; }
+    .era-badge { display:inline-block; background:linear-gradient(135deg,var(--main),var(--dark)); color:var(--accent-light); border:1px solid var(--accent); padding:.04rem .4rem; font-family:'Nanum Myeongjo',serif; font-size:.75rem; font-weight:700; border-radius:2px; white-space:nowrap; }
+
+    /* 빈칸: 순차 공개 */
+    .blank {
+      display:inline-block; min-width:4.5rem;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.03em .55em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:inherit; user-select:none; position:relative;
+      text-align:center; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .blank::after {
+      content:'?'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.8em; font-weight:800;
+      pointer-events:none; transition:opacity .25s;
+    }
+    .blank.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .blank.on::after { opacity:0; }
+
+    .cover-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.6rem; }
+
+    .toc-list { display:flex; flex-direction:column; gap:.3rem; margin-top:.2rem; }
+    .toc-item { display:flex; align-items:center; gap:.6rem; padding:.35rem .75rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); cursor:pointer; transition:all .2s; }
+    .toc-item:hover { background:var(--light); border-color:var(--accent); transform:translateX(4px); }
+    .toc-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.75rem; min-width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .toc-title { font-weight:700; font-size:.85rem; }
+    .toc-desc  { font-size:.76rem; color:var(--text-sec); margin-top:.05rem; }
+    .toc-group-label { font-family:'Nanum Myeongjo',serif; font-size:.8rem; font-weight:700; color:var(--main); letter-spacing:.06em; margin:.35rem 0 .15rem; padding-left:.3rem; border-left:3px solid var(--accent); }
+
+    .ruler-card { border:1.5px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:.4rem; }
+    .ruler-card-header { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.85rem; padding:.28rem .75rem; display:flex; align-items:center; gap:.4rem; }
+    .ruler-card-body { padding:.45rem .85rem; background:var(--card-bg); }
+    .ruler-card-body.compact { padding:.35rem .75rem; }
+
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
+    .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.45rem; }
+
+    .info-list { list-style:none; display:flex; flex-direction:column; gap:.32rem; }
+    .info-list li { position:relative; padding-left:1.05em; font-size:.88rem; line-height:1.62; }
+    .info-list li::before { content:'◆'; color:var(--accent); font-size:.58rem; position:absolute; left:0; top:.46em; }
+
+    .sum-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+    .sum-table th { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); padding:.3rem .55rem; text-align:center; font-family:'Nanum Myeongjo',serif; }
+    .sum-table td { padding:.3rem .55rem; border:1px solid var(--border); line-height:1.55; vertical-align:top; }
+    .sum-table tr:nth-child(even) td { background:rgba(255,248,225,.6); }
+    .sum-table .row-head { background:rgba(139,69,19,.12); font-weight:700; text-align:center; white-space:nowrap; }
+
+    /* 중단원 구분 슬라이드 */
+    .sec-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.5rem; }
+    .sec-num { font-family:'Nanum Myeongjo',serif; font-size:3.5rem; font-weight:800; color:var(--main); letter-spacing:.06em; line-height:1; }
+    .sec-sub { display:flex; flex-direction:column; gap:.3rem; margin-top:.2rem; }
+    .sec-lesson { font-size:.82rem; color:var(--text-sec); }
+
+    @media (max-width:768px) { .grid-2,.grid-3 { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ────────────────────────────────────────────
+     슬라이드 0: 표지
+     ──────────────────────────────────────────── -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌍</span>
+      <span class="browser-title">세계사 — 학습지 1~32쪽 대단원 복습</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">학습지 1~32쪽</span>
+        <h1 style="margin-top:.3rem;">Ⅰ단원 대단원 복습</h1>
+        <div class="hist-divider" style="width:65%;margin:0 auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;line-height:1.9;">
+          Ⅰ-1. 현생 인류와 문명의 형성<br>
+          Ⅰ-2. 동아시아, 인도 세계의 형성<br>
+          Ⅰ-3. 서아시아, 지중해, 유럽 세계의 형성
+        </p>
+        <div class="section-ornament" style="margin-top:.1rem;">✦ &nbsp; ✦ &nbsp; ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 1: 목차
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📋</span>
+      <span class="browser-title">목차</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="text-align:center;margin-bottom:.4rem;">학습 내용</h2>
+      <div class="grid-2" style="gap:.4rem;align-items:start;">
+        <div>
+          <div class="toc-group-label">Ⅰ-1. 현생 인류와 문명의 형성</div>
+          <div class="toc-list">
+            <div class="toc-item" onclick="goToSlide(3)">
+              <span class="toc-num">01</span>
+              <div><div class="toc-title">선사 시대와 문명의 탄생</div><div class="toc-desc">구석기 · 신석기 · 청동기 · 4대 문명</div></div>
+            </div>
+            <div class="toc-item" onclick="goToSlide(4)">
+              <span class="toc-num">02</span>
+              <div><div class="toc-title">메소포타미아, 이집트, 지중해 문명</div><div class="toc-desc">바빌로니아 · 파라오 · 에게 문명</div></div>
+            </div>
+            <div class="toc-item" onclick="goToSlide(8)">
+              <span class="toc-num">03</span>
+              <div><div class="toc-title">인도, 중국, 메소아메리카 문명</div><div class="toc-desc">카스트제 · 갑골문 · 봉건제 · 마야</div></div>
+            </div>
+          </div>
+          <div class="toc-group-label" style="margin-top:.5rem;">Ⅰ-2. 동아시아, 인도 세계의 형성</div>
+          <div class="toc-list">
+            <div class="toc-item" onclick="goToSlide(12)">
+              <span class="toc-num">04</span>
+              <div><div class="toc-title">진·한 제국</div><div class="toc-desc">군현제 · 유교 · 제자백가 · 흉노</div></div>
+            </div>
+            <div class="toc-item" onclick="goToSlide(16)">
+              <span class="toc-num">05</span>
+              <div><div class="toc-title">수·당 제국</div><div class="toc-desc">한화 정책 · 과거제 · 동아시아 문화권</div></div>
+            </div>
+            <div class="toc-item" onclick="goToSlide(19)">
+              <span class="toc-num">06</span>
+              <div><div class="toc-title">일본 고대 국가의 발전</div><div class="toc-desc">아스카 · 나라 · 헤이안 시대</div></div>
+            </div>
+            <div class="toc-item" onclick="goToSlide(22)">
+              <span class="toc-num">07</span>
+              <div><div class="toc-title">불교의 성립과 인도의 통일 제국</div><div class="toc-desc">마우리아 · 쿠샨 · 간다라 미술</div></div>
+            </div>
+            <div class="toc-item" onclick="goToSlide(26)">
+              <span class="toc-num">08</span>
+              <div><div class="toc-title">굽타 왕조와 인도 고전 문화</div><div class="toc-desc">힌두교 · 산스크리트어 · 델리 술탄</div></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="toc-group-label">Ⅰ-3. 서아시아, 지중해, 유럽 세계의 형성</div>
+          <div class="toc-list">
+            <div class="toc-item" onclick="goToSlide(31)">
+              <span class="toc-num">09</span>
+              <div><div class="toc-title">서아시아 여러 제국의 발전</div><div class="toc-desc">아케메네스 · 파르티아 · 사산 왕조</div></div>
+            </div>
+            <div class="toc-item" onclick="goToSlide(34)">
+              <span class="toc-num">10</span>
+              <div><div class="toc-title">그리스 세계의 발전</div><div class="toc-desc">폴리스 · 아테네 민주정 · 헬레니즘</div></div>
+            </div>
+            <div class="toc-item" onclick="goToSlide(37)">
+              <span class="toc-num">11</span>
+              <div><div class="toc-title">로마의 발전과 크리스트교</div><div class="toc-desc">공화정 · Pax Romana · 밀라노 칙령</div></div>
+            </div>
+            <div class="toc-item" onclick="goToSlide(40)">
+              <span class="toc-num">12</span>
+              <div><div class="toc-title">서유럽 봉건 사회와 비잔티움 제국</div><div class="toc-desc">프랑크 · 봉건제 · 카노사의 굴욕</div></div>
+            </div>
+            <div class="toc-item" onclick="goToSlide(43)">
+              <span class="toc-num">13</span>
+              <div><div class="toc-title">이슬람 세계의 성립과 발전</div><div class="toc-desc">헤지라 · 우마이야 · 아바스 왕조</div></div>
+            </div>
+            <div class="toc-item" onclick="goToSlide(46)">
+              <span class="toc-num">14</span>
+              <div><div class="toc-title">크리스트교 세계와 이슬람 세계의 충돌</div><div class="toc-desc">셀주크 튀르크 · 십자군 전쟁</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 2: Ⅰ-1 중단원 구분
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏺</span>
+      <span class="browser-title">Ⅰ-1. 현생 인류와 문명의 형성</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <div class="sec-num">Ⅰ — 1</div>
+        <div class="hist-divider" style="width:55%;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2>현생 인류와 문명의 형성</h2>
+        <div class="sec-sub">
+          <div class="sec-lesson">01 선사 시대와 문명의 탄생 (학습지 1~2쪽)</div>
+          <div class="sec-lesson">02 메소포타미아, 이집트, 지중해 문명 (학습지 3~4쪽)</div>
+          <div class="sec-lesson">03 인도, 중국, 메소아메리카 문명 (학습지 5~6쪽)</div>
+        </div>
+        <div class="section-ornament" style="margin-top:.2rem;">✦ &nbsp; ✦ &nbsp; ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 3: 01 — 현생 인류 + 선사시대 비교표
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🦴</span>
+      <span class="browser-title">Ⅰ-1 · 01 선사 시대와 문명의 탄생 — 학습지 1~2쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.4rem;">선사 시대와 문명의 탄생</h2>
+      <div class="ruler-card" style="margin-bottom:.35rem;">
+        <div class="ruler-card-header">🧬 현생 인류의 등장</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>현생 인류인 <span class="blank" data-reveal>호모 사피엔스</span>가 아프리카에서 등장 → 세계 각지로 이동, 구석기 문화 주도</li>
+          </ul>
+        </div>
+      </div>
+      <table class="sum-table">
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th>구석기 시대</th>
+            <th>신석기 시대</th>
+            <th>청동기·문명의 탄생</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-head">생활</td>
+            <td>수렵·채집, 이동 생활<br>동굴·숲속 거주</td>
+            <td><span class="blank" data-reveal>농경</span>과 목축, 정착 생활<br>움집 제작, 베틀·옷 제작</td>
+            <td>대규모 관개 농업<br>도시 건설(성벽)</td>
+          </tr>
+          <tr>
+            <td class="row-head">유물</td>
+            <td><span class="blank" data-reveal>뗀석기</span>, 비너스 조각상<br>동굴 벽화(알타미라)</td>
+            <td><span class="blank" data-reveal>간석기</span>·토기<br>거석 유적(스톤헨지)</td>
+            <td>청동 무기·제사 도구<br>문자 발명</td>
+          </tr>
+          <tr>
+            <td class="row-head">사회</td>
+            <td>씨족 공동체</td>
+            <td>씨족 사회, 촌락 형성<br><span class="blank" data-reveal>애니미즘</span> 신앙</td>
+            <td><span class="blank" data-reveal>계급</span> 형성 → 국가 출현<br>직업 분화</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:.35rem; font-size:.82rem; color:var(--text-sec);">
+        ※ 4대 문명 발상지: 메소포타미아 · 이집트 · 인도 · 중국 (모두 큰 강 유역)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 4: 02 — 메소포타미아 문명
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏺</span>
+      <span class="browser-title">Ⅰ-1 · 02 메소포타미아, 이집트, 지중해 문명 — 학습지 3~4쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏺 메소포타미아 문명</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>아무르인이 <span class="blank" data-reveal>바빌로니아</span> 왕국 건국 → 함무라비왕 때 전성기</li>
+            <li>《함무라비 법전》(쐐기 문자), <span class="blank" data-reveal>지구라트</span>(신전), 신정 정치, 태음력·60진법</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 5: 02 — 이집트 문명
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">☀️</span>
+      <span class="browser-title">Ⅰ-1 · 02 메소포타미아, 이집트, 지중해 문명 — 학습지 3~4쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">☀️ 이집트 문명</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>최고 통치자 <span class="blank" data-reveal>파라오</span>(태양신 '라'의 아들)가 신으로 군림</li>
+            <li><span class="blank" data-reveal>피라미드</span>(파라오의 무덤), 〈사자의 서〉, 미라, 상형 문자, 태양력·10진법</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 6: 02 — 동부 지중해 연안 국가들
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚓</span>
+      <span class="browser-title">Ⅰ-1 · 02 메소포타미아, 이집트, 지중해 문명 — 학습지 3~4쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚓ 동부 지중해 연안 국가들</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><strong>히타이트</strong>: <span class="blank" data-reveal>철제 무기</span>·전차 → 철기 문화 전파</li>
+            <li><strong>페니키아</strong>: 해상 무역, <span class="blank" data-reveal>표음 문자</span> 사용 → 유럽 문자에 영향</li>
+            <li><strong>헤브라이</strong>: 이스라엘 왕국 건설, <span class="blank" data-reveal>유대교</span>(유일신) 창시 → 크리스트교·이슬람교에 영향</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 7: 02 — 에게 문명
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌊</span>
+      <span class="browser-title">Ⅰ-1 · 02 메소포타미아, 이집트, 지중해 문명 — 학습지 3~4쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌊 에게 문명</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><strong>크레타(미노스) 문명</strong>: 해양 교역, 크노소스 궁전 → 미케네인에 멸망</li>
+            <li><strong>미케네 문명</strong>: 크레타 계승 → 도리스인 이주로 몰락</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 8: 03 — 인도 문명
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🕌</span>
+      <span class="browser-title">Ⅰ-1 · 03 인도, 중국, 메소아메리카 문명 — 학습지 5~6쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🕌 인도 문명</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><strong>인더스 문명</strong>: 드라비다인, 하라파·<span class="blank" data-reveal>모헨조다로</span>(계획도시)</li>
+            <li>아리아인 이동 → 원주민 지배 위해 <span class="blank" data-reveal>카스트제</span> 형성</li>
+            <li><span class="blank" data-reveal>브라만교</span> 성립(자연신 숭배, 《베다》 경전)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 9: 03 — 중국 문명
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🐉</span>
+      <span class="browser-title">Ⅰ-1 · 03 인도, 중국, 메소아메리카 문명 — 학습지 5~6쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🐉 중국 문명</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><strong>하</strong>: 문헌상 최초 국가(얼리터우 유적)</li>
+            <li><strong>상</strong>: 신권 정치, <span class="blank" data-reveal>갑골문</span>(한자의 기원)</li>
+            <li><strong>주</strong>: <span class="blank" data-reveal>봉건제</span> 실시, 혈연 기반 <span class="blank" data-reveal>종법 제도</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 10: 03 — 메소아메리카 문명
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌽</span>
+      <span class="browser-title">Ⅰ-1 · 03 인도, 중국, 메소아메리카 문명 — 학습지 5~6쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌽 메소아메리카 문명</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><strong>올메카 문명</strong>: 상형 문자·달력 → 마야 문명에 영향, 거대 석조 두상</li>
+            <li><strong>마야 문명</strong>: 유카탄반도를 중심으로 도시 국가 형성(티칼·치첸이트사), 피라미드형 신전, '영(0)'의 개념·일식·월식 계산</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 11: Ⅰ-2 중단원 구분
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏯</span>
+      <span class="browser-title">Ⅰ-2. 동아시아, 인도 세계의 형성</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <div class="sec-num">Ⅰ — 2</div>
+        <div class="hist-divider" style="width:55%;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2>동아시아, 인도 세계의 형성</h2>
+        <div class="sec-sub">
+          <div class="sec-lesson">04 진·한 제국 (학습지 7~8쪽)</div>
+          <div class="sec-lesson">05 수·당 제국 (학습지 9~12쪽)</div>
+          <div class="sec-lesson">06 일본 고대 국가의 발전 (학습지 13~14쪽)</div>
+          <div class="sec-lesson">07 불교의 성립과 인도의 통일 제국 (학습지 15~16쪽)</div>
+          <div class="sec-lesson">08 굽타 왕조와 인도 고전 문화의 발전 (학습지 17~18쪽)</div>
+        </div>
+        <div class="section-ornament" style="margin-top:.2rem;">✦ &nbsp; ✦ &nbsp; ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 12: 04 — 춘추 전국 시대 / 제자백가
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📜</span>
+      <span class="browser-title">Ⅰ-2 · 04 진·한 제국 — 학습지 7~8쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📜 춘추 전국 시대 — 제자백가</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><strong>춘추 시대</strong>: 존왕양이 명분, 춘추 5패</li>
+            <li><strong>전국 시대</strong>: 전국 7웅, 약육강식</li>
+            <li><span class="blank" data-reveal>유가</span>(공자·맹자): 인과 예 중시</li>
+            <li><span class="blank" data-reveal>법가</span>(한비자·상앙): 엄격한 법으로 통치</li>
+            <li><span class="blank" data-reveal>도가</span>(노자·장자): 자연 상태 추구 / <span class="blank" data-reveal>묵가</span>(묵자): 차별 없는 사랑</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 13: 04 — 진(秦)의 통일과 멸망
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏯</span>
+      <span class="browser-title">Ⅰ-2 · 04 진·한 제국 — 학습지 7~8쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏯 진(秦)의 통일과 멸망</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>전국 7웅 통일 → <span class="blank" data-reveal>군현제</span> 실시, 화폐·도량형·문자 통일, <span class="blank" data-reveal>분서갱유</span></li>
+            <li>만리장성 축조 → 농민 반란(진승·오광의 난)으로 멸망</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 14: 04 — 한(漢)의 발전
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="14">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚔️</span>
+      <span class="browser-title">Ⅰ-2 · 04 진·한 제국 — 학습지 7~8쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ 한(漢)의 발전</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><strong>한 고조</strong>(유방): <span class="blank" data-reveal>군국제</span>(봉건제+군현제 절충) 실시</li>
+            <li><strong>한 <span class="blank" data-reveal>무제</span></strong>: 군현제 전국 실시, 유교 중시(오경박사·태학), 흉노 정벌·고조선 멸망·장건 서역 파견</li>
+            <li><strong>후한</strong>: 광무제(유수) 건국 → 황건적의 난 등으로 삼국(위·촉·오) 분열</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 15: 04 — 흉노의 발전
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="15">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🐴</span>
+      <span class="browser-title">Ⅰ-2 · 04 진·한 제국 — 학습지 7~8쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🐴 흉노의 발전</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>몽골고원 유목 → 진·한 교체기에 동호 정복 등 세력 확대</li>
+            <li>군주 선우가 좌현왕·우현왕을 두고 분할 통치</li>
+            <li>한 무제의 원정 이후 쇠퇴, 남흉노는 후한에 복속</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 16: 05 — 위진 남북조 · 수
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="16">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏰</span>
+      <span class="browser-title">Ⅰ-2 · 05 수·당 제국 — 학습지 9~12쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏰 위진 남북조 · 수</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>5호 16국 → 북위 통일 → 효문제의 <span class="blank" data-reveal>한화 정책</span>(뤄양 천도, 선비어·복장 금지)</li>
+            <li>위진 남북조: 9품중정제(문벌 사회), 청담 유행, 불교 장려(윈강 석굴)</li>
+            <li>수 문제: <span class="blank" data-reveal>과거제</span> 실시(9품중정제 폐지), <span class="blank" data-reveal>3성 6부제</span>, 균전제·조용조·부병제</li>
+            <li>수 양제: <span class="blank" data-reveal>대운하</span> 완성 → 농민 반란으로 멸망</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 17: 05 — 당(唐)의 발전
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="17">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌏</span>
+      <span class="browser-title">Ⅰ-2 · 05 수·당 제국 — 학습지 9~12쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌏 당(唐)의 발전</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><strong>태종</strong>(정관의 치) → <strong>고종</strong>(고구려·백제 멸망) → <strong>현종</strong>(전성기)</li>
+            <li>균전제 붕괴 → <span class="blank" data-reveal>양세법</span> 실시, 모병제 확대 → <span class="blank" data-reveal>안사의 난</span>·황소의 난으로 멸망</li>
+            <li>문화: 《오경정의》, 훈고학, 당삼채, 이백·두보, 불교·도교, 외래 종교(조로아스터교 등)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 18: 05 — 동아시아 문화권의 형성
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="18">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌐</span>
+      <span class="browser-title">Ⅰ-2 · 05 수·당 제국 — 학습지 9~12쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌐 동아시아 문화권의 형성</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>책봉·조공 관계, 공통 요소: 유교 · 불교 · <span class="blank" data-reveal>율령</span> · 한자</li>
+            <li>동아시아 각국이 당의 선진 문물을 수용 → 고유 문화와 융합</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 19: 06 — 야마토 정권의 성립
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="19">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⛩️</span>
+      <span class="browser-title">Ⅰ-2 · 06 일본 고대 국가의 발전 — 학습지 13~14쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🗾 야마토 정권의 성립</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><strong>야요이 시대</strong>: 청동기·철기 사용 → 야마타이국 중심 연합체 형성</li>
+            <li><strong>야마토 정권</strong>: 4세기 주변 소국 통합</li>
+            <li><strong>쇼토쿠 태자</strong>: 중국·한반도 선진 문화 수용, 불교 장려 → <span class="blank" data-reveal>아스카 문화</span> 발전</li>
+            <li><strong><span class="blank" data-reveal>다이카 개신</span></strong>(645): 군주 중심 중앙 집권 지향, '일본'·'천황' 칭호 사용, 다이호 율령 반포</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 20: 06 — 나라 시대(710~794)
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="20">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📚</span>
+      <span class="browser-title">Ⅰ-2 · 06 일본 고대 국가의 발전 — 학습지 13~14쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📚 나라 시대(710~794)</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>당의 장안을 본떠 <span class="blank" data-reveal>헤이조쿄</span>(나라) 조성 후 천도</li>
+            <li>견신라사·견당사 파견, 도다이사 건립</li>
+            <li>《고사기》·《일본서기》·《만엽집》 편찬</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 21: 06 — 헤이안 시대(794~1185)
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="21">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🎋</span>
+      <span class="browser-title">Ⅰ-2 · 06 일본 고대 국가의 발전 — 학습지 13~14쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🎋 헤이안 시대(794~1185)</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>헤이안쿄(교토)로 천도 → 귀족 세력 견제 목적</li>
+            <li>견당사 파견 중지 → <span class="blank" data-reveal>국풍 문화</span> 발달(<span class="blank" data-reveal>가나 문자</span> 성립, 와카 유행)</li>
+            <li>귀족·호족의 장원 확대, 무사 등장</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 22: 07 — 불교·자이나교의 성립
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="22">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">☸️</span>
+      <span class="browser-title">Ⅰ-2 · 07 불교의 성립과 인도의 통일 제국 — 학습지 15~16쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🙏 불교·자이나교의 성립</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><span class="blank" data-reveal>브라만교</span>의 형식화된 제사 의식·권위주의에 반대하여 등장</li>
+            <li><strong>자이나교</strong>: 바르다마나 창시, 엄격한 계율·고행으로 해탈 추구</li>
+            <li><strong>불교</strong>: 고타마 싯다르타(석가모니) 창시 → 인간의 평등·윤리적 실천을 통한 해탈 강조</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 23: 07 — 마우리아 왕조
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="23">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏛️</span>
+      <span class="browser-title">Ⅰ-2 · 07 불교의 성립과 인도의 통일 제국 — 학습지 15~16쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏛️ 마우리아 왕조</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>찬드라굽타 마우리아가 인도 북부 통일</li>
+            <li><span class="blank" data-reveal>아소카왕</span>: 인도 대부분 통일, 불교 경전 정리, 스투파(불탑) 건립, 동남아시아에 포교단 파견</li>
+            <li><span class="blank" data-reveal>상좌부</span> 불교 발달: 개인의 해탈 강조</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 24: 07 — 쿠샨 왕조와 대승 불교
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="24">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🕌</span>
+      <span class="browser-title">Ⅰ-2 · 07 불교의 성립과 인도의 통일 제국 — 학습지 15~16쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🕌 쿠샨 왕조와 대승 불교</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>이란 계통의 쿠샨 왕조, 인도 서북부 통일</li>
+            <li>중국·인도·서아시아 연결 교역로 장악 → 중계 무역 번영</li>
+            <li><span class="blank" data-reveal>카니슈카왕</span>: <span class="blank" data-reveal>대승</span> 불교 발달(중생의 구제 목표, 부처의 신격화)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 25: 07 — 간다라 미술
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="25">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🎨</span>
+      <span class="browser-title">Ⅰ-2 · 07 불교의 성립과 인도의 통일 제국 — 학습지 15~16쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🎨 간다라 미술</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>알렉산드로스 침략 이후 간다라 지방에서 <span class="blank" data-reveal>헬레니즘</span> 문화와 인도 문화 융합</li>
+            <li>인간적·사실적 불상 발달 → 대승 불교와 함께 중앙아시아·중국·한국·일본 등으로 전파</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 26: 08 — 굽타 왕조
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="26">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👑</span>
+      <span class="browser-title">Ⅰ-2 · 08 굽타 왕조와 인도 고전 문화의 발전 — 학습지 17~18쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 굽타 왕조</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>찬드라굽타 1세: 쿠샨 왕조 멸망 후 혼란 속 북인도 다시 통일</li>
+            <li>찬드라굽타 2세: 북인도 대부분 차지, 학문·예술 장려</li>
+            <li>에프탈의 침입·내분 → 쇠퇴·멸망</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 27: 08 — 힌두교의 성립
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="27">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🕉️</span>
+      <span class="browser-title">Ⅰ-2 · 08 굽타 왕조와 인도 고전 문화의 발전 — 학습지 17~18쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🕉️ 힌두교의 성립</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>브라만교를 바탕으로 민간 신앙·불교 융합 → <span class="blank" data-reveal>힌두교</span> 성립</li>
+            <li>창시자 없음, 다양한 신 숭배(왕은 <span class="blank" data-reveal>비슈누</span>에 비유)</li>
+            <li><span class="blank" data-reveal>마누법전</span> 정비 → 힌두교도의 일상생활에 영향</li>
+            <li>카스트제가 인도 사회에 정착</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 28: 08 — 인도 고전 문화
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="28">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📖</span>
+      <span class="browser-title">Ⅰ-2 · 08 굽타 왕조와 인도 고전 문화의 발전 — 학습지 17~18쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📖 인도 고전 문화</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><span class="blank" data-reveal>산스크리트어</span>가 공용어 → 산스크리트 문학 발달(《마하바라타》·《라마야나》·《샤쿤탈라》)</li>
+            <li>굽타 양식(간다라+인도 고유 특색): <span class="blank" data-reveal>아잔타</span>·엘롤라 석굴 사원</li>
+            <li>원주율로 지구 둘레 추산, 영(0)과 10진법 사용 → 이슬람 세계에 영향</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 29: 08 — 델리 술탄 왕조
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="29">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🕌</span>
+      <span class="browser-title">Ⅰ-2 · 08 굽타 왕조와 인도 고전 문화의 발전 — 학습지 17~18쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🕌 델리 술탄 왕조</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>이슬람 계통의 왕조가 델리 중심으로 북인도 지배</li>
+            <li>힌두교도에게 <span class="blank" data-reveal>지즈야</span>(인두세)만 부담하면 종교 자유 허용</li>
+            <li>이슬람 개종자에게는 세금 감면</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 30: Ⅰ-3 중단원 구분
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="30">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏛️</span>
+      <span class="browser-title">Ⅰ-3. 서아시아, 지중해, 유럽 세계의 형성</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <div class="sec-num">Ⅰ — 3</div>
+        <div class="hist-divider" style="width:55%;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2>서아시아, 지중해, 유럽 세계의 형성</h2>
+        <div class="sec-sub">
+          <div class="sec-lesson">09 서아시아 여러 제국의 발전 (학습지 19~20쪽)</div>
+          <div class="sec-lesson">10 그리스 세계의 발전 (학습지 21~22쪽)</div>
+          <div class="sec-lesson">11 로마의 발전과 크리스트교 (학습지 23~24쪽)</div>
+          <div class="sec-lesson">12 서유럽 봉건 사회와 비잔티움 제국의 발전 (학습지 25~28쪽)</div>
+          <div class="sec-lesson">13 이슬람 세계의 성립과 발전 (학습지 29~30쪽)</div>
+          <div class="sec-lesson">14 크리스트교 세계와 이슬람 세계의 충돌 (학습지 31~32쪽)</div>
+        </div>
+        <div class="section-ornament" style="margin-top:.2rem;">✦ &nbsp; ✦ &nbsp; ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 31: 09 — 아시리아 · 아케메네스 왕조 페르시아
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="31">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚔️</span>
+      <span class="browser-title">Ⅰ-3 · 09 서아시아 여러 제국의 발전 — 학습지 19~20쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ 아시리아 · 아케메네스 왕조 페르시아</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><strong>아시리아</strong>: 서아시아 대부분 통일, 총독 파견, 수도 <span class="blank" data-reveal>니네베</span>에 왕립 도서관 → 강압 통치로 멸망</li>
+            <li><strong>키루스 2세</strong>: 서아시아 통일, <span class="blank" data-reveal>관용(포용) 정책</span>(다른 민족 문화·종교 존중)</li>
+            <li><strong>다리우스 1세</strong>: 20여 개 행정 구역, '왕의 눈·귀', <span class="blank" data-reveal>왕의 길</span> 건설·역참제</li>
+            <li>그리스·페르시아 전쟁 패배 → 알렉산드로스에게 멸망</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 32: 09 — 파르티아 · 사산 왕조 페르시아
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="32">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🐎</span>
+      <span class="browser-title">Ⅰ-3 · 09 서아시아 여러 제국의 발전 — 학습지 19~20쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🐎 파르티아 · 사산 왕조 페르시아</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><strong>파르티아</strong>: 중국과 <span class="blank" data-reveal>로마</span> 사이의 중계 무역으로 번영 → 사산 왕조에 멸망</li>
+            <li><strong>사산 왕조 페르시아</strong>: 아케메네스 부흥 표방, 동서 중계 무역 번영 → <span class="blank" data-reveal>비잔티움 제국</span>과 계속된 전쟁으로 쇠퇴, 이슬람 세력에 멸망</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 33: 09 — 조로아스터교와 페르시아 문화
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="33">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔥</span>
+      <span class="browser-title">Ⅰ-3 · 09 서아시아 여러 제국의 발전 — 학습지 19~20쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🔥 조로아스터교와 페르시아 문화</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><span class="blank" data-reveal>아후라 마즈다</span> 신봉, 불 신성시, 이원론적 세계관 → 유대교·크리스트교·이슬람교에 영향</li>
+            <li>피정복민의 문화·종교·언어 존중 → 인도·유럽·동아시아에 전파</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 34: 10 — 폴리스와 아테네 민주정
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="34">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏛️</span>
+      <span class="browser-title">Ⅰ-3 · 10 그리스 세계의 발전 — 학습지 21~22쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏛️ 폴리스와 아테네 민주정</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>산·섬 많은 지형 → 도시 중심 자치 국가 <span class="blank" data-reveal>폴리스</span> 형성</li>
+            <li><strong>스파르타</strong>: 소수 시민이 다수 피정복민 지배, 군사 통치</li>
+            <li><strong>클레이스테네스</strong>: 부족제 개편(혈연→거주지), 500인 평의회, <span class="blank" data-reveal>도편 추방제</span></li>
+            <li><strong><span class="blank" data-reveal>페리클레스</span></strong>: 모든 성인 남자 민회 참석, 공무 수당 지급, 관직 추첨</li>
+            <li>그리스·페르시아 전쟁 승리 → 델로스 동맹 결성</li>
+            <li>펠로폰네소스 전쟁(아테네 vs 스파르타) → 스파르타 승리 → 마케도니아에 정복</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 35: 10 — 알렉산드로스 제국
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="35">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🗺️</span>
+      <span class="browser-title">Ⅰ-3 · 10 그리스 세계의 발전 — 학습지 21~22쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🗺️ 알렉산드로스 제국</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><span class="blank" data-reveal>알렉산드로스</span>: 아케메네스 왕조·이집트 정복 → 인더스강 진출, 대제국 건설</li>
+            <li>'<span class="blank" data-reveal>알렉산드리아</span>' 건설, 그리스인 이주, 그리스인과 현지인 결혼 장려</li>
+            <li>오리엔트식 전제 군주제 확립 → 알렉산드로스 사후 마케도니아·시리아·이집트 등으로 분열</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 36: 10 — 헬레니즘 문화
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="36">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌍</span>
+      <span class="browser-title">Ⅰ-3 · 10 그리스 세계의 발전 — 학습지 21~22쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌍 헬레니즘 문화</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>그리스 문화 + 오리엔트 문화 융합 → <span class="blank" data-reveal>헬레니즘</span> 문화</li>
+            <li>개인적·세계 시민주의적 성격</li>
+            <li>스토아 학파(욕망 억제) · 에피쿠로스 학파(마음의 안정)</li>
+            <li>예술: 라오콘 군상 → 인도 간다라 미술에 영향</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 37: 11 — 로마 공화정의 발달과 쇠퇴
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="37">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚖️</span>
+      <span class="browser-title">Ⅰ-3 · 11 로마의 발전과 크리스트교 — 학습지 23~24쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚖️ 로마 공화정의 발달과 쇠퇴</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>왕정 → 공화정(원로원·집정관·민회) → 평민의 신분 투쟁</li>
+            <li>호민관·평민회 설치, <span class="blank" data-reveal>호르텐시우스법</span> 제정(평민회 결의에 법적 효력)</li>
+            <li>포에니 전쟁(로마-카르타고) 승리 → 서부 지중해 패권, 이후 마케도니아·그리스 정복</li>
+            <li><span class="blank" data-reveal>라티푼디움</span> 유행, 자영농 몰락 → <span class="blank" data-reveal>그라쿠스 형제</span> 개혁(귀족 반발로 실패)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 38: 11 — 로마 제정의 발전과 쇠퇴
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="38">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👑</span>
+      <span class="browser-title">Ⅰ-3 · 11 로마의 발전과 크리스트교 — 학습지 23~24쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 로마 제정의 발전과 쇠퇴</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>1차 삼두: 카이사르 주도 → 암살</li>
+            <li>2차 삼두: 옥타비아누스 악티움 해전 승리 → 프린켑스 자처, 원로원에서 <span class="blank" data-reveal>아우구스투스</span> 칭호 부여, 제정 시작</li>
+            <li>Pax Romana(옥타비아누스~5현제): 정치적 안정·최대 영토</li>
+            <li>3세기 위기 → 디오클레티아누스 4제 통치 → 콘스탄티누스(<span class="blank" data-reveal>밀라노 칙령</span>, 크리스트교 공인) → 테오도시우스(크리스트교 국교화, 동·서 분리)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 39: 11 — 로마 문화
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="39">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✝️</span>
+      <span class="browser-title">Ⅰ-3 · 11 로마의 발전과 크리스트교 — 학습지 23~24쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">✝️ 로마 문화</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>법률: 12표법(관습법 성문화) → 시민법 → 만민법</li>
+            <li>실용적 문화: 토목·건축, 그리스 문화 모방</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 40: 12 — 프랑크 왕국의 발전
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="40">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👑</span>
+      <span class="browser-title">Ⅰ-3 · 12 서유럽 봉건 사회와 비잔티움 제국의 발전 — 학습지 25~28쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 프랑크 왕국의 발전</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>메로베우스 왕조: <span class="blank" data-reveal>클로비스</span>(로마 가톨릭 개종), <span class="blank" data-reveal>카롤루스 마르텔</span>(투르·푸아티에 전투 732 승리)</li>
+            <li>카롤루스 왕조: 피핀(교황에 이탈리아 중부 헌납), <span class="blank" data-reveal>카롤루스 대제</span>(영토 확장, 크리스트교 보급, 궁정 학교, 서로마 황제 대관 800)</li>
+            <li>노르만족·마자르족·이슬람 세력의 침입 → <span class="blank" data-reveal>봉건제</span> 성립(주종 관계 + 장원제)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 41: 12 — 교황과 황제의 대립
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="41">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✝️</span>
+      <span class="browser-title">Ⅰ-3 · 12 서유럽 봉건 사회와 비잔티움 제국의 발전 — 학습지 25~28쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">✝️ 교황과 황제의 대립</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>클뤼니 수도원 교회 개혁 → 교황 그레고리우스 7세, 세속 권력의 성직자 임명 금지</li>
+            <li>카노사의 굴욕: 하인리히 4세 교황에게 사죄</li>
+            <li><span class="blank" data-reveal>보름스 협약</span>(1122): 교황의 서임권 확정</li>
+            <li>건축: <span class="blank" data-reveal>로마네스크</span> 양식(피사 대성당) → <span class="blank" data-reveal>고딕</span> 양식(첨탑·스테인드글라스, 샤르트르 대성당)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 42: 12 — 비잔티움 제국의 발전
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="42">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏛️</span>
+      <span class="browser-title">Ⅰ-3 · 12 서유럽 봉건 사회와 비잔티움 제국의 발전 — 학습지 25~28쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏛️ 비잔티움 제국의 발전</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>서로마 멸망 후 동로마 제국이 약 1,000년간 유지</li>
+            <li><span class="blank" data-reveal>유스티니아누스</span> 황제: 로마 영토 대부분 회복, 《유스티니아누스 법전》 편찬</li>
+            <li>황제권 강함, 동서 교통 중심으로 무역 번영, 군관구제·둔전병제</li>
+            <li>문화: 그리스 정교 기반, 비잔티움 양식(모자이크 벽화·돔), 성 소피아 성당</li>
+            <li>오스만 제국의 공격으로 멸망(1453)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 43: 13 — 무함마드와 이슬람교
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="43">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📿</span>
+      <span class="browser-title">Ⅰ-3 · 13 이슬람 세계의 성립과 발전 — 학습지 29~30쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📿 무함마드와 이슬람교</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>무함마드가 이슬람교 정립: 우상 숭배 배격, 유일신 알라에 복종, 신 앞에서 평등</li>
+            <li><span class="blank" data-reveal>헤지라</span>: 메카 귀족의 탄압 → 무함마드와 추종자들이 메디나로 이주 → 메카 장악, 아라비아반도 통일</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 44: 13 — 이슬람 제국의 성립과 분열
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="44">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏛️</span>
+      <span class="browser-title">Ⅰ-3 · 13 이슬람 세계의 성립과 발전 — 학습지 29~30쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏛️ 이슬람 제국의 성립과 분열</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><strong>정통 칼리프 시대</strong>: 합의로 칼리프 선출, 예루살렘·이집트 정복, 사산 왕조 멸망</li>
+            <li><strong>우마이야 왕조</strong>: <span class="blank" data-reveal>무아위야</span>가 수도 <span class="blank" data-reveal>다마스쿠스</span>로 영토 확장 → 수니/시아파 대립, 아랍인 우월주의 → 반발로 멸망</li>
+            <li><strong>아바스 왕조</strong>: 범이슬람 제국 지향, 당과의 <span class="blank" data-reveal>탈라스</span> 전투 승리 → <span class="blank" data-reveal>바그다드</span> 중심 통치</li>
+            <li>분열: 후우마이야 왕조(코르도바) · 파티마 왕조(이집트)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 45: 13 — 이슬람 사회와 문화
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="45">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌍</span>
+      <span class="browser-title">Ⅰ-3 · 13 이슬람 세계의 성립과 발전 — 학습지 29~30쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌍 이슬람 사회와 문화</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>《<span class="blank" data-reveal>쿠란</span>》의 가르침이 일상을 지배하는 종교 중심 사회</li>
+            <li>피정복민에게 <span class="blank" data-reveal>지즈야</span>(인두세)를 거두는 대신 종교 인정 → 이슬람 세력의 빠른 성장</li>
+            <li>문학·건축·미술·과학 등 발달</li>
+            <li>유럽 문화에 자극을 주어 르네상스에 영향</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 46: 14 — 셀주크 튀르크의 등장
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="46">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🐎</span>
+      <span class="browser-title">Ⅰ-3 · 14 크리스트교 세계와 이슬람 세계의 충돌 — 학습지 31~32쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🐎 셀주크 튀르크의 등장</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>중앙아시아 튀르크인이 이슬람교 수용</li>
+            <li>바그다드 입성 → 칼리프로부터 <span class="blank" data-reveal>술탄</span> 칭호 인정</li>
+            <li>소아시아로 세력 확장 → <span class="blank" data-reveal>비잔티움</span> 제국과 대립</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 47: 14 — 십자군 전쟁의 배경과 전개
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="47">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✝️</span>
+      <span class="browser-title">Ⅰ-3 · 14 크리스트교 세계와 이슬람 세계의 충돌 — 학습지 31~32쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">✝️ 십자군 전쟁의 배경과 전개</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li>비잔티움 제국이 로마 교황에게 도움 요청</li>
+            <li>교황 <span class="blank" data-reveal>우르바누스 2세</span>가 성지 회복 호소 → 제후·기사·상인·농민 호응</li>
+            <li><strong>제1차 십자군</strong>: 예루살렘 점령, <span class="blank" data-reveal>예루살렘 왕국</span> 건설</li>
+            <li><strong>제4차 십자군</strong>: 콘스탄티노폴리스 점령, <span class="blank" data-reveal>라틴 제국</span> 수립</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 48: 14 — 십자군 전쟁의 영향
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="48">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌐</span>
+      <span class="browser-title">Ⅰ-3 · 14 크리스트교 세계와 이슬람 세계의 충돌 — 학습지 31~32쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌐 십자군 전쟁의 영향</div>
+        <div class="ruler-card-body compact">
+          <ul class="info-list">
+            <li><span class="blank" data-reveal>봉건제</span> 동요: 교황 권위 추락, 제후·기사 계층 몰락 → 왕권 강화</li>
+            <li>지중해를 통한 동방과의 교역 활발 → 상공업 발달, 이탈리아 도시 성장</li>
+            <li>비잔티움·이슬람 문화와의 접촉 → 서유럽에 문화적 자극</li>
+            <li>이슬람 세계의 작물·재배법·문화가 서유럽으로 유입</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ────────────────────────────────────────────
+     슬라이드 49: 마무리
+     ──────────────────────────────────────────── -->
+<div class="slide" data-slide="49">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌍</span>
+      <span class="browser-title">Ⅰ단원 대단원 복습 — 마무리</span>
+    </div>
+    <div class="browser-content">
+      <div class="sec-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h1 style="font-size:2rem;">수고하셨습니다!</h1>
+        <div class="hist-divider" style="width:55%;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec); font-size:.88rem; line-height:2;">
+          Ⅰ-1. 현생 인류와 문명의 형성 (학습지 1~6쪽)<br>
+          Ⅰ-2. 동아시아, 인도 세계의 형성 (학습지 7~18쪽)<br>
+          Ⅰ-3. 서아시아, 지중해, 유럽 세계의 형성 (학습지 19~32쪽)
+        </p>
+        <div class="section-ornament" style="margin-top:.1rem;">✦ &nbsp; ✦ &nbsp; ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<!-- 네비게이션 바 -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
+    / <span id="totalSlides">50</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function revealItems(slideEl) {
+    return Array.from(slideEl.querySelectorAll('[data-reveal]'));
+  }
+  function getRC(slideEl) { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n) { slideEl.dataset.rc = n; }
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => el.classList.toggle('on', i < n));
+  }
+  function updateNav() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && n === 0;
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && n === items.length;
+    document.getElementById('slideInput').value = currentSlide + 1;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+  }
+  function goToSlide(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = idx;
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1);
+      applyReveal(el);
+      updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1);
+      applyReveal(el);
+      updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length);
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.target === document.getElementById('slideInput')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextAction(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End') goToSlide(total - 1);
+  });
+
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const n = parseInt(slideInput.value) - 1;
+      if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+      slideInput.blur();
+    }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('blur', () => {
+    const n = parseInt(slideInput.value) - 1;
+    if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) { dx < 0 ? nextAction() : prevAction(); }
+  }, { passive: true });
+
+  updateNav();
+</script>
+</body>
+</html>
