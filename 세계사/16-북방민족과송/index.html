@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>16. 북방 민족과 송</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main:#8B4513; --dark:#6B3010; --light:#FFF8E1; --accent:#C5A028;
+      --accent-light:#E8D080; --bg:#F5E6C4; --text:#2C1A0E; --text-sec:#6B4226;
+      --border:#A07850; --card-bg:#FDF5E0;
+    }
+    html, body { font-size: clamp(20px, 2.2vw, 36px); font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif; color: var(--text); height: 100%; overflow: hidden; }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+    h1 { font-family:'Nanum Myeongjo',serif; font-size:2.3rem; font-weight:800; letter-spacing:.04em; line-height:1.3; }
+    h2 { font-family:'Nanum Myeongjo',serif; font-size:1.35rem; font-weight:700; letter-spacing:.04em; }
+    p  { font-size:.95rem; line-height:1.7; }
+
+    body { background-color:var(--bg); background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(160,120,60,.04) 2px,rgba(160,120,60,.04) 4px), repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(140,100,40,.06) 28px,rgba(140,100,40,.06) 29px); }
+
+    .presentation { position:fixed; inset:0; bottom:2.2rem; display:flex; align-items:center; justify-content:center; padding:.8rem; }
+    .slide { display:none; aspect-ratio:16/9; width:min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height:auto; }
+    .slide.active { display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    .browser-card { background:var(--card-bg); border:2px solid var(--border); outline:4px solid var(--accent); outline-offset:-7px; border-radius:4px; box-shadow:0 4px 28px rgba(44,26,14,.2),inset 0 0 60px rgba(160,120,40,.05); width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    .browser-topbar { background:linear-gradient(90deg,#8B4513 0%,#5C2808 45%,#8B4513 100%); border-bottom:2px solid var(--accent); padding:.4rem 1.1rem; display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+    .topbar-icon { font-size:.95rem; }
+    .browser-title { color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-size:.82rem; font-weight:700; letter-spacing:.07em; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+    .browser-content { flex:1; overflow-y:auto; padding:.9rem 1.8rem; display:flex; flex-direction:column; }
+    .browser-content::-webkit-scrollbar { width:4px; }
+    .browser-content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+    .progress-bar { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--main)); z-index:1000; transition:width .3s; }
+    .nav-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.3rem 1.5rem; background:rgba(30,15,6,.97); border-top:2px solid var(--accent); z-index:999; font-size:14px; }
+    .nav-btn { display:flex; align-items:center; justify-content:center; width:1.7rem; height:1.7rem; border:1.5px solid #8B6540; border-radius:50%; background:transparent; cursor:pointer; color:var(--accent-light); transition:all .2s; padding:0; }
+    .nav-btn svg { width:.55rem; height:.55rem; fill:currentColor; display:block; }
+    .nav-btn:hover:not(:disabled) { background:var(--main); border-color:var(--accent); }
+    .nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .nav-counter { font-size:13px; font-weight:700; color:var(--accent-light); min-width:3rem; text-align:center; display:flex; align-items:center; gap:.15rem; line-height:1; }
+    .slide-input { width:1.4rem; text-align:center; border:none; border-bottom:1.5px solid transparent; background:transparent; font-size:13px; font-weight:700; color:var(--accent-light); font-family:inherit; padding:0; outline:none; cursor:pointer; transition:border-color .2s; line-height:1; }
+    .slide-input:hover { border-bottom-color:var(--accent); }
+    .slide-input:focus { border-bottom-color:var(--accent); background:rgba(139,69,19,.3); border-radius:3px; }
+
+    /* ── 역사 수업 시그니처 요소 ── */
+    .section-ornament { color:var(--accent); font-size:.72rem; letter-spacing:.5em; text-align:center; margin-bottom:.2rem; opacity:.75; }
+    .hist-divider { display:flex; align-items:center; gap:.4rem; margin:.25rem 0 .55rem; }
+    .h-line { flex:1; height:1.5px; background:linear-gradient(90deg,transparent,var(--accent) 25%,var(--accent) 75%,transparent); }
+    .h-gem  { color:var(--accent); font-size:.7rem; }
+    .era-badge { display:inline-block; background:linear-gradient(135deg,var(--main),var(--dark)); color:var(--accent-light); border:1px solid var(--accent); padding:.05rem .45rem; font-family:'Nanum Myeongjo',serif; font-size:.8rem; font-weight:700; border-radius:2px; white-space:nowrap; }
+
+    /* ── 빈칸 순차 공개 ── */
+    .blank {
+      display:inline-block; min-width:5rem;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.05em .6em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:inherit; user-select:none; position:relative;
+      text-align:center; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .blank::after {
+      content:'?'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.85em; font-weight:800;
+      pointer-events:none; transition:opacity .25s;
+    }
+    .blank.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .blank.on::after { opacity:0; }
+
+    /* ── 정답 버튼 순차 공개 ── */
+    .ans-btn {
+      display:inline-block;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.08em .9em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:.88rem; user-select:none; position:relative;
+      text-align:center; white-space:nowrap; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .ans-btn::after {
+      content:'정답'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.78em; font-weight:700;
+      pointer-events:none; transition:opacity .25s; white-space:nowrap;
+    }
+    .ans-btn.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity:0; }
+
+    /* ── 레이아웃 ── */
+    .cover-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.65rem; }
+    .end-wrap   { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.7rem; }
+    .center-content { flex:1; display:flex; flex-direction:column; justify-content:center; }
+
+    /* TOC */
+    .toc-list { display:flex; flex-direction:column; gap:.55rem; margin-top:.5rem; }
+    .toc-item { display:flex; align-items:center; gap:.7rem; padding:.55rem 1rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); cursor:pointer; transition:all .2s; }
+    .toc-item:hover { background:var(--light); border-color:var(--accent); transform:translateX(4px); }
+    .toc-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.85rem; min-width:1.7rem; height:1.7rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .toc-title { font-weight:700; font-size:1rem; }
+    .toc-desc  { font-size:.82rem; color:var(--text-sec); }
+
+    /* 내용 카드 */
+    .ruler-card { border:1.5px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:.4rem; }
+    .ruler-card-header { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.9rem; padding:.35rem .8rem; display:flex; align-items:center; gap:.4rem; }
+    .ruler-card-body { padding:.6rem .95rem; background:var(--card-bg); }
+    .info-list { list-style:none; display:flex; flex-direction:column; gap:.48rem; }
+    .info-list li { position:relative; padding-left:1.3em; font-size:.93rem; line-height:1.7; }
+    .info-list li::before { content:'◆'; color:var(--accent); font-size:.6rem; position:absolute; left:0; top:.48em; }
+    .info-list li.sub { padding-left:2.3em; }
+    .info-list li.sub::before { content:'—'; font-size:.88rem; top:.38em; }
+
+    /* 퀴즈 */
+    .quiz-wrap { display:flex; flex-direction:column; gap:.4rem; margin-top:.25rem; }
+    .quiz-row { display:flex; align-items:flex-start; gap:.6rem; border:1.5px solid var(--border); border-radius:3px; padding:.42rem .8rem; background:var(--card-bg); }
+    .quiz-row.col { flex-direction:column; gap:.22rem; }
+    .quiz-row.col .inner { display:flex; gap:.6rem; align-items:flex-start; }
+    .q-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.78rem; min-width:1.45rem; height:1.45rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.15em; }
+    .q-text { flex:1; font-size:.92rem; line-height:1.8; }
+    .bogi { border:1px solid var(--border); border-radius:2px; padding:.28rem .75rem; margin:.25rem 0; font-size:.88rem; background:var(--light); }
+    .choice-list { display:flex; flex-direction:column; gap:.22rem; font-size:.9rem; line-height:1.65; padding-left:.2rem; }
+    .choice-grid { display:grid; grid-template-columns:1fr 1fr; gap:.32rem .7rem; font-size:.88rem; line-height:1.75; padding-left:.2rem; }
+
+    @media (max-width:768px) { .toc-grid { grid-template-columns:1fr; } .choice-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ══ 슬라이드 1: 표지 ══ -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏯</span>
+      <span class="browser-title">세계사 · Ⅱ-1. 이슬람 세계와 몽골 제국의 팽창 — 학습지 35~36쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 80~83쪽</span>
+        <h1 style="margin-top:.35rem;">북방 민족과 송</h1>
+        <div class="hist-divider" style="width:55%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;">송의 성립과 발전 &nbsp;·&nbsp; 송대 경제·문화 &nbsp;·&nbsp; 북방 민족의 성장</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 2: 목차 ══ -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📋</span>
+      <span class="browser-title">학습 목차</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="text-align:center;margin-bottom:.4rem;">학습 내용</h2>
+      <div class="toc-list">
+        <div class="toc-item" onclick="goToSlide(2)">
+          <span class="toc-num">1</span>
+          <div><div class="toc-title">송의 성립과 발전</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(8)">
+          <span class="toc-num">2</span>
+          <div><div class="toc-title">송대 경제, 문화의 발전</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(10)">
+          <span class="toc-num">3</span>
+          <div><div class="toc-title">북방 민족의 성장</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(14)">
+          <span class="toc-num">4</span>
+          <div><div class="toc-title">개념 확인 문제</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 건국 ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📜</span>
+      <span class="browser-title">학습지 35쪽 — 1. 송의 성립과 발전 &gt; 건국</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">1. 송의 성립과 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📜 건국</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>당 멸망 후 절도사의 난립 → <strong>5대 10국 시대</strong> 전개</li>
+            <li>건국(960): 후주 절도사 출신 <strong>조광윤(태조)</strong>이 변경을 수도로 건국</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 송 태조 ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👑</span>
+      <span class="browser-title">학습지 35쪽 — 1. 송의 성립과 발전 &gt; 송 태조</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">1. 송의 성립과 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 송 태조</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>황제 독재 체제 강화 정책 추진</li>
+            <li>금군 증강, 전시 정례화, 절도사의 권한 축소, 문인 우대</li>
+            <li>(<span class="blank" data-reveal>문치주의</span> 정책)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 왕안석의 신법 — 배경 ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚠️</span>
+      <span class="browser-title">학습지 35쪽 — 1. 송의 성립과 발전 &gt; 왕안석의 신법 · 쇠퇴 &gt; 배경</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">왕안석의 신법 · 쇠퇴</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚠️ 배경</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>문치주의 정책으로 인한 <strong>국방력 약화</strong>, 북방 민족의 압박</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 왕안석의 신법 — 내용 ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📝</span>
+      <span class="browser-title">학습지 35쪽 — 1. 송의 성립과 발전 &gt; 왕안석의 신법 · 쇠퇴 &gt; 내용</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">왕안석의 신법 · 쇠퇴</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📝 내용</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>청묘법, 시역법, 균수법(물가 안정책), 보갑법, 보마법(강병책)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 왕안석의 신법 — 결과 ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✗</span>
+      <span class="browser-title">학습지 35쪽 — 1. 송의 성립과 발전 &gt; 왕안석의 신법 · 쇠퇴 &gt; 결과</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">왕안석의 신법 · 쇠퇴</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">✗ 결과</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>보수파와 대지주, 대상인의 반대로 <strong>실패</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: 남송 ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🗺️</span>
+      <span class="browser-title">학습지 35쪽 — 1. 송의 성립과 발전 &gt; 남송</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">1. 송의 성립과 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🗺️ 남송</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><span class="blank" data-reveal>정강의 변</span>: 송이 금의 침입을 받아 강남으로 이동</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 경제 ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">💰</span>
+      <span class="browser-title">학습지 35쪽 — 2. 송대 경제, 문화의 발전 &gt; 경제</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">2. 송대 경제, 문화의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">💰 경제</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>농업: 모내기법과 참파벼 도입, 용골차와 앙마 사용 → 창장강 하류가 농업 중심지로 성장</li>
+            <li>상공업: 상업 도시 성장, 교자·회자 발행, 행·작 결성, 시박사가 해상 무역 관리</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 10: 문화 ══ -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📚</span>
+      <span class="browser-title">학습지 35쪽 — 2. 송대 경제, 문화의 발전 &gt; 문화</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">2. 송대 경제, 문화의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📚 문화</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>문치주의와 과거제를 토대로 <strong>사대부</strong> 계층 성장</li>
+            <li>성리학: 인간 심성, 우주의 원리 탐구 → 주희의 집대성</li>
+            <li class="sub">(군신·부자의 의리, 대의명분과 화이론 강조 → 민족 의식 자극)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 11: 요(거란) ══ -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🦅</span>
+      <span class="browser-title">학습지 35쪽 — 3. 북방 민족의 성장 (1) 북방 민족과 송의 관계 &gt; 요(거란)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">3. 북방 민족의 성장 — (1) 북방 민족과 송의 관계</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🦅 요(거란)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>야율아보기가 거란(요) 건국(916) → <span class="blank" data-reveal>연운 16주</span> 차지 → 전연의 맹약으로 송과 화친</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 12: 서하 ══ -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏜️</span>
+      <span class="browser-title">학습지 35쪽 — 3. 북방 민족의 성장 (1) 북방 민족과 송의 관계 &gt; 서하</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">3. 북방 민족의 성장 — (1) 북방 민족과 송의 관계</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏜️ 서하</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>이원호가 건국, 송은 세폐를 보내 화친 유지</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 13: 금 ══ -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚔️</span>
+      <span class="browser-title">학습지 35쪽 — 3. 북방 민족의 성장 (1) 북방 민족과 송의 관계 &gt; 금</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">3. 북방 민족의 성장 — (1) 북방 민족과 송의 관계</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ 금</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>아구다가 건국(1115) → 송과 연합하여 거란 멸망 → 송의 수도를 함락하고 황제를 사로잡음(정강의 변)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 14: 이중 지배 체제 ══ -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚖️</span>
+      <span class="browser-title">학습지 35쪽 — 3. 북방 민족의 성장 (2) 북방 민족의 이중 지배 체제</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">3. 북방 민족의 성장 — (2) 북방 민족의 이중 지배 체제</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚖️ 이중 지배 체제</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 이중 지배 체제: 요(북면관제와 남면관제), 금(맹안·모극제와 주현제)</li>
+            <li>② 고유 문자 제정: 거란 문자, 서하 문자, 여진 문자 등</li>
+            <li>③ 목적: 통치의 효율성 향상, 민족 고유의 전통과 정체성 유지</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 15: 개념 확인 1 (⑴⑵⑶) ══ -->
+<div class="slide" data-slide="14">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 36쪽 — 개념 확인 문제 1번</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.4rem;">1. 빈칸에 들어갈 알맞은 말을 쓰시오.</h2>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">⑴</span>
+          <p class="q-text">송 태조는 금군을 증강하고 과거제에 &nbsp;<span class="blank" data-reveal>전시</span>&nbsp; 을/를 정례화하는 등 황제 독재 체제를 강화하였다.</p>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <p class="q-text">남송 대 주희가 집대성한 &nbsp;<span class="blank" data-reveal>성리학</span>&nbsp; 은/는 인간의 심성과 우주의 원리를 탐구하였으며, 군신·부자의 의리, 대의명분과 화이론을 강조하였다.</p>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑶</span>
+          <p class="q-text">송은 고려, 일본, 아라비아 상인과의 해상 무역을 활발히 전개하였으며, 임안(항저우) 등의 항구 도시에 설치된 &nbsp;<span class="blank" data-reveal>시박사</span>&nbsp; 을/를 통해 관리되었다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 16: 개념 확인 2 ══ -->
+<div class="slide" data-slide="15">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔍</span>
+      <span class="browser-title">학습지 36쪽 — 개념 확인 문제 2번</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.4rem;">2. 송대 경제에 대한 설명으로 옳지 않은 것은?</h2>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner">
+            <span class="q-num">2</span>
+            <p class="q-text">정답: <span class="ans-btn" data-reveal>④</span></p>
+          </div>
+          <div class="choice-list">
+            <span>① 모내기법과 참파벼가 보급되었다.</span>
+            <span>② 교자·회자 등의 지폐가 발행되었다.</span>
+            <span>③ 행·작이라는 동업 조합을 결성하였다.</span>
+            <span>④ 약속 어음인 비전이 사용되기 시작하였다.</span>
+            <span>⑤ 새로운 농기구로 용골차, 앙마 등이 사용되었다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 17: 개념 확인 3 ══ -->
+<div class="slide" data-slide="16">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔍</span>
+      <span class="browser-title">학습지 36쪽 — 개념 확인 문제 3번</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.3rem;">3. 다음 내용과 관련 있는 국가를 &lt;보기&gt;에서 고르시오.</h2>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="bogi">ㄱ. 송 &nbsp;&nbsp;&nbsp; ㄴ. 서하 &nbsp;&nbsp;&nbsp; ㄷ. 요(거란) &nbsp;&nbsp;&nbsp; ㄹ. 금(여진)</div>
+          <div class="choice-grid">
+            <span>⑴ 과거제에 전시를 정례화하였다.<br>( <span class="ans-btn" data-reveal>ㄱ</span> )</span>
+            <span>⑵ 발해를 멸망시키고 연운 16주를 차지하였다.<br>( <span class="ans-btn" data-reveal>ㄷ</span> )</span>
+            <span>⑶ 맹안 모극제와 주현제를 바탕으로 통치하였다.<br>( <span class="ans-btn" data-reveal>ㄹ</span> )</span>
+            <span>⑷ 탕구트족의 이원호가 건국하였고 사막길을 통한 중계 무역으로 번영하였다.<br>( <span class="ans-btn" data-reveal>ㄴ</span> )</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 18: 마무리 ══ -->
+<div class="slide" data-slide="17">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✅</span>
+      <span class="browser-title">학습 마무리</span>
+    </div>
+    <div class="browser-content">
+      <div class="end-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h1>수고하셨습니다!</h1>
+        <div class="hist-divider" style="width:50%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <div style="border:2px solid var(--accent);border-radius:3px;background:var(--light);padding:.8rem 1.6rem;max-width:82%;text-align:left;">
+          <p style="font-size:.9rem;line-height:2.1;">
+            🔑 <strong>문치주의</strong>: 황제 독재 체제 강화 → 국방력 약화<br>
+            🔑 <strong>남송</strong>: 금의 침입 → 강남으로 이동<br>
+            🔑 <strong>연운 16주</strong>: 야율아보기(거란·요) 차지 → 전연의 맹약<br>
+            🔑 <strong>이중 지배</strong>: 요(북면관·남면관), 금(맹안·모극제·주현제)
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<!-- ── Navigation Bar ── -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력"> / <span id="totalSlides">18</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function revealItems(slideEl) { return Array.from(slideEl.querySelectorAll('[data-reveal]')); }
+  function getRC(slideEl) { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n) { slideEl.dataset.rc = n; }
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => el.classList.toggle('on', i < n));
+  }
+  function updateNav() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && n === 0;
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && n === items.length;
+    document.getElementById('slideInput').value = currentSlide + 1;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+  }
+  function goToSlide(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = idx;
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1); applyReveal(el); updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1); applyReveal(el); updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length);
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  /* 키보드: 화살표, Space, PageDown/PageUp, Home, End */
+  document.addEventListener('keydown', e => {
+    if (e.target === document.getElementById('slideInput')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextAction(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End') goToSlide(total - 1);
+  });
+
+  /* 슬라이드 번호 직접 입력 */
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const n = parseInt(slideInput.value) - 1;
+      if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+      slideInput.blur();
+    }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('blur', () => {
+    const n = parseInt(slideInput.value) - 1;
+    if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+  });
+
+  /* 터치 스와이프 */
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) { if (dx < 0) nextAction(); else prevAction(); }
+  }, { passive: true });
+
+  updateNav();
+</script>
+</body>
+</html>
