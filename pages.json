@@ -191,6 +191,19 @@
             { "label": "역사 수업", "color": "green" }
           ],
           "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
+          "title": "16. 북방 민족과 송",
+          "path": "세계사/16-북방민족과송/index.html",
+          "emoji": "🏯",
+          "description": "송의 성립(조광윤·문치주의), 왕안석의 신법과 남송, 송대 경제(교자·회자·시박사)·문화(성리학), 북방 민족(요·서하·금)의 성장과 이중 지배 체제. 빈칸 포인터로 하나씩 공개.",
+          "tags": [
+            { "label": "송", "color": "orange" },
+            { "label": "북방 민족", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
         }
       ]
     }
