@@ -202,6 +202,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "17. 몽골 제국",
+              "path": "Ⅱ./17. 몽골 제국/index.html",
+              "emoji": "🏇",
+              "description": "몽골 제국의 건국(테무친·칭기즈 칸)과 팽창(쿠빌라이 칸·원), 원의 중국 통치(사등인제·역참제), 동서 교류(마르코 폴로·동방견문록), 명의 발전(이갑제·이자성의 난). 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "몽골 제국", "color": "orange" },
+                { "label": "원·명", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
