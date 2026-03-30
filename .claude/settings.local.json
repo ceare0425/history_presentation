@@ -28,7 +28,24 @@
       "Bash(powershell.exe -Command \"\n\\\\$py = 'C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe'\n\\\\$script = @'\nimport fitz, sys, io, os\n\nsys.stdout = io.TextIOWrapper\\(sys.stdout.buffer, encoding='utf-8', errors='replace'\\)\n\npdf_path = r'C:\\\\Users\\\\user\\\\OneDrive - 전라북도교육청\\\\문서\\\\GitHub\\\\history_presentation\\\\한국사\\\\한국사1.pdf'\nout_path = r'C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Temp\\\\hs_pages.txt'\n\ndoc = fitz.open\\(pdf_path\\)\n\nwith open\\(out_path, 'w', encoding='utf-8'\\) as f:\n    for page_num in range\\(7, 23\\):\n        page = doc[page_num]\n        text = page.get_text\\(\\)\n        f.write\\(f'=== PAGE {page_num+1} ===\\\\n'\\)\n        f.write\\(text\\)\n        f.write\\('\\\\n\\\\n'\\)\n\ndoc.close\\(\\)\nprint\\('Done. Saved to:', out_path\\)\n'@\n\\\\$tmp = [System.IO.Path]::GetTempFileName\\(\\) + '.py'\n[System.IO.File]::WriteAllText\\(\\\\$tmp, \\\\$script, [System.Text.Encoding]::UTF8\\)\n& \\\\$py \\\\$tmp\nRemove-Item \\\\$tmp\n\" 2>&1)",
       "Skill(update-config)",
       "Bash(rm -rf \"/c/Users/user/Documents/GitHub/history_presentation/세계사/14-십자군전쟁영향-이슬람교역망\")",
-      "Bash(mkdir -p \"/c/Users/user/Documents/GitHub/history_presentation/세계사/14-크리스트교이슬람충돌\")"
+      "Bash(mkdir -p \"/c/Users/user/Documents/GitHub/history_presentation/세계사/14-크리스트교이슬람충돌\")",
+      "Bash(where node:*)",
+      "Bash(where py:*)",
+      "Bash(py --version)",
+      "Bash(where powershell:*)",
+      "Bash(powershell -Command \"Get-Command python*, node, pip 2>&1 | Select-Object Name\")",
+      "Bash(powershell -Command \"python --version\" 2>&1)",
+      "Bash(powershell -Command \"Get-Command python.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\" 2>&1)",
+      "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Programs\\\\Python'' -ErrorAction SilentlyContinue\")",
+      "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Python*'' -ErrorAction SilentlyContinue\")",
+      "Bash(powershell -Command \"\\(Get-Command pip -ErrorAction SilentlyContinue\\).Source\")",
+      "Bash(powershell -Command \"Get-ChildItem 'C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Programs' -ErrorAction SilentlyContinue | Select Name\" 2>&1)",
+      "Bash(powershell -Command \"Get-Command code -ErrorAction SilentlyContinue | Select Source; where.exe code 2>&1\")",
+      "Bash(winget:*)",
+      "Bash(powershell -Command \"& 'C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe' -m pip install pymupdf --quiet 2>&1\")",
+      "Bash(powershell -Command \"& 'C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe' -c \\\\\"import fitz; print\\('PyMuPDF version:', fitz.__version__\\)\\\\\"\" 2>&1)",
+      "Bash(powershell -Command \"& 'C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe' 'C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\history_presentation\\\\pdf_to_text.py'\" 2>&1)",
+      "Bash(powershell -Command \"& 'C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe' 'C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\history_presentation\\\\pdf_to_text_batch.py'\" 2>&1)"
     ]
   }
 }
