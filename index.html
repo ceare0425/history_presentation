@@ -267,6 +267,77 @@
       margin-top: 0.5rem;
     }
 
+    /* ── Group (Folder) ── */
+    .group-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .group-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 0.9rem;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.15s, background 0.15s;
+      box-shadow: var(--shadow);
+    }
+    .group-header:hover {
+      border-color: var(--accent);
+      background: #FFFDF7;
+    }
+    .group-header.open {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      border-bottom-color: var(--border);
+    }
+    .group-chevron {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: var(--text-sec);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .group-header.open .group-chevron {
+      transform: rotate(90deg);
+    }
+    .group-emoji { font-size: 1.1rem; line-height: 1; }
+    .group-name {
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .group-count {
+      background: var(--accent);
+      color: #2C1A0E;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 20px;
+      padding: 0.15rem 0.55rem;
+    }
+
+    .group-content {
+      display: none;
+      border: 1.5px solid var(--border);
+      border-top: none;
+      border-bottom-left-radius: var(--radius);
+      border-bottom-right-radius: var(--radius);
+      padding: 1rem;
+      background: #FDFAF5;
+    }
+    .group-content.open {
+      display: block;
+    }
+
     /* ── No results ── */
     .no-results {
       grid-column: 1 / -1;
@@ -347,18 +418,46 @@
     }
 
     function renderSubject(sub) {
-      const pages = (sub.pages || []).slice();
+      const groups = (sub.groups || []);
+      const pages  = (sub.pages  || []);
+      const groupPageCount = groups.reduce((s, g) => s + (g.pages || []).length, 0);
+      const totalCount = groupPageCount + pages.length;
+
+      const groupsHTML = groups.map(g => renderGroup(g)).join('');
+      const pagesHTML  = pages.length
+        ? `<div class="card-grid">${pages.map(p => renderCard(p)).join('')}</div>`
+        : '';
+
       return `
         <section class="subject-section" data-subject="${esc(sub.name)}">
           <div class="subject-header">
             <span class="subject-emoji">${sub.emoji || '📁'}</span>
             <span class="subject-name">${esc(sub.name)}</span>
-            <span class="subject-count">${pages.length}</span>
+            <span class="subject-count">${totalCount}</span>
           </div>
-          <div class="card-grid">
-            ${pages.map(p => renderCard(p)).join('')}
-          </div>
+          ${groupsHTML}
+          ${pagesHTML}
         </section>
+      `;
+    }
+
+    function renderGroup(g) {
+      const pages = (g.pages || []);
+      const id = 'group-' + Math.random().toString(36).slice(2);
+      return `
+        <div class="group-section">
+          <div class="group-header" onclick="toggleGroup(this)" aria-expanded="false">
+            <span class="group-emoji">${g.emoji || '📂'}</span>
+            <span class="group-name">${esc(g.name)}</span>
+            <span class="group-count">${pages.length}</span>
+            <svg class="group-chevron" viewBox="0 0 24 24"><path d="M8 5l8 7-8 7"/></svg>
+          </div>
+          <div class="group-content">
+            <div class="card-grid">
+              ${pages.map(p => renderCard(p)).join('')}
+            </div>
+          </div>
+        </div>
       `;
     }
 
@@ -391,12 +490,30 @@
       `;
     }
 
+    function toggleGroup(header) {
+      const isOpen = header.classList.toggle('open');
+      const content = header.nextElementSibling;
+      content.classList.toggle('open', isOpen);
+      header.setAttribute('aria-expanded', isOpen);
+    }
+
     function filterCards() {
       const q = document.getElementById('searchInput').value.trim().toLowerCase();
       document.querySelectorAll('.pres-card').forEach(card => {
         const title = (card.dataset.title || '').toLowerCase();
         const desc  = (card.dataset.desc  || '').toLowerCase();
         card.style.display = (!q || title.includes(q) || desc.includes(q)) ? '' : 'none';
+      });
+      // 검색 중이면 모든 그룹 자동 열기
+      document.querySelectorAll('.group-section').forEach(gs => {
+        const header  = gs.querySelector('.group-header');
+        const content = gs.querySelector('.group-content');
+        const visible = [...gs.querySelectorAll('.pres-card')].some(c => c.style.display !== 'none');
+        gs.style.display = visible ? '' : 'none';
+        if (q && visible) {
+          header.classList.add('open');
+          content.classList.add('open');
+        }
       });
       // 섹션 내 카드 전부 숨겨지면 섹션도 숨김
       document.querySelectorAll('.subject-section').forEach(sec => {
