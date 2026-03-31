@@ -215,6 +215,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "18. 중세 유럽 세계",
+              "path": "Ⅱ./18. 중세 유럽 세계/index.html",
+              "emoji": "🏰",
+              "description": "중세 유럽 세계의 변화. 교역의 발달(한자 동맹·정기시), 장원제 해체(흑사병·농민 봉기), 교황권 쇠퇴(아비뇽 유수), 유럽 각국 왕권 강화(영국 대헌장·프랑스 백년 전쟁·레콩키스타). 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "중세 유럽", "color": "orange" },
+                { "label": "교황권 쇠퇴", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
