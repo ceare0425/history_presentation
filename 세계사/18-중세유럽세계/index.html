@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>18. 중세 유럽 세계</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main:#8B4513; --dark:#6B3010; --light:#FFF8E1; --accent:#C5A028;
+      --accent-light:#E8D080; --bg:#F5E6C4; --text:#2C1A0E; --text-sec:#6B4226;
+      --border:#A07850; --card-bg:#FDF5E0;
+    }
+    html, body { font-size: clamp(20px, 2.2vw, 36px); font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif; color: var(--text); height: 100%; overflow: hidden; }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+    h1 { font-family:'Nanum Myeongjo',serif; font-size:2.3rem; font-weight:800; letter-spacing:.04em; line-height:1.3; }
+    h2 { font-family:'Nanum Myeongjo',serif; font-size:1.35rem; font-weight:700; letter-spacing:.04em; }
+    p  { font-size:.95rem; line-height:1.7; }
+
+    body { background-color:var(--bg); background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(160,120,60,.04) 2px,rgba(160,120,60,.04) 4px), repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(140,100,40,.06) 28px,rgba(140,100,40,.06) 29px); }
+
+    .presentation { position:fixed; inset:0; bottom:2.2rem; display:flex; align-items:center; justify-content:center; padding:.8rem; }
+    .slide { display:none; aspect-ratio:16/9; width:min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height:auto; }
+    .slide.active { display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    .browser-card { background:var(--card-bg); border:2px solid var(--border); outline:4px solid var(--accent); outline-offset:-7px; border-radius:4px; box-shadow:0 4px 28px rgba(44,26,14,.2),inset 0 0 60px rgba(160,120,40,.05); width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    .browser-topbar { background:linear-gradient(90deg,#8B4513 0%,#5C2808 45%,#8B4513 100%); border-bottom:2px solid var(--accent); padding:.4rem 1.1rem; display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+    .topbar-icon { font-size:.95rem; }
+    .browser-title { color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-size:.82rem; font-weight:700; letter-spacing:.07em; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+    .browser-content { flex:1; overflow-y:auto; padding:.9rem 1.8rem; display:flex; flex-direction:column; }
+    .browser-content::-webkit-scrollbar { width:4px; }
+    .browser-content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+    .progress-bar { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--main)); z-index:1000; transition:width .3s; }
+    .nav-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.3rem 1.5rem; background:rgba(30,15,6,.97); border-top:2px solid var(--accent); z-index:999; font-size:14px; }
+    .nav-btn { display:flex; align-items:center; justify-content:center; width:1.7rem; height:1.7rem; border:1.5px solid #8B6540; border-radius:50%; background:transparent; cursor:pointer; color:var(--accent-light); transition:all .2s; padding:0; }
+    .nav-btn svg { width:.55rem; height:.55rem; fill:currentColor; display:block; }
+    .nav-btn:hover:not(:disabled) { background:var(--main); border-color:var(--accent); }
+    .nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .nav-counter { font-size:13px; font-weight:700; color:var(--accent-light); min-width:3rem; text-align:center; display:flex; align-items:center; gap:.15rem; line-height:1; }
+    .slide-input { width:1.4rem; text-align:center; border:none; border-bottom:1.5px solid transparent; background:transparent; font-size:13px; font-weight:700; color:var(--accent-light); font-family:inherit; padding:0; outline:none; cursor:pointer; transition:border-color .2s; line-height:1; }
+    .slide-input:hover { border-bottom-color:var(--accent); }
+    .slide-input:focus { border-bottom-color:var(--accent); background:rgba(139,69,19,.3); border-radius:3px; }
+
+    /* ── 역사 수업 시그니처 요소 ── */
+    .section-ornament { color:var(--accent); font-size:.72rem; letter-spacing:.5em; text-align:center; margin-bottom:.2rem; opacity:.75; }
+    .hist-divider { display:flex; align-items:center; gap:.4rem; margin:.25rem 0 .55rem; }
+    .h-line { flex:1; height:1.5px; background:linear-gradient(90deg,transparent,var(--accent) 25%,var(--accent) 75%,transparent); }
+    .h-gem  { color:var(--accent); font-size:.7rem; }
+    .era-badge { display:inline-block; background:linear-gradient(135deg,var(--main),var(--dark)); color:var(--accent-light); border:1px solid var(--accent); padding:.05rem .45rem; font-family:'Nanum Myeongjo',serif; font-size:.8rem; font-weight:700; border-radius:2px; white-space:nowrap; }
+
+    /* ── 빈칸 순차 공개 ── */
+    .blank {
+      display:inline-block; min-width:5rem;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.05em .6em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:inherit; user-select:none; position:relative;
+      text-align:center; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .blank::after {
+      content:'?'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.85em; font-weight:800;
+      pointer-events:none; transition:opacity .25s;
+    }
+    .blank.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .blank.on::after { opacity:0; }
+
+    /* ── 정답 버튼 순차 공개 ── */
+    .ans-btn {
+      display:inline-block;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.08em .9em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:.88rem; user-select:none; position:relative;
+      text-align:center; white-space:nowrap; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .ans-btn::after {
+      content:'정답'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.78em; font-weight:700;
+      pointer-events:none; transition:opacity .25s; white-space:nowrap;
+    }
+    .ans-btn.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity:0; }
+
+    /* ── 레이아웃 ── */
+    .cover-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.65rem; }
+    .end-wrap   { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.7rem; }
+    .center-content { flex:1; display:flex; flex-direction:column; justify-content:center; }
+
+    /* TOC */
+    .toc-list { display:flex; flex-direction:column; gap:.55rem; margin-top:.5rem; }
+    .toc-item { display:flex; align-items:center; gap:.7rem; padding:.55rem 1rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); cursor:pointer; transition:all .2s; }
+    .toc-item:hover { background:var(--light); border-color:var(--accent); transform:translateX(4px); }
+    .toc-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.85rem; min-width:1.7rem; height:1.7rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .toc-title { font-weight:700; font-size:1rem; }
+
+    /* 내용 카드 */
+    .ruler-card { border:1.5px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:.4rem; }
+    .ruler-card-header { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.9rem; padding:.35rem .8rem; display:flex; align-items:center; gap:.4rem; }
+    .ruler-card-body { padding:.6rem .95rem; background:var(--card-bg); }
+    .info-list { list-style:none; display:flex; flex-direction:column; gap:.48rem; }
+    .info-list li { position:relative; padding-left:1.3em; font-size:.93rem; line-height:1.7; }
+    .info-list li::before { content:'◆'; color:var(--accent); font-size:.6rem; position:absolute; left:0; top:.48em; }
+    .info-list li.sub { padding-left:2.3em; }
+    .info-list li.sub::before { content:'—'; font-size:.88rem; top:.38em; }
+
+    /* 퀴즈 */
+    .quiz-wrap { display:flex; flex-direction:column; gap:.4rem; margin-top:.25rem; }
+    .quiz-row { display:flex; align-items:flex-start; gap:.6rem; border:1.5px solid var(--border); border-radius:3px; padding:.42rem .8rem; background:var(--card-bg); }
+    .q-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.78rem; min-width:1.45rem; height:1.45rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.15em; }
+    .q-text { flex:1; font-size:.92rem; line-height:1.8; }
+
+    /* 선 연결 */
+    .match-grid { display:grid; grid-template-columns:1fr auto 1fr; gap:.35rem .7rem; align-items:center; margin-top:.2rem; }
+    .match-left { text-align:right; font-size:.9rem; font-weight:700; padding:.3rem .5rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); }
+    .match-arrow { color:var(--accent); font-size:.9rem; text-align:center; }
+    .match-right { font-size:.9rem; padding:.3rem .5rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); }
+
+    /* 교역권 3열 그리드 */
+    .trade-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.5rem; margin-top:.35rem; }
+    .trade-card { border:1.5px solid var(--border); border-radius:3px; overflow:hidden; }
+    .trade-card-header { background:linear-gradient(135deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-size:.82rem; font-weight:700; padding:.3rem .6rem; text-align:center; }
+    .trade-card-body { padding:.45rem .65rem; background:var(--card-bg); font-size:.88rem; line-height:1.65; }
+
+    /* 각국 정치 변화 테이블 */
+    .country-table { width:100%; border-collapse:collapse; margin-top:.3rem; font-size:.88rem; }
+    .country-table th { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; padding:.3rem .6rem; text-align:center; border:1px solid var(--border); }
+    .country-table td { padding:.35rem .65rem; border:1px solid var(--border); line-height:1.6; background:var(--card-bg); vertical-align:top; }
+    .country-table tr:nth-child(even) td { background:#FFF3D0; }
+    .country-label { font-weight:700; color:var(--main); white-space:nowrap; }
+
+    @media (max-width:768px) {
+      .trade-grid { grid-template-columns:1fr; }
+      .match-grid { grid-template-columns:1fr auto 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ══ 슬라이드 1: 표지 ══ -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏰</span>
+      <span class="browser-title">세계사 · Ⅱ-2. 유럽의 신항로 개척과 재정·군사 국가 — 학습지 39~40쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 88~91쪽</span>
+        <h1 style="margin-top:.35rem;">1. 중세 유럽 세계의 변화</h1>
+        <div class="hist-divider" style="width:55%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;">교역의 발달과 도시의 성장 &nbsp;·&nbsp; 장원제의 해체 &nbsp;·&nbsp; 교황권의 쇠퇴 &nbsp;·&nbsp; 왕권의 강화</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 2: 목차 ══ -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📋</span>
+      <span class="browser-title">학습 목차</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="text-align:center;margin-bottom:.4rem;">학습 내용</h2>
+      <div class="toc-list">
+        <div class="toc-item" onclick="goToSlide(2)">
+          <span class="toc-num">1</span>
+          <div><div class="toc-title">교역의 발달과 도시의 성장</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(5)">
+          <span class="toc-num">2</span>
+          <div><div class="toc-title">장원제의 해체</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(6)">
+          <span class="toc-num">3</span>
+          <div><div class="toc-title">교황권의 쇠퇴</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(7)">
+          <span class="toc-num">4</span>
+          <div><div class="toc-title">왕권의 강화와 중앙 집권 체제의 성장</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(9)">
+          <span class="toc-num">5</span>
+          <div><div class="toc-title">개념 확인 문제</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 1. 교역의 발달 > 배경 ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚓</span>
+      <span class="browser-title">학습지 39쪽 — 1. 교역의 발달과 도시의 성장 &gt; 배경</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">1. 교역의 발달과 도시의 성장</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚓ 배경</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>시장 발달, <strong>농업 생산력 증대</strong>, 도시 성장 등이 맞물려 교역 활성화</li>
+          </ul>
+        </div>
+      </div>
+      <div style="margin-top:.5rem;">
+        <p style="font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.95rem; margin-bottom:.35rem;">3대 교역권</p>
+        <div class="trade-grid">
+          <div class="trade-card">
+            <div class="trade-card-header">🌊 지중해 무역권</div>
+            <div class="trade-card-body">
+              <strong>베네치아·제노바</strong> 등이 <strong>동방 무역</strong> 주도<br>
+              직물업·금융업 번창<br>
+              <span style="color:var(--text-sec);font-size:.82rem;">(밀라노, 피렌체 등)</span>
+            </div>
+          </div>
+          <div class="trade-card">
+            <div class="trade-card-header">🧭 북유럽 교역권</div>
+            <div class="trade-card-body">
+              북독일 함부르크·뤼베크 등의<br>
+              <span class="blank" data-reveal>한자 동맹</span> 주도<br>
+              북해·발트해 연안 무역
+            </div>
+          </div>
+          <div class="trade-card">
+            <div class="trade-card-header">🏘️ 내륙 교역권</div>
+            <div class="trade-card-body">
+              <strong>상파뉴</strong> 지방 중심<br>
+              지중해 무역과 북방 무역을<br>
+              연결하는 <strong>정기시</strong> 운영
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 1. 도시의 성장 > 자치권 획득 ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏙️</span>
+      <span class="browser-title">학습지 39쪽 — 1. 교역의 발달과 도시의 성장 &gt; 도시의 자치권 획득</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">1. 교역의 발달과 도시의 성장</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏙️ 도시의 자치권 획득</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>자치권 획득</strong>: 특허장을 획득하거나 무력으로 자치권 획득</li>
+            <li><strong>도시 운영</strong>: 시의회 구성, 독자적인 법 제정</li>
+            <li><strong>길드 조성</strong>: 상인과 수공업자의 동업 조합(길드) 결성 → 상호 이익 보호</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 2. 장원제의 해체 ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌾</span>
+      <span class="browser-title">학습지 39쪽 — 2. 장원제의 해체</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">2. (서유럽) 장원제의 해체</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌾 해체 과정</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>상공업 발달, 도시 성장, 곡물 가격 상승 및 화폐 가치 하락, <strong>흑사병</strong> → 농민 봉기</li>
+            <li>농민의 지위 상승 → <strong>농노 신분 해방</strong> → 장원의 점차적인 해체</li>
+            <li class="sub">일부 지역에서 영주의 농민 억압 강화로 농민 봉기 발생</li>
+            <li class="sub"><strong>자크리의 난</strong> (프랑스, 1358) · <strong>와트 타일러의 난</strong> (영국, 1381)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 3. 교황권의 쇠퇴 ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⛪</span>
+      <span class="browser-title">학습지 39쪽 — 3. 교황권의 쇠퇴</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">3. 교황권의 쇠퇴</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⛪ 배경</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>십자군 전쟁 실패</strong>로 교황의 권위 하락</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">✝️ <span class="blank" data-reveal>아비뇽 유수</span> (1309~1377)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>배경</strong>: 성직자 과세 문제로 프랑스 왕과 교황 대립</li>
+            <li><strong>전개</strong>: 삼부회의 지지를 받아 <strong>필리프 4세</strong> 승리</li>
+            <li><strong>결과</strong>: 교황청을 <strong>아비뇽</strong>으로 옮겨 프랑스 왕이 통제</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ 교회의 대분열 (1378~1417)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>로마</strong>와 <strong>아비뇽</strong>에서 각각 교황이 선출되어 대립 → 교황 권위 추락</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 4. 왕권의 강화 > 배경 ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👑</span>
+      <span class="browser-title">학습지 39~40쪽 — 4. 왕권의 강화와 중앙 집권 체제의 성장 &gt; 배경</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">4. 왕권의 강화와 중앙 집권 체제의 성장</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 배경</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>봉건 영주</strong>의 세력 약화</li>
+            <li><strong>교황</strong>의 권위 쇠퇴</li>
+            <li><strong>도시 상공업자</strong>들의 성장과 국가 재정 지원<br>
+              <span style="font-size:.86rem;color:var(--text-sec);">(국왕의 관리로 봉사, 신분제 의회에 참여)</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: 4. 유럽 각국의 정치적 변화 (영국·프랑스) ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🗺️</span>
+      <span class="browser-title">학습지 40쪽 — 4. 왕권의 강화 &gt; 유럽 각국의 정치적 변화 (영국·프랑스)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.4rem;">유럽 각국의 정치적 변화 ①</h2>
+      <table class="country-table">
+        <thead>
+          <tr><th style="width:12%;">나라</th><th>정치적 변화</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="country-label">🇬🇧 영국</span></td>
+            <td>
+              노르만 왕조의 정복 → 강한 왕권 유지<br>
+              → 13세기 존 왕의 과다한 과세 → 귀족들의 <span class="blank" data-reveal>대헌장(마그나 카르타)</span> 승인 시도<br>
+              → 왕위 계승 문제로 <strong>장미 전쟁</strong> 발생 → 튜더 왕조 성립, 중앙 집권화
+            </td>
+          </tr>
+          <tr>
+            <td><span class="country-label">🇫🇷 프랑스</span></td>
+            <td>
+              카페 왕조(지방 분권적 봉건 국가)<br>
+              → <strong>백년 전쟁</strong> (잔 다르크의 활약 등) 승리로 중앙 집권화
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 4. 유럽 각국의 정치적 변화 (독일·이탈리아·이베리아) ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🗺️</span>
+      <span class="browser-title">학습지 40쪽 — 4. 왕권의 강화 &gt; 유럽 각국의 정치적 변화 (독일·이탈리아·이베리아)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.4rem;">유럽 각국의 정치적 변화 ②</h2>
+      <table class="country-table">
+        <thead>
+          <tr><th style="width:14%;">나라</th><th>정치적 변화</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="country-label">🇩🇪 독일</span></td>
+            <td>
+              <strong>신성 로마 제국</strong> 성립 → 분열 상태 지속<br>
+              <span style="font-size:.86rem;color:var(--text-sec);">(지방 제후의 강력한 세력 유지)</span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="country-label">🇮🇹 이탈리아</span></td>
+            <td>
+              여러 <strong>도시 국가</strong> 등장<br>
+              <span style="font-size:.86rem;color:var(--text-sec);">(베네치아, 피렌체 등)</span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="country-label">🇪🇸 이베리아반도</span></td>
+            <td>
+              <strong>레콩키스타</strong> (재정복 운동)<br>
+              → 카스티야, 아라곤 성립<br>
+              → <strong>에스파냐 왕국</strong> 탄생 (15세기 후반)
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 10: 개념 확인 문제 1 (OX) ══ -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 39~40쪽 — 개념 확인 문제 1 · OX 문제</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">개념 확인 문제 1</h2>
+      <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:.4rem;">다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">①</span>
+          <span class="q-text">베네치아, 제노바 등 지중해 연안의 도시는 동방 무역을 통해 번영하였고, 밀라노, 피렌체 등에서는 직물업과 금융업이 번창하였다.</span>
+          <span class="ans-btn" data-reveal>○</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">②</span>
+          <span class="q-text">십자군 전쟁 이후 영주는 농민에게 현물이나 화폐의 형태로 지대를 요구하는 대신 부역을 강화하였다.</span>
+          <span class="ans-btn" data-reveal>×</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">③</span>
+          <span class="q-text">중세 말기 봉건 영주의 힘이 약화되고 교황의 권위가 쇠퇴하면서 유럽 각국에서는 왕권을 강화하려는 경향이 나타났다.</span>
+          <span class="ans-btn" data-reveal>○</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 11: 개념 확인 문제 2 (빈칸) ══ -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 39~40쪽 — 개념 확인 문제 2 · 빈칸 채우기</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">개념 확인 문제 2</h2>
+      <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:.4rem;">빈칸에 들어갈 알맞은 말을 쓰시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">①</span>
+          <span class="q-text">프랑스 <span class="blank" data-reveal>상파뉴</span> 지방에서는 지중해 무역과 북방 무역을 연결하는 정기시가 열렸다.</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">②</span>
+          <span class="q-text">14세기 중엽 <span class="blank" data-reveal>흑사병</span>으로 유럽 인구의 1/3 이상이 줄어들었고, 그 영향으로 장원 내 노동력이 부족해지자 영주는 농민의 처우를 개선해 주었다.</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">③</span>
+          <span class="q-text">교황 보니파키우스 8세와 프랑스 왕 <span class="blank" data-reveal>필리프 4세</span>는 교회와 성직자에 대한 과세 문제를 둘러싸고 대립하였으나, 교황은 삼부회의 지지를 받은 프랑스 국왕에게 굴복하였다.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 12: 개념 확인 문제 3 (선 연결) ══ -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 40쪽 — 개념 확인 문제 3 · 해당하는 지역 선택</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">개념 확인 문제 3</h2>
+      <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:.4rem;">다음 설명에 해당하는 지역을 &lt;보기&gt;에서 고르시오. &nbsp; <span style="border:1px solid var(--border);padding:.05rem .4rem;border-radius:2px;font-size:.82rem;">ㄱ. 영국 &nbsp; ㄴ. 독일 &nbsp; ㄷ. 프랑스 &nbsp; ㄹ. 이베리아 반도</span></p>
+      <div class="match-grid">
+        <div class="match-left">⑴ 신성 로마 제국이 성립하였다.</div>
+        <div class="match-arrow">→</div>
+        <div class="match-right"><span class="blank" data-reveal>ㄴ. 독일</span></div>
+
+        <div class="match-left">⑵ 왕위 계승 문제로 장미 전쟁이 발생하였다.</div>
+        <div class="match-arrow">→</div>
+        <div class="match-right"><span class="blank" data-reveal>ㄱ. 영국</span></div>
+
+        <div class="match-left">⑶ 레콩키스타로 카스티야, 아라곤이 세워졌다.</div>
+        <div class="match-arrow">→</div>
+        <div class="match-right"><span class="blank" data-reveal>ㄹ. 이베리아 반도</span></div>
+
+        <div class="match-left">⑷ 플랑드르 지방에 대한 지배권을 놓고 영국과 대립하였다.</div>
+        <div class="match-arrow">→</div>
+        <div class="match-right"><span class="blank" data-reveal>ㄷ. 프랑스</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 13: 마무리 ══ -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏅</span>
+      <span class="browser-title">1. 중세 유럽 세계의 변화 — 학습 완료</span>
+    </div>
+    <div class="browser-content">
+      <div class="end-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h1>수고하셨습니다!</h1>
+        <div class="hist-divider" style="width:50%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;">교역의 발달 &nbsp;·&nbsp; 장원제 해체 &nbsp;·&nbsp; 교황권 쇠퇴 &nbsp;·&nbsp; 왕권 강화</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<!-- ── Navigation Bar ── -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력"> / <span id="totalSlides">13</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function revealItems(slideEl) { return Array.from(slideEl.querySelectorAll('[data-reveal]')); }
+  function getRC(slideEl) { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n) { slideEl.dataset.rc = n; }
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => el.classList.toggle('on', i < n));
+  }
+  function updateNav() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && n === 0;
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && n === items.length;
+    document.getElementById('slideInput').value = currentSlide + 1;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+  }
+  function goToSlide(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = idx;
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1); applyReveal(el); updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1); applyReveal(el); updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length);
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  /* 키보드: 화살표, Space, PageDown/PageUp, Home, End */
+  document.addEventListener('keydown', e => {
+    if (e.target === document.getElementById('slideInput')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextAction(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End') goToSlide(total - 1);
+  });
+
+  /* 슬라이드 번호 직접 입력 */
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const n = parseInt(slideInput.value) - 1;
+      if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+      slideInput.blur();
+    }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('blur', () => {
+    const n = parseInt(slideInput.value) - 1;
+    if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+  });
+
+  /* 터치 스와이프 */
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) { if (dx < 0) nextAction(); else prevAction(); }
+  }, { passive: true });
+
+  updateNav();
+</script>
+</body>
+</html>
