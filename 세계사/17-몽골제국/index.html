@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>17. 몽골 제국</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main:#8B4513; --dark:#6B3010; --light:#FFF8E1; --accent:#C5A028;
+      --accent-light:#E8D080; --bg:#F5E6C4; --text:#2C1A0E; --text-sec:#6B4226;
+      --border:#A07850; --card-bg:#FDF5E0;
+    }
+    html, body { font-size: clamp(20px, 2.2vw, 36px); font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif; color: var(--text); height: 100%; overflow: hidden; }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+    h1 { font-family:'Nanum Myeongjo',serif; font-size:2.3rem; font-weight:800; letter-spacing:.04em; line-height:1.3; }
+    h2 { font-family:'Nanum Myeongjo',serif; font-size:1.35rem; font-weight:700; letter-spacing:.04em; }
+    p  { font-size:.95rem; line-height:1.7; }
+
+    body { background-color:var(--bg); background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(160,120,60,.04) 2px,rgba(160,120,60,.04) 4px), repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(140,100,40,.06) 28px,rgba(140,100,40,.06) 29px); }
+
+    .presentation { position:fixed; inset:0; bottom:2.2rem; display:flex; align-items:center; justify-content:center; padding:.8rem; }
+    .slide { display:none; aspect-ratio:16/9; width:min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height:auto; }
+    .slide.active { display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    .browser-card { background:var(--card-bg); border:2px solid var(--border); outline:4px solid var(--accent); outline-offset:-7px; border-radius:4px; box-shadow:0 4px 28px rgba(44,26,14,.2),inset 0 0 60px rgba(160,120,40,.05); width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    .browser-topbar { background:linear-gradient(90deg,#8B4513 0%,#5C2808 45%,#8B4513 100%); border-bottom:2px solid var(--accent); padding:.4rem 1.1rem; display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+    .topbar-icon { font-size:.95rem; }
+    .browser-title { color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-size:.82rem; font-weight:700; letter-spacing:.07em; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+    .browser-content { flex:1; overflow-y:auto; padding:.9rem 1.8rem; display:flex; flex-direction:column; }
+    .browser-content::-webkit-scrollbar { width:4px; }
+    .browser-content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+    .progress-bar { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--main)); z-index:1000; transition:width .3s; }
+    .nav-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.3rem 1.5rem; background:rgba(30,15,6,.97); border-top:2px solid var(--accent); z-index:999; font-size:14px; }
+    .nav-btn { display:flex; align-items:center; justify-content:center; width:1.7rem; height:1.7rem; border:1.5px solid #8B6540; border-radius:50%; background:transparent; cursor:pointer; color:var(--accent-light); transition:all .2s; padding:0; }
+    .nav-btn svg { width:.55rem; height:.55rem; fill:currentColor; display:block; }
+    .nav-btn:hover:not(:disabled) { background:var(--main); border-color:var(--accent); }
+    .nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .nav-counter { font-size:13px; font-weight:700; color:var(--accent-light); min-width:3rem; text-align:center; display:flex; align-items:center; gap:.15rem; line-height:1; }
+    .slide-input { width:1.4rem; text-align:center; border:none; border-bottom:1.5px solid transparent; background:transparent; font-size:13px; font-weight:700; color:var(--accent-light); font-family:inherit; padding:0; outline:none; cursor:pointer; transition:border-color .2s; line-height:1; }
+    .slide-input:hover { border-bottom-color:var(--accent); }
+    .slide-input:focus { border-bottom-color:var(--accent); background:rgba(139,69,19,.3); border-radius:3px; }
+
+    /* ── 역사 수업 시그니처 요소 ── */
+    .section-ornament { color:var(--accent); font-size:.72rem; letter-spacing:.5em; text-align:center; margin-bottom:.2rem; opacity:.75; }
+    .hist-divider { display:flex; align-items:center; gap:.4rem; margin:.25rem 0 .55rem; }
+    .h-line { flex:1; height:1.5px; background:linear-gradient(90deg,transparent,var(--accent) 25%,var(--accent) 75%,transparent); }
+    .h-gem  { color:var(--accent); font-size:.7rem; }
+    .era-badge { display:inline-block; background:linear-gradient(135deg,var(--main),var(--dark)); color:var(--accent-light); border:1px solid var(--accent); padding:.05rem .45rem; font-family:'Nanum Myeongjo',serif; font-size:.8rem; font-weight:700; border-radius:2px; white-space:nowrap; }
+
+    /* ── 빈칸 순차 공개 ── */
+    .blank {
+      display:inline-block; min-width:5rem;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.05em .6em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:inherit; user-select:none; position:relative;
+      text-align:center; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .blank::after {
+      content:'?'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.85em; font-weight:800;
+      pointer-events:none; transition:opacity .25s;
+    }
+    .blank.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .blank.on::after { opacity:0; }
+
+    /* ── 정답 버튼 순차 공개 ── */
+    .ans-btn {
+      display:inline-block;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.08em .9em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:.88rem; user-select:none; position:relative;
+      text-align:center; white-space:nowrap; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .ans-btn::after {
+      content:'정답'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.78em; font-weight:700;
+      pointer-events:none; transition:opacity .25s; white-space:nowrap;
+    }
+    .ans-btn.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity:0; }
+
+    /* ── 레이아웃 ── */
+    .cover-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.65rem; }
+    .end-wrap   { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.7rem; }
+    .center-content { flex:1; display:flex; flex-direction:column; justify-content:center; }
+
+    /* TOC */
+    .toc-list { display:flex; flex-direction:column; gap:.55rem; margin-top:.5rem; }
+    .toc-item { display:flex; align-items:center; gap:.7rem; padding:.55rem 1rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); cursor:pointer; transition:all .2s; }
+    .toc-item:hover { background:var(--light); border-color:var(--accent); transform:translateX(4px); }
+    .toc-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.85rem; min-width:1.7rem; height:1.7rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .toc-title { font-weight:700; font-size:1rem; }
+
+    /* 내용 카드 */
+    .ruler-card { border:1.5px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:.4rem; }
+    .ruler-card-header { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.9rem; padding:.35rem .8rem; display:flex; align-items:center; gap:.4rem; }
+    .ruler-card-body { padding:.6rem .95rem; background:var(--card-bg); }
+    .info-list { list-style:none; display:flex; flex-direction:column; gap:.48rem; }
+    .info-list li { position:relative; padding-left:1.3em; font-size:.93rem; line-height:1.7; }
+    .info-list li::before { content:'◆'; color:var(--accent); font-size:.6rem; position:absolute; left:0; top:.48em; }
+    .info-list li.sub { padding-left:2.3em; }
+    .info-list li.sub::before { content:'—'; font-size:.88rem; top:.38em; }
+
+    /* 퀴즈 */
+    .quiz-wrap { display:flex; flex-direction:column; gap:.4rem; margin-top:.25rem; }
+    .quiz-row { display:flex; align-items:flex-start; gap:.6rem; border:1.5px solid var(--border); border-radius:3px; padding:.42rem .8rem; background:var(--card-bg); }
+    .quiz-row.col { flex-direction:column; gap:.22rem; }
+    .quiz-row.col .inner { display:flex; gap:.6rem; align-items:flex-start; }
+    .q-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.78rem; min-width:1.45rem; height:1.45rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.15em; }
+    .q-text { flex:1; font-size:.92rem; line-height:1.8; }
+
+    /* 선 연결 */
+    .match-grid { display:grid; grid-template-columns:1fr auto 1fr; gap:.35rem .7rem; align-items:center; margin-top:.2rem; }
+    .match-left { text-align:right; font-size:.9rem; font-weight:700; padding:.3rem .5rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); }
+    .match-arrow { color:var(--accent); font-size:.9rem; text-align:center; }
+    .match-right { font-size:.9rem; padding:.3rem .5rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); }
+
+    @media (max-width:768px) { .match-grid { grid-template-columns:1fr auto 1fr; } }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ══ 슬라이드 1: 표지 ══ -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏇</span>
+      <span class="browser-title">세계사 · Ⅱ-1. 이슬람 세계와 몽골 제국의 팽창 — 학습지 37~38쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 84~87쪽</span>
+        <h1 style="margin-top:.35rem;">3. 몽골 제국</h1>
+        <div class="hist-divider" style="width:55%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;">몽골 제국의 발전 &nbsp;·&nbsp; 유라시아 교역망의 확대 &nbsp;·&nbsp; 명의 발전</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 2: 목차 ══ -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📋</span>
+      <span class="browser-title">학습 목차</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="text-align:center;margin-bottom:.4rem;">학습 내용</h2>
+      <div class="toc-list">
+        <div class="toc-item" onclick="goToSlide(2)">
+          <span class="toc-num">1</span>
+          <div><div class="toc-title">몽골 제국의 발전</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(5)">
+          <span class="toc-num">2</span>
+          <div><div class="toc-title">유라시아 교역망의 확대와 원의 대외 관계</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(8)">
+          <span class="toc-num">3</span>
+          <div><div class="toc-title">명의 발전</div></div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(12)">
+          <span class="toc-num">4</span>
+          <div><div class="toc-title">개념 확인 문제</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 1. 몽골 제국의 발전 > 건국 ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏹</span>
+      <span class="browser-title">학습지 37쪽 — 1. 몽골 제국의 발전 &gt; 건국</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">1. 몽골 제국의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏹 건국</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>몽골 부족을 통합한 <strong>테무친</strong>이 쿠릴타이에서 <strong>칭기즈 칸</strong>으로 추대</li>
+            <li>칭기즈 칸: 몽골 제국 건설, <strong>서하·금·호라즘</strong> 공격</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 1. 몽골 제국의 발전 > 팽창 ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚔️</span>
+      <span class="browser-title">학습지 37쪽 — 1. 몽골 제국의 발전 &gt; 팽창</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">1. 몽골 제국의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ 팽창</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>칭기즈 칸 사후 <strong>금과 아바스 왕조</strong> 멸망, <strong>동유럽</strong>까지 진출</li>
+            <li><strong>쿠빌라이 칸</strong>: 대도(베이징) 천도, 국호를 <strong>원</strong>으로 변경, <strong>남송 멸망</strong>, 일본·베트남 원정</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 1. 몽골 제국의 발전 > 원의 중국 통치 ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏯</span>
+      <span class="browser-title">학습지 37쪽 — 1. 몽골 제국의 발전 &gt; 원의 중국 통치</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">1. 몽골 제국의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏯 원의 중국 통치</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><span class="blank" data-reveal>몽골 제일주의</span>: 색목인 우대, 한족 차별</li>
+            <li>티베트 불교 유행(황실 종교), <strong>파스파 문자</strong> 제정, 《수시력》 제작</li>
+            <li>서민 문화의 발전: 《서상기》 등의 연극 유행</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 2. 유라시아 교역망 > 몽골의 평화 시대 ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🛤️</span>
+      <span class="browser-title">학습지 37쪽 — 2. 유라시아 교역망의 확대와 원의 대외 관계 &gt; 몽골의 평화 시대</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">2. 유라시아 교역망의 확대와 원의 대외 관계</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🛤️ 몽골의 평화 시대</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><span class="blank" data-reveal>역참제</span> 실시: 패자(파이자) 발급(말, 식량, 숙소 제공) → 넓은 제국의 효과적 통치, 원활한 물자 수송과 문서 전달에 도움</li>
+            <li>시박사를 설치하여 대외 무역 관리, <strong>교초·은화</strong> 사용을 통한 교역</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 2. 동서 교류 ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌐</span>
+      <span class="browser-title">학습지 37쪽 — 2. 유라시아 교역망의 확대와 원의 대외 관계 &gt; 동서 교류</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">2. 유라시아 교역망의 확대와 원의 대외 관계</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌐 동서 교류</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>마르코 폴로</strong>: 원을 방문, 《동방견문록》 집필</li>
+            <li>중국의 <strong>화약 무기, 나침반, 활판 인쇄술</strong> 등이 유럽에 전래</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: 2. 원의 대외 관계 ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🗺️</span>
+      <span class="browser-title">학습지 37쪽 — 2. 유라시아 교역망의 확대와 원의 대외 관계 &gt; 원의 대외 관계</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">2. 유라시아 교역망의 확대와 원의 대외 관계</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🗺️ 원의 대외 관계</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>베트남</strong>: 원의 쩐 왕조 침입 → <strong>쩐흥다오</strong>를 중심으로 격퇴, 《대월사기》 편찬</li>
+            <li><strong>일본 원정</strong>: 원이 고려와 연합하여 일본 원정 진행 → <strong>가마쿠라 막부</strong>의 저항으로 실패</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 3. 명의 발전 > 건국 ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏮</span>
+      <span class="browser-title">학습지 38쪽 — 3. 명의 발전 &gt; 건국</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">3. 명의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏮 건국</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>원의 내분과 물가 폭등 → <strong>홍건적의 난</strong> → <strong>주원장(태조)</strong>이 명을 건국하고 몽골을 북쪽으로 축출</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 10: 3. 명의 발전 > 태조(홍무제) ══ -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👑</span>
+      <span class="browser-title">학습지 38쪽 — 3. 명의 발전 &gt; 태조(홍무제)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">3. 명의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 태조(홍무제)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>육유 반포, 과거제 부활, <strong>재상제 폐지</strong>, 토지 대장(어린도책)과 호적 대장(부역황책) 작성</li>
+            <li><span class="blank" data-reveal>이갑제</span> 실시(조세 징수, 치안 유지)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 11: 3. 명의 발전 > 영락제 ══ -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⛵</span>
+      <span class="browser-title">학습지 38쪽 — 3. 명의 발전 &gt; 영락제</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">3. 명의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⛵ 영락제</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>자금성 건설, 베이징 천도, 대운하와 만리장성 정비, 몽골·베트남 원정</li>
+            <li>무로마치 막부와 <strong>감합 무역</strong> 개시, <strong>정화</strong>의 함대 파견</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 12: 3. 명의 발전 > 발전·멸망 ══ -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📉</span>
+      <span class="browser-title">학습지 38쪽 — 3. 명의 발전 &gt; 발전 · 멸망</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.5rem;">3. 명의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📉 발전 · 멸망</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>북로남왜</strong>: 15세기 이후 북쪽의 몽골과 동남 해안의 왜구가 명을 침입</li>
+            <li>장거정의 개혁: <strong>일조편법</strong>을 확대 실시 → 실패</li>
+            <li>멸망: <strong>이자성의 난</strong>으로 인해 멸망(1644)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 13: 개념 확인 문제 1 (O표) ══ -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 38쪽 — 개념 확인 문제 1 · 괄호 안에서 알맞은 말에 ○표</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">개념 확인 문제 1</h2>
+      <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:.4rem;">괄호 안의 내용 중 알맞은 말에 ○표를 하시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">⑴</span>
+          <span class="q-text">( 칭기즈 칸 / 쿠빌라이 칸 )은 남송을 멸망시키고 중국 전역을 통일하였다. &nbsp;→&nbsp; 정답: <span class="ans-btn" data-reveal>쿠빌라이 칸</span></span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <span class="q-text">( 마르코 폴로 / 이븐 바투타 )가 남긴 《동방견문록》은 유럽에 소개되어 동아시아에 대한 관심을 촉발하였다. &nbsp;→&nbsp; 정답: <span class="ans-btn" data-reveal>마르코 폴로</span></span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑶</span>
+          <span class="q-text">원은 고려와 연합하여 일본 원정을 두 차례 추진하였으나, ( 가마쿠라 / 무로마치 ) 막부의 저항과 태풍의 영향 등으로 실패하였다. &nbsp;→&nbsp; 정답: <span class="ans-btn" data-reveal>가마쿠라</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 14: 개념 확인 문제 2 (빈칸) ══ -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 38쪽 — 개념 확인 문제 2 · 빈칸에 알맞은 말 쓰기</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">개념 확인 문제 2</h2>
+      <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:.4rem;">빈칸에 들어갈 알맞은 말을 쓰시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner">
+            <span class="q-num">⑴</span>
+            <span class="q-text">칭기즈 칸은 ( <span class="blank" data-reveal>천호제</span> )을/를 바탕으로 몽골 제국을 건설하고 서하와 금, 호라즘을 공격하였다.</span>
+          </div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner">
+            <span class="q-num">⑵</span>
+            <span class="q-text">명 태조는 향촌 질서를 정비하기 위해 토지 대장과 호적 대장을 작성하고, 이장호와 갑수호를 중심으로 부역을 징수하고 치안을 담당하도록 하는 ( <span class="blank" data-reveal>이갑제</span> )을/를 실시하였다.</span>
+          </div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner">
+            <span class="q-num">⑶</span>
+            <span class="q-text">15세기 이후 명이 북로남왜로 인해 국력이 쇠퇴하는 상황 속에서 장거정은 각종 세금 및 부역을 지세와 정세에 통합하여 은으로 징수하는 제도인 ( <span class="blank" data-reveal>일조편법</span> )을/를 확대 실시하는 개혁을 추진하였다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 15: 개념 확인 문제 3 (선 연결) ══ -->
+<div class="slide" data-slide="14">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 38쪽 — 개념 확인 문제 3 · 용어와 관련 내용 선 연결</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">개념 확인 문제 3</h2>
+      <p style="font-size:.85rem;color:var(--text-sec);margin-bottom:.4rem;">다음 용어와 관련된 내용으로 옳은 것끼리 선으로 연결하시오.</p>
+      <div class="match-grid">
+        <div class="match-left">⑴ 쩐 왕조</div>
+        <div class="match-arrow">→</div>
+        <div class="match-right"><span class="blank" data-reveal>《대월사기》 편찬</span></div>
+
+        <div class="match-left">⑵ 무로마치 막부</div>
+        <div class="match-arrow">→</div>
+        <div class="match-right"><span class="blank" data-reveal>명과 감합 무역</span></div>
+
+        <div class="match-left">⑶ 명 태조</div>
+        <div class="match-arrow">→</div>
+        <div class="match-right"><span class="blank" data-reveal>재상제 폐지, 육유 반포</span></div>
+
+        <div class="match-left">⑷ 영락제</div>
+        <div class="match-arrow">→</div>
+        <div class="match-right"><span class="blank" data-reveal>자금성 건설, 정화 함대 파견</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 16: 마무리 ══ -->
+<div class="slide" data-slide="15">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏅</span>
+      <span class="browser-title">3. 몽골 제국 — 학습 완료</span>
+    </div>
+    <div class="browser-content">
+      <div class="end-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h1>수고하셨습니다!</h1>
+        <div class="hist-divider" style="width:50%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<!-- ── Navigation Bar ── -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력"> / <span id="totalSlides">16</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function revealItems(slideEl) { return Array.from(slideEl.querySelectorAll('[data-reveal]')); }
+  function getRC(slideEl) { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n) { slideEl.dataset.rc = n; }
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => el.classList.toggle('on', i < n));
+  }
+  function updateNav() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && n === 0;
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && n === items.length;
+    document.getElementById('slideInput').value = currentSlide + 1;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+  }
+  function goToSlide(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = idx;
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1); applyReveal(el); updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1); applyReveal(el); updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length);
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  /* 키보드: 화살표, Space, PageDown/PageUp, Home, End */
+  document.addEventListener('keydown', e => {
+    if (e.target === document.getElementById('slideInput')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextAction(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End') goToSlide(total - 1);
+  });
+
+  /* 슬라이드 번호 직접 입력 */
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const n = parseInt(slideInput.value) - 1;
+      if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+      slideInput.blur();
+    }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('blur', () => {
+    const n = parseInt(slideInput.value) - 1;
+    if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+  });
+
+  /* 터치 스와이프 */
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) { if (dx < 0) nextAction(); else prevAction(); }
+  }, { passive: true });
+
+  updateNav();
+</script>
+</body>
+</html>
