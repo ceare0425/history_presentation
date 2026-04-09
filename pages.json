@@ -228,6 +228,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "19. 르네상스와 종교 개혁",
+              "path": "세계사/19. 르네상스와 종교개혁/index.html",
+              "emoji": "✍️",
+              "description": "르네상스의 의미(인문주의), 이탈리아 르네상스(페트라르카·다 빈치·미켈란젤로), 알프스 이북 르네상스(에라스뮈스·토머스 모어), 종교 개혁(루터·칼뱅·영국 국교회·트리엔트 공의회). 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "르네상스", "color": "orange" },
+                { "label": "종교 개혁", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
