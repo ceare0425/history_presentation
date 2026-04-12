@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3. 신항로 개척</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main:#8B4513; --dark:#6B3010; --light:#FFF8E1; --accent:#C5A028;
+      --accent-light:#E8D080; --bg:#F5E6C4; --text:#2C1A0E; --text-sec:#6B4226;
+      --border:#A07850; --card-bg:#FDF5E0;
+    }
+    html, body { font-size: clamp(20px, 2.2vw, 36px); font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif; color: var(--text); height: 100%; overflow: hidden; }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+    h1 { font-family:'Nanum Myeongjo',serif; font-size:2.3rem; font-weight:800; letter-spacing:.04em; line-height:1.3; }
+    h2 { font-family:'Nanum Myeongjo',serif; font-size:1.35rem; font-weight:700; letter-spacing:.04em; }
+    p  { font-size:.95rem; line-height:1.7; }
+
+    body {
+      background-color:var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(160,120,60,.04) 2px,rgba(160,120,60,.04) 4px),
+        repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(140,100,40,.06) 28px,rgba(140,100,40,.06) 29px);
+    }
+
+    .presentation { position:fixed; inset:0; bottom:2.2rem; display:flex; align-items:center; justify-content:center; padding:.8rem; }
+    .slide { display:none; aspect-ratio:16/9; width:min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height:auto; }
+    .slide.active { display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    .browser-card { background:var(--card-bg); border:2px solid var(--border); outline:4px solid var(--accent); outline-offset:-7px; border-radius:4px; box-shadow:0 4px 28px rgba(44,26,14,.2),inset 0 0 60px rgba(160,120,40,.05); width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    .browser-topbar { background:linear-gradient(90deg,#8B4513 0%,#5C2808 45%,#8B4513 100%); border-bottom:2px solid var(--accent); padding:.4rem 1.1rem; display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+    .topbar-icon { font-size:.95rem; }
+    .browser-title { color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-size:.82rem; font-weight:700; letter-spacing:.07em; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+    .browser-content { flex:1; overflow-y:auto; padding:.9rem 1.8rem; display:flex; flex-direction:column; }
+    .browser-content::-webkit-scrollbar { width:4px; }
+    .browser-content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+    .progress-bar { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--main)); z-index:1000; transition:width .3s; }
+    .nav-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.3rem 1.5rem; background:rgba(30,15,6,.97); border-top:2px solid var(--accent); z-index:999; font-size:14px; }
+    .nav-btn { display:flex; align-items:center; justify-content:center; width:1.7rem; height:1.7rem; border:1.5px solid #8B6540; border-radius:50%; background:transparent; cursor:pointer; color:var(--accent-light); transition:all .2s; padding:0; }
+    .nav-btn svg { width:.55rem; height:.55rem; fill:currentColor; display:block; }
+    .nav-btn:hover:not(:disabled) { background:var(--main); border-color:var(--accent); }
+    .nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .nav-counter { font-size:13px; font-weight:700; color:var(--accent-light); min-width:3rem; text-align:center; display:flex; align-items:center; gap:.15rem; line-height:1; }
+    .slide-input { width:1.4rem; text-align:center; border:none; border-bottom:1.5px solid transparent; background:transparent; font-size:13px; font-weight:700; color:var(--accent-light); font-family:inherit; padding:0; outline:none; cursor:pointer; transition:border-color .2s; line-height:1; }
+    .slide-input:hover { border-bottom-color:var(--accent); }
+    .slide-input:focus { border-bottom-color:var(--accent); background:rgba(139,69,19,.3); border-radius:3px; }
+
+    /* ── 역사 수업 시그니처 요소 ── */
+    .section-ornament { color:var(--accent); font-size:.72rem; letter-spacing:.5em; text-align:center; margin-bottom:.2rem; opacity:.75; }
+    .hist-divider { display:flex; align-items:center; gap:.4rem; margin:.25rem 0 .55rem; }
+    .h-line { flex:1; height:1.5px; background:linear-gradient(90deg,transparent,var(--accent) 25%,var(--accent) 75%,transparent); }
+    .h-gem  { color:var(--accent); font-size:.7rem; }
+    .era-badge { display:inline-block; background:linear-gradient(135deg,var(--main),var(--dark)); color:var(--accent-light); border:1px solid var(--accent); padding:.05rem .45rem; font-family:'Nanum Myeongjo',serif; font-size:.8rem; font-weight:700; border-radius:2px; white-space:nowrap; }
+
+    /* ── 빈칸 순차 공개 ── */
+    .blank {
+      display:inline-block; min-width:5rem;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.05em .6em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:inherit; user-select:none; position:relative;
+      text-align:center; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .blank::after {
+      content:'?'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.85em; font-weight:800;
+      pointer-events:none; transition:opacity .25s;
+    }
+    .blank.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .blank.on::after { opacity:0; }
+
+    /* ── 정답 버튼 순차 공개 ── */
+    .ans-btn {
+      display:inline-block;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.08em .9em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:.88rem; user-select:none; position:relative;
+      text-align:center; white-space:nowrap; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .ans-btn::after {
+      content:'정답'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.78em; font-weight:700;
+      pointer-events:none; transition:opacity .25s; white-space:nowrap;
+    }
+    .ans-btn.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity:0; }
+
+    /* ── 레이아웃 ── */
+    .cover-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.65rem; }
+
+    /* TOC */
+    .toc-list { display:flex; flex-direction:column; gap:.45rem; margin-top:.4rem; }
+    .toc-item { display:flex; align-items:center; gap:.7rem; padding:.45rem 1rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); cursor:pointer; transition:all .2s; }
+    .toc-item:hover { background:var(--light); border-color:var(--accent); transform:translateX(4px); }
+    .toc-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.85rem; min-width:1.7rem; height:1.7rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .toc-title { font-weight:700; font-size:1rem; }
+    .toc-sub { font-size:.82rem; color:var(--text-sec); margin-top:.08rem; }
+
+    /* 내용 카드 */
+    .ruler-card { border:1.5px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:.4rem; }
+    .ruler-card-header { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.9rem; padding:.35rem .8rem; display:flex; align-items:center; gap:.4rem; }
+    .ruler-card-body { padding:.55rem .9rem; background:var(--card-bg); }
+    .info-list { list-style:none; display:flex; flex-direction:column; gap:.42rem; }
+    .info-list li { position:relative; padding-left:1.3em; font-size:.93rem; line-height:1.7; }
+    .info-list li::before { content:'◆'; color:var(--accent); font-size:.6rem; position:absolute; left:0; top:.48em; }
+    .info-list li.sub { padding-left:2.3em; }
+    .info-list li.sub::before { content:'—'; font-size:.88rem; top:.38em; }
+
+    /* 개척 항로 테이블 */
+    .route-table { width:100%; border-collapse:collapse; font-size:.88rem; margin-top:.3rem; }
+    .route-table th { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; padding:.32rem .7rem; text-align:center; border:1px solid var(--border); }
+    .route-table td { padding:.38rem .7rem; border:1px solid var(--border); line-height:1.65; background:var(--card-bg); vertical-align:top; }
+    .route-label { font-weight:700; color:var(--main); white-space:nowrap; }
+
+    /* 퀴즈 */
+    .quiz-wrap { display:flex; flex-direction:column; gap:.38rem; margin-top:.2rem; }
+    .quiz-row { display:flex; align-items:flex-start; gap:.55rem; border:1.5px solid var(--border); border-radius:3px; padding:.38rem .75rem; background:var(--card-bg); }
+    .quiz-row.col { flex-direction:column; gap:.25rem; }
+    .quiz-row.col .inner { display:flex; gap:.55rem; align-items:flex-start; }
+    .q-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.78rem; min-width:1.45rem; height:1.45rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.15em; }
+    .q-text { flex:1; font-size:.9rem; line-height:1.8; }
+    .choice-list { display:flex; flex-direction:column; gap:.22rem; margin-top:.3rem; font-size:.88rem; line-height:1.7; padding-left:.3rem; }
+    .choice-list span { display:flex; align-items:flex-start; gap:.4rem; }
+
+    /* 강조 박스 */
+    .highlight-box { background:var(--light); border:1.5px solid var(--accent); border-left:4px solid var(--main); border-radius:3px; padding:.45rem .9rem; margin:.25rem 0; font-size:.88rem; line-height:1.7; }
+
+    @media (max-width:768px) {
+      .route-table { font-size:.8rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ══ 슬라이드 1: 표지 ══ -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⛵</span>
+      <span class="browser-title">세계사 · Ⅱ-2. 유럽의 신항로 개척과 재정·군사 국가 — 학습지 43~44쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 96~100쪽</span>
+        <h1 style="margin-top:.35rem;">3. 신항로 개척</h1>
+        <div class="hist-divider" style="width:60%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;">신항로 개척의 배경 &nbsp;·&nbsp; 전개 &nbsp;·&nbsp; 아메리카 문명의 파괴 &nbsp;·&nbsp; 신항로 개척의 영향</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 2: 목차 ══ -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📋</span>
+      <span class="browser-title">학습 목차</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="text-align:center;margin-bottom:.4rem;">학습 내용</h2>
+      <div class="toc-list">
+        <div class="toc-item" onclick="goToSlide(2)">
+          <span class="toc-num">1</span>
+          <div>
+            <div class="toc-title">신항로 개척의 배경</div>
+            <div class="toc-sub">동기 (호기심·경제·종교) · 과학 기술 발달</div>
+          </div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(4)">
+          <span class="toc-num">2</span>
+          <div>
+            <div class="toc-title">신항로 개척의 전개</div>
+            <div class="toc-sub">포르투갈·에스파냐 선도 이유 · 서아프리카 항로 · 대서양 항로</div>
+          </div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(7)">
+          <span class="toc-num">3</span>
+          <div>
+            <div class="toc-title">아메리카 문명의 파괴</div>
+            <div class="toc-sub">아스테카·잉카 · 문명 정복 · 유럽인의 지배 · 원주민 수의 급감</div>
+          </div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(9)">
+          <span class="toc-num">4</span>
+          <div>
+            <div class="toc-title">신항로 개척의 영향</div>
+            <div class="toc-sub">유럽 지역의 변화 · 세계적 교역망 · 작물 전파 · 환경 파괴</div>
+          </div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(11)">
+          <span class="toc-num">5</span>
+          <div>
+            <div class="toc-title">개념 확인 문제</div>
+            <div class="toc-sub">OX 문제 · 빈칸 채우기 · 선택형</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 배경 — (1) 동기 ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌍</span>
+      <span class="browser-title">학습지 43쪽 — 1. 신항로 개척의 배경 (1) 신항로 개척의 동기</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 신항로 개척의 배경</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🔭 (1) 신항로 개척의 동기</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>아시아에 대한 유럽인의 호기심: 사제왕 요한의 전설, 마르코 폴로의 《동방견문록》</li>
+            <li>경제적 동기: 오스만 제국의 지중해 교역권 장악 → 새로운 교역로 탐색</li>
+            <li>종교적 열정: 이슬람 세력과의 투쟁 → 크리스트교 세력과 동맹, 아시아에 크리스트교 전파</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 배경 — (2) 과학 기술 발달 ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚙️</span>
+      <span class="browser-title">학습지 43쪽 — 1. 신항로 개척의 배경 (2) 과학 기술 발달</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 신항로 개척의 배경</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚙️ (2) 과학 기술 발달</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>지리학·천문학·조선술 발달 및 나침반 사용 → 원거리 항해 가능</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 전개 — (1) 포르투갈·에스파냐 선도 이유 ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏰</span>
+      <span class="browser-title">학습지 43쪽 — 2. 신항로 개척의 전개 (1) 포르투갈과 에스파냐가 선도한 이유</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 신항로 개척의 전개</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚓ (1) 포르투갈과 에스파냐가 신항로 개척을 선도한 이유</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>대서양 연안에 위치: 지중해 무역에서 소외</li>
+            <li><span class="blank" data-reveal>레콩키스타</span>를 거치며 크리스트교 세력 확대에 관심</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 전개 — (2) 서아프리카 항로 ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🗺️</span>
+      <span class="browser-title">학습지 43쪽 — 2. 신항로 개척의 전개 (2) 개척 항로 — 서아프리카 항로</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 신항로 개척의 전개</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🧭 (2) 개척 항로 — 서아프리카 항로 (포르투갈)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>엔히크 왕자: 아프리카 방향 항해 지원, '항해 왕자'</li>
+            <li>바르톨로메우 디아스: 아프리카 남단 '희망봉' 도착(1488)</li>
+            <li>바스쿠 다 가마: 인도 항로 개척(1498)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 전개 — (2) 대서양 항로 ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌊</span>
+      <span class="browser-title">학습지 43쪽 — 2. 신항로 개척의 전개 (2) 개척 항로 — 대서양 항로</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 신항로 개척의 전개</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌊 (2) 개척 항로 — 대서양 항로 (에스파냐)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>콜럼버스: 아메리카 대륙의 서인도 제도 도착(1492)</li>
+            <li><span class="blank" data-reveal>마젤란</span> 함대: 그의 일행이 최초의 세계 일주 성공(1522)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: 아메리카 문명의 파괴 — 아스테카·잉카 ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏛️</span>
+      <span class="browser-title">학습지 43쪽 — 3. 아메리카 문명의 파괴 — 아메리카 문명</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">3. 아메리카 문명의 파괴</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏺 아메리카 문명</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>아스테카 제국: 14세기경 멕시코 고원에서 발전, 수도 테노치티틀란, 달력과 그림 문자 사용, 피라미드 형태의 신전에서 제사</li>
+            <li>잉카 제국: 15세기경 안데스 고원에서 발전, 수도 쿠스코, 건축술·역법·직물업 등 발달, 계단식 밭, 마추픽추 건설, 새끼줄 매듭(키푸)으로 숫자와 문자 표시</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 아메리카 문명의 파괴 — 정복·지배·급감 ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚔️</span>
+      <span class="browser-title">학습지 43쪽 — 3. 아메리카 문명의 파괴 — 문명 정복 · 유럽인의 지배 · 원주민 수의 급감</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">3. 아메리카 문명의 파괴</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ 문명 정복 · 유럽인의 지배 · 원주민 수의 급감</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>문명 정복: 발달한 군사 기술, 원주민의 정치적 분열 이용</li>
+            <li class="sub">코르테스(아스테카 제국), 피사로(잉카 제국)</li>
+            <li>유럽인의 지배: 원주민을 동원한 금·은 채굴, 플렌테이션(사탕수수 등 상업작물)</li>
+            <li>원주민 수의 급감: 극심한 노동 착취, 유라시아 대륙에서 온 전염병(천연두 등) 유행</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 10: 영향 — (1) 유럽 지역의 변화 ══ -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏙️</span>
+      <span class="browser-title">학습지 44쪽 — 4. 신항로 개척의 영향 (1) 유럽 지역의 변화</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">4. 신항로 개척의 영향</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏙️ (1) 유럽 지역의 변화</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>대서양 연안 국가 번영, 해상 진출 본격화</li>
+            <li>아메리카 귀금속 대량 유입 → <span class="blank" data-reveal>가격</span> 혁명 → 신흥 상공업 계층 성장</li>
+            <li>넓은 해외 시장 발견: 상업과 제조업, 금융 제도 발전 → 자본주의 발전 기반</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 11: 영향 — (2)~(4) 세계적 변화 ══ -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌐</span>
+      <span class="browser-title">학습지 44쪽 — 4. 신항로 개척의 영향 (2)~(4) 세계적 변화</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">4. 신항로 개척의 영향</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌏 (2)~(4) 세계적 변화</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>세계적 교역망 형성: 은을 매개로 한 교역망 통합</li>
+            <li>아메리카 대륙 작물의 전파: 감자·고구마·옥수수 등 → 인구 증가에 기여</li>
+            <li>환경 파괴: 선박 건조, 설탕 생산 등의 목적으로 삼림 대량 벌채 → 사막화, 생태계 균형 파괴 등</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 12: 개념 확인 1번 (OX) ══ -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📝</span>
+      <span class="browser-title">학습지 44쪽 — 개념 확인 문제 1번 (OX)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 1번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.4rem;">다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">⑴</span>
+          <div class="q-text">오스만 제국이 지중해 교역권을 장악하자 유럽인은 동방산 물품, 귀금속 등을 얻기 위해 새로운 교역로를 확보하고자 하였다.</div>
+          <span class="ans-btn" data-reveal>○</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <div class="q-text">16세기 콜럼버스가 이끄는 함대는 대서양을 건너고 아메리카, 태평양을 지나 필리핀에 도착하였으며, 3년 만에 귀환하여 최초로 세계 일주에 성공하였다.</div>
+          <span class="ans-btn" data-reveal>× (마젤란 함대)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 13: 개념 확인 2번 (빈칸 채우기) ══ -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📝</span>
+      <span class="browser-title">학습지 44쪽 — 개념 확인 문제 2번 (빈칸 채우기)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 2번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.4rem;">빈칸에 들어갈 알맞은 말을 쓰시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner">
+            <span class="q-num">⑴</span>
+            <div class="q-text">포르투갈의 <span class="ans-btn" data-reveal>바스쿠 다 가마</span>은/는 희망봉을 돌아 인도 캘리컷에 상륙함으로써 인도 항로를 개척하였다.</div>
+          </div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner">
+            <span class="q-num">⑵</span>
+            <div class="q-text">에스파냐는 군사 기술과 원주민의 정치적 분열을 이용하여 아메리카 문명을 정복하고 파괴하였고, 이 과정에서 <span class="ans-btn" data-reveal>코르테스</span>은/는 아스테카 제국을 피사로는 잉카 제국를 무너뜨리고 막대한 전리품을 획득하였다.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 14: 개념 확인 3번 (선택형) ══ -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📝</span>
+      <span class="browser-title">학습지 44쪽 — 개념 확인 문제 3번 (선택형)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 3번</h2>
+      <div style="display:flex; align-items:baseline; gap:.55rem; margin-bottom:.35rem;">
+        <p style="font-size:.88rem;color:var(--text-sec);">신항로 개척의 영향에 대한 (가), (나)에 들어갈 설명으로 옳지 않은 것은?</p>
+        <span class="ans-btn" data-reveal style="flex-shrink:0;">③</span>
+      </div>
+      <div class="quiz-wrap">
+        <div class="quiz-row" style="flex-direction:column; gap:.25rem;">
+          <div class="choice-list">
+            <span>① (가)- 귀금속의 대량 유입으로 가격 혁명이 일어났다.</span>
+            <span>② (가)- 감자, 고구마, 옥수수 등의 작물이 전파되었다.</span>
+            <span>③ (가)- 천연두가 전파되어 인구가 급감하였다.</span>
+            <span>④ (나)- 양 사육의 확대로 사막화가 진행되었다.</span>
+            <span>⑤ (나)- 한 종류의 작물을 집중 재배하는 플랜테이션을 실시하였다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<!-- 네비게이션 바 -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
+    &nbsp;/&nbsp;<span id="totalSlides">14</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function revealItems(slideEl) { return Array.from(slideEl.querySelectorAll('[data-reveal]')); }
+  function getRC(slideEl) { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n) { slideEl.dataset.rc = n; }
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => { el.classList.toggle('on', i < n); });
+  }
+  function updateNav() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && n === 0;
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && n === items.length;
+    document.getElementById('slideInput').value = currentSlide + 1;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+  }
+  function goToSlide(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = idx;
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1);
+      applyReveal(el);
+      updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1);
+      applyReveal(el);
+      updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length);
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    const slideInput = document.getElementById('slideInput');
+    if (document.activeElement === slideInput) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextAction(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp')   { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End')  goToSlide(total - 1);
+  });
+
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const n = parseInt(slideInput.value) - 1;
+      if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+      slideInput.blur();
+    }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('blur', e => {
+    const n = parseInt(slideInput.value) - 1;
+    if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+  });
+
+  // 터치 스와이프
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) { if (dx < 0) nextAction(); else prevAction(); }
+  });
+
+  updateNav();
+</script>
+</body>
+</html>
