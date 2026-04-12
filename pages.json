@@ -241,6 +241,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "20. 신항로 개척",
+              "path": "세계사/20. 신항로 개척/index.html",
+              "emoji": "⛵",
+              "description": "신항로 개척의 배경(호기심·경제·종교·과학기술), 포르투갈·에스파냐의 개척 항로(엔히크·디아스·가마·콜럼버스·마젤란), 아메리카 문명의 파괴(아스테카·잉카), 신항로 개척의 영향(가격 혁명·교역망·작물 전파). 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "신항로 개척", "color": "orange" },
+                { "label": "아메리카 문명", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
