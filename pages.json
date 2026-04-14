@@ -5,6 +5,19 @@
       "emoji": "🏯",
       "pages": [
         {
+          "title": "한국사 1단원 복습 (pp.8~43)",
+          "path": "한국사/한국사 1단원 복습.html",
+          "emoji": "📜",
+          "description": "근대 이전 한국사 이해 — 고대 국가의 성장·고려·조선 전기·조선 후기. 사건·인명·지역·제도 중심 빈칸을 PageDown으로 하나씩 공개하여 시험 대비 복습.",
+          "tags": [
+            { "label": "1단원 복습", "color": "orange" },
+            { "label": "고대~조선", "color": "purple" },
+            { "label": "빈칸 학습", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
           "title": "선사 시대와 고조선 (8~23쪽)",
           "path": "한국사/선사시대-고조선/index.html",
           "emoji": "📜",
