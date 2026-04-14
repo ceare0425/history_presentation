@@ -254,6 +254,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "21. 재정·군사 국가",
+              "path": "세계사/21. 재정 군사 국가/index.html",
+              "emoji": "🏰",
+              "description": "재정·군사 국가의 등장과 발전. 에스파냐(펠리페 2세)·네덜란드·영국(청교도·명예 혁명)·프랑스(루이 14세)·프로이센(프리드리히 2세), 중상주의, 식민지 개척 경쟁. 45·47쪽 내용 + 46·48쪽 개념 확인 문제. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "재정군사국가", "color": "orange" },
+                { "label": "절대왕정", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }

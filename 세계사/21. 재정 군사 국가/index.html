@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4. 재정·군사 국가</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main:#8B4513; --dark:#6B3010; --light:#FFF8E1; --accent:#C5A028;
+      --accent-light:#E8D080; --bg:#F5E6C4; --text:#2C1A0E; --text-sec:#6B4226;
+      --border:#A07850; --card-bg:#FDF5E0;
+    }
+    html, body { font-size: clamp(20px, 2.2vw, 36px); font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif; color: var(--text); height: 100%; overflow: hidden; }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+    h1 { font-family:'Nanum Myeongjo',serif; font-size:2.3rem; font-weight:800; letter-spacing:.04em; line-height:1.3; }
+    h2 { font-family:'Nanum Myeongjo',serif; font-size:1.35rem; font-weight:700; letter-spacing:.04em; }
+    p  { font-size:.95rem; line-height:1.7; }
+
+    body {
+      background-color:var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(160,120,60,.04) 2px,rgba(160,120,60,.04) 4px),
+        repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(140,100,40,.06) 28px,rgba(140,100,40,.06) 29px);
+    }
+
+    .presentation { position:fixed; inset:0; bottom:2.2rem; display:flex; align-items:center; justify-content:center; padding:.8rem; }
+    .slide { display:none; aspect-ratio:16/9; width:min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height:auto; }
+    .slide.active { display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    .browser-card { background:var(--card-bg); border:2px solid var(--border); outline:4px solid var(--accent); outline-offset:-7px; border-radius:4px; box-shadow:0 4px 28px rgba(44,26,14,.2),inset 0 0 60px rgba(160,120,40,.05); width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    .browser-topbar { background:linear-gradient(90deg,#8B4513 0%,#5C2808 45%,#8B4513 100%); border-bottom:2px solid var(--accent); padding:.4rem 1.1rem; display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+    .topbar-icon { font-size:.95rem; }
+    .browser-title { color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-size:.82rem; font-weight:700; letter-spacing:.07em; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+    .browser-content { flex:1; overflow-y:auto; padding:.9rem 1.8rem; display:flex; flex-direction:column; }
+    .browser-content::-webkit-scrollbar { width:4px; }
+    .browser-content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+    .progress-bar { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--main)); z-index:1000; transition:width .3s; }
+    .nav-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.3rem 1.5rem; background:rgba(30,15,6,.97); border-top:2px solid var(--accent); z-index:999; font-size:14px; }
+    .nav-btn { display:flex; align-items:center; justify-content:center; width:1.7rem; height:1.7rem; border:1.5px solid #8B6540; border-radius:50%; background:transparent; cursor:pointer; color:var(--accent-light); transition:all .2s; padding:0; }
+    .nav-btn svg { width:.55rem; height:.55rem; fill:currentColor; display:block; }
+    .nav-btn:hover:not(:disabled) { background:var(--main); border-color:var(--accent); }
+    .nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .nav-counter { font-size:13px; font-weight:700; color:var(--accent-light); min-width:3rem; text-align:center; display:flex; align-items:center; gap:.15rem; line-height:1; }
+    .slide-input { width:1.4rem; text-align:center; border:none; border-bottom:1.5px solid transparent; background:transparent; font-size:13px; font-weight:700; color:var(--accent-light); font-family:inherit; padding:0; outline:none; cursor:pointer; transition:border-color .2s; line-height:1; }
+    .slide-input:hover { border-bottom-color:var(--accent); }
+    .slide-input:focus { border-bottom-color:var(--accent); background:rgba(139,69,19,.3); border-radius:3px; }
+
+    /* ── 역사 수업 시그니처 요소 ── */
+    .section-ornament { color:var(--accent); font-size:.72rem; letter-spacing:.5em; text-align:center; margin-bottom:.2rem; opacity:.75; }
+    .hist-divider { display:flex; align-items:center; gap:.4rem; margin:.25rem 0 .55rem; }
+    .h-line { flex:1; height:1.5px; background:linear-gradient(90deg,transparent,var(--accent) 25%,var(--accent) 75%,transparent); }
+    .h-gem  { color:var(--accent); font-size:.7rem; }
+    .era-badge { display:inline-block; background:linear-gradient(135deg,var(--main),var(--dark)); color:var(--accent-light); border:1px solid var(--accent); padding:.05rem .45rem; font-family:'Nanum Myeongjo',serif; font-size:.8rem; font-weight:700; border-radius:2px; white-space:nowrap; }
+
+    /* ── 빈칸 순차 공개 ── */
+    .blank {
+      display:inline-block; min-width:5rem;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.05em .6em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:inherit; user-select:none; position:relative;
+      text-align:center; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .blank::after {
+      content:'?'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.85em; font-weight:800;
+      pointer-events:none; transition:opacity .25s;
+    }
+    .blank.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .blank.on::after { opacity:0; }
+
+    /* ── 정답 버튼 순차 공개 ── */
+    .ans-btn {
+      display:inline-block;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.08em .9em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:.88rem; user-select:none; position:relative;
+      text-align:center; white-space:nowrap; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .ans-btn::after {
+      content:'정답'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.78em; font-weight:700;
+      pointer-events:none; transition:opacity .25s; white-space:nowrap;
+    }
+    .ans-btn.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity:0; }
+
+    /* ── 레이아웃 ── */
+    .cover-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.65rem; }
+
+    /* TOC */
+    .toc-list { display:flex; flex-direction:column; gap:.45rem; margin-top:.4rem; }
+    .toc-item { display:flex; align-items:center; gap:.7rem; padding:.45rem 1rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); cursor:pointer; transition:all .2s; }
+    .toc-item:hover { background:var(--light); border-color:var(--accent); transform:translateX(4px); }
+    .toc-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.85rem; min-width:1.7rem; height:1.7rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .toc-title { font-weight:700; font-size:1rem; }
+    .toc-sub { font-size:.82rem; color:var(--text-sec); margin-top:.08rem; }
+
+    /* 내용 카드 */
+    .ruler-card { border:1.5px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:.4rem; }
+    .ruler-card-header { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.9rem; padding:.35rem .8rem; display:flex; align-items:center; gap:.4rem; }
+    .ruler-card-body { padding:.55rem .9rem; background:var(--card-bg); }
+    .info-list { list-style:none; display:flex; flex-direction:column; gap:.42rem; }
+    .info-list li { position:relative; padding-left:1.3em; font-size:.93rem; line-height:1.7; }
+    .info-list li::before { content:'◆'; color:var(--accent); font-size:.6rem; position:absolute; left:0; top:.48em; }
+    .info-list li.sub { padding-left:2.3em; }
+    .info-list li.sub::before { content:'—'; font-size:.88rem; top:.38em; }
+
+    /* 중상주의 테이블 */
+    .merch-table { width:100%; border-collapse:collapse; font-size:.88rem; margin-top:.3rem; }
+    .merch-table th { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; padding:.32rem .7rem; text-align:center; border:1px solid var(--border); }
+    .merch-table td { padding:.38rem .7rem; border:1px solid var(--border); line-height:1.65; background:var(--card-bg); vertical-align:top; }
+    .merch-table .row-label { font-weight:700; color:var(--main); white-space:nowrap; text-align:center; }
+
+    /* 퀴즈 */
+    .quiz-wrap { display:flex; flex-direction:column; gap:.38rem; margin-top:.2rem; }
+    .quiz-row { display:flex; align-items:flex-start; gap:.55rem; border:1.5px solid var(--border); border-radius:3px; padding:.38rem .75rem; background:var(--card-bg); }
+    .quiz-row.col { flex-direction:column; gap:.25rem; }
+    .quiz-row.col .inner { display:flex; gap:.55rem; align-items:flex-start; }
+    .q-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.78rem; min-width:1.45rem; height:1.45rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.15em; }
+    .q-text { flex:1; font-size:.9rem; line-height:1.8; }
+    .choice-list { display:flex; flex-direction:column; gap:.22rem; margin-top:.3rem; font-size:.88rem; line-height:1.7; padding-left:.3rem; }
+    .choice-list span { display:flex; align-items:flex-start; gap:.4rem; }
+    .choice-list span.correct { color:var(--main); font-weight:700; }
+
+    /* 사료 박스 */
+    .source-box { background:rgba(255,248,225,.7); border:1.5px solid var(--border); border-left:4px solid var(--accent); border-radius:3px; padding:.45rem .9rem; margin:.25rem 0; font-size:.88rem; line-height:1.75; font-style:italic; }
+    .source-cite { font-style:normal; font-size:.8rem; color:var(--text-sec); margin-top:.2rem; }
+
+    @media (max-width:768px) {
+      .merch-table { font-size:.8rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ══ 슬라이드 1: 표지 ══ -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏰</span>
+      <span class="browser-title">세계사 · Ⅱ-2. 유럽의 신항로 개척과 재정·군사 국가 — 학습지 45~48쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 101~104쪽</span>
+        <h1 style="margin-top:.35rem;">4. 재정·군사 국가</h1>
+        <div class="hist-divider" style="width:60%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;">재정·군사 국가의 등장 &nbsp;·&nbsp; 에스파냐·네덜란드·영국 &nbsp;·&nbsp; 프랑스·프로이센 &nbsp;·&nbsp; 중상주의 &nbsp;·&nbsp; 식민지 개척</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 2: 목차 ══ -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📋</span>
+      <span class="browser-title">학습 목차</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="text-align:center;margin-bottom:.4rem;">학습 내용</h2>
+      <div class="toc-list">
+        <div class="toc-item" onclick="goToSlide(2)">
+          <span class="toc-num">1</span>
+          <div>
+            <div class="toc-title">재정·군사 국가의 등장</div>
+            <div class="toc-sub">배경 · 개념 · 형태 (45쪽)</div>
+          </div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(3)">
+          <span class="toc-num">2</span>
+          <div>
+            <div class="toc-title">재정·군사 국가의 발전 — 에스파냐 · 네덜란드 · 영국</div>
+            <div class="toc-sub">펠리페 2세 · 베스트팔렌 조약 · 청교도 혁명 · 명예 혁명 (45쪽)</div>
+          </div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(7)">
+          <span class="toc-num">3</span>
+          <div>
+            <div class="toc-title">프랑스 · 프로이센 · 중상주의 · 식민지 개척</div>
+            <div class="toc-sub">루이 14세 · 프리드리히 2세 · 콜베르 · 인클로저 운동 (47쪽)</div>
+          </div>
+        </div>
+        <div class="toc-item" onclick="goToSlide(12)">
+          <span class="toc-num">4</span>
+          <div>
+            <div class="toc-title">개념 확인 문제</div>
+            <div class="toc-sub">46쪽 (OX · 빈칸 · 순서) · 48쪽 (빈칸 · 선택 · 선다 · 사료)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 45쪽 — 1. 재정·군사 국가의 등장 ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚔️</span>
+      <span class="browser-title">학습지 45쪽 — 1. 재정·군사 국가의 등장</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 재정·군사 국가의 등장</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📜 배경 · 개념 · 형태</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>배경:</strong> 16세기 무렵부터 유럽 내 치열한 군비 경쟁 → 장기간 전쟁으로 많은 군비 지출 → 효율적 세금 징수와 재정 관리를 위한 관료제 갖춤</li>
+            <li><strong>개념:</strong> 전문화된 군사력과 이를 유지하기 위한 행정 관료 체계를 갖추고, 재정과 군사력을 독점하는 중앙 집권화된 국가</li>
+            <li><strong>형태 ①</strong> 영국, 네덜란드: 자본주의적 기초 → 중앙 권력과 의회의 협조하에 전비 마련</li>
+            <li><strong>형태 ②</strong> 프랑스, 프로이센: 국왕권의 절대화를 통한 재정 확보</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 45쪽 — 에스파냐 ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏰</span>
+      <span class="browser-title">학습지 45쪽 — 2. 에스파냐</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">2. 재정·군사 국가의 발전 — 에스파냐</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏰 에스파냐</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>배경:</strong> 화약 무기 도입으로 군사 혁명 선도, 대서양 항해를 통해 아메리카의 귀금속 확보</li>
+            <li><span class="blank" data-reveal>펠리페 2세</span>: 네덜란드-벨기에-이탈리아를 포함한 대제국 건설</li>
+            <li><strong>몰락:</strong> 세금 부과, 가톨릭 강요(→ 네덜란드 독립), 무적함대가 영국에 패배</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 45쪽 — 네덜란드 ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌷</span>
+      <span class="browser-title">학습지 45쪽 — 2. 네덜란드</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">2. 재정·군사 국가의 발전 — 네덜란드</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌷 네덜란드</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>배경:</strong> 무역과 제조업으로 자본주의 발전</li>
+            <li><strong>독립:</strong> 에스파냐의 종교 탄압, 무리한 조세 부과 → 독립 전쟁 발발 → 위트레흐트 동맹 결성, 네덜란드 공화국 연방 선포 → <span class="blank" data-reveal>베스트팔렌</span> 조약(1648)으로 독립 승인</li>
+            <li><strong>발전:</strong> 연방 의회의 통치, 효율적 군사 행정 제도 확립</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 45쪽 — 영국 (엘리자베스 1세 · 청교도 혁명) ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👸</span>
+      <span class="browser-title">학습지 45쪽 — 2. 영국 (엘리자베스 1세 · 청교도 혁명)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">2. 재정·군사 국가의 발전 — 영국 ①</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👸 엘리자베스 1세 · 영국의 내전</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>엘리자베스 1세:</strong> 에스파냐의 무적함대 격파, 동인도 회사 설립 및 아시아 진출</li>
+            <li><strong>영국의 내전:</strong> 절대주의를 추구한 왕권과 의회의 대립</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">✝️ 청교도 혁명</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>배경:</strong> 제임스 1세, 찰스 1세의 전제 정치 및 청교도 탄압</li>
+            <li><strong>과정:</strong> 왕당파와 의회파의 내전 → 크롬웰의 의회파 승리</li>
+            <li><strong>결과:</strong> 찰스 1세 처형, 공화정 수립 → 크롬웰의 호국경 취임과 독재 정치</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 45쪽 — 영국 (명예 혁명) ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🕊️</span>
+      <span class="browser-title">학습지 45쪽 — 2. 영국 (명예 혁명)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">2. 재정·군사 국가의 발전 — 영국 ②</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🕊️ 명예 혁명</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>배경:</strong> 크롬웰 사후 왕정 복고 → 찰스 2세, 제임스 2세의 전제 정치 강화</li>
+            <li><strong>과정:</strong> 의회가 제임스 2세 폐위 → 메리와 윌리엄(빌럼) 공동 왕 추대</li>
+            <li><strong>결과:</strong> <span class="blank" data-reveal>권리 장전</span> 승인(1689) → 의회 중심 입헌 군주제의 토대 마련</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: 47쪽 — 프랑스 ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚜️</span>
+      <span class="browser-title">학습지 47쪽 — 1. 프랑스</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">1. 재정·군사 국가의 발전 — 프랑스</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚜️ 프랑스</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>리슐리외:</strong> 프랑스 전역에 행정 관료 체계 구축</li>
+            <li><span class="blank" data-reveal>루이 14세</span>: 베르사유 궁전 건축, 국왕권 신장(왕권신수설 바탕), 귀족 통제, 낭트 칙령 폐지(→ 신교도의 프랑스 이탈), 무리한 전쟁 지속(→ 왕실 재정난 초래)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 47쪽 — 프로이센 ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🦅</span>
+      <span class="browser-title">학습지 47쪽 — 1. 프로이센</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">1. 재정·군사 국가의 발전 — 프로이센</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🦅 프로이센 (프리드리히 2세)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>개혁 추진:</strong> 계몽사상을 바탕으로 전문적 관료제, 중상주의 정책, 종교적 관용 정책, 사법 개혁, 군사력 증강 등</li>
+            <li><strong>영토 확장:</strong> 슐레지엔 병합 등 → 중부 유럽의 강자로 성장</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 10: 47쪽 — 중상주의의 발전 ══ -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">💰</span>
+      <span class="browser-title">학습지 47쪽 — 2. 중상주의의 발전</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">2. 중상주의의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📖 개념</div>
+        <div class="ruler-card-body">
+          <p style="font-size:.9rem;line-height:1.7;">상공업을 장려하며 귀금속을 최대로 확보(중금주의), 수출을 늘리고 수입을 억제(관세 부과)하며 국내 산업을 보호·육성(무역 차액주의)하는 정책</p>
+        </div>
+      </div>
+      <table class="merch-table">
+        <thead>
+          <tr><th style="width:5rem;">국가</th><th>중상주의 정책 내용</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">영국</td>
+            <td>엘리자베스 1세 시기 모직물 산업 육성(→ 인클로저 운동) → 해외 무역 성장 및 국내 상업 발전</td>
+          </tr>
+          <tr>
+            <td class="row-label">프랑스</td>
+            <td>루이 14세 시기 콜베르 → 공업 보호·육성 정책(자본 대여 및 각종 특권 부여, 기술자 유치 등), 해외 식민지 획득 중요성 강조</td>
+          </tr>
+          <tr>
+            <td class="row-label">프로이센</td>
+            <td>프리드리히 2세, 관세 부과 및 섬유·금속 공업 육성, 귀금속의 국외 유출 금지</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 11: 47쪽 — 식민지 개척 경쟁 (목적·북아메리카·서인도 제도) ══ -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌎</span>
+      <span class="browser-title">학습지 47쪽 — 3. 식민지 개척 경쟁 (목적 · 북아메리카 · 서인도 제도)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">3. <span class="blank" data-reveal>식민지</span> 개척 경쟁</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌎 목적 · 북아메리카 · 서인도 제도</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>목적:</strong> 원료 확보와 해외 시장 개척</li>
+            <li><strong>북아메리카:</strong> 프랑스 — 누벨프랑스 건설, 가톨릭 전파 및 모피 무역 / 영국 — 청교도 → 뉴잉글랜드 건설</li>
+            <li><strong>서인도 제도:</strong> 면화, 사탕수수 플랜테이션 (프랑스 — 생도맹그(아이티), 영국 — 자메이카)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 12: 47쪽 — 식민지 개척 경쟁 (아시아 방면) ══ -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌏</span>
+      <span class="browser-title">학습지 47쪽 — 3. 식민지 개척 경쟁 (아시아 방면)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">3. 식민지 개척 경쟁 — 아시아 방면</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌏 아시아 방면</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>포르투갈:</strong> 호르무즈, 캘리컷, 고아 등 무역 거점 점령</li>
+            <li><span class="blank" data-reveal>네덜란드</span>: 믈라카, 실론 등에서 포르투갈을 밀어내고 해상 무역 주도권 확보</li>
+            <li><strong>영국, 프랑스:</strong> 인도 방면 진출</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 13: 46쪽 문제 — 1번 OX ══ -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📝</span>
+      <span class="browser-title">학습지 46쪽 — 개념 확인 문제 1번 (O/X)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 1번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.4rem;">다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">⑴</span>
+          <div class="q-text">재정·군사 국가는 징세 행정을 위한 전문 관료, 군사 전문가 집단을 갖추고 영토, 인구에 대한 지배력을 강화하였다.</div>
+          <span class="ans-btn" data-reveal>○</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <div class="q-text">영국, 네덜란드는 국왕권의 절대화를 통해 강압적으로 재정을 확보하고자 하였다.</div>
+          <span class="ans-btn" data-reveal>×</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑶</span>
+          <div class="q-text">펠리페 2세 시기 거대한 제국을 형성한 에스파냐는 늘어난 전쟁 비용을 마련하기 위한 세금 부과와 가톨릭 강요 정책을 추진하였고, 이에 반발하여 네덜란드가 독립하였다.</div>
+          <span class="ans-btn" data-reveal>○</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 14: 46쪽 문제 — 2번 빈칸 · 3번 순서 ══ -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📝</span>
+      <span class="browser-title">학습지 46쪽 — 개념 확인 문제 2번 (빈칸) · 3번 (순서)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 2번 · 3번</h2>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">2⑴</span>
+          <div class="q-text">네덜란드는 에스파냐의 종교 탄압, 무리한 조세 부담에 저항하여 독립 전쟁을 일으켰으며, ( <span class="ans-btn" data-reveal>베스트팔렌</span> ) 조약으로 독립을 승인받았다.</div>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">2⑵</span>
+          <div class="q-text">영국은 엘리자베스 1세 시기 에스파냐의 무적 함대를 격파하고 ( <span class="ans-btn" data-reveal>동인도 회사</span> )을/를 세워 아시아 방면으로 진출하였다.</div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner">
+            <span class="q-num" style="flex-shrink:0;">3</span>
+            <div class="q-text">다음 &lt;보기&gt;의 사건들을 일어난 순서대로 옳게 나열하시오. ( <span class="ans-btn" data-reveal>ㄱ→ㄷ→ㄹ→ㄴ</span> )</div>
+          </div>
+          <div style="font-size:.88rem;padding-left:2rem;line-height:1.8;color:var(--text-sec);">
+            ㄱ. 찰스 1세의 전제 정치와 청교도 탄압 &nbsp;·&nbsp; ㄴ. 메리와 윌리엄 공동 왕, &lt;권리 장전&gt; 승인<br>
+            ㄷ. 공화정 수립 및 크롬웰의 독재 체제 구축 &nbsp;·&nbsp; ㄹ. 왕정 복고 이후 제임스 2세의 전제 정치 강화
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 15: 48쪽 문제 — 1번 빈칸 ══ -->
+<div class="slide" data-slide="14">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📝</span>
+      <span class="browser-title">학습지 48쪽 — 개념 확인 문제 1번 (빈칸)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 1번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.4rem;">빈칸에 들어갈 알맞은 말을 쓰시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">⑴</span>
+          <div class="q-text">( <span class="ans-btn" data-reveal>루이 14세</span> )이/가 낭트 칙령을 폐지하게 되면서, 상공업에 종사하던 많은 신교도가 프랑스를 떠나게 되었다.</div>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <div class="q-text">프로이센의 프리드리히 2세는 ( <span class="ans-btn" data-reveal>계몽사상</span> )을/를 바탕으로 자신을 '국가 제일의 심부름꾼'으로 자처하며 위로부터의 개혁을 추진하였다.</div>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑶</span>
+          <div class="q-text">영국에서는 엘리자베스 1세가 모직물 산업을 육성하였고, 이에 토지에 울타리를 쳐 방목지를 만드는 ( <span class="ans-btn" data-reveal>인클로저 운동</span> )이/가 일어났다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 16: 48쪽 문제 — 2번 괄호 선택 ══ -->
+<div class="slide" data-slide="15">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📝</span>
+      <span class="browser-title">학습지 48쪽 — 개념 확인 문제 2번 (괄호 선택)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 2번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.4rem;">괄호 안의 내용 중 알맞은 말에 ○표를 하시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">⑴</span>
+          <div class="q-text">프랑스의 ( 리슐리외 / 콜베르 )는 재무 총감으로 임명되어 중상주의 정책을 펼쳐 국가 재정을 확충하였다.</div>
+          <span class="ans-btn" data-reveal>콜베르</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <div class="q-text">( 루이 14세 / 프리드리히 2세 )는 종교적 관용 정책을 실시하고, 사법 개혁과 군사력 증강에 힘썼다. 이후 유럽 내에서 강력한 세력으로 부상하였고, 슐레지엔 지역 등을 병합하여 영토를 크게 확장하였다.</div>
+          <span class="ans-btn" data-reveal>프리드리히 2세</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑶</span>
+          <div class="q-text">( 표트르 대제 / 엘리자베스 1세 )는 서유럽에 유학생을 파견하여 선진 기술, 학문을 수용하였다. 이를 바탕으로 내정을 개혁하고 군사력을 강화하여 스웨덴과의 전쟁에서 승리하고 발트해로 진출하였다.</div>
+          <span class="ans-btn" data-reveal>표트르 대제</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 17: 48쪽 문제 — 3번 선다형 ══ -->
+<div class="slide" data-slide="16">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📝</span>
+      <span class="browser-title">학습지 48쪽 — 개념 확인 문제 3번 (선다형)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 3번</h2>
+      <div class="quiz-wrap">
+        <div class="quiz-row" style="flex-direction:column;gap:.3rem;">
+          <div style="display:flex;align-items:baseline;gap:.55rem;">
+            <span class="q-num" style="flex-shrink:0;">3</span>
+            <div class="q-text">재정·군사 국가 성립 시기 각국의 식민지 개척 경쟁에 대한 설명이 옳게 연결된 것은?</div>
+            <span class="ans-btn" data-reveal style="flex-shrink:0;">⑤</span>
+          </div>
+          <div class="choice-list">
+            <span>① 영국 – 생도맹그를 식민지로 삼았다.</span>
+            <span>② 프랑스 – 자메이카를 식민지화하였다.</span>
+            <span>③ 프로이센 – 무굴 제국의 쇠퇴를 틈타 인도 방면으로 진출하였다.</span>
+            <span>④ 포르투갈 – 호르무즈, 캘리컷, 고아 등의 무역 거점을 점령하였다.</span>
+            <span class="correct">⑤ 네덜란드 – 믈라카, 실론에서 포르투갈을 밀어내고 해상 무역을 주도하였다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 18: 48쪽 문제 — 4번 사료 ══ -->
+<div class="slide" data-slide="17">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📜</span>
+      <span class="browser-title">학습지 48쪽 — 개념 확인 문제 4번 (사료)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 4번</h2>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner">
+            <span class="q-num" style="flex-shrink:0;">4</span>
+            <div class="q-text">다음은 루이 14세의 절대주의를 뒷받침하는 사상에 대한 사료이다. 이를 통해 알 수 있는 주장의 명칭을 쓰시오. ( <span class="ans-btn" data-reveal>왕권신수설</span> )</div>
+          </div>
+          <div class="source-box">
+            "모든 권력은 신으로부터 온다. …… 신은 국왕을 통해 자신의 제국을 다스린다. …… 국왕의 권위는 절대적이다. …… 마치 국왕이 정의 그 자체인 것처럼 그에게 복종해야 한다."
+            <div class="source-cite">— 보쉬에, 《성서의 말씀에서 인용한 정치》</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<!-- 네비게이션 바 -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
+    &nbsp;/&nbsp;<span id="totalSlides">18</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function revealItems(slideEl) { return Array.from(slideEl.querySelectorAll('[data-reveal]')); }
+  function getRC(slideEl) { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n) { slideEl.dataset.rc = n; }
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => { el.classList.toggle('on', i < n); });
+  }
+  function updateNav() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && n === 0;
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && n === items.length;
+    document.getElementById('slideInput').value = currentSlide + 1;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+  }
+  function goToSlide(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = idx;
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1);
+      applyReveal(el);
+      updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1);
+      applyReveal(el);
+      updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length);
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    const slideInput = document.getElementById('slideInput');
+    if (document.activeElement === slideInput) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextAction(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End')  goToSlide(total - 1);
+  });
+
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      const n = parseInt(slideInput.value) - 1;
+      if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+      slideInput.blur();
+    }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('blur', () => {
+    const n = parseInt(slideInput.value) - 1;
+    if (n >= 0 && n < total) goToSlide(n); else slideInput.value = currentSlide + 1;
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) { if (dx < 0) nextAction(); else prevAction(); }
+  });
+
+  updateNav();
+</script>
+</body>
+</html>
