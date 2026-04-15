@@ -267,6 +267,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "22. 근대 유럽의 전쟁 + 세계적 교역망의 형성",
+              "path": "세계사/22. 근대 유럽 전쟁 + 세계적 교역망/index.html",
+              "emoji": "⚔️",
+              "description": "7년 전쟁 결과(영국·프로이센 부상), 유라시아 교역망·인도양 무역(동인도 회사), 대서양 삼각 무역(노예 무역), 태평양 갤리언 무역·은의 이동. 49~52쪽 내용 + 개념 확인 문제. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "근대 유럽 전쟁", "color": "orange" },
+                { "label": "세계적 교역망", "color": "blue" },
+                { "label": "삼각 무역", "color": "purple" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
