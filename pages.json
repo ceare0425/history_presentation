@@ -280,6 +280,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "23. 세계적인 상품 교역과 노예 무역",
+              "path": "세계사/23. 상품 교역+노예 무역/index.html",
+              "emoji": "🌿",
+              "description": "향신료·면직물·차·도자기·설탕·노예 무역의 세계적 교역. 53~56쪽 학습 내용(53·55쪽) + 개념 확인 문제(54·56쪽). 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "상품 교역", "color": "orange" },
+                { "label": "노예 무역", "color": "purple" },
+                { "label": "향신료·설탕", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
