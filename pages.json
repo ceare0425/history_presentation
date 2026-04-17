@@ -310,6 +310,19 @@
             { "label": "역사 수업", "color": "green" }
           ],
           "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+        },
+        {
+          "title": "Ⅱ단원 대단원 복습 (교역망의 확대)",
+          "path": "세계사/대단원복습-2단원/index.html",
+          "emoji": "🚢",
+          "description": "Ⅱ-1 이슬람 세계와 몽골 제국의 팽창 · Ⅱ-2 유럽의 신항로 개척과 재정·군사 국가 · Ⅱ-3 세계적 상품 교역. 22개 슬라이드 핵심 개념 빈칸 순차 공개로 복습.",
+          "tags": [
+            { "label": "대단원 복습", "color": "orange" },
+            { "label": "Ⅱ단원", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
         }
       ]
     }
