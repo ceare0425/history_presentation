@@ -48,7 +48,8 @@
       "Bash(powershell -Command \"& 'C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe' 'C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\history_presentation\\\\pdf_to_text_batch.py'\" 2>&1)",
       "Bash(mv \"C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\history_presentation\\\\Ⅱ.\\\\17. 몽골 제국\" \"C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\history_presentation\\\\세계사\\\\17-몽골제국\")",
       "Bash(mv \"C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\history_presentation\\\\Ⅱ.\\\\18. 중세 유럽 세계\" \"C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\history_presentation\\\\세계사\\\\18-중세유럽세계\")",
-      "Bash(grep -v \"style\\\\|class=\\\\|font\\\\|\\\\\\\\.h2\\\\|\\\\\\\\.h1\\\\|browser-title {\")"
+      "Bash(grep -v \"style\\\\|class=\\\\|font\\\\|\\\\\\\\.h2\\\\|\\\\\\\\.h1\\\\|browser-title {\")",
+      "Bash(grep -v \"data-slide=\\\\\"[0-9]\\\\\"$\\\\|data-slide=\\\\\"1[0-9]\\\\\"$\\\\|data-slide=\\\\\"[2-4][0-9]\\\\\"$\")"
     ]
   }
 }
