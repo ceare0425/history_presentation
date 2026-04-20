@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한국사 48–64쪽 복습</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --main: #8B4513;
+  --dark: #6B3010;
+  --light: #FFF8E1;
+  --accent: #C5A028;
+  --bg: #F5E6C4;
+  --card-bg: #FDF5E0;
+  --text: #2C1A0E;
+  --text-sub: #5C3D1E;
+  --border: #A07850;
+  --gold: #C5A028;
+  --nav-h: 48px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: min(1.75vw, calc((100vh - 48px) / 28));
+  line-height: 1.6;
+}
+body {
+  background: #1A0D00;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.presentation {
+  position: relative;
+  width: min(100vw, calc((100vh - 48px) * 16 / 9));
+  height: min(calc(100vw * 9 / 16), calc(100vh - 48px));
+  background: var(--bg);
+  overflow: hidden;
+  border: 2px solid var(--border);
+  outline: 4px solid var(--gold);
+  outline-offset: -8px;
+}
+
+.slide {
+  display: none;
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+  background: var(--bg);
+  padding: 0.9em 1.4em 0.5em;
+}
+.slide.active { display: flex; }
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 2em, rgba(139,100,20,0.025) 2em, rgba(139,100,20,0.025) calc(2em + 1px));
+  pointer-events: none;
+  z-index: 0;
+}
+.slide > * { position: relative; z-index: 1; }
+
+.slide-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.3em;
+  margin-bottom: 0.5em;
+  flex-shrink: 0;
+}
+.slide-chapter {
+  background: var(--main);
+  color: #FFF8E1;
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 0.18em 0.65em;
+  border-radius: 2px;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+}
+.slide-title {
+  font-size: 1.3em;
+  font-weight: 900;
+  color: var(--main);
+  font-family: 'Nanum Myeongjo', serif;
+}
+
+.slide-body {
+  flex: none;
+  height: 52%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+}
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5em; flex: 1; min-height: 0; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.45em; flex: 1; min-height: 0; }
+
+.card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 0.45em 0.7em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  min-height: 0;
+  overflow: hidden;
+}
+.card-title {
+  font-size: 0.87em;
+  font-weight: 700;
+  color: var(--main);
+  border-bottom: 1px solid rgba(139,69,19,0.2);
+  padding-bottom: 0.15em;
+  margin-bottom: 0.12em;
+  flex-shrink: 0;
+}
+.card-body { font-size: 0.79em; color: var(--text); line-height: 1.65; min-height: 0; }
+
+.info-box {
+  background: rgba(197,160,40,0.1);
+  border: 1.5px solid var(--gold);
+  border-radius: 4px;
+  padding: 0.35em 0.7em;
+  font-size: 0.77em;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.info-box strong { color: var(--main); }
+
+.item-list { list-style: none; display: flex; flex-direction: column; gap: 0.18em; }
+.item-list li {
+  position: relative;
+  padding-left: 1.05em;
+  font-size: 0.84em;
+  color: var(--text);
+  line-height: 1.6;
+}
+.item-list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.88em;
+}
+.item-list li strong { color: var(--main); font-weight: 700; }
+
+.blank {
+  display: inline-block;
+  border-bottom: 2px solid var(--main);
+  background: rgba(139,69,19,0.07);
+  border-radius: 3px 3px 0 0;
+  padding: 0.04em 0.4em 0;
+  white-space: nowrap;
+  cursor: default;
+  transition: background 0.35s, border-color 0.35s;
+}
+.blank::after {
+  content: attr(data-answer);
+  font-weight: 700;
+  color: transparent;
+  transition: color 0.35s;
+}
+.blank.revealed { background: rgba(197,160,40,0.2); border-color: var(--gold); }
+.blank.revealed::after { color: var(--main); }
+
+.slide-cover {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(ellipse at center, #FDF5E0 0%, #F0D9A0 45%, #E8C87A 100%);
+  gap: 0.4em;
+}
+.cover-deco { font-size: 2.4em; }
+.cover-subject { font-size: 0.85em; color: var(--text-sub); letter-spacing: 0.18em; }
+.cover-title { font-size: 2.5em; font-weight: 900; color: var(--main); font-family: 'Nanum Myeongjo', serif; line-height: 1.2; }
+.cover-subtitle { font-size: 0.87em; color: var(--text-sub); }
+.cover-hint {
+  font-size: 0.73em; color: var(--text-sub);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 0.32em 1em;
+  background: rgba(255,248,225,0.5);
+  margin-top: 0.4em;
+}
+
+.toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5em; flex: 1; }
+.toc-item {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-left: 4px solid var(--main);
+  border-radius: 4px;
+  padding: 0.5em 0.8em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  display: flex; flex-direction: column; gap: 0.1em;
+}
+.toc-item:hover { background: rgba(139,69,19,0.07); transform: translateX(3px); }
+.toc-num { font-size: 1.05em; font-weight: 900; color: var(--accent); font-family: 'Nanum Myeongjo', serif; }
+.toc-name { font-size: 0.87em; font-weight: 700; color: var(--main); }
+.toc-sub { font-size: 0.71em; color: var(--text-sub); }
+
+.sum-table { width: 100%; border-collapse: collapse; font-size: 0.76em; }
+.sum-table th {
+  background: var(--main); color: #FFF8E1;
+  padding: 0.28em 0.5em; font-weight: 700; text-align: center;
+  border: 1px solid var(--border);
+}
+.sum-table td {
+  padding: 0.25em 0.5em;
+  border: 1px solid rgba(139,69,19,0.2);
+  color: var(--text); vertical-align: middle;
+}
+.sum-table tr:nth-child(even) td { background: rgba(139,69,19,0.04); }
+
+.sec-slide {
+  align-items: center; justify-content: center; text-align: center;
+  background: radial-gradient(ellipse at center, #FDF5E0 0%, #F0D9A0 100%);
+  gap: 0.5em;
+}
+.sec-num { font-size: 3.5em; font-weight: 900; color: var(--main); font-family: 'Nanum Myeongjo', serif; }
+.sec-name { font-size: 1.4em; font-weight: 900; color: var(--dark); font-family: 'Nanum Myeongjo', serif; }
+.sec-sub { font-size: 0.8em; color: var(--text-sub); }
+
+.slide-end {
+  align-items: center; justify-content: center; text-align: center;
+  background: radial-gradient(ellipse at center, #FDF5E0 0%, #F0D9A0 100%);
+  gap: 0.5em;
+}
+
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 48px;
+  background: rgba(253,245,224,0.97);
+  border-top: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.8rem; z-index: 999; font-size: 14px;
+}
+.nav-btn {
+  width: 2rem; height: 2rem;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  background: #FDF5E0;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; padding: 0;
+}
+.nav-btn svg { width: 0.85rem; height: 0.85rem; fill: #8B4513; }
+.nav-btn:hover:not(:disabled) { background: #8B4513; border-color: #8B4513; }
+.nav-btn:hover:not(:disabled) svg { fill: #FFF8E1; }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.nav-label { font-size: 13px; color: #5C3D1E; font-weight: 700; min-width: 4.5rem; text-align: center; }
+.nav-blank-info {
+  font-size: 12px; color: #8B4513;
+  background: rgba(197,160,40,0.15);
+  border: 1px solid rgba(197,160,40,0.5);
+  border-radius: 10px; padding: 0.1em 0.6em;
+  min-width: 5rem; text-align: center;
+}
+.nav-hint { font-size: 11px; color: #A07850; opacity: 0.8; }
+
+#progressBar {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--main), var(--gold));
+  transition: width 0.3s ease; z-index: 1000; width: 0%;
+}
+</style>
+</head>
+<body>
+<div id="progressBar"></div>
+<div class="presentation" id="pres">
+
+<!-- SLIDE 0: Cover -->
+<div class="slide slide-cover active" data-slide="0">
+  <div class="cover-deco">🌏</div>
+  <div class="cover-subject">II. 근대 이전 한국사의 탐구</div>
+  <div class="cover-title">48–64쪽 복습<br>빈칸 학습지</div>
+  <div class="cover-subtitle">국제 관계와 대외 교류 · 수취 체제와 경제생활</div>
+  <div class="cover-hint">⌨ PageDown / → : 정답 한 개씩 공개 &nbsp;|&nbsp; PageUp / ← : 정답 숨기기 &nbsp;|&nbsp; 터치 스와이프 지원</div>
+</div>
+
+<!-- SLIDE 1: 목차 -->
+<div class="slide" data-slide="1">
+  <div class="slide-header">
+    <span class="slide-chapter">목차</span>
+    <span class="slide-title">단원 학습 내용</span>
+  </div>
+  <div class="slide-body">
+    <ul class="toc-list">
+      <li class="toc-item" onclick="goSlide(3)">
+        <div class="toc-num">01</div>
+        <div class="toc-name">삼국의 대외 관계</div>
+        <div class="toc-sub">살수 대첩 · 안시성 · 나당 동맹 · 삼국 통일 (pp.48–50)</div>
+      </li>
+      <li class="toc-item" onclick="goSlide(4)">
+        <div class="toc-num">02</div>
+        <div class="toc-name">통일 신라·발해의 대외 교류</div>
+        <div class="toc-sub">신라방 · 청해진 · 발해관 (pp.50)</div>
+      </li>
+      <li class="toc-item" onclick="goSlide(5)">
+        <div class="toc-num">03</div>
+        <div class="toc-name">고려의 국제 관계</div>
+        <div class="toc-sub">서희 · 귀주 대첩 · 다원적 질서 · 몽골 (pp.51–53)</div>
+      </li>
+      <li class="toc-item" onclick="goSlide(6)">
+        <div class="toc-num">04</div>
+        <div class="toc-name">조선의 사대교린 외교</div>
+        <div class="toc-sub">명 · 4군6진 · 3포 · 통신사 (pp.54–56)</div>
+      </li>
+      <li class="toc-item" onclick="goSlide(8)">
+        <div class="toc-num">05</div>
+        <div class="toc-name">삼국·통일 신라·발해 경제</div>
+        <div class="toc-sub">수취 · 녹읍 · 촌락 문서 (pp.58–59)</div>
+      </li>
+      <li class="toc-item" onclick="goSlide(9)">
+        <div class="toc-num">06</div>
+        <div class="toc-name">고려의 토지·수취 제도</div>
+        <div class="toc-sub">전시과 · 공음전 · 수취 체제 (pp.60–61)</div>
+      </li>
+      <li class="toc-item" onclick="goSlide(10)">
+        <div class="toc-num">07</div>
+        <div class="toc-name">조선 전기 토지·수취 제도</div>
+        <div class="toc-sub">과전법 · 직전법 · 방납 (pp.62)</div>
+      </li>
+      <li class="toc-item" onclick="goSlide(11)">
+        <div class="toc-num">08</div>
+        <div class="toc-name">조선 후기 수취 개편·경제 발달</div>
+        <div class="toc-sub">대동법 · 균역법 · 이앙법 · 상평통보 (pp.63–64)</div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- SLIDE 2: 국제 관계 섹션 구분 -->
+<div class="slide sec-slide" data-slide="2">
+  <div class="sec-num">1</div>
+  <div class="sec-name">국제 관계와 대외 교류</div>
+  <div class="sec-sub">삼국 · 통일 신라 · 발해 · 고려 · 조선</div>
+  <div style="font-size:0.75em;color:var(--text-sub);margin-top:0.5em;">교과서 pp. 48 – 57</div>
+</div>
+
+<!-- SLIDE 3: 삼국의 대외 관계 -->
+<div class="slide" data-slide="3">
+  <div class="slide-header">
+    <span class="slide-chapter">01 국제관계</span>
+    <span class="slide-title">삼국의 대외 관계와 고구려·수·당 전쟁</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🌏 삼국의 대외 관계</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>백제: <span class="blank" data-answer="동진"></span>·왜와 우호, 침류왕 때 <span class="blank" data-answer="불교"></span> 수용</li>
+            <li>고구려 광개토 대왕: 연호 '<span class="blank" data-answer="영락"></span>', '태왕' 칭호 → 독자적 천하관</li>
+            <li>신라: 고구려 통해 선진 문물 수용 → 5세기 고구려 간섭</li>
+            <li>신라의 한강 유역 장악 → <span class="blank" data-answer="중국과 직접 교류</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">⚔ 고구려와 수·당의 전쟁</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>수 양제 침략 → <span class="blank" data-answer="을지문덕"></span>이 <span class="blank" data-answer="살수 대첩"></span>(612) 승리</li>
+            <li>당 침략 대비: <span class="blank" data-answer="천리장성"></span> 축조, <span class="blank" data-answer="연개소문"></span> 권력 장악</li>
+            <li>당 태종 침략 → <span class="blank" data-answer="안시성 싸움"></span>(645) 승리로 격퇴</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 나당 동맹(648): 신라의 <span class="blank" data-answer="김춘추"></span>가 당에 동맹 제의 → 나당 연합군이 백제·고구려 멸망시킴 → <span class="blank" data-answer="나당 전쟁"></span> → <span class="blank" data-answer="매소성·기벌포"></span> 승리 → 삼국 통일(676)
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: 통일 신라·발해의 대외 교류 -->
+<div class="slide" data-slide="4">
+  <div class="slide-header">
+    <span class="slide-chapter">01 국제관계</span>
+    <span class="slide-title">통일 신라 · 발해의 국제 관계와 대외 교류</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🛶 통일 신라의 대외 교류</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>당과 <span class="blank" data-answer="조공·책봉"></span> 관계 유지, 사신·유학생·승려 파견</li>
+            <li>산둥반도·창장강 하류에 <span class="blank" data-answer="신라방·신라촌"></span> 형성</li>
+            <li>무역 거점: <span class="blank" data-answer="당항성"></span>(서해안), <span class="blank" data-answer="사포(울산)"></span>(동해안)</li>
+            <li><span class="blank" data-answer="장보고"></span>: <span class="blank" data-answer="청해진"></span> 설치 → 해상 무역 주도</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🐻 발해의 대외 교류</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>당·신라·거란·일본 등과 다양한 교역</li>
+            <li>당이 산둥반도 등주에 <span class="blank" data-answer="발해관"></span> 설치</li>
+            <li>수출품: <span class="blank" data-answer="모피·인삼·말"></span> / 수입품: 비단·서적</li>
+            <li>일본에서 발해 사신을 '<span class="blank" data-answer="견고려사"></span>'로 기록</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: 고려의 국제 관계 -->
+<div class="slide" data-slide="5">
+  <div class="slide-header">
+    <span class="slide-chapter">02 국제관계</span>
+    <span class="slide-title">고려의 국제 관계 — 거란·여진·몽골</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🗡 거란의 침입 극복</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>1차 침입(993): <span class="blank" data-answer="서희"></span>의 외교 담판 → <span class="blank" data-answer="강동 6주"></span> 획득</li>
+            <li>3차 침입: <span class="blank" data-answer="강감찬"></span>의 <span class="blank" data-answer="귀주 대첩"></span>(1019)</li>
+            <li>여진 정벌: <span class="blank" data-answer="윤관"></span>의 <span class="blank" data-answer="별무반"></span>으로 동북 9성 축조</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏰 다원적 국제 질서 · 몽골 침입</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>고려: <span class="blank" data-answer="황제국"></span> 표방 (면류관·연호 사용)</li>
+            <li>국제 무역항: <span class="blank" data-answer="벽란도"></span> (아라비아 상인까지 왕래)</li>
+            <li>몽골 침입(1231): <span class="blank" data-answer="최우"></span>가 <span class="blank" data-answer="강화도"></span>로 천도</li>
+            <li>처인성·충주성에서 백성 중심 항전</li>
+            <li><span class="blank" data-answer="삼별초"></span>: 개경 환도에 반발 → 진도·제주도 항쟁</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: 조선의 사대교린 — 명·여진·일본 -->
+<div class="slide" data-slide="6">
+  <div class="slide-header">
+    <span class="slide-chapter">03 국제관계</span>
+    <span class="slide-title">조선의 사대교린 외교 — 명 · 여진 · 일본</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title">🇨🇳 명과의 사대 외교</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>원칙: <span class="blank" data-answer="사대교린"></span> (큰 나라 섬기기·이웃 나라와 교류)</li>
+            <li>명에 조공·책봉, 명의 <span class="blank" data-answer="연호</span> 사용</li>
+            <li>사절 파견 → 공무역 성격의 <span class="blank" data-answer="조공 무역"></span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏹 여진 정책</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>국경에 <span class="blank" data-answer="무역소"></span> 설치 → 제한 교류</li>
+            <li>세종: <span class="blank" data-answer="최윤덕"></span> → <span class="blank" data-answer="4군"></span>(압록강)</li>
+            <li>세종: <span class="blank" data-answer="김종서"></span> → <span class="blank" data-answer="6진"></span>(두만강)</li>
+            <li>남부 주민 이주, 토착민을 <span class="blank" data-answer="토관"></span> 임명</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🚢 일본 교린 정책</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>세종: 이종무가 <span class="blank" data-answer="대마도</span> 토벌</li>
+            <li><span class="blank" data-answer="3포"></span> 개항: 부산포·제포·염포</li>
+            <li><span class="blank" data-answer="계해약조"></span>(1443): 제한 교역 허용</li>
+            <li>3포 왜란: 일본인 통제 강화에 반발</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: 양 난 이후 외교 -->
+<div class="slide" data-slide="7">
+  <div class="slide-header">
+    <span class="slide-chapter">03 국제관계</span>
+    <span class="slide-title">양 난 이후 외교 — 통신사 · 연행사 · 북벌론</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🚢 일본 — 통신사</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="기유약조"></span>(1609): 광해군 때 일본과 국교 재개</li>
+            <li>교역 장소를 <span class="blank" data-answer="부산포"></span>로 한정</li>
+            <li><span class="blank" data-answer="통신사"></span>: 1607~1811년 12회 파견</li>
+            <li>일본에 <span class="blank" data-answer="선진 문화 전파"></span>하는 역할</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🐉 청 — 북벌론 · 북학론</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="북벌 운동"></span>: 효종·송시열 — 청 정벌, 명 의리 강조</li>
+            <li><span class="blank" data-answer="조선 중화주의"></span>: 조선이 중화 문명 후계자 자부</li>
+            <li><span class="blank" data-answer="연행사"></span>: 청 수도 북경(연경)에 파견한 사신</li>
+            <li><span class="blank" data-answer="북학론"></span>: 청의 선진 문물 적극 수용 주장</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      💡 연행사가 가져온 서양 문물: <span class="blank" data-answer="천주교 서적·천리경·자명종"></span> 등 → 실학 발전에 영향
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: 수취 체제 섹션 구분 -->
+<div class="slide sec-slide" data-slide="8">
+  <div class="sec-num">2</div>
+  <div class="sec-name">수취 체제와 경제생활</div>
+  <div class="sec-sub">삼국 · 통일 신라 · 발해 · 고려 · 조선</div>
+  <div style="font-size:0.75em;color:var(--text-sub);margin-top:0.5em;">교과서 pp. 58 – 64</div>
+</div>
+
+<!-- SLIDE 9: 삼국·통일 신라·발해 경제 -->
+<div class="slide" data-slide="9">
+  <div class="slide-header">
+    <span class="slide-chapter">04 수취·경제</span>
+    <span class="slide-title">삼국 · 통일 신라 · 발해의 경제</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title">🌾 삼국의 수취 제도</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>조세: 재산 정도로 호 구분 → <span class="blank" data-answer="곡물·포"></span></li>
+            <li>공물: <span class="blank" data-answer="특산물"></span> 징수</li>
+            <li>역: 15세 이상 남자 동원</li>
+            <li>농업 장려: <span class="blank" data-answer="철제 농기구</span> 보급, <span class="blank" data-answer="우경"></span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📜 통일 신라의 경제</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="신문왕"></span>: <span class="blank" data-answer="관료전"></span> 지급 + <span class="blank" data-answer="녹읍 폐지"></span> → 왕권 강화</li>
+            <li><span class="blank" data-answer="신라 촌락 문서"></span>: 촌주가 3년마다 작성</li>
+            <li>촌락 단위로 조세 징수 (인구·토지·소·말 기록)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🐻 발해의 경제</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>밭농사 중심, 일부 지역 벼농사</li>
+            <li>수출품: <span class="blank" data-answer="말"></span>(대표 수출품)</li>
+            <li>수공업: 금·은·구리 금속 가공, 직물, 도자기</li>
+            <li>상경 등 교통 요충지에서 상업 발달</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ <strong>녹읍</strong>: 수조권 + 노동력 징발권 / <strong>관료전</strong>: 수조권만 인정 (노동력 징발 ✗)
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: 고려의 전시과와 수취 제도 -->
+<div class="slide" data-slide="10">
+  <div class="slide-header">
+    <span class="slide-chapter">05 수취·경제</span>
+    <span class="slide-title">고려의 전시과와 수취 제도</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🏛 전시과 제도</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="전시과"></span>: 관리·직역자 <span class="blank" data-answer="18등급</span>으로 나눠 <span class="blank" data-answer="전지+시지"></span> 지급</li>
+            <li>과전: 사망·퇴직 시 <span class="blank" data-answer="국가에 반납</span></li>
+            <li><span class="blank" data-answer="공음전"></span>: 5품 이상, 자손에게 <span class="blank" data-answer="세습 가능"></span></li>
+            <li>한인전(하급 관리 자제), <span class="blank" data-answer="군인전"></span>(직업 군인)</li>
+            <li>구분전: 직역 승계자 없는 유가족 생계 보호</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">💰 고려의 수취·경제</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>조세: 토지 비옥도 3등급 → 생산량 <span class="blank" data-answer="10분의 1"></span></li>
+            <li>공납: 상공(매년) + <span class="blank" data-answer="별공"></span>(수시, 후기에 증가)</li>
+            <li>화폐: 건원중보(철전), <span class="blank" data-answer="해동통보"></span>, <span class="blank" data-answer="활구(은병)"></span></li>
+            <li><span class="blank" data-answer="의창"></span>(곡식 빌려줌)·<span class="blank" data-answer="상평창"></span>(물가 조절)</li>
+            <li>후기: 2년3작, 시비법, 고려 말 <span class="blank" data-answer="목화"></span> 재배</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: 조선 전기 토지·수취 제도 -->
+<div class="slide" data-slide="11">
+  <div class="slide-header">
+    <span class="slide-chapter">06 수취·경제</span>
+    <span class="slide-title">조선 전기의 토지 제도와 수취 제도</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🏞 토지 제도의 변화</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="과전법"></span>(고려 말): 경기 지역, 수조권 지급</li>
+            <li><span class="blank" data-answer="직전법"></span>(세조): <span class="blank" data-answer="현직 관리</span>에게만 수조권</li>
+            <li><span class="blank" data-answer="관수 관급"></span>: 관청이 직접 조세 거두어 관리에 지급</li>
+            <li>직전법 폐지 → 관리에게 <span class="blank" data-answer="녹봉</span>만 지급</li>
+            <li>지주제 확산: 소작농에게 수확량의 반 이상 소작료</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">⚖ 조선 전기 수취 제도·폐단</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>전세: 수확량의 <span class="blank" data-answer="10분의 1"></span>, 세종 때 차등 징수</li>
+            <li>공납: 군현 단위 배분 → 폐단: <span class="blank" data-answer="방납"></span> (서리가 대납 후 폭리)</li>
+            <li>역: 군역(16세↑ 정남), 요역(가호 기준)</li>
+            <li>군역 폐단: <span class="blank" data-answer="대립</span>(대신 군역)·<span class="blank" data-answer="방군수포</span>(포로 면제)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 12: 조선 후기 수취 개편·경제 발달 -->
+<div class="slide" data-slide="12">
+  <div class="slide-header">
+    <span class="slide-chapter">06 수취·경제</span>
+    <span class="slide-title">조선 후기 수취 체제 개편과 경제 발달</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📜 수취 체제 개편</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="대동법"></span>(광해군): 공물 → 토지 결 수 기준 <span class="blank" data-answer="쌀·포·동전"></span></li>
+            <li>→ <span class="blank" data-answer="공인"></span> 성장, 상업·수공업 발달</li>
+            <li><span class="blank" data-answer="영정법"></span>(인조): 풍흉 관계없이 1결당 <span class="blank" data-answer="쌀 4~6두"></span></li>
+            <li><span class="blank" data-answer="균역법"></span>(영조): 군포 <span class="blank" data-answer="1필</span>로 감축</li>
+            <li>재원 보충: 지주에게 <span class="blank" data-answer="결작"></span>, 선무군관포 부과</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">💹 조선 후기 경제 발달</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>농업: <span class="blank" data-answer="모내기법(이앙법)"></span> 전국 확산, <span class="blank" data-answer="광작"></span>, 상품 작물</li>
+            <li>수공업: <span class="blank" data-answer="선대제</span>(상인 자본 + 수공업자), 공장제</li>
+            <li>상업: 전국에 <span class="blank" data-answer="장시"></span> 활성화, <span class="blank" data-answer="보부상"></span> 활동</li>
+            <li>사상: <span class="blank" data-answer="경강상인</span>(한성)·<span class="blank" data-answer="송상"></span>(개성)</li>
+            <li>화폐: 숙종 이후 <span class="blank" data-answer="상평통보"></span> 전국 유통</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 13: 마무리 -->
+<div class="slide slide-end" data-slide="13">
+  <div style="font-size:2.2em">🎉</div>
+  <div style="font-size:2.2em;font-weight:900;color:var(--main);font-family:'Nanum Myeongjo',serif">수고하셨습니다!</div>
+  <div style="font-size:0.88em;color:var(--text-sub)">48–64쪽 복습을 모두 마쳤습니다.</div>
+  <div style="background:var(--card-bg);border:1.5px solid var(--gold);border-radius:6px;padding:0.9em 1.5em;max-width:85%;font-size:0.78em;color:var(--text);line-height:1.9">
+    <strong style="color:var(--main);font-size:1.05em">📌 핵심 흐름 정리</strong><br>
+    <strong>국제 관계:</strong> 삼국(살수 대첩·안시성) → 나당 동맹·삼국 통일 → 고려(거란·여진·몽골) → 조선(사대교린·통신사·연행사)<br>
+    <strong>수취 체제:</strong> 삼국(조세·공물·역) → 전시과(고려) → 과전법·직전법(조선) → 대동법·영정법·균역법(조선 후기)
+  </div>
+</div>
+
+</div><!-- /.presentation -->
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="pageUp()" title="PageUp / ← : 정답 숨기기">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-label"><span id="curSlide">1</span> / <span id="totSlides">14</span></span>
+  <button class="nav-btn" id="nextBtn" onclick="pageDown()" title="PageDown / → : 정답 공개">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+  <span class="nav-blank-info" id="blankInfo" style="display:none"></span>
+  <span class="nav-hint">PageDown·→ : 정답 공개 &nbsp;|&nbsp; PageUp·← : 숨기기</span>
+</div>
+
+<script>
+(function() {
+  var slides = Array.from(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var cur = 0;
+  var revealed = new Array(total).fill(0);
+
+  document.getElementById('totSlides').textContent = total;
+
+  function getBlanks(i) {
+    return Array.from(slides[i].querySelectorAll('.blank'));
+  }
+
+  function goSlide(i) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(i, total - 1));
+    slides[cur].classList.add('active');
+    updateUI();
+  }
+  window.goSlide = goSlide;
+
+  function pageDown() {
+    var bs = getBlanks(cur);
+    if (revealed[cur] < bs.length) {
+      bs[revealed[cur]].classList.add('revealed');
+      revealed[cur]++;
+      updateUI();
+    } else if (cur < total - 1) {
+      goSlide(cur + 1);
+    }
+  }
+  window.pageDown = pageDown;
+
+  function pageUp() {
+    if (revealed[cur] > 0) {
+      var bs = getBlanks(cur);
+      bs[revealed[cur] - 1].classList.remove('revealed');
+      revealed[cur]--;
+      updateUI();
+    } else if (cur > 0) {
+      goSlide(cur - 1);
+    }
+  }
+  window.pageUp = pageUp;
+
+  function updateUI() {
+    document.getElementById('curSlide').textContent = cur + 1;
+
+    var bs = getBlanks(cur);
+    var bi = document.getElementById('blankInfo');
+    if (bs.length > 0) {
+      bi.textContent = '빈칸 ' + revealed[cur] + ' / ' + bs.length;
+      bi.style.display = '';
+    } else {
+      bi.style.display = 'none';
+    }
+
+    var pct = total > 1 ? (cur / (total - 1)) * 100 : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+
+    document.getElementById('prevBtn').disabled = (cur === 0 && revealed[cur] === 0);
+    document.getElementById('nextBtn').disabled = (cur === total - 1 && revealed[cur] === getBlanks(cur).length);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return;
+    if (e.key === 'PageDown' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault(); pageDown();
+    } else if (e.key === 'PageUp' || e.key === 'ArrowLeft') {
+      e.preventDefault(); pageUp();
+    } else if (e.key === 'Home') {
+      e.preventDefault(); goSlide(0);
+    } else if (e.key === 'End') {
+      e.preventDefault(); goSlide(total - 1);
+    }
+  });
+
+  var tsX = 0, tsY = 0;
+  document.addEventListener('touchstart', function(e) {
+    tsX = e.touches[0].clientX;
+    tsY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - tsX;
+    var dy = e.changedTouches[0].clientY - tsY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) pageDown(); else pageUp();
+    }
+  }, { passive: true });
+
+  updateUI();
+})();
+</script>
+</body>
+</html>
