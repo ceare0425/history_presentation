@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>02. 수, 당 제국</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main:#8B4513; --dark:#6B3010; --light:#FFF8E1; --accent:#C5A028;
+      --accent-light:#E8D080; --bg:#F5E6C4; --text:#2C1A0E; --text-sec:#6B4226;
+      --border:#A07850; --card-bg:#FDF5E0;
+    }
+    html, body { font-size: clamp(20px, 2.2vw, 36px); font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif; color: var(--text); height: 100%; overflow: hidden; }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+    h1 { font-family:'Nanum Myeongjo',serif; font-size:2.3rem; font-weight:800; letter-spacing:.04em; line-height:1.3; }
+    h2 { font-family:'Nanum Myeongjo',serif; font-size:1.35rem; font-weight:700; letter-spacing:.04em; }
+    p  { font-size:.95rem; line-height:1.7; }
+
+    body {
+      background-color:var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(160,120,60,.04) 2px,rgba(160,120,60,.04) 4px),
+        repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(140,100,40,.06) 28px,rgba(140,100,40,.06) 29px);
+    }
+
+    .presentation { position:fixed; inset:0; bottom:2.2rem; display:flex; align-items:center; justify-content:center; padding:.8rem; }
+    .slide { display:none; aspect-ratio:16/9; width:min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height:auto; }
+    .slide.active { display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    .browser-card { background:var(--card-bg); border:2px solid var(--border); outline:4px solid var(--accent); outline-offset:-7px; border-radius:4px; box-shadow:0 4px 28px rgba(44,26,14,.2),inset 0 0 60px rgba(160,120,40,.05); width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    .browser-topbar { background:linear-gradient(90deg,#8B4513 0%,#5C2808 45%,#8B4513 100%); border-bottom:2px solid var(--accent); padding:.4rem 1.1rem; display:flex; align-items:center; gap:.5rem; flex-shrink:0; }
+    .topbar-icon { font-size:.95rem; }
+    .browser-title { color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-size:.82rem; font-weight:700; letter-spacing:.07em; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+    .browser-content { flex:1; overflow-y:auto; padding:.9rem 1.8rem; display:flex; flex-direction:column; }
+    .browser-content::-webkit-scrollbar { width:4px; }
+    .browser-content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+    .progress-bar { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--main)); z-index:1000; transition:width .3s; }
+    .nav-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.3rem 1.5rem; background:rgba(30,15,6,.97); border-top:2px solid var(--accent); z-index:999; font-size:14px; }
+    .nav-btn { display:flex; align-items:center; justify-content:center; width:1.7rem; height:1.7rem; border:1.5px solid #8B6540; border-radius:50%; background:transparent; cursor:pointer; color:var(--accent-light); transition:all .2s; padding:0; }
+    .nav-btn svg { width:.55rem; height:.55rem; fill:currentColor; display:block; }
+    .nav-btn:hover:not(:disabled) { background:var(--main); border-color:var(--accent); }
+    .nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .nav-counter { font-size:13px; font-weight:700; color:var(--accent-light); min-width:3rem; text-align:center; display:flex; align-items:center; gap:.15rem; line-height:1; }
+    .slide-input { width:1.4rem; text-align:center; border:none; border-bottom:1.5px solid transparent; background:transparent; font-size:13px; font-weight:700; color:var(--accent-light); font-family:inherit; padding:0; outline:none; cursor:pointer; transition:border-color .2s; line-height:1; }
+    .slide-input:hover { border-bottom-color:var(--accent); }
+    .slide-input:focus { border-bottom-color:var(--accent); background:rgba(139,69,19,.3); border-radius:3px; }
+
+    /* ── 역사 수업 시그니처 요소 ── */
+    .section-ornament { color:var(--accent); font-size:.72rem; letter-spacing:.5em; text-align:center; margin-bottom:.2rem; opacity:.75; }
+    .hist-divider { display:flex; align-items:center; gap:.4rem; margin:.25rem 0 .5rem; }
+    .h-line { flex:1; height:1.5px; background:linear-gradient(90deg,transparent,var(--accent) 25%,var(--accent) 75%,transparent); }
+    .h-gem  { color:var(--accent); font-size:.7rem; }
+    .era-badge { display:inline-block; background:linear-gradient(135deg,var(--main),var(--dark)); color:var(--accent-light); border:1px solid var(--accent); padding:.05rem .45rem; font-family:'Nanum Myeongjo',serif; font-size:.8rem; font-weight:700; border-radius:2px; white-space:nowrap; }
+
+    /* ── 빈칸 순차 공개 ── */
+    .blank {
+      display:inline-block; min-width:4rem;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.03em .55em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:inherit; user-select:none; position:relative;
+      text-align:center; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .blank::after {
+      content:'?'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.85em; font-weight:800;
+      pointer-events:none; transition:opacity .25s;
+    }
+    .blank.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .blank.on::after { opacity:0; }
+
+    /* ── 정답 버튼 순차 공개 ── */
+    .ans-btn {
+      display:inline-block;
+      background:linear-gradient(135deg,var(--main),var(--dark));
+      color:transparent; border:1.5px solid var(--accent); border-radius:2px;
+      padding:.06em .8em; font-family:'Nanum Myeongjo',serif; font-weight:700;
+      font-size:.88rem; user-select:none; position:relative;
+      text-align:center; white-space:nowrap; vertical-align:baseline;
+      transition:background .35s, color .35s, box-shadow .35s;
+    }
+    .ans-btn::after {
+      content:'정답'; position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      color:var(--accent-light); font-size:.78em; font-weight:700;
+      pointer-events:none; transition:opacity .25s; white-space:nowrap;
+    }
+    .ans-btn.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity:0; }
+
+    /* ── 레이아웃 ── */
+    .cover-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.65rem; }
+
+    /* 내용 카드 */
+    .ruler-card { border:1.5px solid var(--border); border-radius:3px; overflow:hidden; margin-bottom:.35rem; }
+    .ruler-card-header { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.88rem; padding:.28rem .8rem; display:flex; align-items:center; gap:.4rem; }
+    .ruler-card-body { padding:.45rem .9rem; background:var(--card-bg); }
+    .info-list { list-style:none; display:flex; flex-direction:column; gap:.32rem; }
+    .info-list li { position:relative; padding-left:1.3em; font-size:.9rem; line-height:1.65; }
+    .info-list li::before { content:'◆'; color:var(--accent); font-size:.6rem; position:absolute; left:0; top:.45em; }
+    .info-list li.sub { padding-left:2.3em; }
+    .info-list li.sub::before { content:'—'; font-size:.88rem; top:.38em; }
+
+    /* 퀴즈 */
+    .quiz-wrap { display:flex; flex-direction:column; gap:.3rem; margin-top:.15rem; }
+    .quiz-row { display:flex; align-items:flex-start; gap:.5rem; border:1.5px solid var(--border); border-radius:3px; padding:.3rem .7rem; background:var(--card-bg); }
+    .quiz-row.col { flex-direction:column; gap:.15rem; }
+    .quiz-row.col .inner { display:flex; gap:.5rem; align-items:flex-start; }
+    .q-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.75rem; min-width:1.35rem; height:1.35rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.18em; }
+    .q-text { flex:1; font-size:.88rem; line-height:1.8; }
+    .sub-list { display:flex; flex-direction:column; gap:.15rem; padding-left:2rem; font-size:.88rem; line-height:1.75; }
+    .sub-list span { display:block; }
+    .source-box { background:rgba(255,248,225,.7); border:1.5px solid var(--border); border-left:4px solid var(--accent); border-radius:3px; padding:.35rem .85rem; font-size:.85rem; line-height:1.75; font-style:italic; margin-top:.3rem; }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ══ 슬라이드 1: 표지 ══ -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏯</span>
+      <span class="browser-title">세계사 · Ⅰ-2. 동아시아, 인도 세계의 형성 — 학습지 9~12쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 26~30쪽</span>
+        <h1 style="margin-top:.35rem;">02. 수, 당 제국</h1>
+        <div class="hist-divider" style="width:60%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;">위진 남북조 시대 &nbsp;·&nbsp; 수의 통일 &nbsp;·&nbsp; 당의 발전 &nbsp;·&nbsp; 동아시아 문화권의 형성</p>
+        <div class="hist-divider" style="width:40%;margin:.1rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 2: 9쪽 — 위진 남북조 (1)삼국 + (2)강남 이주 ══ -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚔️</span>
+      <span class="browser-title">학습지 9쪽 — 1. 위진 남북조 시대 (1)(2)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 위진 남북조 시대</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ (1) 삼국 시대</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>전개:</strong> 후한 말 위·촉·오가 경쟁하는 삼국 시대 전개</li>
+            <li><strong>삼국 통일:</strong> 3세기 위를 계승한 진이 삼국 시대 통일</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌊 (2) 진의 강남 이주</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 진의 내분 → <strong>5호 16국 시대:</strong> 흉노·선비·저·갈·강 등 5호가 화북 지방에 나라를 세움 → 5호의 남하로 진의 수도 상실</li>
+            <li>② <strong>동진 건국:</strong> 진의 일부 황실 세력이 강남으로 이주하여 건국</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 9쪽 — (3) 북위의 화북 통일 [➊ 효문제] ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏰</span>
+      <span class="browser-title">학습지 9쪽 — 1. 위진 남북조 시대 (3) 북위의 화북 통일</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 위진 남북조 시대</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏰 (3) 북위의 화북 통일</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① <strong>통일(439):</strong> 4세기 선비족이 세운 북위가 화북 통일</li>
+            <li>② ➊ <span class="blank" data-reveal>효문제</span>의 한화 정책: 평성에서 뤄양으로 천도, 조정에서 선비어·복장 금지, 선비족과 한족의 결혼 장려</li>
+            <li>③ <strong>효문제 이후 남북조:</strong> 북조(동위·서위로 분열), 남조(정치 불안정으로 계속된 왕조 교체)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 9쪽 — (4) 위진 남북조 시대의 문화 [➋ 9품중정제] ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📜</span>
+      <span class="browser-title">학습지 9쪽 — 1. 위진 남북조 시대 (4) 문화</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 위진 남북조 시대</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📜 (4) 위진 남북조 시대의 문화</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① <strong>호한 융합:</strong> 북방 민족과 한족의 문화 융합</li>
+            <li>② <strong>화북 지방:</strong> 국가적 차원의 불교 장려 → 윈강 석굴 등 조성</li>
+            <li>③ <strong>강남 지방:</strong> 한족 이주(농업 생산력의 발전)</li>
+            <li>④ <strong>문벌 사회 형성:</strong> ➋ <span class="blank" data-reveal>9품중정제</span>(추천에 따른 인재 선발) → 문벌 사회 형성 → 고위 관직 독점, 대토지 소유</li>
+            <li>⑤ <strong>청담 유행:</strong> 정치적 혼란 속에서 자유로운 삶 추구 → 죽림칠현 등</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 9쪽 — 2. 수의 통일 [➌ 과거제] ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏛️</span>
+      <span class="browser-title">학습지 9쪽 — 2. 수의 통일</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 수의 통일</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏛️ 수의 건국·통치·멸망</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>통일:</strong> 북주의 외척 양견(문제)의 수 건국(581) → 남북조 시대 통일(589)</li>
+            <li><strong>문제:</strong> ➌ <span class="blank" data-reveal>과거제</span> 실시(9품중정제 폐지), 3성 6부제 마련, 균전제·조용조·부병제 유지·정비</li>
+            <li><strong>양제:</strong> 대운하 완성, 돌궐과 고구려 원정</li>
+            <li><strong>멸망:</strong> 대외 원정·대규모 토목 공사 → 농민 반란·내분으로 30여 년 만에 멸망(618)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 11쪽 — 1. 당의 발전 건국+발전 ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🐉</span>
+      <span class="browser-title">학습지 11쪽 — 1. 당의 발전 (건국·발전)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 당의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏗️ 건국</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>각지의 반란·내분으로 수 멸망 → 이연(고조)이 당 건국(618)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📈 발전</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>태종:</strong> 동돌궐 정복, 율령 체제 정비('정관의 치')</li>
+            <li><strong>고종:</strong> 서돌궐 복속, 백제와 고구려 멸망</li>
+            <li><strong>현종:</strong> 당의 전성기</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 11쪽 — 1. 당의 발전 쇠퇴 [➊ 양세법] ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📉</span>
+      <span class="browser-title">학습지 11쪽 — 1. 당의 발전 (쇠퇴)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 당의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📉 쇠퇴</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>8세기 균전제 붕괴 → ➊ <span class="blank" data-reveal>양세법</span> 실시, 모병제 확대</li>
+            <li>안사의 난·황소의 난으로 쇠퇴 → 절도사 주전충에 의해 멸망(907)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: 11쪽 — (2) 당의 사회·경제·문화 ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🎨</span>
+      <span class="browser-title">학습지 11쪽 — (2) 당의 사회·경제·문화</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 당의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🎨 (2) 당의 사회·경제·문화</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>사회:</strong> 과거제와 음서를 통한 문벌 사회</li>
+            <li><strong>경제:</strong> 농업 생산력의 발전, 상업 발달(비전 사용, 행 결성 등)</li>
+            <li><strong>문화:</strong> 《오경정의》(훈고학 집대성·과거 수험서), 수도 장안성의 번영, 이백·두보 등 시인 활약, 당삼채, 불교·도교 발달, 외래 종교 유행(조로아스터교 등)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 11쪽 — 동아시아 문화권 배경+형성 ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌏</span>
+      <span class="browser-title">학습지 11쪽 — 2. 동아시아 문화권의 형성 (배경·형성)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 동아시아 문화권의 형성</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌏 배경</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>책봉·조공으로 주변 국가와 긴밀한 관계 유지</li>
+            <li>당과 한반도, 일본 사이에 활발한 문화 교류</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🔄 형성</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>동아시아 각국, 당의 선진 문물 적극적으로 수용 → 고유문화와 융합하여 독자적 문화를 형성</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 10: 11쪽 — 동아시아 문화권 공통 요소 [➋ 율령] ══ -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📚</span>
+      <span class="browser-title">학습지 11쪽 — 2. 동아시아 문화권의 형성 (공통 요소)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 동아시아 문화권의 형성</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📚 공통 요소</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>유교:</strong> 충·효를 강조하여 사회 질서 확립</li>
+            <li><strong>불교:</strong> 왕즉불 사상 → 군주권 강화</li>
+            <li>➋ <span class="blank" data-reveal>율령</span>: 법과 제도를 통한 국가 통치 보조</li>
+            <li><strong>한자:</strong> 동아시아 각국의 의사소통, 사상 전달 수단</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 11: 10쪽 개념 확인 문제 1번 ══ -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 10쪽 — 개념 확인 문제 1번</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 1번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.4rem;">빈칸에 들어갈 알맞은 말을 쓰시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">⑴</span>
+          <div class="q-text">북위의 효문제는 수도를 뤄양으로 옮기고, 선비족의 언어와 복장을 금지하였으며, 선비족과 한족의 결혼을 장려하는 ( <span class="ans-btn" data-reveal>한화 정책</span> )을/를 실시하였다.</div>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <div class="q-text">수 양제는 강남과 화북을 연결하는 ( <span class="ans-btn" data-reveal>대운하</span> )을/를 완성하였고, 이는 남북 간 경제 통합에 이바지하였다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 12: 10쪽 개념 확인 문제 2번 ══ -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 10쪽 — 개념 확인 문제 2번</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 2번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.4rem;">다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">⑴</span>
+          <div class="q-text">수 문제는 문벌을 견제하고 중앙 집권을 강화하기 위하여 9품중정제를 실시하였다.</div>
+          <span class="ans-btn" data-reveal>×</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <div class="q-text">위진 남북조 시대에는 북방 민족과 한족 사이의 문화가 융합되는 호한 융합 현상이 나타났다.</div>
+          <span class="ans-btn" data-reveal>○</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑶</span>
+          <div class="q-text">수는 3성 6부의 중앙 관제를 바탕으로 황제의 통치를 뒷받침하였다.</div>
+          <span class="ans-btn" data-reveal>○</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 13: 10쪽 개념 확인 문제 3번 ══ -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 10쪽 — 개념 확인 문제 3번</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 3번</h2>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner">
+            <span class="q-num" style="flex-shrink:0;">3</span>
+            <div class="q-text">수에 대한 설명으로 옳은 것은? ( <span class="ans-btn" data-reveal>④</span> )</div>
+          </div>
+          <div class="sub-list">
+            <span>① 봉건제를 처음으로 실시하였다.</span>
+            <span>② 위·촉·오의 삼국을 통일하였다.</span>
+            <span>③ 호경에서 뤄양으로 천도하였다.</span>
+            <span>④ 과거제를 실시하여 인재를 선발하였다.</span>
+            <span>⑤ 오경박사를 설치하고 태학을 설립하였다.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 14: 10쪽 개념 확인 문제 4번 ══ -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 10쪽 — 개념 확인 문제 4번</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 4번</h2>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner">
+            <span class="q-num" style="flex-shrink:0;">4</span>
+            <div class="q-text">다음 제시문의 밑줄 친 '이 제도'의 이름을 쓰시오. ( <span class="ans-btn" data-reveal>균전제</span> )</div>
+          </div>
+          <div class="source-box">
+            이 제도는 북위 효문제 시기 자영농 육성을 위한 토지 제도로 처음 시행되었다. 이에 따라 농민들은 국가로부터 일정한 면적의 토지를 지급받았다. 이후 이 제도는 농한기에 군사 훈련을 받고 전시에 군대에 복무하도록 하는 부병제, 세금 제도인 조용조와 결합되어 운영되었다. 이러한 운영 방식은 후대 왕조인 수, 당 및 동아시아 각국의 통치 체제에도 영향을 미쳤다.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 15: 12쪽 개념 확인 문제 1번 ══ -->
+<div class="slide" data-slide="14">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 12쪽 — 개념 확인 문제 1번</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 1번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.4rem;">다음 국왕과 각 국왕에 대한 내용으로 옳은 것끼리 선으로 연결하시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">⑴</span>
+          <div class="q-text">당 고조</div>
+          <span class="ans-btn" data-reveal>당 건국</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <div class="q-text">당 태종</div>
+          <span class="ans-btn" data-reveal>동돌궐 정복, 정관의 치</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑶</span>
+          <div class="q-text">당 현종</div>
+          <span class="ans-btn" data-reveal>당의 전성기, 후기에는 쇠퇴</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 16: 12쪽 개념 확인 문제 2번 ══ -->
+<div class="slide" data-slide="15">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 12쪽 — 개념 확인 문제 2번</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 2번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.4rem;">빈칸에 들어갈 알맞은 말을 쓰시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">⑴</span>
+          <div class="q-text">당 고종은 서돌궐을 복속하는 한편, 신라와 연합하여 ( <span class="ans-btn" data-reveal>백제</span> ), ( <span class="ans-btn" data-reveal>고구려</span> )을/를 멸망시켰다.</div>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <div class="q-text">당은 정복지에 도호부를 설치하고 현지 유력자를 통해 간접 통치하는 ( <span class="ans-btn" data-reveal>기미 정책</span> )을/를 실시하였다.</div>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑶</span>
+          <div class="q-text">8세기경 당은 ( <span class="ans-btn" data-reveal>안사의 난</span> )을/를 전후로 자영농이 몰락하고 균전제가 붕괴하였다. 이에 ( <span class="ans-btn" data-reveal>양세법</span> )을/를 실시하여 재정을 확보하고 모병제를 확대하였다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 17: 12쪽 개념 확인 문제 3번 ══ -->
+<div class="slide" data-slide="16">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 12쪽 — 개념 확인 문제 3번</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 3번</h2>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner">
+            <span class="q-num" style="flex-shrink:0;">3</span>
+            <div class="q-text">다음 자료를 참고하여 빈칸에 들어갈 알맞은 내용을 쓰시오.</div>
+          </div>
+          <div class="source-box">
+            (가)는 당의 중앙 통치 제도인 ( <span class="ans-btn" data-reveal>3성 6부제</span> )이며, (나)는 일본의 ( <span class="ans-btn" data-reveal>태정관제</span> )이다. 일본은 당의 통치 체제를 독자적으로 수용하였으며, 일본을 비롯하여 동아시아 국가는 법과 제도를 바탕으로 하는 당의 ( <span class="ans-btn" data-reveal>율령</span> ) 체제를 수용함으로써 국가 통치를 뒷받침하였다.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 18: 12쪽 개념 확인 문제 4번 ══ -->
+<div class="slide" data-slide="17">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 12쪽 — 개념 확인 문제 4번</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 4번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.35rem;">당의 문화에 대한 설명으로 옳은 것을 &lt;보기&gt;에서 있는 대로 고른 것은?</p>
+      <p style="font-size:.82rem;color:var(--text-sec);margin-bottom:.4rem;">ㄱ. 당삼채가 제작되었다. &nbsp;·&nbsp; ㄴ. 이백, 두보 등의 시인이 활약하였다. &nbsp;·&nbsp; ㄷ. 자유로운 삶을 추구하는 청담이 유행하였다. &nbsp;·&nbsp; ㄹ. 조로아스터교, 마니교, 경교 등이 유행하였다.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner">
+            <span class="q-num" style="flex-shrink:0;">4</span>
+            <div class="q-text">옳은 것을 있는 대로 고른 것은? ( <span class="ans-btn" data-reveal>④ ㄱ, ㄴ, ㄹ</span> )</div>
+          </div>
+          <div class="sub-list">
+            <span>① ㄱ, ㄴ &nbsp;&nbsp; ② ㄴ, ㄷ &nbsp;&nbsp; ③ ㄷ, ㄹ &nbsp;&nbsp; ④ ㄱ, ㄴ, ㄹ &nbsp;&nbsp; ⑤ ㄴ, ㄷ, ㄹ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<!-- 네비게이션 -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
+    / <span id="totalSlides">18</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function revealItems(slideEl) { return Array.from(slideEl.querySelectorAll('[data-reveal]')); }
+  function getRC(slideEl) { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n) { slideEl.dataset.rc = n; }
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => { el.classList.toggle('on', i < n); });
+  }
+
+  function updateNav() {
+    document.getElementById('prevBtn').disabled = (currentSlide === 0 && getRC(slides[0]) === 0);
+    document.getElementById('nextBtn').disabled = false;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+    document.getElementById('slideInput').value = currentSlide + 1;
+  }
+
+  function goToSlide(idx) {
+    slides[currentSlide].classList.remove('active');
+    currentSlide = Math.max(0, Math.min(total - 1, idx));
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1); applyReveal(el); updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1); applyReveal(el); updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length);
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  /* 키보드 */
+  document.addEventListener('keydown', e => {
+    if (e.target === document.getElementById('slideInput')) return;
+    if (['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)) { e.preventDefault(); nextAction(); }
+    if (['ArrowLeft','ArrowUp','PageUp'].includes(e.key)) { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End') goToSlide(total - 1);
+  });
+
+  /* 터치 스와이프 */
+  let touchX = 0;
+  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', e => {
+    const dx = touchX - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 50) { dx > 0 ? nextAction() : prevAction(); }
+  }, {passive:true});
+
+  /* 슬라이드 번호 직접 입력 */
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { goToSlide(parseInt(slideInput.value) - 1); slideInput.blur(); }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('blur', () => {
+    const v = parseInt(slideInput.value);
+    if (!isNaN(v)) goToSlide(v - 1);
+    else slideInput.value = currentSlide + 1;
+  });
+
+  updateNav();
+</script>
+</body>
+</html>

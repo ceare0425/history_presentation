@@ -93,6 +93,19 @@
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             },
             {
+              "title": "05. 수, 당 제국",
+              "path": "세계사/Ⅰ단원/05. 수, 당 제국/index.html",
+              "emoji": "🏯",
+              "description": "위진 남북조 시대(삼국·5호16국·북위 한화 정책·9품중정제), 수의 통일(과거제·대운하), 당의 발전(정관의 치·양세법), 동아시아 문화권의 형성(유교·불교·율령·한자). 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "수·당 제국", "color": "orange" },
+                { "label": "위진 남북조", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
               "title": "07. 불교의 성립과 인도의 통일 제국",
               "path": "세계사/07-불교성립-인도통일제국/index.html",
               "emoji": "☸️",
