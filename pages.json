@@ -106,6 +106,19 @@
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             },
             {
+              "title": "06. 일본 고대 국가의 발전",
+              "path": "세계사/Ⅰ단원/06. 일본 고대 국가/index.html",
+              "emoji": "🗾",
+              "description": "야요이 시대, 야마토 정권(쇼토쿠 태자·아스카 문화·다이카 개신), 나라 시대(헤이조쿄·도다이사), 헤이안 시대(국풍 문화·가나 문자). 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "일본 고대", "color": "orange" },
+                { "label": "야마토·나라·헤이안", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
               "title": "07. 불교의 성립과 인도의 통일 제국",
               "path": "세계사/07-불교성립-인도통일제국/index.html",
               "emoji": "☸️",
