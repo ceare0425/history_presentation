@@ -80,6 +80,19 @@
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             },
             {
+              "title": "04. 진, 한 제국",
+              "path": "세계사/Ⅰ단원/04. 진, 한 제국/index.html",
+              "emoji": "🏯",
+              "description": "춘추 전국 시대(제자백가), 진의 통일(군현제·분서갱유·만리장성), 한의 발전(군국제→무제의 군현제·유교), 후한의 멸망과 흉노의 발전. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "진·한 제국", "color": "orange" },
+                { "label": "제자백가", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
               "title": "07. 불교의 성립과 인도의 통일 제국",
               "path": "세계사/07-불교성립-인도통일제국/index.html",
               "emoji": "☸️",
