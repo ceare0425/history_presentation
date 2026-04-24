@@ -348,6 +348,26 @@
             }
           ]
         }
+        ,
+        {
+          "name": "Ⅲ. 국민 국가의 형성",
+          "emoji": "🐉",
+          "pages": [
+            {
+              "title": "24. 청 제국",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/24. 청 제국/index.html",
+              "emoji": "🐉",
+              "description": "청의 성립(후금→청), 강희제·옹정제·건륭제의 발전과 쇠퇴, 다민족 통치(만주족 고유문화·한족 통치·번부 지배), 명·청대 경제(공행)·문화(신사·양명학·고증학). 학습지 57~58쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "청 제국", "color": "orange" },
+                { "label": "다민족 통치", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            }
+          ]
+        }
       ],
       "pages": [
         {
