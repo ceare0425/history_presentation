@@ -365,6 +365,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "25. 에도 막부",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/25. 에도 막부/index.html",
+              "emoji": "🏯",
+              "description": "센고쿠 시대(오닌의 난·오다 노부나가·도요토미 히데요시·도쿠가와 이에야스), 에도 막부의 발전(막번 체제·참근교대제·쇄국 정책·난학), 에도 막부의 문화(조닌 문화·조카마치·가부키·우키요에·국학). 학습지 59~60쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "에도 막부", "color": "orange" },
+                { "label": "센고쿠 시대", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
