@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>26. 무굴 제국의 발전</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main: #8B4513; --dark: #6B3010; --light: #FFF8E1; --accent: #C5A028;
+      --accent-light: #E8D080; --bg: #F5E6C4; --text: #2C1A0E; --text-sec: #6B4226;
+      --border: #A07850; --card-bg: #FDF5E0;
+    }
+    html, body {
+      font-size: clamp(20px, 2.2vw, 36px);
+      font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif;
+      color: var(--text); height: 100%; overflow: hidden;
+    }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+
+    h1 { font-family: 'Nanum Myeongjo', serif; font-size: 2.3rem; font-weight: 800; letter-spacing: .04em; line-height: 1.3; }
+    h2 { font-family: 'Nanum Myeongjo', serif; font-size: 1.35rem; font-weight: 700; letter-spacing: .04em; }
+    p  { font-size: .95rem; line-height: 1.7; }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(160,120,60,.04) 2px, rgba(160,120,60,.04) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(140,100,40,.06) 28px, rgba(140,100,40,.06) 29px);
+    }
+
+    .presentation { position: fixed; inset: 0; bottom: 2.2rem; display: flex; align-items: center; justify-content: center; padding: .8rem; }
+    .slide { display: none; aspect-ratio: 16/9; width: min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height: auto; }
+    .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .browser-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      outline: 4px solid var(--accent);
+      outline-offset: -7px;
+      border-radius: 4px;
+      box-shadow: 0 4px 28px rgba(44,26,14,.2), inset 0 0 60px rgba(160,120,40,.05);
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .browser-topbar {
+      background: linear-gradient(90deg, #8B4513 0%, #5C2808 45%, #8B4513 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: .4rem 1.1rem;
+      display: flex; align-items: center; gap: .5rem; flex-shrink: 0;
+    }
+    .topbar-icon { font-size: .95rem; }
+    .browser-title {
+      color: var(--accent-light);
+      font-family: 'Nanum Myeongjo', serif;
+      font-size: .82rem; font-weight: 700;
+      letter-spacing: .07em;
+      text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    }
+    .browser-content {
+      flex: 1; overflow-y: auto;
+      padding: .9rem 1.8rem;
+      display: flex; flex-direction: column;
+    }
+    .browser-content::-webkit-scrollbar { width: 4px; }
+    .browser-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--main)); z-index: 1000; transition: width .3s; }
+
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: .5rem; padding: .3rem 1.5rem; background: rgba(30,15,6,.97); border-top: 2px solid var(--accent); z-index: 999; font-size: 14px; }
+    .nav-btn { display: flex; align-items: center; justify-content: center; width: 1.7rem; height: 1.7rem; border: 1.5px solid #8B6540; border-radius: 50%; background: transparent; cursor: pointer; color: var(--accent-light); transition: all .2s; padding: 0; }
+    .nav-btn svg { width: .55rem; height: .55rem; fill: currentColor; display: block; }
+    .nav-btn:hover:not(:disabled) { background: var(--main); border-color: var(--accent); }
+    .nav-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .nav-counter { font-size: 13px; font-weight: 700; color: var(--accent-light); min-width: 3rem; text-align: center; display: flex; align-items: center; gap: .15rem; line-height: 1; }
+    .slide-input { width: 1.4rem; text-align: center; border: none; border-bottom: 1.5px solid transparent; background: transparent; font-size: 13px; font-weight: 700; color: var(--accent-light); font-family: inherit; padding: 0; outline: none; cursor: pointer; transition: border-color .2s; line-height: 1; }
+    .slide-input:hover { border-bottom-color: var(--accent); }
+    .slide-input:focus { border-bottom-color: var(--accent); background: rgba(139,69,19,.3); border-radius: 3px; }
+
+    /* 역사 수업 시그니처 요소 */
+    .section-ornament { color: var(--accent); font-size: .72rem; letter-spacing: .5em; text-align: center; margin-bottom: .2rem; opacity: .75; }
+    .hist-divider { display: flex; align-items: center; gap: .4rem; margin: .25rem 0 .5rem; }
+    .h-line { flex: 1; height: 1.5px; background: linear-gradient(90deg, transparent, var(--accent) 25%, var(--accent) 75%, transparent); }
+    .h-gem  { color: var(--accent); font-size: .7rem; }
+    .era-badge { display: inline-block; background: linear-gradient(135deg, var(--main), var(--dark)); color: var(--accent-light); border: 1px solid var(--accent); padding: .05rem .45rem; font-family: 'Nanum Myeongjo', serif; font-size: .8rem; font-weight: 700; border-radius: 2px; white-space: nowrap; }
+
+    /* 빈칸 순차 공개 */
+    .blank {
+      display: inline-block; min-width: 4rem;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent); border-radius: 2px;
+      padding: .03em .55em; font-family: 'Nanum Myeongjo', serif; font-weight: 700;
+      font-size: inherit; user-select: none; position: relative;
+      text-align: center; vertical-align: baseline;
+      transition: background .35s, color .35s, box-shadow .35s;
+    }
+    .blank::after {
+      content: '?'; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: .85em; font-weight: 800;
+      pointer-events: none; transition: opacity .25s;
+    }
+    .blank.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
+    .blank.on::after { opacity: 0; }
+
+    /* 정답 버튼 */
+    .ans-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent); border-radius: 2px;
+      padding: .06em .8em; font-family: 'Nanum Myeongjo', serif; font-weight: 700;
+      font-size: .88rem; user-select: none; position: relative;
+      text-align: center; white-space: nowrap; vertical-align: baseline;
+      transition: background .35s, color .35s, box-shadow .35s;
+    }
+    .ans-btn::after {
+      content: '정답'; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: .78em; font-weight: 700;
+      pointer-events: none; transition: opacity .25s; white-space: nowrap;
+    }
+    .ans-btn.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity: 0; }
+
+    /* 표지 */
+    .cover-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: .65rem; }
+
+    /* 내용 카드 */
+    .ruler-card { border: 1.5px solid var(--border); border-radius: 3px; overflow: hidden; margin-bottom: .35rem; }
+    .ruler-card-header { background: linear-gradient(90deg, var(--main), var(--dark)); color: var(--accent-light); font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: .88rem; padding: .28rem .8rem; display: flex; align-items: center; gap: .4rem; }
+    .ruler-card-body { padding: .45rem .9rem; background: var(--card-bg); }
+
+    /* info-list: position 방식으로 불릿 처리 (flex 사용 금지) */
+    .info-list { list-style: none; display: flex; flex-direction: column; gap: .32rem; }
+    .info-list li { position: relative; padding-left: 1.3em; font-size: .9rem; line-height: 1.65; }
+    .info-list li::before { content: '◆'; color: var(--accent); font-size: .6rem; position: absolute; left: 0; top: .45em; }
+    .info-list li.sub { padding-left: 2.3em; }
+    .info-list li.sub::before { content: '—'; font-size: .88rem; top: .38em; }
+
+    /* 퀴즈 */
+    .quiz-wrap { display: flex; flex-direction: column; gap: .3rem; margin-top: .15rem; }
+    .quiz-row { display: flex; align-items: flex-start; gap: .5rem; border: 1.5px solid var(--border); border-radius: 3px; padding: .3rem .7rem; background: var(--card-bg); }
+    .quiz-row.col { flex-direction: column; gap: .15rem; }
+    .quiz-row.col .inner { display: flex; gap: .5rem; align-items: flex-start; }
+    .q-num { background: var(--main); color: var(--accent-light); font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: .75rem; min-width: 1.35rem; height: 1.35rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: .18em; }
+    .q-text { flex: 1; font-size: .88rem; line-height: 1.8; }
+    .bogie-box { background: var(--light); border: 1.5px solid var(--border); border-radius: 3px; padding: .28rem .7rem; font-size: .85rem; line-height: 1.7; margin-bottom: .1rem; }
+
+    /* 인용문 박스 */
+    .hist-quote-box { background: var(--light); border-left: 4px solid var(--accent); border-right: 1px solid var(--accent); padding: .75rem 1rem .75rem 1.3rem; margin: .5rem 0; position: relative; border-radius: 0 3px 3px 0; }
+    .hist-quote-mark { position: absolute; top: -.1rem; left: .25rem; font-size: 2.5rem; color: var(--accent); line-height: 1; font-family: Georgia, serif; opacity: .55; }
+    .hist-quote-text { font-style: italic; color: var(--text); font-size: .88rem; padding-left: 1rem; margin: 0 0 .25rem 0; line-height: 1.75; }
+    .hist-quote-source { text-align: right; color: var(--text-sec); font-size: .8rem; font-weight: 600; }
+
+    /* 보기 리스트 */
+    .bogi-list { list-style: none; display: flex; flex-direction: column; gap: .2rem; margin-top: .3rem; }
+    .bogi-list li { position: relative; padding-left: 1.5em; font-size: .88rem; line-height: 1.65; }
+    .bogi-list li::before { content: attr(data-label); font-weight: 700; color: var(--main); position: absolute; left: 0; }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ══ 슬라이드 1: 표지 ══ -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🕌</span>
+      <span class="browser-title">세계사 · Ⅲ-1. 아시아의 다민족 제국들 — 학습지 61~62쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 133~135쪽</span>
+        <h1 style="margin-top:.35rem;">3. 무굴 제국의 발전</h1>
+        <div class="hist-divider" style="width:60%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;">무굴 제국의 성립 &nbsp;·&nbsp; 아크바르 황제 &nbsp;·&nbsp; 아우랑제브 황제 &nbsp;·&nbsp; 경제와 문화</p>
+        <div class="hist-divider" style="width:40%;margin:.1rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 2: 무굴 제국의 수립 (바부르) ══ -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏹</span>
+      <span class="browser-title">학습지 61쪽 — 1. 무굴 제국의 성립과 발전 · 수립</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 무굴 제국의 성립과 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏹 무굴 제국의 수립</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>티무르의 후손 ➊ <span class="blank" data-reveal>바부르</span>가 아프가니스탄 방면에서 인도 북부로 진출</li>
+            <li>파니파트 전투 승리 → 델리 술탄 왕조를 무너뜨리고 무굴 제국 수립</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 아크바르 황제 ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👑</span>
+      <span class="browser-title">학습지 61쪽 — 1. 무굴 제국의 성립과 발전 · 아크바르 황제</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 무굴 제국의 성립과 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 아크바르 황제 — 통일과 관용</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>중앙 집권 체제 강화 → 남부 지역 일부를 제외한 인도 전체 통일</li>
+            <li>종교적 관용 정책 실시
+              <ul class="info-list" style="margin-top:.2rem;">
+                <li class="sub">힌두교도 관리 임명, 힌두교도와 결혼</li>
+                <li class="sub">비이슬람교도 인두세 지즈야(인두세) 폐지</li>
+              </ul>
+            </li>
+            <li>정복 활동 전개 → 구자라트·벵골 등 정복, 무굴 제국 최대 영토 확보</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 아우랑제브 황제 & 쇠퇴 ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚔️</span>
+      <span class="browser-title">학습지 61쪽 — 1. 무굴 제국의 성립과 발전 · 아우랑제브 황제 · 쇠퇴</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 무굴 제국의 성립과 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ 아우랑제브 황제 — 이슬람 강경책</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>➋ <span class="blank" data-reveal>이슬람 제일주의</span>를 바탕으로 힌두교 사원 파괴, 지즈야 부활</li>
+            <li class="sub">→ 힌두교도와 시크교도의 강한 반발</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📉 무굴 제국의 쇠퇴</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>시크교도와 마라타 왕국의 반란 → 아우랑제브 황제 사후 마라타 동맹 결성</li>
+            <li>각지의 반란 + 영국·프랑스 등 유럽인의 침투로 점차 쇠퇴</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 무굴 제국의 경제 ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌾</span>
+      <span class="browser-title">학습지 61쪽 — 2. 무굴 제국의 경제·문화 · (1) 경제</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 무굴 제국의 경제·문화</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌾 (1) 경제</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>페르시아 지역에서 관개 농법 도입 → 농업 생산력 증대, 상공업 발달</li>
+            <li>내륙에 시장과 도시 발달, 무역항 발달</li>
+            <li>대외 교역 활발 → 중국·동남아시아·유럽을 잇는 인도양 무역 주도</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 무굴 제국의 문화 ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🕌</span>
+      <span class="browser-title">학습지 62쪽 — 2. 무굴 제국의 경제·문화 · (2) 문화</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 무굴 제국의 경제·문화</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🕌 (2) 문화 — 힌두·이슬람 문화의 융합</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>종교·언어·회화·건축 등에서 힌두 문화와 이슬람 문화 융합</li>
+            <li>시크교 성립, 무굴 회화 발달, 우르두어 사용, 타지마할 축조</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 개념 확인 문제 1 — O/X ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📝</span>
+      <span class="browser-title">학습지 61~62쪽 — 개념 확인 문제 1 · 옳으면 ○, 틀리면 × 하시오</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 1 &nbsp;<span style="font-size:.82rem;color:var(--text-sec);font-weight:400;">— 옳으면 ○표, 틀리면 ×표 하시오</span></h2>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-num">⑴</span>
+          <span class="q-text">
+            16세기 초 티무르의 후손 바부르가 아프가니스탄 방면에서 인도 북부로 진출하였으며, 파니파트 전투에서 승리하였다.
+            &nbsp;&nbsp;( <span class="ans-btn" data-reveal>○</span> )
+          </span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <span class="q-text">
+            아크바르 황제의 사후 마라타 왕국은 마라타 동맹을 결성하여 무굴 제국에 대한 저항을 이어 갔다.
+            &nbsp;&nbsp;( <span class="ans-btn" data-reveal>×</span> )
+            <br><span style="font-size:.8rem;color:var(--text-sec);">※ 마라타 동맹은 아우랑제브 황제 사후에 결성되었다.</span>
+          </span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑶</span>
+          <span class="q-text">
+            시크교는 힌두교에서 윤회와 '업' 개념을 받아들였으나, 우상 숭배와 카스트제의 신분 차별을 반대하였다.
+            &nbsp;&nbsp;( <span class="ans-btn" data-reveal>○</span> )
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: 개념 확인 문제 2 — 빈칸 채우기 ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✍️</span>
+      <span class="browser-title">학습지 62쪽 — 개념 확인 문제 2 · 빈칸에 알맞은 말을 쓰시오</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 2 &nbsp;<span style="font-size:.82rem;color:var(--text-sec);font-weight:400;">— 빈칸에 알맞은 말을 쓰시오</span></h2>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner"><span class="q-num">⑴</span>
+          <span class="q-text">아우랑제브 황제는 ( <span class="ans-btn" data-reveal>이슬람 제일주의</span> )을/를 바탕으로 힌두교 사원을 파괴하고 지즈야를 부활시켜 힌두교도와 시크교도의 반발을 샀다.</span></div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner"><span class="q-num">⑵</span>
+          <span class="q-text">( <span class="ans-btn" data-reveal>타지마할</span> )은/는 무굴 제국의 제5대 황제 샤자한이 왕비인 뭄타즈 마할을 추모하기 위해 세운 묘당으로, 힌두·이슬람 문화의 대표적인 건축물이다.</span></div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner"><span class="q-num">⑶</span>
+          <span class="q-text">무굴 제국의 공식 문서나 외교문서에는 페르시아어를 사용하였으나, 일상에서는 힌두어에 페르시아어·아랍어가 합쳐진 ( <span class="ans-btn" data-reveal>우르두어</span> )이/가 널리 사용되었다.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 개념 확인 문제 3 — 사료 분석 ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📜</span>
+      <span class="browser-title">학습지 62쪽 — 개념 확인 문제 3 · 사료 분석</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 3 &nbsp;<span style="font-size:.82rem;color:var(--text-sec);font-weight:400;">— 밑줄 친 '나'에 해당하는 국왕을 쓰고 옳은 설명을 고르시오</span></h2>
+      <div class="hist-quote-box">
+        <div class="hist-quote-mark">"</div>
+        <p class="hist-quote-text">지금까지 나는 신앙이 다른 사람들을 박해하여 나와 같게 만들려고 하였으며, 그것을 신에 대한 귀의라고 생각하였다. 그러나 지식을 쌓아 감에 따라 나는 후회하는 마음에 사로잡혔다. 강제로 개종시킨 사람에게서 어떻게 성실한 신앙생활을 기대할 수 있을까?</p>
+        <div class="hist-quote-source">— 무굴 제국 황제의 발언</div>
+      </div>
+      <div class="quiz-wrap" style="margin-top:.3rem;">
+        <div class="quiz-row">
+          <span class="q-num" style="font-size:.7rem;min-width:2.4rem;">⑴국왕</span>
+          <span class="q-text">밑줄 친 '나'에 해당하는 국왕: ( <span class="ans-btn" data-reveal>아크바르</span> )</span>
+        </div>
+        <div class="quiz-row col">
+          <div class="bogie-box" style="font-size:.82rem;">
+            &lt;보기&gt; &nbsp;
+            ㄱ. 델리 술탄 왕조를 무너뜨리고 무굴 제국을 세웠다. &nbsp;
+            ㄴ. 비이슬람교도에게 부과한 지즈야를 폐지하였다. &nbsp;
+            ㄷ. 구자라트 지역, 벵골 지역을 정복하였다. &nbsp;
+            ㄹ. 무굴 제국의 영토를 최대로 넓혔다.
+          </div>
+          <div class="inner"><span class="q-num" style="font-size:.7rem;min-width:2.4rem;">⑵설명</span>
+          <span class="q-text">옳은 설명: ( <span class="ans-btn" data-reveal>ㄴ, ㄷ</span> )</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력"> / <span id="totalSlides">9</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function revealItems(slideEl) { return Array.from(slideEl.querySelectorAll('[data-reveal]')); }
+  function getRC(slideEl) { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n) { slideEl.dataset.rc = n; }
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => { el.classList.toggle('on', i < n); });
+  }
+
+  function updateNav() {
+    document.getElementById('prevBtn').disabled = (currentSlide === 0 && getRC(slides[0]) === 0);
+    document.getElementById('nextBtn').disabled = false;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+    document.getElementById('slideInput').value = currentSlide + 1;
+  }
+
+  function goToSlide(idx) {
+    slides[currentSlide].classList.remove('active');
+    currentSlide = Math.max(0, Math.min(total - 1, idx));
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1); applyReveal(el); updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1); applyReveal(el); updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length);
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  /* 키보드 — 포인터 기기 대응 */
+  document.addEventListener('keydown', e => {
+    if (e.target === document.getElementById('slideInput')) return;
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); nextAction(); }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End') goToSlide(total - 1);
+  });
+
+  /* 터치 스와이프 */
+  let touchX = 0;
+  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, {passive: true});
+  document.addEventListener('touchend', e => {
+    const dx = touchX - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 50) { dx > 0 ? nextAction() : prevAction(); }
+  }, {passive: true});
+
+  /* 슬라이드 번호 직접 입력 */
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { goToSlide(parseInt(slideInput.value) - 1); slideInput.blur(); }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('blur', () => {
+    const v = parseInt(slideInput.value);
+    if (!isNaN(v)) goToSlide(v - 1);
+    else slideInput.value = currentSlide + 1;
+  });
+
+  updateNav();
+</script>
+</body>
+</html>

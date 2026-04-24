@@ -378,6 +378,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "26. 무굴 제국의 발전",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/26. 무굴 제국의 발전/index.html",
+              "emoji": "🕌",
+              "description": "무굴 제국의 수립(바부르·델리 술탄 왕조), 아크바르 황제(종교적 관용·지즈야 폐지), 아우랑제브 황제(이슬람 제일주의·쇠퇴), 경제(관개 농법·인도양 무역), 문화(시크교·우르두어·타지마할). 학습지 61~62쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "무굴 제국", "color": "orange" },
+                { "label": "힌두·이슬람 융합", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
