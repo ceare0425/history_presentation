@@ -391,6 +391,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "27. 오스만 제국",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/27. 오스만 제국/index.html",
+              "emoji": "🕌",
+              "description": "오스만 제국의 성립(메흐메트 2세·셀림 1세·술레이만 1세), 통치 제도(티마르·데브시르메·밀레트), 경제와 문화, 티무르 왕조·사파비 왕조. 학습지 63~64쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "오스만 제국", "color": "orange" },
+                { "label": "다민족 통치", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
