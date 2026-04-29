@@ -404,6 +404,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "28. 미국 혁명",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/28. 미국 혁명/index.html",
+              "emoji": "🗽",
+              "description": "근대 의식의 발전(과학 혁명·계몽사상), 미국 혁명의 배경(13개 식민지·중상주의 정책·보스턴 차 사건), 전개(독립 선언문·파리 조약), 결과(연방 헌법·삼권분립·공화주의). 학습지 65~66쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "미국 혁명", "color": "blue" },
+                { "label": "시민 혁명", "color": "orange" },
+                { "label": "2학년", "color": "purple" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
