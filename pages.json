@@ -417,6 +417,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "29. 프랑스 혁명",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/29. 프랑스 혁명/index.html",
+              "emoji": "⚜️",
+              "description": "프랑스 혁명의 배경(구제도·삼부회), 전개(국민의회·입법의회), 과격화(국민공회·로베스피에르), 나폴레옹 시대(통령정부·제1제정·대륙봉쇄령). 학습지 67~70쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "프랑스 혁명", "color": "blue" },
+                { "label": "나폴레옹", "color": "orange" },
+                { "label": "2학년", "color": "purple" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
