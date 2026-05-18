@@ -443,6 +443,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "31. 민족주의 운동과 국민 국가의 발전",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/31. 민족주의 운동/index.html",
+              "emoji": "🗺️",
+              "description": "국민 국가의 형성, 이탈리아 통일(카보우르·가리발디·1861), 독일 통일(비스마르크 철혈 정책·1871), 미국 남북 전쟁(링컨·노예 해방 선언·1863). 학습지 73~74쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "민족주의 운동", "color": "orange" },
+                { "label": "이탈리아·독일 통일", "color": "purple" },
+                { "label": "미국 남북 전쟁", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
