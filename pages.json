@@ -430,6 +430,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "30. 빈 체제와 자유주의 운동",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/30. 빈 체제/index.html",
+              "emoji": "🏛️",
+              "description": "빈 체제의 성립(메테르니히·신성 동맹)과 동요, 프랑스 7월 혁명·2월 혁명·제2 제정, 영국 자유주의 개혁·차티스트 운동, 러시아 데카브리스트·크림 전쟁·브나로드 운동. 학습지 71~72쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "빈 체제", "color": "orange" },
+                { "label": "자유주의 운동", "color": "blue" },
+                { "label": "2학년", "color": "purple" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }

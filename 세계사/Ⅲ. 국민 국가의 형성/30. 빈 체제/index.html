@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>30. 빈 체제와 자유주의 운동</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main: #8B4513; --dark: #6B3010; --light: #FFF8E1; --accent: #C5A028;
+      --accent-light: #E8D080; --bg: #F5E6C4; --text: #2C1A0E; --text-sec: #6B4226;
+      --border: #A07850; --card-bg: #FDF5E0;
+    }
+    html, body {
+      font-size: clamp(20px, 2.2vw, 36px);
+      font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif;
+      color: var(--text); height: 100%; overflow: hidden;
+    }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+
+    h1 { font-family: 'Nanum Myeongjo', serif; font-size: 2.3rem; font-weight: 800; letter-spacing: .04em; line-height: 1.3; }
+    h2 { font-family: 'Nanum Myeongjo', serif; font-size: 1.35rem; font-weight: 700; letter-spacing: .04em; }
+    p  { font-size: .95rem; line-height: 1.7; }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(160,120,60,.04) 2px, rgba(160,120,60,.04) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(140,100,40,.06) 28px, rgba(140,100,40,.06) 29px);
+    }
+
+    .presentation { position: fixed; inset: 0; bottom: 2.2rem; display: flex; align-items: center; justify-content: center; padding: .8rem; }
+    .slide { display: none; aspect-ratio: 16/9; width: min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height: auto; }
+    .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .browser-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      outline: 4px solid var(--accent);
+      outline-offset: -7px;
+      border-radius: 4px;
+      box-shadow: 0 4px 28px rgba(44,26,14,.2), inset 0 0 60px rgba(160,120,40,.05);
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .browser-topbar {
+      background: linear-gradient(90deg, #8B4513 0%, #5C2808 45%, #8B4513 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: .4rem 1.1rem;
+      display: flex; align-items: center; gap: .5rem; flex-shrink: 0;
+    }
+    .topbar-icon { font-size: .95rem; }
+    .browser-title {
+      color: var(--accent-light); font-family: 'Nanum Myeongjo', serif;
+      font-size: .82rem; font-weight: 700; letter-spacing: .07em;
+      text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    }
+    .browser-content {
+      flex: 1; overflow-y: auto;
+      padding: .9rem 1.8rem;
+      display: flex; flex-direction: column;
+      justify-content: flex-start;
+    }
+    .browser-content::-webkit-scrollbar { width: 4px; }
+    .browser-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--main)); z-index: 1000; transition: width .3s; }
+
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: .5rem; padding: .3rem 1.5rem; background: rgba(30,15,6,.97); border-top: 2px solid var(--accent); z-index: 999; font-size: 14px; }
+    .nav-btn { display: flex; align-items: center; justify-content: center; width: 1.7rem; height: 1.7rem; border: 1.5px solid #8B6540; border-radius: 50%; background: transparent; cursor: pointer; color: var(--accent-light); transition: all .2s; padding: 0; }
+    .nav-btn svg { width: .55rem; height: .55rem; fill: currentColor; display: block; }
+    .nav-btn:hover:not(:disabled) { background: var(--main); border-color: var(--accent); }
+    .nav-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .nav-counter { font-size: 13px; font-weight: 700; color: var(--accent-light); min-width: 3rem; text-align: center; display: flex; align-items: center; gap: .15rem; line-height: 1; }
+    .slide-input { width: 1.4rem; text-align: center; border: none; border-bottom: 1.5px solid transparent; background: transparent; font-size: 13px; font-weight: 700; color: var(--accent-light); font-family: inherit; padding: 0; outline: none; cursor: pointer; transition: border-color .2s; line-height: 1; }
+    .slide-input:hover { border-bottom-color: var(--accent); }
+    .slide-input:focus { border-bottom-color: var(--accent); background: rgba(139,69,19,.3); border-radius: 3px; }
+
+    /* 역사 수업 시그니처 요소 */
+    .section-ornament { color: var(--accent); font-size: .72rem; letter-spacing: .5em; text-align: center; margin-bottom: .2rem; opacity: .75; }
+    .hist-divider { display: flex; align-items: center; gap: .4rem; margin: .25rem 0 .5rem; }
+    .h-line { flex: 1; height: 1.5px; background: linear-gradient(90deg, transparent, var(--accent) 25%, var(--accent) 75%, transparent); }
+    .h-gem  { color: var(--accent); font-size: .7rem; }
+    .era-badge { display: inline-block; background: linear-gradient(135deg, var(--main), var(--dark)); color: var(--accent-light); border: 1px solid var(--accent); padding: .05rem .45rem; font-family: 'Nanum Myeongjo', serif; font-size: .8rem; font-weight: 700; border-radius: 2px; white-space: nowrap; }
+
+    /* 빈칸 순차 공개 */
+    .blank {
+      display: inline-block; min-width: 4rem;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent); border-radius: 2px;
+      padding: .03em .55em; font-family: 'Nanum Myeongjo', serif; font-weight: 700;
+      font-size: inherit; user-select: none; position: relative;
+      text-align: center; vertical-align: baseline;
+      transition: background .35s, color .35s, box-shadow .35s;
+    }
+    .blank::after {
+      content: '?'; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: .85em; font-weight: 800;
+      pointer-events: none; transition: opacity .25s;
+    }
+    .blank.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
+    .blank.on::after { opacity: 0; }
+
+    /* 정답 버튼 */
+    .ans-btn {
+      display: inline-block; min-width: 3rem;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent); border-radius: 2px;
+      padding: .06em .7em; font-family: 'Nanum Myeongjo', serif; font-weight: 700;
+      font-size: .88rem; user-select: none; position: relative;
+      text-align: center; white-space: normal; vertical-align: baseline;
+      transition: background .35s, color .35s, box-shadow .35s;
+    }
+    .ans-btn::after {
+      content: '정답'; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: .78em; font-weight: 700;
+      pointer-events: none; transition: opacity .25s; white-space: nowrap;
+    }
+    .ans-btn.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity: 0; }
+
+    /* 표지 */
+    .cover-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: .65rem; }
+
+    /* 내용 카드 */
+    .ruler-card { border: 1.5px solid var(--border); border-radius: 3px; overflow: hidden; margin-bottom: .35rem; }
+    .ruler-card-header { background: linear-gradient(90deg, var(--main), var(--dark)); color: var(--accent-light); font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: .88rem; padding: .28rem .8rem; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+    .ruler-card-body { padding: .45rem .9rem; background: var(--card-bg); }
+
+    /* info-list: position 방식으로 불릿 처리 */
+    .info-list { list-style: none; display: flex; flex-direction: column; gap: .32rem; }
+    .info-list li { position: relative; padding-left: 1.3em; font-size: .9rem; line-height: 1.65; }
+    .info-list li::before { content: '◆'; color: var(--accent); font-size: .6rem; position: absolute; left: 0; top: .45em; }
+    .info-list li.sub { padding-left: 2.3em; }
+    .info-list li.sub::before { content: '—'; font-size: .88rem; top: .38em; }
+
+    /* 퀴즈 */
+    .quiz-wrap { display: flex; flex-direction: column; gap: .28rem; margin-top: .15rem; }
+    .quiz-row { display: flex; align-items: flex-start; gap: .5rem; border: 1.5px solid var(--border); border-radius: 3px; padding: .28rem .7rem; background: var(--card-bg); }
+    .q-text { flex: 1; font-size: .88rem; line-height: 1.85; }
+
+    /* 사료 박스 / 보기 박스 */
+    .source-box { background: var(--light); border: 1.5px solid var(--border); border-radius: 3px; padding: .3rem .9rem; font-size: .85rem; line-height: 1.75; margin-bottom: .2rem; }
+    .bogi-box { background: var(--light); border: 1.5px solid var(--border); border-radius: 3px; padding: .25rem .9rem; font-size: .85rem; line-height: 1.65; margin-bottom: .2rem; }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ══ 슬라이드 1: 표지 ══ -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏛️</span>
+      <span class="browser-title">세계사 · Ⅲ-2. 시민 혁명과 시민 사회의 형성 — 학습지 71~72쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 150~153쪽</span>
+        <h1 style="margin-top:.35rem;">3. 빈 체제와 자유주의 운동</h1>
+        <div class="hist-divider" style="width:60%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;">빈 체제의 성립 &nbsp;·&nbsp; 프랑스·영국·러시아의 자유주의 운동</p>
+        <div class="hist-divider" style="width:40%;margin:.1rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 2: 71쪽 — 1. 빈 체제의 성립 (1) · ➊ ══ -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏛️</span>
+      <span class="browser-title">학습지 71쪽 — 1. 빈 체제의 성립 · (1) 빈 체제의 성립 · ➊</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 빈 체제의 성립 — (1) 빈 체제의 성립</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏛️ 빈 체제의 성립</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 빈 회의: 나폴레옹 전쟁 전후 처리 목적, 오스트리아 외상 ➊ <span class="blank" data-reveal>메테르니히</span> 주도</li>
+            <li>② 빈 체제 성립: 각국 지배권과 영토를 프랑스 혁명 이전으로 회귀, 신성 동맹·4국 동맹 결성</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 71쪽 — 1. 빈 체제의 성립 (2) 동요 ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚡</span>
+      <span class="browser-title">학습지 71쪽 — 1. 빈 체제의 성립 · (2) 빈 체제의 동요</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 빈 체제의 성립 — (2) 빈 체제의 동요</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚡ 빈 체제의 동요</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 자유주의 확산: 이탈리아 카르보나리당, 러시아 데카브리스트의 봉기</li>
+            <li>② 민족주의 확산: 그리스 독립, 라틴 아메리카 독립</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 71쪽 — 2. 프랑스의 자유주의 혁명 · 7월 혁명 · ➋ ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔥</span>
+      <span class="browser-title">학습지 71쪽 — 2. 프랑스의 자유주의 혁명 · 7월 혁명(1830) · ➋</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 프랑스의 자유주의 혁명 — 7월 혁명 (1830)</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🔥 7월 혁명 (1830)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>배경: 샤를 10세의 전제 정치</li>
+            <li>전개: 파리 시민의 봉기 → 샤를 10세 축출, 루이 필리프 국왕 추대, ➋ <span class="blank" data-reveal>입헌 군주제</span> 수립(7월 왕정)</li>
+            <li>영향: 벨기에 독립, 유럽 자유주의 운동 확산</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 71쪽 — 2. 프랑스의 자유주의 혁명 · 2월 혁명 ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚡</span>
+      <span class="browser-title">학습지 71쪽 — 2. 프랑스의 자유주의 혁명 · 2월 혁명(1848)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 프랑스의 자유주의 혁명 — 2월 혁명 (1848)</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚡ 2월 혁명 (1848)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>배경: 소수 부유한 시민에게 부와 선거권 집중</li>
+            <li>전개: 노동자와 중하층 시민의 봉기 → 루이 필리프 축출, 제2 공화정 수립</li>
+            <li>영향: 오스트리아 3월 혁명 발생 → 메테르니히 실각, 빈 체제 붕괴, 유럽 자유주의·민족주의 운동 확산</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 71쪽 — 2. 프랑스의 자유주의 혁명 · 제2 제정 ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👑</span>
+      <span class="browser-title">학습지 71쪽 — 2. 프랑스의 자유주의 혁명 · 제2 제정</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 프랑스의 자유주의 혁명 — 제2 제정</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 제2 제정</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>성립: 대통령 루이 나폴레옹이 황제 즉위</li>
+            <li>나폴레옹 3세: 자유주의 억압, 산업화 추진, 크림 전쟁과 이탈리아 통일 전쟁 개입 → 프로이센과의 전쟁 패배 및 몰락</li>
+            <li>제3 공화정 수립: 임시 정부 수립 및 파리 코뮌 진압</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 71쪽 — 3. 영국의 자유주의 개혁 (1) ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📜</span>
+      <span class="browser-title">학습지 71쪽 — 3. 영국의 자유주의 개혁 · (1) 자유주의 개혁 추진</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">3. 영국의 자유주의 개혁 — (1) 자유주의 개혁 추진</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📜 의회 중심의 점진적 개혁</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>심사법 폐지: 비국교도에게 공직 허용</li>
+            <li>가톨릭 해방법 제정</li>
+            <li>제1차 선거법 개정</li>
+            <li>곡물법·항해법 폐지</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: 71쪽 — 3. 영국의 자유주의 개혁 (2) · ➌ ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✊</span>
+      <span class="browser-title">학습지 71쪽 — 3. 영국의 자유주의 개혁 · (2) ➌ 운동</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">3. 영국의 자유주의 개혁 — (2) ➌ <span class="blank" data-reveal>차티스트</span> 운동</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">✊ 차티스트 운동</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 배경: 제1차 선거법에서 선거권 제외된 노동자 불만</li>
+            <li>② 전개: 노동자들이 〈인민헌장〉(1838) 발표, 참정권 확대 요구 → 실패, 이후 선거법 개정을 통한 선거권 점진적 확대</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 72쪽 — 4. 러시아의 자유주의 운동 · 데카브리스트 봉기 · ➍ ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">❄️</span>
+      <span class="browser-title">학습지 72쪽 — 4. 러시아의 자유주의 운동 · 데카브리스트 봉기(1825) · ➍</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">4. 러시아의 자유주의 운동 — 데카브리스트 봉기 (1825)</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">❄️ 데카브리스트 봉기 (1825)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>배경: 차르의 전제 정치 및 ➍ <span class="blank" data-reveal>농노제</span> 유지</li>
+            <li>전개: 자유주의적 청년 장교와 지식인 주도 → 실패</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 10: 72쪽 — 4. 러시아의 자유주의 운동 · 크림 전쟁 ══ -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚔️</span>
+      <span class="browser-title">학습지 72쪽 — 4. 러시아의 자유주의 운동 · 크림 전쟁</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">4. 러시아의 자유주의 운동 — 크림 전쟁</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ 크림 전쟁</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>니콜라이 1세: 전제 정치 강화 및 남하 정책 추진 → 크림 전쟁 전개 및 패배</li>
+            <li>알렉산드르 2세: 전쟁 패배 후 개혁 절감 → 농노 해방, 지방 의회 설립</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 11: 72쪽 — 4. 러시아의 자유주의 운동 · 브나로드 운동 ══ -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📚</span>
+      <span class="browser-title">학습지 72쪽 — 4. 러시아의 자유주의 운동 · 브나로드 운동</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">4. 러시아의 자유주의 운동 — 브나로드 운동</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📚 브나로드 운동</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>전개: 지식인들이 농민 계몽 운동 전개 → 정부의 탄압과 농민의 무관심으로 부진</li>
+            <li>자유주의 운동 탄압: 무정부주의자에 의해 알렉산드르 2세 암살 → 전제 정치 강화, 자유주의 운동 탄압</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 12: 72쪽 — 개념 확인 문제 1 ══ -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 72쪽 — 개념 확인 문제 1</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.3rem;">1 &nbsp;다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</h2>
+      <div class="source-box">⑴ 오스트리아 외상 메테르니히의 주도로 개최된 빈 회의에서는 각국의 지배권과 영토를 프랑스 혁명 이전으로 되돌리기로 합의하였다. &nbsp;( <span class="ans-btn" data-reveal>○</span> )</div>
+      <div class="source-box">⑵ 프랑스 7월 혁명은 소수의 부유한 시민에게 선거권이 허용된 것에 불만을 가진 노동자와 중하층 시민이 루이 필리프를 몰아내고 제2 공화정을 수립한 사건이다. &nbsp;( <span class="ans-btn" data-reveal>×</span> )</div>
+      <div class="source-box">⑶ 데카브리스트의 봉기 이후 니콜라이 1세는 전제 정치를 강화하고 남하 정책을 추진하였다. &nbsp;( <span class="ans-btn" data-reveal>○</span> )</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 13: 72쪽 — 개념 확인 문제 2 ══ -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 72쪽 — 개념 확인 문제 2</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.3rem;">2 &nbsp;빈칸에 들어갈 알맞은 말을 쓰시오.</h2>
+      <div class="source-box">⑴ 프랑스 ( <span class="ans-btn" data-reveal>2월 혁명</span> )의 영향으로 오스트리아에서는 3월 혁명이 일어나 메테르니히가 실각하고 빈 체제가 붕괴되었다.</div>
+      <div class="source-box">⑵ 영국에서 제1차 선거법 개정으로 선거권을 보장받지 못한 노동자들은 ( <span class="ans-btn" data-reveal>인민헌장</span> )을/를 발표하고 참정권 확대를 요구하는 차티스트 운동을 전개하였다.</div>
+      <div class="source-box">⑶ 크림 전쟁 패배 이후 ( <span class="ans-btn" data-reveal>알렉산드르 2세</span> )은/는 농노 해방령을 반포하고 지방 의회 설립 등의 내정 개혁을 실시하였다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 14: 72쪽 — 개념 확인 문제 3 ══ -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📋</span>
+      <span class="browser-title">학습지 72쪽 — 개념 확인 문제 3</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">3 &nbsp;빈 체제에 저항하는 각국의 움직임에 대한 설명으로 옳지 않은 것은?</h2>
+      <div class="bogi-box">
+        ① 프랑스 – 신성 동맹을 결성하였다.<br>
+        ② 프로이센 – 학생 조합 운동이 이루어졌다.<br>
+        ③ 러시아 – 데카브리스트의 봉기가 일어났다.<br>
+        ④ 그리스 – 오스만 제국에 대한 독립 전쟁을 벌였다.<br>
+        ⑤ 이탈리아 – 카르보나리당이 주도하는 운동이 발생하였다.
+      </div>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-text">정답: <span class="ans-btn" data-reveal>① 프랑스</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력"> / <span id="totalSlides">14</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function revealItems(slideEl) { return Array.from(slideEl.querySelectorAll('[data-reveal]')); }
+  function getRC(slideEl) { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n) { slideEl.dataset.rc = n; }
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => { el.classList.toggle('on', i < n); });
+  }
+
+  function updateNav() {
+    document.getElementById('prevBtn').disabled = (currentSlide === 0 && getRC(slides[0]) === 0);
+    document.getElementById('nextBtn').disabled = false;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+    document.getElementById('slideInput').value = currentSlide + 1;
+  }
+
+  function goToSlide(idx) {
+    slides[currentSlide].classList.remove('active');
+    currentSlide = Math.max(0, Math.min(total - 1, idx));
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1); applyReveal(el); updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1); applyReveal(el); updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length);
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.target === document.getElementById('slideInput')) return;
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); nextAction(); }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End') goToSlide(total - 1);
+  });
+
+  let touchX = 0;
+  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, {passive: true});
+  document.addEventListener('touchend', e => {
+    const dx = touchX - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 50) { dx > 0 ? nextAction() : prevAction(); }
+  }, {passive: true});
+
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { goToSlide(parseInt(slideInput.value) - 1); slideInput.blur(); }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('blur', () => {
+    const v = parseInt(slideInput.value);
+    if (!isNaN(v)) goToSlide(v - 1);
+    else slideInput.value = currentSlide + 1;
+  });
+
+  updateNav();
+</script>
+</body>
+</html>
