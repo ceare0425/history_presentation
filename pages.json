@@ -469,6 +469,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "33. 제국주의 열강의 식민지 분할",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/33. 제국주의/index.html",
+              "emoji": "🗺️",
+              "description": "03 제국주의 열강의 식민지 분할. 제국주의의 등장과 특징(문명화 사명론), 아프리카 분할(영·프·독·벨기에·에티오피아), 아시아·태평양 분할(동인도 회사·플라시 전투·인도차이나 연방). 학습지 79~80쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "제국주의", "color": "orange" },
+                { "label": "아프리카 분할", "color": "purple" },
+                { "label": "아시아·태평양", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
