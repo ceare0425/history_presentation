@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>32. 산업 혁명</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main: #8B4513; --dark: #6B3010; --light: #FFF8E1; --accent: #C5A028;
+      --accent-light: #E8D080; --bg: #F5E6C4; --text: #2C1A0E; --text-sec: #6B4226;
+      --border: #A07850; --card-bg: #FDF5E0;
+    }
+    html, body {
+      font-size: clamp(20px, 2.2vw, 36px);
+      font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif;
+      color: var(--text); height: 100%; overflow: hidden;
+    }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+
+    h1 { font-family: 'Nanum Myeongjo', serif; font-size: 2.3rem; font-weight: 800; letter-spacing: .04em; line-height: 1.3; }
+    h2 { font-family: 'Nanum Myeongjo', serif; font-size: 1.35rem; font-weight: 700; letter-spacing: .04em; }
+    p  { font-size: .95rem; line-height: 1.7; }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(160,120,60,.04) 2px, rgba(160,120,60,.04) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(140,100,40,.06) 28px, rgba(140,100,40,.06) 29px);
+    }
+
+    .presentation { position: fixed; inset: 0; bottom: 2.2rem; display: flex; align-items: center; justify-content: center; padding: .8rem; }
+    .slide { display: none; aspect-ratio: 16/9; width: min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height: auto; }
+    .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .browser-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      outline: 4px solid var(--accent);
+      outline-offset: -7px;
+      border-radius: 4px;
+      box-shadow: 0 4px 28px rgba(44,26,14,.2), inset 0 0 60px rgba(160,120,40,.05);
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .browser-topbar {
+      background: linear-gradient(90deg, #8B4513 0%, #5C2808 45%, #8B4513 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: .4rem 1.1rem;
+      display: flex; align-items: center; gap: .5rem; flex-shrink: 0;
+    }
+    .topbar-icon { font-size: .95rem; }
+    .browser-title {
+      color: var(--accent-light); font-family: 'Nanum Myeongjo', serif;
+      font-size: .82rem; font-weight: 700; letter-spacing: .07em;
+      text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    }
+    .browser-content {
+      flex: 1; overflow-y: auto;
+      padding: .9rem 1.8rem;
+      display: flex; flex-direction: column;
+      justify-content: flex-start;
+    }
+    .browser-content::-webkit-scrollbar { width: 4px; }
+    .browser-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--main)); z-index: 1000; transition: width .3s; }
+
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: .5rem; padding: .3rem 1.5rem; background: rgba(30,15,6,.97); border-top: 2px solid var(--accent); z-index: 999; font-size: 14px; }
+    .nav-btn { display: flex; align-items: center; justify-content: center; width: 1.7rem; height: 1.7rem; border: 1.5px solid #8B6540; border-radius: 50%; background: transparent; cursor: pointer; color: var(--accent-light); transition: all .2s; padding: 0; }
+    .nav-btn svg { width: .55rem; height: .55rem; fill: currentColor; display: block; }
+    .nav-btn:hover:not(:disabled) { background: var(--main); border-color: var(--accent); }
+    .nav-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .nav-counter { font-size: 13px; font-weight: 700; color: var(--accent-light); min-width: 3rem; text-align: center; display: flex; align-items: center; gap: .15rem; line-height: 1; }
+    .slide-input { width: 1.4rem; text-align: center; border: none; border-bottom: 1.5px solid transparent; background: transparent; font-size: 13px; font-weight: 700; color: var(--accent-light); font-family: inherit; padding: 0; outline: none; cursor: pointer; transition: border-color .2s; line-height: 1; }
+    .slide-input:hover { border-bottom-color: var(--accent); }
+    .slide-input:focus { border-bottom-color: var(--accent); background: rgba(139,69,19,.3); border-radius: 3px; }
+
+    .section-ornament { color: var(--accent); font-size: .72rem; letter-spacing: .5em; text-align: center; margin-bottom: .2rem; opacity: .75; }
+    .hist-divider { display: flex; align-items: center; gap: .4rem; margin: .25rem 0 .5rem; }
+    .h-line { flex: 1; height: 1.5px; background: linear-gradient(90deg, transparent, var(--accent) 25%, var(--accent) 75%, transparent); }
+    .h-gem  { color: var(--accent); font-size: .7rem; }
+    .era-badge { display: inline-block; background: linear-gradient(135deg, var(--main), var(--dark)); color: var(--accent-light); border: 1px solid var(--accent); padding: .05rem .45rem; font-family: 'Nanum Myeongjo', serif; font-size: .8rem; font-weight: 700; border-radius: 2px; white-space: nowrap; }
+
+    .blank {
+      display: inline-block; min-width: 4rem;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent); border-radius: 2px;
+      padding: .03em .55em; font-family: 'Nanum Myeongjo', serif; font-weight: 700;
+      font-size: inherit; user-select: none; position: relative;
+      text-align: center; vertical-align: baseline;
+      transition: background .35s, color .35s, box-shadow .35s;
+    }
+    .blank::after {
+      content: '?'; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: .85em; font-weight: 800;
+      pointer-events: none; transition: opacity .25s;
+    }
+    .blank.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
+    .blank.on::after { opacity: 0; }
+
+    .ans-btn {
+      display: inline-block; min-width: 3rem;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent); border-radius: 2px;
+      padding: .06em .7em; font-family: 'Nanum Myeongjo', serif; font-weight: 700;
+      font-size: .88rem; user-select: none; position: relative;
+      text-align: center; white-space: normal; vertical-align: baseline;
+      transition: background .35s, color .35s, box-shadow .35s;
+    }
+    .ans-btn::after {
+      content: '정답'; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: .78em; font-weight: 700;
+      pointer-events: none; transition: opacity .25s; white-space: nowrap;
+    }
+    .ans-btn.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity: 0; }
+
+    .cover-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: .65rem; }
+
+    .ruler-card { border: 1.5px solid var(--border); border-radius: 3px; overflow: hidden; margin-bottom: .35rem; }
+    .ruler-card-header { background: linear-gradient(90deg, var(--main), var(--dark)); color: var(--accent-light); font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: .88rem; padding: .28rem .8rem; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+    .ruler-card-body { padding: .45rem .9rem; background: var(--card-bg); }
+
+    .info-list { list-style: none; display: flex; flex-direction: column; gap: .32rem; }
+    .info-list li { position: relative; padding-left: 1.3em; font-size: .9rem; line-height: 1.65; }
+    .info-list li::before { content: '◆'; color: var(--accent); font-size: .6rem; position: absolute; left: 0; top: .45em; }
+    .info-list li.sub { padding-left: 2.3em; }
+    .info-list li.sub::before { content: '—'; font-size: .88rem; top: .38em; }
+
+    .quiz-wrap { display: flex; flex-direction: column; gap: .28rem; margin-top: .15rem; }
+    .quiz-row { display: flex; align-items: flex-start; gap: .5rem; border: 1.5px solid var(--border); border-radius: 3px; padding: .28rem .7rem; background: var(--card-bg); }
+    .q-text { flex: 1; font-size: .88rem; line-height: 1.85; }
+
+    .source-box { background: var(--light); border: 1.5px solid var(--border); border-radius: 3px; padding: .3rem .9rem; font-size: .85rem; line-height: 1.75; margin-bottom: .2rem; }
+    .bogi-box { background: var(--light); border: 1.5px solid var(--border); border-radius: 3px; padding: .25rem .9rem; font-size: .85rem; line-height: 1.65; margin-bottom: .2rem; }
+
+    .comp-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .2rem; }
+    .comp-table th { background: linear-gradient(90deg, var(--main), var(--dark)); color: var(--accent-light); font-family: 'Nanum Myeongjo', serif; font-weight: 700; padding: .3rem .7rem; text-align: center; border: 1px solid var(--border); }
+    .comp-table td { padding: .3rem .7rem; text-align: center; border: 1px solid var(--border); background: var(--card-bg); line-height: 1.55; }
+    .comp-table tr:nth-child(even) td { background: var(--light); }
+    .comp-table .wrong-mark { color: var(--main); font-weight: 700; }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ══ 슬라이드 1: 표지 ══ -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚙️</span>
+      <span class="browser-title">세계사 · Ⅲ-3. 산업 혁명과 제국주의 — 학습지 75~78쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 158~165쪽</span>
+        <h1 style="margin-top:.35rem;">산업 혁명</h1>
+        <div class="hist-divider" style="width:60%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;">01 산업 혁명의 전개 &nbsp;·&nbsp; 02 산업 혁명의 영향</p>
+        <div class="hist-divider" style="width:40%;margin:.1rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 2: 01 전개 — 1. 산업 혁명의 배경 (1) 이전 유럽 상황 ══ -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚙️</span>
+      <span class="browser-title">학습지 75쪽 — 01 산업 혁명의 전개 · 1. 산업 혁명의 배경</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 산업 혁명의 배경 — (1) 산업 혁명 이전 유럽 상황</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌍 산업 혁명 이전 유럽 상황</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 신항로 개척의 영향: 인구 증가, 식민지 확대, 경제 규모 및 상품 수요 증가</li>
+            <li>② 수공업 발전: 선대제, 매뉴팩처 실시</li>
+            <li>③ 제1차 산업 혁명: 18세기 후반 영국에서 연이은 기계 발명으로 ➊ <span class="blank" data-reveal>공장제 기계</span> 공업을 통한 대량 생산</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 01 전개 — 1. 산업 혁명의 배경 (2) 영국 배경 ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏭</span>
+      <span class="browser-title">학습지 75쪽 — 01 산업 혁명의 전개 · 1. 산업 혁명의 배경 (2)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 산업 혁명의 배경 — (2) 영국의 제1차 산업 혁명 배경</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏭 영국에서 먼저 일어난 이유</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 자본과 시장 확대: 신항로 개척 이후 식민지 증가</li>
+            <li>② 정치적 안정: 17세기 명예혁명 이후 의회 중심의 정치 안정</li>
+            <li>③ 노동력 풍부: 제2차 인클로저 운동으로 농촌 인구의 도시 유입</li>
+            <li>④ 지하자원 풍부: 도시 주변 석탄·철광석 등 광산 풍부</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 01 전개 — 2. 제1차 산업 혁명의 전개 · ➋ ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔩</span>
+      <span class="browser-title">학습지 75쪽 — 01 산업 혁명의 전개 · 2. 제1차 산업 혁명의 전개</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 제1차 산업 혁명의 전개와 확산 — (1) 전개</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🔩 제1차 산업 혁명의 전개</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 면직물 공업에서 시작: 영국의 방직기·방적기 개발</li>
+            <li>② 동력: 와트의 ➋ <span class="blank" data-reveal>증기 기관</span>, 석탄 → 다양한 기계에 활용</li>
+            <li>③ 교통 혁명: 스티븐슨의 증기 기관차, 풀턴의 증기선</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 01 전개 — 2. 제1차 산업 혁명의 확산 ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌐</span>
+      <span class="browser-title">학습지 75쪽 — 01 산업 혁명의 전개 · 2. 제1차 산업 혁명의 확산</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 제1차 산업 혁명의 전개와 확산 — (2) 확산</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌐 제1차 산업 혁명의 확산 경로</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>19세기 전반: 벨기에(광업·제철업 중심), 프랑스(섬유 공업 중심)</li>
+            <li>19세기 중반: 독일, 미국</li>
+            <li>19세기 후반: 러시아, 일본</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 01 전개 — 3. 제2차 산업 혁명 (1) ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚡</span>
+      <span class="browser-title">학습지 75쪽 — 01 산업 혁명의 전개 · 3. 제2차 산업 혁명 (1)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">3. 제2차 산업 혁명의 전개 — (1) 중심 국가</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚡ (1) 제2차 산업 혁명 (19세기 중반~20세기 전반)</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>독일: 제철업·화학 등 중화학 공업 분야 중심</li>
+            <li>미국: 철강·전기·자동차·석유 화학 분야 중심</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 01 전개 — 3. 제2차 산업 혁명 (2) ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">⚡</span>
+      <span class="browser-title">학습지 75쪽 — 01 산업 혁명의 전개 · 3. 제2차 산업 혁명 (2)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">3. 제2차 산업 혁명의 전개 — (2) 전개</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚡ (2) 제2차 산업 혁명의 전개</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>동력: 전기, 석유</li>
+            <li>내용: 제철·정유 및 석유 화학 발전, 합성 섬유·플라스틱 등 신소재 개발</li>
+            <li>농기계와 화학 비료 등 농업의 기계화와 생산력 증대</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: 01 전개 — 3. 제2차 산업 혁명 (3) 새로운 발명 ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">💡</span>
+      <span class="browser-title">학습지 76쪽 — 01 산업 혁명의 전개 · 3. 제2차 산업 혁명 (3)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">3. 제2차 산업 혁명 — (3) 새로운 발명과 기술 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">💡 새로운 발명과 기술 발전</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 전기: 에디슨·테슬라의 활약 → 다양한 산업에 활용</li>
+            <li>② 통신: 모스의 무선 전신, 벨의 전화</li>
+            <li>③ 운송 수단: 자동차 대중화(포드의 대량 생산 체제 도입), 비행기(라이트 형제)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 02 영향 — 1. 산업 사회의 형성 (1) ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏙️</span>
+      <span class="browser-title">학습지 77쪽 — 02 산업 혁명의 영향 · 1. 산업 사회의 형성 (1)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 산업 사회의 형성 — (1) 산업 혁명의 영향</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏙️ (1) 산업 혁명의 영향</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 공장제 기계 공업 발전, 산업 자본주의 발전</li>
+            <li>② 도시의 수와 규모 확대: 공장 설립, 인구와 물자 집중</li>
+            <li>③ 산업 사회의 형성: 물질적 풍요, 소비 증대, 편리한 생활, 새로운 여가 문화 등장</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 10: 02 영향 — 1. 산업 사회의 형성 (2) ══ -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👥</span>
+      <span class="browser-title">학습지 77쪽 — 02 산업 혁명의 영향 · 1. 산업 사회의 형성 (2)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 산업 사회의 형성 — (2) 자본가와 노동자 계급 등장</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👥 (2) 자본가와 노동자 계급 등장</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>자본가 계급: 평민 출신 산업 자본가와 전문직 종사자, 물질적 풍요, 정치 참여 확대</li>
+            <li>노동자 계급: 낮은 임금, 열악한 노동 환경에 투쟁</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 11: 02 영향 — 2. 노동 운동의 전개 · ➊ ══ -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✊</span>
+      <span class="browser-title">학습지 77쪽 — 02 산업 혁명의 영향 · 2. 노동 문제 (1)(2)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 노동 문제와 사회주의 사상의 등장</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚠️ (1) 산업 혁명 초기 노동자의 상황</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>열악한 노동 환경, 장시간 노동, 적은 임금, 아동 노동</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">✊ (2) 노동 운동의 전개</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 기계 파괴 운동(➊ <span class="blank" data-reveal>러다이트</span> 운동): 19세기 초 영국 — 열악한 노동 상황을 기계 탓으로 여겨 기계 파괴</li>
+            <li>② 참정권 요구 운동: 영국의 차티스트 운동, 프랑스의 2월 혁명</li>
+            <li>③ 영국의 공장법 제정: 장시간 노동 제한, 아동 노동자 보호</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 12: 02 영향 — 2. 사회주의 사상 발전 · ➋ ══ -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📖</span>
+      <span class="browser-title">학습지 77쪽 — 02 산업 혁명의 영향 · 2. 사회주의 사상 발전 (3)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 노동 문제와 사회주의 사상 — (3) 사회주의 사상 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📖 사회주의 사상 발전</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>① 사회주의 사상: 산업 사회 문제의 근본적 해결 목적, 사유재산 제도 비판, 생산 수단의 공동 소유</li>
+            <li>② 초기 사회주의자: 협동 강조, 빈부 격차 없는 이상적 공동체 구상</li>
+            <li>③ '과학적 사회주의': ➋ <span class="blank" data-reveal>마르크스</span>·엥겔스 — 노동자들이 자본가 계급 타도 및 권력 쟁취, 사회주의 사회 건설</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 13: 02 영향 — 3. 산업화와 생태환경 문제 ══ -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌿</span>
+      <span class="browser-title">학습지 77쪽 — 02 산업 혁명의 영향 · 3. 산업화와 생태환경 문제</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">3. 산업화와 생태환경 문제</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌿 도시·환경 문제</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>(1) 도시 문제: 많은 인구의 도시 집중 → 주택 부족, 교통 혼잡</li>
+            <li>(2) 전염병 유행: 상하수도 미비로 인한 위생 문제, 교통 발전으로 확산 속도 증가</li>
+            <li>(3) 환경 오염과 생태계 변화</li>
+            <li class="sub">대기 오염: 화석 연료 사용 → 매연·스모그 발생</li>
+            <li class="sub">수질 오염: 폐기물과 화학 물질의 강·바다 유입</li>
+            <li class="sub">생태계 변화: 도시화로 인한 숲의 급격한 감소</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 14: 개념 확인 문제 — 01 전개 · 문제 1 (O/X) ══ -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 76쪽 — 개념 확인 문제 (01 산업 혁명의 전개) · 문제 1</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.3rem;">1 &nbsp;다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</h2>
+      <div class="source-box">⑴ 제1차 산업 혁명은 상인 자본가의 선대제 실시, 매뉴팩처의 단계를 거쳐 공장제 기계 공업을 통한 대량 생산이 이루어진 현상을 의미한다. &nbsp; <span class="ans-btn" data-reveal>○</span></div>
+      <div class="source-box" style="margin-top:.3rem;">⑵ 제2차 산업 혁명에서 독일은 섬유 공업을 중심으로 산업화가 이루어졌다. &nbsp; <span class="ans-btn" data-reveal>×</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 15: 개념 확인 문제 — 01 전개 · 문제 2 (선택형) ══ -->
+<div class="slide" data-slide="14">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 76쪽 — 개념 확인 문제 (01 산업 혁명의 전개) · 문제 2</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.3rem;">2 &nbsp;제1차 산업 혁명이 영국에서 일어나게 된 배경으로 옳지 않은 것은? &nbsp; 정답: <span class="ans-btn" data-reveal>⑤</span></h2>
+      <div class="bogi-box">
+        ① 명예혁명 이후 의회 중심의 안정적 정치 운영<br>
+        ② 신항로 개척으로 인한 자본과 시장 확대<br>
+        ③ 인클로저 운동으로 인한 풍부한 노동력<br>
+        ④ 석탄, 철광석 등의 풍부한 지하자원<br>
+        ⑤ 대륙 횡단 철도의 개통
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 16: 개념 확인 문제 — 01 전개 · 문제 3 (비교표) ══ -->
+<div class="slide" data-slide="15">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📋</span>
+      <span class="browser-title">학습지 76쪽 — 개념 확인 문제 (01 산업 혁명의 전개) · 문제 3</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.3rem;">3 &nbsp;제1차 산업 혁명과 제2차 산업 혁명을 비교한 내용 중 잘못된 것은? &nbsp; 정답: <span class="ans-btn" data-reveal>②</span></h2>
+      <table class="comp-table">
+        <thead>
+          <tr><th>구분</th><th>제1차 산업 혁명</th><th>제2차 산업 혁명</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>① 시기</td><td>18세기 후반</td><td>19세기 후반</td></tr>
+          <tr><td>② 동력</td><td>석유, 전기</td><td>석탄, 증기 기관</td></tr>
+          <tr><td>③ 중심 국가</td><td>영국, 프랑스 등</td><td>독일, 미국 등</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 17: 개념 확인 문제 — 01 전개 · 문제 4 (빈칸) ══ -->
+<div class="slide" data-slide="16">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 76쪽 — 개념 확인 문제 (01 산업 혁명의 전개) · 문제 4</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.3rem;">4 &nbsp;빈칸에 들어갈 알맞은 단어를 쓰시오.</h2>
+      <div class="source-box">⑴ ( <span class="ans-btn" data-reveal>교통 혁명</span> )은/는 증기 기관이 교통수단에도 활용되면서 나타난 현상으로, 증기 기관차의 상용화, 증기선의 개량 및 상업화의 성공으로 인하여 발생하였다.</div>
+      <div class="source-box" style="margin-top:.2rem;">⑵ 제2차 산업 혁명 시기 전기는 ( <span class="ans-btn" data-reveal>에디슨</span> )와/과 테슬라의 활약으로 상용화되었고, 점차 다양한 산업 분야에 활용되었다.</div>
+      <div class="source-box" style="margin-top:.2rem;">⑶ 제2차 산업 혁명 시기 포드가 대량 생산 체제를 도입하면서 자동차가 대중화되었으며, 라이트 형제의 노력으로 ( <span class="ans-btn" data-reveal>비행기</span> )이/가 개발되기도 하였다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 18: 개념 확인 문제 — 02 영향 · 문제 1 (빈칸) ══ -->
+<div class="slide" data-slide="17">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 78쪽 — 개념 확인 문제 (02 산업 혁명의 영향) · 문제 1</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.3rem;">1 &nbsp;빈칸에 들어갈 알맞은 말을 채워 넣으시오.</h2>
+      <div class="source-box">⑴ 산업 사회가 형성되면서 자본가와 ( <span class="ans-btn" data-reveal>노동자</span> ) 계급이 새롭게 등장하였다.</div>
+      <div class="source-box" style="margin-top:.2rem;">⑵ 노동자들은 자신의 처우를 개선하기 위하여 ( <span class="ans-btn" data-reveal>노동조합</span> )을/를 결성하였다.</div>
+      <div class="source-box" style="margin-top:.2rem;">⑶ 영국 정부는 ( <span class="ans-btn" data-reveal>공장법</span> )을/를 제정하여 장시간 노동을 제한하고 아동 노동자를 보호하려 하였다.</div>
+      <div class="source-box" style="margin-top:.2rem;">⑷ ( <span class="ans-btn" data-reveal>사회주의</span> )은/는 사유 재산 제도를 비판하고 공장 등의 생산 수단을 사회 공동의 소유로 만들고자 하였다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 19: 개념 확인 문제 — 02 영향 · 문제 2 (O/X) ══ -->
+<div class="slide" data-slide="18">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 78쪽 — 개념 확인 문제 (02 산업 혁명의 영향) · 문제 2</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.3rem;">2 &nbsp;다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</h2>
+      <div class="source-box">⑴ 제1·2차 산업 혁명을 거치면서 공장제 기계 공업이 안정되었으며 산업 자본주의가 발전하였다. &nbsp; <span class="ans-btn" data-reveal>○</span></div>
+      <div class="source-box" style="margin-top:.2rem;">⑵ 산업 사회가 형성되면서 자본가와 노동자 계급이 새롭게 등장하였다. &nbsp; <span class="ans-btn" data-reveal>○</span></div>
+      <div class="source-box" style="margin-top:.2rem;">⑶ 마르크스와 엥겔스 등은 초기 사회주의자로 협동을 강조하고 빈부 격차가 없는 이상적인 공동체를 구상하였다. &nbsp; <span class="ans-btn" data-reveal>×</span></div>
+      <div class="source-box" style="margin-top:.2rem;">⑷ 산업 혁명으로 화석 연료의 사용이 늘어나면서 매연·스모그 등의 대기 오염 문제가 심각하게 대두하였다. &nbsp; <span class="ans-btn" data-reveal>○</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 20: 개념 확인 문제 — 02 영향 · 문제 3 (서술형) ══ -->
+<div class="slide" data-slide="19">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📋</span>
+      <span class="browser-title">학습지 78쪽 — 개념 확인 문제 (02 산업 혁명의 영향) · 문제 3</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.35rem;">3 &nbsp;밑줄 친 '이 운동'의 명칭을 쓰시오.</h2>
+      <div class="bogi-box">
+        일부 노동자들은 실업 증가와 임금 체불 등의 사회 문제가 기계 탓이라고 생각하면서 기계를 파괴하는 <u>이 운동</u>을 벌였다. 이 운동은 19세기 초 영국에서 일어났으며, 노동자들이 열악한 노동 상황에 항의하는 방식으로 나타났다.
+      </div>
+      <div class="quiz-wrap">
+        <div class="quiz-row">
+          <span class="q-text">정답: <span class="ans-btn" data-reveal>러다이트 운동</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력"> / <span id="totalSlides">20</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function revealItems(slideEl) { return Array.from(slideEl.querySelectorAll('[data-reveal]')); }
+  function getRC(slideEl) { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n) { slideEl.dataset.rc = n; }
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => { el.classList.toggle('on', i < n); });
+  }
+
+  function updateNav() {
+    document.getElementById('prevBtn').disabled = (currentSlide === 0 && getRC(slides[0]) === 0);
+    document.getElementById('nextBtn').disabled = false;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+    document.getElementById('slideInput').value = currentSlide + 1;
+  }
+
+  function goToSlide(idx) {
+    slides[currentSlide].classList.remove('active');
+    currentSlide = Math.max(0, Math.min(total - 1, idx));
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1); applyReveal(el); updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1); applyReveal(el); updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length);
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.target === document.getElementById('slideInput')) return;
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); nextAction(); }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End') goToSlide(total - 1);
+  });
+
+  let touchX = 0;
+  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, {passive: true});
+  document.addEventListener('touchend', e => {
+    const dx = touchX - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 50) { dx > 0 ? nextAction() : prevAction(); }
+  }, {passive: true});
+
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { goToSlide(parseInt(slideInput.value) - 1); slideInput.blur(); }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('blur', () => {
+    const v = parseInt(slideInput.value);
+    if (!isNaN(v)) goToSlide(v - 1);
+    else slideInput.value = currentSlide + 1;
+  });
+
+  updateNav();
+</script>
+</body>
+</html>

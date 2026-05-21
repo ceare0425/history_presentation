@@ -456,6 +456,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "32. 산업 혁명",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/32. 산업 혁명/index.html",
+              "emoji": "⚙️",
+              "description": "01 산업 혁명의 전개(배경·1차·2차 산업 혁명·新발명), 02 산업 혁명의 영향(산업 사회·노동 운동·사회주의·생태환경 문제). 학습지 75~78쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "산업 혁명의 전개", "color": "orange" },
+                { "label": "산업 혁명의 영향", "color": "purple" },
+                { "label": "노동·사회주의", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
