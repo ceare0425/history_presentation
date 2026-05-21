@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>33. 제국주의 열강의 식민지 분할</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main: #8B4513; --dark: #6B3010; --light: #FFF8E1; --accent: #C5A028;
+      --accent-light: #E8D080; --bg: #F5E6C4; --text: #2C1A0E; --text-sec: #6B4226;
+      --border: #A07850; --card-bg: #FDF5E0;
+    }
+    html, body {
+      font-size: clamp(20px, 2.2vw, 36px);
+      font-family: 'Noto Serif KR', 'Nanum Myeongjo', Georgia, serif;
+      color: var(--text); height: 100%; overflow: hidden;
+    }
+    @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
+    @media (max-width:  768px) { html { font-size: clamp(16px, 3.8vw, 24px); } }
+
+    h1 { font-family: 'Nanum Myeongjo', serif; font-size: 2.3rem; font-weight: 800; letter-spacing: .04em; line-height: 1.3; }
+    h2 { font-family: 'Nanum Myeongjo', serif; font-size: 1.35rem; font-weight: 700; letter-spacing: .04em; }
+    p  { font-size: .95rem; line-height: 1.7; }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(160,120,60,.04) 2px, rgba(160,120,60,.04) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(140,100,40,.06) 28px, rgba(140,100,40,.06) 29px);
+    }
+
+    .presentation { position: fixed; inset: 0; bottom: 2.2rem; display: flex; align-items: center; justify-content: center; padding: .8rem; }
+    .slide { display: none; aspect-ratio: 16/9; width: min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height: auto; }
+    .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .browser-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border);
+      outline: 4px solid var(--accent);
+      outline-offset: -7px;
+      border-radius: 4px;
+      box-shadow: 0 4px 28px rgba(44,26,14,.2), inset 0 0 60px rgba(160,120,40,.05);
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .browser-topbar {
+      background: linear-gradient(90deg, #8B4513 0%, #5C2808 45%, #8B4513 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: .4rem 1.1rem;
+      display: flex; align-items: center; gap: .5rem; flex-shrink: 0;
+    }
+    .topbar-icon { font-size: .95rem; }
+    .browser-title {
+      color: var(--accent-light); font-family: 'Nanum Myeongjo', serif;
+      font-size: .82rem; font-weight: 700; letter-spacing: .07em;
+      text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    }
+    .browser-content {
+      flex: 1; overflow-y: auto;
+      padding: .9rem 1.8rem;
+      display: flex; flex-direction: column;
+      justify-content: flex-start;
+    }
+    .browser-content::-webkit-scrollbar { width: 4px; }
+    .browser-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--main)); z-index: 1000; transition: width .3s; }
+
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: .5rem; padding: .3rem 1.5rem; background: rgba(30,15,6,.97); border-top: 2px solid var(--accent); z-index: 999; font-size: 14px; }
+    .nav-btn { display: flex; align-items: center; justify-content: center; width: 1.7rem; height: 1.7rem; border: 1.5px solid #8B6540; border-radius: 50%; background: transparent; cursor: pointer; color: var(--accent-light); transition: all .2s; padding: 0; }
+    .nav-btn svg { width: .55rem; height: .55rem; fill: currentColor; display: block; }
+    .nav-btn:hover:not(:disabled) { background: var(--main); border-color: var(--accent); }
+    .nav-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .nav-counter { font-size: 13px; font-weight: 700; color: var(--accent-light); min-width: 3rem; text-align: center; display: flex; align-items: center; gap: .15rem; line-height: 1; }
+    .slide-input { width: 1.4rem; text-align: center; border: none; border-bottom: 1.5px solid transparent; background: transparent; font-size: 13px; font-weight: 700; color: var(--accent-light); font-family: inherit; padding: 0; outline: none; cursor: pointer; transition: border-color .2s; line-height: 1; }
+    .slide-input:hover { border-bottom-color: var(--accent); }
+    .slide-input:focus { border-bottom-color: var(--accent); background: rgba(139,69,19,.3); border-radius: 3px; }
+
+    .section-ornament { color: var(--accent); font-size: .72rem; letter-spacing: .5em; text-align: center; margin-bottom: .2rem; opacity: .75; }
+    .hist-divider { display: flex; align-items: center; gap: .4rem; margin: .25rem 0 .5rem; }
+    .h-line { flex: 1; height: 1.5px; background: linear-gradient(90deg, transparent, var(--accent) 25%, var(--accent) 75%, transparent); }
+    .h-gem  { color: var(--accent); font-size: .7rem; }
+    .era-badge { display: inline-block; background: linear-gradient(135deg, var(--main), var(--dark)); color: var(--accent-light); border: 1px solid var(--accent); padding: .05rem .45rem; font-family: 'Nanum Myeongjo', serif; font-size: .8rem; font-weight: 700; border-radius: 2px; white-space: nowrap; }
+
+    .blank {
+      display: inline-block; min-width: 4rem;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent); border-radius: 2px;
+      padding: .03em .55em; font-family: 'Nanum Myeongjo', serif; font-weight: 700;
+      font-size: inherit; user-select: none; position: relative;
+      text-align: center; vertical-align: baseline;
+      transition: background .35s, color .35s, box-shadow .35s;
+    }
+    .blank::after {
+      content: '?'; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: .85em; font-weight: 800;
+      pointer-events: none; transition: opacity .25s;
+    }
+    .blank.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
+    .blank.on::after { opacity: 0; }
+
+    .ans-btn {
+      display: inline-block; min-width: 3rem;
+      background: linear-gradient(135deg, var(--main), var(--dark));
+      color: transparent; border: 1.5px solid var(--accent); border-radius: 2px;
+      padding: .06em .7em; font-family: 'Nanum Myeongjo', serif; font-weight: 700;
+      font-size: .88rem; user-select: none; position: relative;
+      text-align: center; white-space: normal; vertical-align: baseline;
+      transition: background .35s, color .35s, box-shadow .35s;
+    }
+    .ans-btn::after {
+      content: '정답'; position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--accent-light); font-size: .78em; font-weight: 700;
+      pointer-events: none; transition: opacity .25s; white-space: nowrap;
+    }
+    .ans-btn.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
+    .ans-btn.on::after { opacity: 0; }
+
+    .cover-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: .65rem; }
+
+    .ruler-card { border: 1.5px solid var(--border); border-radius: 3px; overflow: hidden; margin-bottom: .35rem; }
+    .ruler-card-header { background: linear-gradient(90deg, var(--main), var(--dark)); color: var(--accent-light); font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: .88rem; padding: .28rem .8rem; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+    .ruler-card-body { padding: .45rem .9rem; background: var(--card-bg); }
+
+    .info-list { list-style: none; display: flex; flex-direction: column; gap: .32rem; }
+    .info-list li { position: relative; padding-left: 1.3em; font-size: .9rem; line-height: 1.65; }
+    .info-list li::before { content: '◆'; color: var(--accent); font-size: .6rem; position: absolute; left: 0; top: .45em; }
+    .info-list li.sub { padding-left: 2.3em; }
+    .info-list li.sub::before { content: '—'; font-size: .88rem; top: .38em; }
+
+    .source-box { background: var(--light); border: 1.5px solid var(--border); border-radius: 3px; padding: .3rem .9rem; font-size: .85rem; line-height: 1.75; margin-bottom: .2rem; }
+    .bogi-box { background: var(--light); border: 1.5px solid var(--border); border-radius: 3px; padding: .25rem .9rem; font-size: .85rem; line-height: 1.65; margin-bottom: .2rem; }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ══ 슬라이드 1: 표지 ══ -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🗺️</span>
+      <span class="browser-title">세계사 · Ⅲ-3. 산업 혁명과 제국주의 — 학습지 79~80쪽</span>
+    </div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">교과서 168~171쪽</span>
+        <h1 style="margin-top:.35rem;">제국주의 열강의<br>식민지 분할</h1>
+        <div class="hist-divider" style="width:60%;margin:.15rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.88rem;">01 제국주의의 등장 &nbsp;·&nbsp; 02 아프리카 분할 &nbsp;·&nbsp; 03 아시아와 태평양 분할</p>
+        <div class="hist-divider" style="width:40%;margin:.1rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 2: 1. 제국주의의 등장 — (1) 배경·의미 ══ -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🏭</span>
+      <span class="browser-title">학습지 79쪽 — 1. 제국주의의 등장 · (1) 배경과 의미</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 제국주의의 등장 — (1) 제국주의</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📌 배경</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>산업 혁명 이후 자본주의가 급속히 발전, 독점 자본주의 출현</li>
+            <li>제2차 산업 혁명 이후 고무·구리·석유 등에 대한 수요가 높아짐.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📌 의미</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>19세기 후반 열강이 <strong>군사력과 경제력</strong>을 앞세워 식민지 건설을 추진한 정책</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 1. 제국주의의 등장 — (2) 특징 · ➊ ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔍</span>
+      <span class="browser-title">학습지 79쪽 — 1. 제국주의의 등장 · (2) 제국주의의 특징</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 제국주의의 등장 — (2) 제국주의의 특징</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🔍 제국주의의 특징</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>식민지 확대</strong> — 값싼 원료 공급지, 상품 판매 시장, 잉여 자본의 투자처를 필요로 함.</li>
+            <li><strong>침략적 민족주의</strong></li>
+            <li>➊ <span class="blank" data-reveal>사회 진화론</span> — 후진 지역의 문명화를 명분으로 침략 합리화</li>
+            <li><strong>인종주의</strong> — 백인의 우월성 주장</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 2. 아프리카 분할 — 영국·프랑스 ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌍</span>
+      <span class="browser-title">학습지 79쪽 — 2. 제국주의 열강의 아프리카 분할 · 영국·프랑스</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 제국주의 열강의 아프리카 분할</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🇬🇧 영국</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>수에즈 운하 관리권 차지, 이집트 보호국화</li>
+            <li>아프리카를 남북으로 연결: <strong>종단 정책</strong> (카이로 ~ 케이프타운)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🇫🇷 프랑스</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>알제리 장악, 튀니지 보호령화</li>
+            <li>아프리카를 동서로 연결: <strong>횡단 정책</strong> (알제리 ~ 마다가스카르)</li>
+            <li>→ <strong>파쇼다 사건</strong>: 파쇼다에서 영국과 충돌 (1898)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 2. 아프리카 분할 — 독일·벨기에·결과 · ➋ ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌍</span>
+      <span class="browser-title">학습지 79쪽 — 2. 제국주의 열강의 아프리카 분할 · 독일·벨기에·결과</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">2. 제국주의 열강의 아프리카 분할 (계속)</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🇩🇪 독일</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>독일령 동아프리카·남서아프리카·카메룬·토고 등 차지</li>
+            <li>모로코를 둘러싸고 프랑스와 대립 → <strong>모로코 사건</strong> (1905, 1911)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🇧🇪 벨기에 &nbsp;·&nbsp; 결과</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>레오폴드 2세가 <strong>콩고</strong>를 식민지로 삼아 고무 등 착취</li>
+            <li>결과: 20세기 초 ➋ <span class="blank" data-reveal>에티오피아</span>, 라이베리아 외 대부분 아프리카 지역이 식민지화</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 3. 아시아·태평양 분할 — 영국·프랑스 · ➌ ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌏</span>
+      <span class="browser-title">학습지 80쪽 — 3. 아시아와 태평양 분할 · 영국·프랑스</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">3. 제국주의 열강의 아시아와 태평양 분할</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🇬🇧 영국</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>17세기 ➌ <span class="blank" data-reveal>동인도 회사</span>를 앞세워 인도 진출</li>
+            <li><strong>플라시 전투</strong> (1757) 승리 → 벵골 지역 통치권 획득</li>
+            <li>19세기 중엽 인도 대부분 장악 (영국산 면직물 판매, 목화·아편 재배 강요)</li>
+            <li>오스트레일리아·뉴질랜드를 자치령으로 삼음</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🇫🇷 프랑스</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>플라시 전투 패배 이후 베트남의 지배권 장악</li>
+            <li>베트남·캄보디아를 합쳐 <strong>프랑스령 인도차이나 연방</strong> 수립</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 3. 아시아·태평양 분할 — 네덜란드·미국·러시아·독일 ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌏</span>
+      <span class="browser-title">학습지 80쪽 — 3. 아시아와 태평양 분할 · 네덜란드·미국·러시아·독일</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">3. 아시아와 태평양 분할 (계속)</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🇳🇱 네덜란드 &nbsp;·&nbsp; 🇺🇸 미국 &nbsp;·&nbsp; 🇷🇺 러시아 &nbsp;·&nbsp; 🇩🇪 독일</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>네덜란드</strong> — 17세기 인도네시아 진출, <strong>네덜란드령 동인도</strong> 건설</li>
+            <li><strong>미국</strong> — 에스파냐와의 전쟁에서 승리하여 필리핀을 식민지로 삼고, 괌·하와이 등을 차지하여 태평양으로 세력 확대</li>
+            <li><strong>러시아</strong> — <strong>남하 정책</strong>을 통해 흑해 방면에서 오스만 제국 압박</li>
+            <li><strong>독일</strong> — 비스마르크 제도와 마셜 제도 등 점령</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: 개념 확인 문제 — 문제 1 (빈칸 채우기) ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 79~80쪽 — 개념 확인 문제 · 문제 1</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.3rem;">1 &nbsp;빈칸에 들어갈 알맞은 말을 쓰시오.</h2>
+      <div class="source-box">⑴ ( <span class="ans-btn" data-reveal>제국주의</span> )은/는 19세기 후반 열강이 군사력과 경제력을 앞세워 식민지 건설을 추진한 것을 의미한다.</div>
+      <div class="source-box">⑵ 서양 열강은 자신들의 행위를 정당화하기 위해 사회 진화론을 내세웠으며, 사회 진화론은 인종 간에 우열이 존재한다고 믿는 사고방식인 ( <span class="ans-btn" data-reveal>인종주의</span> )와/과도 연결되었다.</div>
+      <div class="source-box">⑶ 플라시 전투에서 패한 프랑스는 베트남의 지배권을 장악한 후 베트남과 캄보디아를 합쳐 ( <span class="ans-btn" data-reveal>인도차이나</span> ) 연방을 수립하였다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 개념 확인 문제 — 문제 2 (선택형) ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 79쪽 — 개념 확인 문제 · 문제 2</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.3rem;">2 &nbsp;제국주의 열강의 아프리카 분할에 대한 설명으로 옳지 않은 것은? &nbsp; 정답: <span class="ans-btn" data-reveal>③</span></h2>
+      <div class="bogi-box">
+        ① 프랑스 – 알제리에서 마다가스카르를 연결하는 횡단 정책을 추진하였다.<br>
+        ② 영국 – 케이프 식민지를 중심으로 남아프리카 연방을 조직하였다.<br>
+        ③ 이탈리아 – 수에즈 운하 관리권을 차지하였다.<br>
+        ④ 독일 – 프랑스와 모로코를 두고 대립하였다.<br>
+        ⑤ 벨기에 – 콩고를 식민지로 삼았다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 10: 개념 확인 문제 — 문제 3 (선택형) ══ -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">✏️</span>
+      <span class="browser-title">학습지 80쪽 — 개념 확인 문제 · 문제 3</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.3rem;">3 &nbsp;제국주의 열강의 아시아와 태평양 분할에 대한 설명으로 옳은 것은? &nbsp; 정답: <span class="ans-btn" data-reveal>②</span></h2>
+      <div class="bogi-box">
+        ① 프랑스 – 18세기 중엽 벵골 지역의 통치권을 얻고 인도에 대한 지배를 강화하였다.<br>
+        ② 미국 – 에스파냐와의 전쟁에서 승리하여 필리핀을 식민지로 삼았다.<br>
+        ③ 독일 – 오스트레일리아, 뉴질랜드를 자치령으로 삼았다.<br>
+        ④ 영국 – 남하 정책을 통해 오스만 제국을 압박하였다.<br>
+        ⑤ 러시아 – 인도네시아 대부분을 식민지로 삼았다.
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력"> / <span id="totalSlides">10</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function revealItems(slideEl) { return Array.from(slideEl.querySelectorAll('[data-reveal]')); }
+  function getRC(slideEl) { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n) { slideEl.dataset.rc = n; }
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => { el.classList.toggle('on', i < n); });
+  }
+
+  function updateNav() {
+    document.getElementById('prevBtn').disabled = (currentSlide === 0 && getRC(slides[0]) === 0);
+    document.getElementById('nextBtn').disabled = false;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+    document.getElementById('slideInput').value = currentSlide + 1;
+  }
+
+  function goToSlide(idx) {
+    slides[currentSlide].classList.remove('active');
+    currentSlide = Math.max(0, Math.min(total - 1, idx));
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1); applyReveal(el); updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1); applyReveal(el); updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length);
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.target === document.getElementById('slideInput')) return;
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); nextAction(); }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End') goToSlide(total - 1);
+  });
+
+  let touchX = 0;
+  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, {passive: true});
+  document.addEventListener('touchend', e => {
+    const dx = touchX - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 50) { dx > 0 ? nextAction() : prevAction(); }
+  }, {passive: true});
+
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { goToSlide(parseInt(slideInput.value) - 1); slideInput.blur(); }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('blur', () => {
+    const v = parseInt(slideInput.value);
+    if (!isNaN(v)) goToSlide(v - 1);
+    else slideInput.value = currentSlide + 1;
+  });
+
+  updateNav();
+</script>
+</body>
+</html>
