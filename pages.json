@@ -482,6 +482,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "34. 중국의 국민 국가 건설 운동",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/34. 중국의 국민 국가 건설/index.html",
+              "emoji": "🐉",
+              "description": "01 중국의 국민 국가 건설 운동. 아편 전쟁·태평천국 운동·양무운동·변법자강 운동·의화단 운동·신해혁명. 학습지 81~82쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "아편 전쟁", "color": "orange" },
+                { "label": "태평천국·양무", "color": "purple" },
+                { "label": "신해혁명", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
