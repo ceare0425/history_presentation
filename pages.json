@@ -508,6 +508,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "36. 인도의 민족 운동",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/36. 인도 민족운동/index.html",
+              "emoji": "🌺",
+              "description": "03 인도의 민족 운동. 영국의 인도 침략(플라시 전투)·세포이의 항쟁·인도 국민 회의 결성·벵골 분할령과 반영 운동(콜카타 대회 4대 강령). 학습지 85~86쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "세포이의 항쟁", "color": "orange" },
+                { "label": "인도 국민 회의", "color": "purple" },
+                { "label": "벵골 분할령", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
