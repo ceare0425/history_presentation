@@ -495,6 +495,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "35. 일본의 국민 국가 건설 운동",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/35. 일본 국민 국가/index.html",
+              "emoji": "🌸",
+              "description": "02 일본의 국민 국가 건설 운동. 일본의 개항·메이지 유신·제국주의 침략 전쟁(청일·러일). 학습지 83~84쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "메이지 유신", "color": "orange" },
+                { "label": "개항·팽창", "color": "purple" },
+                { "label": "청일·러일", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
