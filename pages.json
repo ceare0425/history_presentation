@@ -534,6 +534,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "38. 제1차 세계 대전과 러시아 혁명",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/38. 1차 세계 대전/index.html",
+              "emoji": "⚔️",
+              "description": "01 제1차 세계 대전과 러시아 혁명. 3국 동맹·3국 협상, 사라예보 사건·참호전·무제한 잠수함 작전, 러시아 피의 일요일·3월 혁명·11월 혁명, 레닌 NEP·소련 수립·스탈린 5개년 계획. 학습지 89~90쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "제1차 세계 대전", "color": "orange" },
+                { "label": "러시아 혁명", "color": "purple" },
+                { "label": "레닌·스탈린", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
