@@ -53,7 +53,11 @@
       "PowerShell(New-Item *)",
       "Bash(cmd //c echo %TEMP%)",
       "Bash(Get-ChildItem -Recurse -Name)",
-      "Bash(Select-String \"중국\")"
+      "Bash(Select-String \"중국\")",
+      "Bash(Get-Content \"세계사학습지_text.txt\")",
+      "Bash(Select-Object -Skip 0)",
+      "Bash(Select-String -Pattern \"87|88|서아시아|아프리카\")",
+      "Bash(Select-Object -First 30)"
     ]
   }
 }

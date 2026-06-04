@@ -521,6 +521,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "37. 서아시아와 아프리카의 민족 운동",
+              "path": "세계사/Ⅲ. 국민 국가의 형성/37. 서아시아 아프리카 민족운동/index.html",
+              "emoji": "🕌",
+              "description": "04 서아시아와 아프리카의 민족 운동. 오스만 제국 탄지마트·청년 튀르크당, 아랍 와하브 운동, 이란 담배 이권 수호 운동·입헌 혁명, 이집트 무함마드 알리·아라비 파샤, 아프리카 각지 저항. 학습지 87~88쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "탄지마트", "color": "orange" },
+                { "label": "와하브 운동", "color": "purple" },
+                { "label": "아프리카 민족운동", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }
