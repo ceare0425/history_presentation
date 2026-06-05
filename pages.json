@@ -590,6 +590,19 @@
             { "label": "역사 수업", "color": "green" }
           ],
           "gradient": "linear-gradient(90deg, #1A3A6B, #2E6DA4)"
+        },
+        {
+          "title": "Ⅲ단원 복습 (학습지 57~88쪽)",
+          "path": "세계사/57-88복습/index.html",
+          "emoji": "🏯",
+          "description": "Ⅲ단원 국민 국가의 형성 전체 복습. 청·에도·무굴·오스만 / 미국·프랑스 혁명·빈 체제·민족주의 / 산업혁명·제국주의 / 중국·일본·인도·서아시아·아프리카 민족 운동. 26슬라이드 빈칸 순차 공개.",
+          "tags": [
+            { "label": "Ⅲ단원 복습", "color": "orange" },
+            { "label": "국민 국가", "color": "purple" },
+            { "label": "2학년", "color": "blue" },
+            { "label": "역사 수업", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
         }
       ]
     }
