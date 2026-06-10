@@ -57,7 +57,8 @@
       "Bash(Get-Content \"세계사학습지_text.txt\")",
       "Bash(Select-Object -Skip 0)",
       "Bash(Select-String -Pattern \"87|88|서아시아|아프리카\")",
-      "Bash(Select-Object -First 30)"
+      "Bash(Select-Object -First 30)",
+      "PowerShell(Move-Item *)"
     ]
   }
 }
