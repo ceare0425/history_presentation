@@ -592,6 +592,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "42. 냉전 체제의 형성",
+              "path": "세계사/Ⅳ. 현대 세계의 과제/42. 냉전 체제의 형성/index.html",
+              "emoji": "🌍",
+              "description": "01 냉전 체제의 형성. 트루먼 독트린·마셜 계획·NATO, 소련의 코민포름·코메콘·바르샤바 조약 기구, 베를린 봉쇄, 6·25 전쟁·베트남 전쟁, 쿠바 미사일 위기, 제3 세계와 평화 10원칙. 학습지 97~98쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "냉전", "color": "orange" },
+                { "label": "트루먼·마셜 계획", "color": "purple" },
+                { "label": "제3 세계", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         },
