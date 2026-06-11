@@ -579,6 +579,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "41. 전후 처리와 국제 연합",
+              "path": "세계사/Ⅳ. 현대 세계의 과제/41. 전후 처리와 국제 연합/index.html",
+              "emoji": "🕊️",
+              "description": "04 전후 처리와 국제 연합의 창설. 대서양 헌장·카이로·얄타·포츠담 회담, 국제 연합(UN) 창설과 안전 보장 이사회, 뉘른베르크 재판·극동 국제 군사 재판, 샌프란시스코 강화 조약. 학습지 95~96쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "국제 연합(UN)", "color": "orange" },
+                { "label": "전범 재판", "color": "purple" },
+                { "label": "전후 처리", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         },

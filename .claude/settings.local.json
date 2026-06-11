@@ -60,7 +60,8 @@
       "Bash(Select-Object -First 30)",
       "PowerShell(Move-Item *)",
       "PowerShell(try { Get-Content \"C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\history_presentation\\\\pages.json\" -Raw | ConvertFrom-Json | Out-Null; Write-Output \"JSON 유효성 검증 통과\" } catch { Write-Output \"오류: $_\" })",
-      "PowerShell(try { [System.IO.File]::ReadAllText\\(\"C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\history_presentation\\\\pages.json\", [System.Text.Encoding]::UTF8\\) | ConvertFrom-Json | Out-Null; Write-Output \"JSON 유효성 검증 통과\" } catch { Write-Output \"오류: $\\($_.Exception.Message\\)\" })"
+      "PowerShell(try { [System.IO.File]::ReadAllText\\(\"C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\history_presentation\\\\pages.json\", [System.Text.Encoding]::UTF8\\) | ConvertFrom-Json | Out-Null; Write-Output \"JSON 유효성 검증 통과\" } catch { Write-Output \"오류: $\\($_.Exception.Message\\)\" })",
+      "PowerShell([System.IO.File]::ReadAllText\\(\"C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\history_presentation\\\\pages.json\", [System.Text.Encoding]::UTF8\\) | ConvertFrom-Json | ForEach-Object { \"JSON 유효성 검증 통과\" })"
     ]
   }
 }
