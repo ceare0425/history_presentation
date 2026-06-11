@@ -566,6 +566,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "40. 제2차 세계대전",
+              "path": "세계사/Ⅳ. 현대 세계의 과제/40. 제2차 세계대전/index.html",
+              "emoji": "💥",
+              "description": "03 제2차 세계대전. 대공황과 각국의 대응(뉴딜 정책·블록 경제), 전체주의의 등장(이탈리아·독일·일본), 전쟁의 발발·전개·종결(노르망디 상륙 작전·일본 항복). 학습지 93~94쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "제2차 세계 대전", "color": "orange" },
+                { "label": "전체주의", "color": "purple" },
+                { "label": "대공황", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         },
