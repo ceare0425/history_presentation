@@ -676,6 +676,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "세계사 전체범위 복습 (Ⅲ, Ⅳ단원)",
+              "path": "세계사/복습/57-100복습/index.html",
+              "emoji": "📚",
+              "description": "Ⅲ단원(국민 국가의 형성) + Ⅳ단원(현대 세계의 과제) 전 범위 복습. 청·에도·무굴·오스만 / 미국·프랑스 혁명·빈 체제·민족주의 / 산업혁명·제국주의 / 민족 운동 / 1·2차 세계 대전 / 냉전. 빈칸 순차 공개.",
+              "tags": [
+                { "label": "전체 범위", "color": "orange" },
+                { "label": "Ⅲ+Ⅳ단원", "color": "purple" },
+                { "label": "2학년", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         }

@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>세계사 전체범위 복습 — Ⅲ·Ⅳ단원 (57~100쪽)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --main:#8B4513; --dark:#6B3010; --light:#FFF8E1; --accent:#C5A028;
+      --accent-light:#E8D080; --bg:#F5E6C4; --text:#2C1A0E; --text-sec:#6B4226;
+      --border:#A07850; --card-bg:#FDF5E0;
+    }
+    html, body { font-size: clamp(20px, 2.2vw, 36px); font-family:'Noto Serif KR','Nanum Myeongjo',Georgia,serif; color:var(--text); height:100%; overflow:hidden; }
+    @media (max-width:1024px) { html { font-size: clamp(18px, 2.8vw, 30px); } }
+    @media (max-width:768px)  { html { font-size: clamp(16px, 3.8vw, 25px); } }
+    h1 { font-family:'Nanum Myeongjo',serif; font-size:2rem; font-weight:800; letter-spacing:.04em; line-height:1.3; }
+    h2 { font-family:'Nanum Myeongjo',serif; font-size:1.15rem; font-weight:700; letter-spacing:.04em; }
+    h3 { font-family:'Nanum Myeongjo',serif; font-size:.9rem; font-weight:700; }
+    p  { font-size:.88rem; line-height:1.7; }
+
+    body { background-color:var(--bg); background-image: repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(160,120,60,.04) 2px,rgba(160,120,60,.04) 4px), repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(140,100,40,.06) 28px,rgba(140,100,40,.06) 29px); }
+
+    .presentation { position:fixed; inset:0; bottom:2.2rem; display:flex; align-items:center; justify-content:center; padding:.7rem; }
+    .slide { display:none; aspect-ratio:16/9; width:min(100%, calc((100vh - 2.2rem - 1.4rem) * (16/9))); height:auto; }
+    .slide.active { display:flex; align-items:center; justify-content:center; animation:fadeIn .3s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+    .browser-card { background:var(--card-bg); border:2px solid var(--border); outline:4px solid var(--accent); outline-offset:-7px; border-radius:4px; box-shadow:0 4px 28px rgba(44,26,14,.22),inset 0 0 60px rgba(160,120,40,.05); width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; }
+    .browser-topbar { background:linear-gradient(90deg,#8B4513 0%,#5C2808 45%,#8B4513 100%); border-bottom:2px solid var(--accent); padding:.32rem .9rem; display:flex; align-items:center; gap:.45rem; flex-shrink:0; }
+    .topbar-icon { font-size:.85rem; }
+    .browser-title { color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-size:.72rem; font-weight:700; letter-spacing:.07em; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+    .browser-content { flex:0 0 auto; max-height:88%; overflow-y:auto; padding:.6rem 1.3rem .5rem; display:flex; flex-direction:column; gap:.32rem; }
+    .browser-content::-webkit-scrollbar { width:4px; }
+    .browser-content::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+    .progress-bar { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--main)); z-index:1000; transition:width .3s; }
+    .nav-bar { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.28rem 1.5rem; background:rgba(30,15,6,.97); border-top:2px solid var(--accent); z-index:999; font-size:14px; }
+    .nav-btn { display:flex; align-items:center; justify-content:center; width:1.7rem; height:1.7rem; border:1.5px solid #8B6540; border-radius:50%; background:transparent; cursor:pointer; color:var(--accent-light); transition:all .2s; padding:0; }
+    .nav-btn svg { width:.55rem; height:.55rem; fill:currentColor; display:block; }
+    .nav-btn:hover:not(:disabled) { background:var(--main); border-color:var(--accent); }
+    .nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .nav-counter { font-size:13px; font-weight:700; color:var(--accent-light); min-width:3rem; text-align:center; display:flex; align-items:center; gap:.15rem; }
+    .slide-input { width:1.4rem; text-align:center; border:none; border-bottom:1.5px solid transparent; background:transparent; font-size:13px; font-weight:700; color:var(--accent-light); font-family:inherit; padding:0; outline:none; cursor:pointer; transition:border-color .2s; }
+    .slide-input:hover { border-bottom-color:var(--accent); }
+    .slide-input:focus { border-bottom-color:var(--accent); background:rgba(139,69,19,.3); border-radius:3px; }
+
+    .section-ornament { color:var(--accent); font-size:.62rem; letter-spacing:.5em; text-align:center; margin-bottom:.15rem; opacity:.75; }
+    .hist-divider { display:flex; align-items:center; gap:.4rem; margin:.1rem 0 .3rem; }
+    .h-line { flex:1; height:1.5px; background:linear-gradient(90deg,transparent,var(--accent) 25%,var(--accent) 75%,transparent); }
+    .h-gem  { color:var(--accent); font-size:.62rem; }
+    .era-badge { display:inline-block; background:linear-gradient(135deg,var(--main),var(--dark)); color:var(--accent-light); border:1px solid var(--accent); padding:.03rem .38rem; font-family:'Nanum Myeongjo',serif; font-size:.7rem; font-weight:700; border-radius:2px; white-space:nowrap; }
+
+    .blank { display:inline-block; min-width:3.8rem; background:linear-gradient(135deg,var(--main),var(--dark)); color:transparent; border:1.5px solid var(--accent); border-radius:2px; padding:.03em .5em; font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:inherit; user-select:none; position:relative; text-align:center; vertical-align:baseline; transition:background .35s, color .35s, box-shadow .35s; }
+    .blank::after { content:'?'; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); color:var(--accent-light); font-size:.8em; font-weight:800; pointer-events:none; transition:opacity .25s; }
+    .blank.on { background:var(--light); color:var(--main); box-shadow:0 0 0 2px var(--accent); }
+    .blank.on::after { opacity:0; }
+
+    .cover-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.5rem; }
+    .sec-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; gap:.4rem; }
+    .sec-num { font-family:'Nanum Myeongjo',serif; font-size:3.5rem; font-weight:800; color:var(--main); letter-spacing:.06em; line-height:1; }
+    .sec-lesson { font-size:.8rem; color:var(--text-sec); }
+
+    .toc-list { display:flex; flex-direction:column; gap:.16rem; }
+    .toc-item { display:flex; align-items:center; gap:.5rem; padding:.16rem .6rem; border:1.5px solid var(--border); border-radius:3px; background:var(--card-bg); cursor:pointer; transition:all .2s; }
+    .toc-item:hover { background:var(--light); border-color:var(--accent); transform:translateX(3px); }
+    .toc-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.58rem; min-width:1.15rem; height:1.15rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .toc-title { font-weight:700; font-size:.68rem; }
+    .toc-desc  { font-size:.58rem; color:var(--text-sec); margin-top:.02rem; }
+    .toc-group-label { font-family:'Nanum Myeongjo',serif; font-size:.66rem; font-weight:700; color:var(--main); letter-spacing:.06em; margin:.2rem 0 .06rem; padding-left:.3rem; border-left:3px solid var(--accent); }
+
+    .ruler-card { border:1.5px solid var(--border); border-radius:3px; overflow:hidden; }
+    .ruler-card-header { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.8rem; padding:.22rem .65rem; display:flex; align-items:center; gap:.35rem; }
+    .ruler-card-body { padding:.32rem .7rem; background:var(--card-bg); }
+
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:.4rem; }
+    .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.35rem; }
+
+    .info-list { list-style:none; display:flex; flex-direction:column; gap:.22rem; }
+    .info-list li { position:relative; padding-left:1.05em; font-size:.82rem; line-height:1.6; }
+    .info-list li::before { content:'◆'; color:var(--accent); font-size:.56rem; position:absolute; left:0; top:.42em; }
+    .info-list.dense li { font-size:.76rem; line-height:1.55; }
+
+    .sum-table { width:100%; border-collapse:collapse; font-size:.74rem; }
+    .sum-table th { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); padding:.22rem .45rem; text-align:center; font-family:'Nanum Myeongjo',serif; }
+    .sum-table td { padding:.22rem .45rem; border:1px solid var(--border); line-height:1.5; vertical-align:top; }
+    .sum-table tr:nth-child(even) td { background:rgba(255,248,225,.6); }
+    .sum-table .row-head { background:rgba(139,69,19,.12); font-weight:700; text-align:center; white-space:nowrap; font-size:.72rem; }
+
+    .highlight-box { background:linear-gradient(135deg,rgba(139,69,19,.08),rgba(197,160,40,.12)); border:1.5px solid var(--accent); border-radius:3px; padding:.3rem .65rem; font-size:.8rem; }
+
+    @media (max-width:768px) { .grid-2,.grid-3 { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="presentation" id="presentation">
+
+<!-- ══ 슬라이드 0: 표지 ══ -->
+<div class="slide active" data-slide="0">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🌍</span><span class="browser-title">세계사 — 57~100쪽 복습 (Ⅲ·Ⅳ단원)</span></div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <span class="era-badge">학습지 57~100쪽 · Ⅲ·Ⅳ단원 전체</span>
+        <h1 style="margin-top:.25rem;">세계사 전체범위 복습<br><span style="font-size:.6em;font-weight:700;color:var(--text-sec);">(Ⅲ, Ⅳ단원)</span></h1>
+        <div class="hist-divider" style="width:60%;margin:.1rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <p style="color:var(--text-sec);font-size:.82rem;line-height:1.9;">
+          Ⅲ. 국민 국가의 형성 (57~88쪽)<br>
+          &nbsp;&nbsp;&nbsp;Ⅲ-1. 아시아의 다민족 제국들 (청·에도·무굴·오스만)<br>
+          &nbsp;&nbsp;&nbsp;Ⅲ-2. 시민 혁명과 시민 사회 (미국·프랑스·빈 체제·민족주의)<br>
+          &nbsp;&nbsp;&nbsp;Ⅲ-3. 산업 혁명과 제국주의<br>
+          &nbsp;&nbsp;&nbsp;Ⅲ-4. 아시아·아프리카의 국민 국가 건설 운동<br>
+          Ⅳ. 현대 세계의 과제 (89~100쪽)<br>
+          &nbsp;&nbsp;&nbsp;Ⅳ-1. 제1·2차 세계 대전<br>
+          &nbsp;&nbsp;&nbsp;Ⅳ-2. 냉전 체제의 형성과 변화
+        </p>
+        <div class="section-ornament" style="margin-top:.05rem;">✦ &nbsp; ✦ &nbsp; ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 1: 목차 ══ -->
+<div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">📋</span><span class="browser-title">목차 — 57~100쪽 전체범위 복습</span></div>
+    <div class="browser-content">
+      <div class="grid-2" style="gap:.28rem;align-items:start;">
+        <div>
+          <div class="toc-group-label">Ⅲ-1. 아시아의 다민족 제국들</div>
+          <div class="toc-list">
+            <div class="toc-item" onclick="goToSlide(3)"><span class="toc-num">01</span><div><div class="toc-title">청 제국 (1)</div><div class="toc-desc">팔기제·강희·옹정·건륭제</div></div></div>
+            <div class="toc-item" onclick="goToSlide(4)"><span class="toc-num">02</span><div><div class="toc-title">청 제국 (2)</div><div class="toc-desc">다민족 통치·경제·문화</div></div></div>
+            <div class="toc-item" onclick="goToSlide(5)"><span class="toc-num">03</span><div><div class="toc-title">에도 막부</div><div class="toc-desc">센고쿠·막번·쇄국·조닌 문화</div></div></div>
+            <div class="toc-item" onclick="goToSlide(6)"><span class="toc-num">04</span><div><div class="toc-title">무굴 제국</div><div class="toc-desc">아크바르·아우랑제브·타지마할</div></div></div>
+            <div class="toc-item" onclick="goToSlide(7)"><span class="toc-num">05</span><div><div class="toc-title">오스만 제국</div><div class="toc-desc">메흐메트·술레이만·티마르·밀레트·사파비</div></div></div>
+          </div>
+          <div class="toc-group-label">Ⅲ-2. 시민 혁명과 시민 사회</div>
+          <div class="toc-list">
+            <div class="toc-item" onclick="goToSlide(9)"><span class="toc-num">06</span><div><div class="toc-title">미국 혁명</div><div class="toc-desc">계몽사상·보스턴 차 사건·연방 헌법</div></div></div>
+            <div class="toc-item" onclick="goToSlide(10)"><span class="toc-num">07</span><div><div class="toc-title">프랑스 혁명 (1)</div><div class="toc-desc">삼부회·테니스 코트·인권선언</div></div></div>
+            <div class="toc-item" onclick="goToSlide(11)"><span class="toc-num">08</span><div><div class="toc-title">프랑스 혁명 (2)</div><div class="toc-desc">공포 정치·나폴레옹·대륙봉쇄령</div></div></div>
+            <div class="toc-item" onclick="goToSlide(12)"><span class="toc-num">09</span><div><div class="toc-title">빈 체제·자유주의 운동</div><div class="toc-desc">메테르니히·7월·2월 혁명·차티스트</div></div></div>
+            <div class="toc-item" onclick="goToSlide(13)"><span class="toc-num">10</span><div><div class="toc-title">민족주의 운동</div><div class="toc-desc">이탈리아·독일 통일 / 미국 남북 전쟁</div></div></div>
+          </div>
+          <div class="toc-group-label">Ⅲ-3. 산업 혁명과 제국주의</div>
+          <div class="toc-list">
+            <div class="toc-item" onclick="goToSlide(15)"><span class="toc-num">11</span><div><div class="toc-title">제국주의·식민지 분할</div><div class="toc-desc">아프리카 분할·아시아·태평양</div></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="toc-group-label">Ⅲ-4. 아시아·아프리카 민족 운동</div>
+          <div class="toc-list">
+            <div class="toc-item" onclick="goToSlide(17)"><span class="toc-num">12</span><div><div class="toc-title">중국의 국민 국가 건설</div><div class="toc-desc">아편 전쟁·태평천국·양무·신해혁명</div></div></div>
+            <div class="toc-item" onclick="goToSlide(18)"><span class="toc-num">13</span><div><div class="toc-title">일본의 국민 국가 건설</div><div class="toc-desc">메이지 유신·청일·러일 전쟁</div></div></div>
+            <div class="toc-item" onclick="goToSlide(19)"><span class="toc-num">14</span><div><div class="toc-title">인도·서아시아·아프리카</div><div class="toc-desc">세포이·인도 국민 회의·탄지마트·와하브</div></div></div>
+          </div>
+          <div class="toc-group-label">Ⅳ-1. 제1·2차 세계 대전</div>
+          <div class="toc-list">
+            <div class="toc-item" onclick="goToSlide(21)"><span class="toc-num">15</span><div><div class="toc-title">제1차 세계 대전</div><div class="toc-desc">3국 동맹·사라예보 사건·총력전</div></div></div>
+            <div class="toc-item" onclick="goToSlide(22)"><span class="toc-num">16</span><div><div class="toc-title">러시아 혁명</div><div class="toc-desc">3월·11월 혁명·레닌·스탈린</div></div></div>
+            <div class="toc-item" onclick="goToSlide(23)"><span class="toc-num">17</span><div><div class="toc-title">1차대전 이후·민족 운동</div><div class="toc-desc">베르사유 체제·국제 연맹·간디·케말</div></div></div>
+            <div class="toc-item" onclick="goToSlide(24)"><span class="toc-num">18</span><div><div class="toc-title">제2차 세계 대전</div><div class="toc-desc">대공황·전체주의·나치·노르망디</div></div></div>
+            <div class="toc-item" onclick="goToSlide(25)"><span class="toc-num">19</span><div><div class="toc-title">전후 처리·국제 연합</div><div class="toc-desc">카이로·얄타·UN·뉘른베르크 재판</div></div></div>
+          </div>
+          <div class="toc-group-label">Ⅳ-2. 냉전 체제</div>
+          <div class="toc-list">
+            <div class="toc-item" onclick="goToSlide(26)"><span class="toc-num">20</span><div><div class="toc-title">냉전 체제의 형성</div><div class="toc-desc">트루먼 독트린·마셜 계획·6·25·쿠바</div></div></div>
+            <div class="toc-item" onclick="goToSlide(27)"><span class="toc-num">21</span><div><div class="toc-title">냉전 체제의 변화</div><div class="toc-desc">고르바초프·소련 해체·동유럽·중국</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 2: Ⅲ-1 단원 구분 ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏯</span><span class="browser-title">Ⅲ-1. 아시아의 다민족 제국들</span></div>
+    <div class="browser-content">
+      <div class="sec-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <div class="sec-num">Ⅲ — 1</div>
+        <div class="hist-divider" style="width:55%;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2>아시아의 다민족 제국들</h2>
+        <div style="display:flex;flex-direction:column;gap:.22rem;margin-top:.2rem;">
+          <div class="sec-lesson">▸ 청 제국: 팔기제 → 후금 → 청 / 강희·옹정·건륭제 / 다민족 통치</div>
+          <div class="sec-lesson">▸ 에도 막부: 센고쿠 시대 / 막번 체제·산킨코타이 / 쇄국·조닌 문화</div>
+          <div class="sec-lesson">▸ 무굴 제국: 바부르·아크바르·아우랑제브 / 힌두·이슬람 융합</div>
+          <div class="sec-lesson">▸ 오스만 제국: 메흐메트·술레이만 / 티마르·데브시르메·밀레트</div>
+          <div class="sec-lesson">▸ 티무르·사파비 왕조</div>
+        </div>
+        <div class="section-ornament" style="margin-top:.2rem;">✦ &nbsp; ✦ &nbsp; ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 청 제국 (1) ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🐉</span><span class="browser-title">Ⅲ-1 · 청 제국 — 성립과 발전 (57~58쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🐉 청의 성립</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>누르하치: <span class="blank" data-reveal>팔기제</span>로 여진족 통합 → <span class="blank" data-reveal>후금</span> 건국</li>
+              <li>홍타이지: 유목 세계 통합, 국호를 <span class="blank" data-reveal>청</span>으로 변경</li>
+              <li>명 멸망 후 중국 대륙으로 진출</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">👑 황제별 업적</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>강희제</span>: 삼번의 난 진압, <span class="blank" data-reveal>지정은제</span>, <span class="blank" data-reveal>네르친스크 조약</span></li>
+              <li><span class="blank" data-reveal>옹정제</span>: <span class="blank" data-reveal>군기처</span> 설립, 캬흐타 조약</li>
+              <li><span class="blank" data-reveal>건륭제</span>: 티베트·신장·몽골 정복, 《<span class="blank" data-reveal>사고전서</span>》 편찬</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:.2rem;">
+        ★ 쇠퇴 원인: 농경지 부족 + 자연재해 + <span class="blank" data-reveal>백련교의 난</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 청 제국 (2) ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🐉</span><span class="browser-title">Ⅲ-1 · 청 제국 — 다민족 통치·경제·문화 (57~58쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🗺️ 다민족 통치</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>만주족 고유문화 유지: <span class="blank" data-reveal>만주 문자</span>, 만주 지역 이주 금지</li>
+              <li>한족 강경책: <span class="blank" data-reveal>변발</span> 강요, <span class="blank" data-reveal>문자의 옥</span></li>
+              <li>한족 회유: <span class="blank" data-reveal>만한 병용제</span>, <span class="blank" data-reveal>신사</span> 우대</li>
+              <li>번부(티베트·신장·몽골): <span class="blank" data-reveal>간접 지배</span></li>
+              <li>《대의각미록》: 만주족 통치 정당성 역설</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">💰 명·청대 경제·문화</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>무역: 광저우 일원화, <span class="blank" data-reveal>공행</span>을 통한 무역</li>
+              <li>창장강 하류: 면직·견직 수공업 중심지</li>
+              <li>문화: <span class="blank" data-reveal>경극</span>, 《홍루몽》 유행</li>
+              <li><span class="blank" data-reveal>양명학</span>(명대, 지행합일) vs <span class="blank" data-reveal>고증학</span>(청대, 실증)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 에도 막부 ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">⛩️</span><span class="browser-title">Ⅲ-1 · 에도 막부 (59~60쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">⚔️ 센고쿠 시대 → 에도 막부</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>오닌의 난</span> → 100여 년 센고쿠 시대</li>
+              <li>오다 노부나가: <span class="blank" data-reveal>조총</span> 전법으로 통일 기반 마련</li>
+              <li>도요토미 히데요시: 통일 후 <span class="blank" data-reveal>임진왜란</span>(조선 침략)</li>
+              <li>도쿠가와 이에야스: <span class="blank" data-reveal>세키가하라 전투</span> 승리 → 에도 막부</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏯 에도 막부의 발전</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>막번 체제</span>: 쇼군(직할지) + 다이묘(번)</li>
+              <li><span class="blank" data-reveal>산킨코타이제</span>: 다이묘의 에도·번 교대 거주 → 통제</li>
+              <li>쇄국: <span class="blank" data-reveal>데지마</span>에서 네덜란드만 교역, <span class="blank" data-reveal>난학</span> 유입</li>
+              <li>조닌 문화: <span class="blank" data-reveal>조카마치</span>, <span class="blank" data-reveal>가부키</span>, 우키요에</li>
+              <li>사상: 국학 운동 → <span class="blank" data-reveal>존왕양이</span> 운동에 영향</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 무굴 제국 ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🕌</span><span class="browser-title">Ⅲ-1 · 무굴 제국의 발전 (61~62쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🕌 무굴 제국 성립과 발전</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>바부르</span>: 티무르 후손, <span class="blank" data-reveal>델리 술탄 왕조</span> 무너뜨리고 무굴 제국 수립</li>
+              <li><span class="blank" data-reveal>아크바르 황제</span>: 종교 관용, <span class="blank" data-reveal>지즈야 폐지</span>, 힌두교도 관리 임명</li>
+              <li>아우랑제브: <span class="blank" data-reveal>이슬람 제일주의</span>, 지즈야 부활 → 힌두·<span class="blank" data-reveal>시크교도</span> 반발</li>
+              <li>쇠퇴: 마라타 동맹 + 영국·프랑스 침투</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏛️ 문화 — 힌두·이슬람 융합</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>시크교</span> 성립: 힌두교 + 이슬람교 요소 융합</li>
+              <li>무굴 회화 발달, <span class="blank" data-reveal>우르두어</span> 사용</li>
+              <li><span class="blank" data-reveal>타지마할</span>: 샤자한이 왕비 뭄타즈 마할 추모</li>
+              <li>인도양 무역 주도: 동남아·유럽 연결</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 오스만 제국 + 티무르·사파비 ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🦅</span><span class="browser-title">Ⅲ-1 · 오스만 제국·티무르·사파비 왕조 (63~64쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🦅 오스만 제국 성립·통치</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>메흐메트 2세</span>: <span class="blank" data-reveal>콘스탄티노폴리스</span> 함락(1453) → 비잔티움 제국 멸망</li>
+              <li>셀림 1세: <span class="blank" data-reveal>맘루크 왕조</span> 멸망, 메카·메디나 보호권</li>
+              <li><span class="blank" data-reveal>술레이만 1세</span>: 헝가리 정복, 빈 포위, 동지중해 제해권, 법전 편찬</li>
+              <li><span class="blank" data-reveal>티마르 제도</span>: 기병에게 토지 징세권 부여</li>
+              <li><span class="blank" data-reveal>데브시르메 제도</span>: 크리스트교 청년 징집 → <span class="blank" data-reveal>예니체리</span>(최정예 부대)</li>
+              <li><span class="blank" data-reveal>밀레트 제도</span>: 인두세 납부 조건으로 종교 공동체 자치 인정</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏰 티무르·사파비 왕조</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>티무르 왕조: 몽골 제국 재건 내세워 수립 → <span class="blank" data-reveal>오스만</span>인에게 멸망</li>
+              <li>사파비 왕조: <span class="blank" data-reveal>이스마일 1세</span> 수립</li>
+              <li>국교: <span class="blank" data-reveal>시아파</span> 이슬람교</li>
+              <li><span class="blank" data-reveal>아바스 1세</span>: 이스파한 천도 → 발전</li>
+              <li>아프간족의 침입 등으로 쇠퇴</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: Ⅲ-2 단원 구분 ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🗽</span><span class="browser-title">Ⅲ-2. 시민 혁명과 시민 사회의 형성</span></div>
+    <div class="browser-content">
+      <div class="sec-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <div class="sec-num">Ⅲ — 2</div>
+        <div class="hist-divider" style="width:55%;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2>시민 혁명과 시민 사회의 형성</h2>
+        <div style="display:flex;flex-direction:column;gap:.22rem;margin-top:.2rem;">
+          <div class="sec-lesson">▸ 미국 혁명: 과학 혁명·계몽사상 → 보스턴 차 사건 → 독립 선언 → 연방 헌법</div>
+          <div class="sec-lesson">▸ 프랑스 혁명: 삼부회 → 인권 선언 → 공포 정치 → 나폴레옹</div>
+          <div class="sec-lesson">▸ 빈 체제: 메테르니히 / 7월·2월 혁명 / 차티스트 / 데카브리스트</div>
+          <div class="sec-lesson">▸ 민족주의: 이탈리아(카보우르·가리발디) / 독일(비스마르크) / 미국 남북 전쟁</div>
+        </div>
+        <div class="section-ornament" style="margin-top:.2rem;">✦ &nbsp; ✦ &nbsp; ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 미국 혁명 ══ -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🗽</span><span class="browser-title">Ⅲ-2 · 미국 혁명 (65~66쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🔭 과학 혁명·계몽사상</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>코페르니쿠스</span>: 태양 중심 지동설</li>
+              <li><span class="blank" data-reveal>갈릴레이</span>: 망원경 제작, 지동설 입증</li>
+              <li><span class="blank" data-reveal>뉴턴</span>: 만유인력의 법칙, 기계론적 우주관</li>
+              <li>계몽사상: <span class="blank" data-reveal>로크</span>·<span class="blank" data-reveal>루소</span>의 자연법 사상, <span class="blank" data-reveal>사회 계약설</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🦅 미국 혁명</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>배경: 7년 전쟁 후 영국의 중상주의 정책 강화, <span class="blank" data-reveal>보스턴 차 사건</span></li>
+              <li>전개: <span class="blank" data-reveal>독립 선언문</span> 발표(1776) → 파리 조약</li>
+              <li>결과: <span class="blank" data-reveal>연방 헌법</span> 제정 (연방주의·<span class="blank" data-reveal>삼권 분립</span>·공화주의)</li>
+              <li>워싱턴 초대 대통령 선출</li>
+              <li>한계: 여성·흑인·원주민 권리 제한, <span class="blank" data-reveal>노예제</span> 유지</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 10: 프랑스 혁명 (1) ══ -->
+<div class="slide" data-slide="10">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">⚜️</span><span class="browser-title">Ⅲ-2 · 프랑스 혁명 (1) — 배경·전개 (67~68쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">⚖️ 혁명의 배경</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>구제도</span>: 제1·2 신분 특권, 제3 신분 세금 부담</li>
+              <li>왕실 재정 악화: 전쟁·사치 → 루이 16세, <span class="blank" data-reveal>삼부회</span> 소집</li>
+              <li>갈등: 표결 방식 대립 (제3 신분: 머릿수 표결 주장)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏛️ 혁명의 전개</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>국민 의회</span>: 제3 신분 구성, <span class="blank" data-reveal>테니스 코트의 서약</span></li>
+              <li><span class="blank" data-reveal>바스티유</span> 습격(1789.7.14.): 혁명 확산</li>
+              <li>봉건적 특권 폐지 선언</li>
+              <li><span class="blank" data-reveal>인권선언</span>(인간과 시민의 권리선언): 자유·평등·사유재산 보장</li>
+              <li>입법 의회: 혁명 전쟁 시작(오스트리아·프로이센 침략)</li>
+              <li>→ 파리 민중의 <span class="blank" data-reveal>왕궁 습격</span> → 왕권 정지, 국민 공회 수립</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 11: 프랑스 혁명 (2) ══ -->
+<div class="slide" data-slide="11">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">⚜️</span><span class="browser-title">Ⅲ-2 · 프랑스 혁명 (2) — 과격화·나폴레옹 (69~70쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🔪 혁명의 과격화</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>국민 공회: <span class="blank" data-reveal>공화정</span> 선포, <span class="blank" data-reveal>루이 16세</span> 처형 → 대프랑스 동맹</li>
+              <li><span class="blank" data-reveal>로베스피에르</span>·자코뱅파: 혁명 재판소·<span class="blank" data-reveal>공안 위원회</span>(공포 정치)</li>
+              <li><span class="blank" data-reveal>테르미도르의 반동</span>: 온건파 쿠데타 → 로베스피에르 처형</li>
+              <li>총재 정부: 5명 총재, 식량 부족·물가 상승 해결 부진</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">👑 나폴레옹 시대</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>나폴레옹</span>: 쿠데타 → 통령 정부(제1 통령) → 황제 즉위</li>
+              <li>내정: 프랑스 은행, 《<span class="blank" data-reveal>나폴레옹 법전</span>》 편찬</li>
+              <li><span class="blank" data-reveal>대륙 봉쇄령</span>: 유럽 대륙↔영국 무역 금지</li>
+              <li>러시아 원정 실패 → <span class="blank" data-reveal>워털루 전투</span> 패배 → 세인트헬레나 유배</li>
+              <li>의의: 자유주의·<span class="blank" data-reveal>민족주의</span> 유럽 확산</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 12: 빈 체제·자유주의 운동 ══ -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏛️</span><span class="browser-title">Ⅲ-2 · 빈 체제와 자유주의 운동 (71~72쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🤝 빈 체제 성립·동요</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>빈 회의: <span class="blank" data-reveal>메테르니히</span> 주도 → 혁명 이전 영토 복귀</li>
+              <li>자유주의 확산: 이탈리아 <span class="blank" data-reveal>카르보나리당</span>, 러시아 <span class="blank" data-reveal>데카브리스트</span> 봉기</li>
+              <li>프랑스 <span class="blank" data-reveal>7월 혁명</span>(1830): 샤를 10세 축출 → <span class="blank" data-reveal>7월 왕정</span></li>
+              <li>프랑스 <span class="blank" data-reveal>2월 혁명</span>(1848): 제2 공화정 수립 → 빈 체제 붕괴</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">⚡ 영국·러시아의 자유주의</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>영국: 제1차 선거법 개정, 곡물법·항해법 폐지</li>
+              <li><span class="blank" data-reveal>차티스트 운동</span>: 《인민헌장》(1838) 발표, 참정권 확대 요구</li>
+              <li>러시아: 데카브리스트 봉기(1825) 실패 → 전제 정치 강화</li>
+              <li><span class="blank" data-reveal>크림 전쟁</span> 패배 → 농노 해방령, 지방 의회 설립</li>
+              <li><span class="blank" data-reveal>브나로드</span> 운동: 지식인들의 농민 계몽 운동</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 13: 민족주의 운동 ══ -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🗺️</span><span class="browser-title">Ⅲ-2 · 민족주의 운동과 국민 국가의 발전 (73~74쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-3">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🇮🇹 이탈리아 통일</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>재상 <span class="blank" data-reveal>카보우르</span>: 사르데냐 중심 내정 개혁</li>
+              <li><span class="blank" data-reveal>가리발디</span>: 의용군 결성, 이탈리아 남부 점령</li>
+              <li>1861 이탈리아 왕국 수립</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🇩🇪 독일 통일</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>관세 동맹(1834): 프로이센 주도</li>
+              <li>재상 <span class="blank" data-reveal>비스마르크</span>의 <span class="blank" data-reveal>철혈 정책</span></li>
+              <li>오스트리아·프랑스 격파</li>
+              <li>1871 독일 제국 선포</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🇺🇸 미국 남북 전쟁</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>배경: 남부(농장·노예제·자유 무역) vs 북부(상공업·노예제 폐지)</li>
+              <li><span class="blank" data-reveal>링컨</span> 대통령 당선 → 남부 7개 주 연방 탈퇴</li>
+              <li><span class="blank" data-reveal>노예 해방 선언</span>(1863)</li>
+              <li>북부 승리 → 산업화·자본주의 발전</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 14: Ⅲ-3 단원 구분 ══ -->
+<div class="slide" data-slide="14">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">⚙️</span><span class="browser-title">Ⅲ-3. 산업 혁명과 제국주의</span></div>
+    <div class="browser-content">
+      <div class="sec-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <div class="sec-num">Ⅲ — 3</div>
+        <div class="hist-divider" style="width:55%;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2>산업 혁명과 제국주의</h2>
+        <div style="display:flex;flex-direction:column;gap:.22rem;margin-top:.2rem;">
+          <div class="sec-lesson">▸ 제국주의: 문명화 사명론 / 아프리카 분할 / 아시아·태평양 분할</div>
+        </div>
+        <div class="section-ornament" style="margin-top:.2rem;">✦ &nbsp; ✦ &nbsp; ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 15: 제국주의와 식민지 분할 ══ -->
+<div class="slide" data-slide="15">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🗺️</span><span class="browser-title">Ⅲ-3 · 제국주의 열강의 식민지 분할 (79~80쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🌍 제국주의·아프리카 분할</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>제국주의: <span class="blank" data-reveal>문명화 사명론</span>, 인종주의 (백인 우월성)</li>
+              <li>영국: <span class="blank" data-reveal>종단 정책</span>(카이로~케이프타운), 수에즈 운하</li>
+              <li>프랑스: <span class="blank" data-reveal>횡단 정책</span>(알제리~마다가스카르) → <span class="blank" data-reveal>파쇼다 사건</span></li>
+              <li>벨기에: <span class="blank" data-reveal>레오폴드 2세</span>, 콩고 착취</li>
+              <li>20c 초 <span class="blank" data-reveal>에티오피아</span>·<span class="blank" data-reveal>라이베리아</span> 외 대부분 식민지화</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🌏 아시아·태평양 분할</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>영국: <span class="blank" data-reveal>동인도 회사</span>, <span class="blank" data-reveal>플라시 전투</span>(1757) → 벵골 장악 → 인도 대부분</li>
+              <li>프랑스: 플라시 전투 패배 후 베트남 장악 → <span class="blank" data-reveal>프랑스령 인도차이나 연방</span></li>
+              <li>네덜란드: 인도네시아 진출 (네덜란드령 동인도)</li>
+              <li>미국: 에스파냐와 전쟁 승리 → <span class="blank" data-reveal>필리핀</span>·괌·하와이</li>
+              <li>러시아: 남하 정책 → 오스만 제국 압박</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 18: Ⅲ-4 단원 구분 ══ -->
+<div class="slide" data-slide="16">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🌺</span><span class="browser-title">Ⅲ-4. 아시아·아프리카의 국민 국가 건설 운동</span></div>
+    <div class="browser-content">
+      <div class="sec-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <div class="sec-num">Ⅲ — 4</div>
+        <div class="hist-divider" style="width:55%;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2>아시아·아프리카의 국민 국가 건설 운동</h2>
+        <div style="display:flex;flex-direction:column;gap:.22rem;margin-top:.2rem;">
+          <div class="sec-lesson">▸ 중국: 아편 전쟁(난징 조약) → 태평천국 → 양무·변법자강 → 의화단 → 신해혁명</div>
+          <div class="sec-lesson">▸ 일본: 미일 화친 조약 → 메이지 유신(폐번치현·자유 민권) → 청일·러일 전쟁</div>
+          <div class="sec-lesson">▸ 인도: 플라시 전투 → 세포이의 항쟁 → 인도 국민 회의 → 벵골 분할령·콜카타 4대 강령</div>
+          <div class="sec-lesson">▸ 서아시아·아프리카: 탄지마트 → 청년 튀르크당 / 와하브 운동 / 무함마드 알리·아라비 파샤</div>
+        </div>
+        <div class="section-ornament" style="margin-top:.2rem;">✦ &nbsp; ✦ &nbsp; ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 19: 중국의 국민 국가 건설 ══ -->
+<div class="slide" data-slide="17">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🐉</span><span class="browser-title">Ⅲ-4 · 중국의 국민 국가 건설 운동 (81~82쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">⚔️ 아편 전쟁·민중 운동</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>1차 아편 전쟁 → <span class="blank" data-reveal>난징 조약</span>: 5개 항구 개항, <span class="blank" data-reveal>홍콩</span> 할양, 공행 폐지</li>
+              <li>2차 아편 전쟁 → <span class="blank" data-reveal>톈진·베이징 조약</span>: 추가 개항, 러시아의 연해주 할양</li>
+              <li><span class="blank" data-reveal>태평천국 운동</span>: 홍수전 '멸만흥한', <span class="blank" data-reveal>천조전무제도</span> (토지 균등 분배)</li>
+              <li>신사층 향용의 공격으로 붕괴</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🌐 근대화 운동·신해혁명</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>양무운동</span>: <span class="blank" data-reveal>중체서용론</span>, 군수 공장·신식 군대 → 청일 전쟁 패배로 한계</li>
+              <li><span class="blank" data-reveal>변법자강 운동</span>: 캉유웨이·량치차오, 무술변법 → 서 태후 보수파 반발로 실패</li>
+              <li>의화단 운동: '부청멸양', 8개국 연합군 진압 → <span class="blank" data-reveal>신축조약</span></li>
+              <li><span class="blank" data-reveal>신해혁명</span>: 쑨원·<span class="blank" data-reveal>삼민주의</span>, 우창 신군 봉기 → <span class="blank" data-reveal>중화민국</span> 수립</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 20: 일본의 국민 국가 건설 ══ -->
+<div class="slide" data-slide="18">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🌸</span><span class="browser-title">Ⅲ-4 · 일본의 국민 국가 건설 운동 (83~84쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">⛵ 개항·메이지 유신</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>페리 제독</span> 무력시위 → 미일 화친 조약 (시모다·하코다테 개항)</li>
+              <li>미일 수호 통상 조약: 협정 관세, <span class="blank" data-reveal>영사 재판권</span></li>
+              <li>조슈번·사쓰마번 주도 → 에도 막부 타도 → <span class="blank" data-reveal>메이지 정부</span> 수립</li>
+              <li><span class="blank" data-reveal>폐번치현</span>: 번 폐지, 현 설치</li>
+              <li>신분제 폐지, 징병제, <span class="blank" data-reveal>이와쿠라 사절단</span> 파견</li>
+              <li><span class="blank" data-reveal>자유 민권 운동</span> → 대일본 제국 헌법(1889) 제정</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">⚔️ 제국주의 침략 전쟁</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>운요호 사건</span> → 강화도 조약(조선 개항)</li>
+              <li>류큐 병합 → <span class="blank" data-reveal>오키나와현</span></li>
+              <li>청일 전쟁 → <span class="blank" data-reveal>시모노세키 조약</span>: 배상금·타이완 할양</li>
+              <li>러일 전쟁 → <span class="blank" data-reveal>포츠머스 조약</span>: 한반도 독점적 지배권·뤼순·다롄 조차</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 21: 인도·서아시아·아프리카 민족 운동 ══ -->
+<div class="slide" data-slide="19">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🌺</span><span class="browser-title">Ⅲ-4 · 인도·서아시아·아프리카 민족 운동 (85~88쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🌺 인도의 민족 운동</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>플라시 전투</span>(1757): 영국이 벵골 통치권 확보</li>
+              <li><span class="blank" data-reveal>세포이의 항쟁</span>(1857): 동인도 회사 해체 → 영국령 인도 제국 성립(1877)</li>
+              <li><span class="blank" data-reveal>인도 국민 회의</span> 결성(1885): 초기 영국 협조</li>
+              <li><span class="blank" data-reveal>벵골 분할령</span>(1905): 힌두·이슬람 대립 조장</li>
+              <li>콜카타 대회 4대 강령: <span class="blank" data-reveal>스와라지</span>·<span class="blank" data-reveal>스와데시</span>·불매·국민 교육</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🕌 서아시아·아프리카 민족 운동</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>오스만: <span class="blank" data-reveal>탄지마트</span>(근대적 제도 개혁), <span class="blank" data-reveal>청년 튀르크당</span> 헌법 부활</li>
+              <li>아랍: <span class="blank" data-reveal>와하브 운동</span> (이슬람교 순화 → 반오스만 민족 운동)</li>
+              <li>이란: 담배 이권 수호 운동 → 입헌 혁명(1906)</li>
+              <li>이집트: <span class="blank" data-reveal>무함마드 알리</span>(사실상 독립), <span class="blank" data-reveal>아라비 파샤</span>(수에즈 운하 반대)</li>
+              <li>에티오피아: <span class="blank" data-reveal>아도와 전투</span>에서 이탈리아 격퇴</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 22: Ⅳ단원 구분 ══ -->
+<div class="slide" data-slide="20">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🕊️</span><span class="browser-title">Ⅳ. 현대 세계의 과제</span></div>
+    <div class="browser-content">
+      <div class="sec-wrap">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <div class="sec-num">Ⅳ</div>
+        <div class="hist-divider" style="width:55%;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2>현대 세계의 과제 (89~100쪽)</h2>
+        <div style="display:flex;flex-direction:column;gap:.22rem;margin-top:.2rem;">
+          <div class="sec-lesson">▸ Ⅳ-1. 제1차 세계 대전(사라예보 사건·총력전·무제한 잠수함)</div>
+          <div class="sec-lesson">▸ Ⅳ-1. 러시아 혁명(3월·11월 혁명·레닌 NEP·스탈린)</div>
+          <div class="sec-lesson">▸ Ⅳ-1. 1차대전 이후(베르사유 조약·국제 연맹·간디·케말)</div>
+          <div class="sec-lesson">▸ Ⅳ-1. 제2차 세계 대전(대공황·전체주의·나치·노르망디·원폭)</div>
+          <div class="sec-lesson">▸ Ⅳ-1. 전후 처리·UN(카이로·얄타·뉘른베르크 재판)</div>
+          <div class="sec-lesson">▸ Ⅳ-2. 냉전 형성(트루먼 독트린·마셜 계획·6·25·쿠바 미사일)</div>
+          <div class="sec-lesson">▸ Ⅳ-2. 냉전 변화(고르바초프·소련 해체·동유럽 민주화·중국)</div>
+        </div>
+        <div class="section-ornament" style="margin-top:.2rem;">✦ &nbsp; ✦ &nbsp; ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 23: 제1차 세계 대전 ══ -->
+<div class="slide" data-slide="21">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">⚔️</span><span class="browser-title">Ⅳ-1 · 제1차 세계 대전 (89~90쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🔥 배경·발발</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>3국 동맹</span>: 독일·오스트리아·이탈리아</li>
+              <li><span class="blank" data-reveal>3국 협상</span>: 영국·프랑스·러시아</li>
+              <li>발칸반도: <span class="blank" data-reveal>범게르만주의</span> vs <span class="blank" data-reveal>범슬라브주의</span> 대립</li>
+              <li><span class="blank" data-reveal>사라예보 사건</span>(1914): 오스트리아 황태자 부부 암살</li>
+              <li>발발: 오스트리아→세르비아 선전 포고 → 동맹국·협상국 참전</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">⚔️ 전개·결과</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>전개: 마른 전투 교착 → <span class="blank" data-reveal>참호전</span> 전개</li>
+              <li>독일: <span class="blank" data-reveal>무제한 잠수함 작전</span> → 미국 참전</li>
+              <li>러시아 11월 혁명 → 단독 강화 → 전쟁 이탈</li>
+              <li>종결: 독일 <span class="blank" data-reveal>킬 군항</span> 봉기 → 빌헬름 2세 퇴위, 공화국 수립 → 휴전(1918)</li>
+              <li>특징: 총력전, <span class="blank" data-reveal>탱크</span>·전투기·잠수함·<span class="blank" data-reveal>독가스</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 24: 러시아 혁명 ══ -->
+<div class="slide" data-slide="22">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">☭</span><span class="browser-title">Ⅳ-1 · 러시아 혁명 (89~90쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🔴 혁명의 전개</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>피의 일요일 사건</span>(1905): 입헌 정치 요구 → 무력 진압 → <span class="blank" data-reveal>두마</span>(의회) 설치</li>
+              <li><span class="blank" data-reveal>3월 혁명</span>: 노동자·병사 봉기 → 니콜라이 2세 퇴위 → 임시 정부</li>
+              <li><span class="blank" data-reveal>11월 혁명</span>: <span class="blank" data-reveal>레닌</span>·볼셰비키 무장봉기 → 소비에트 정부 수립</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏛️ 혁명 후 소련</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>레닌: 독일과 강화, 토지·산업 국유화 → 경제 혼란</li>
+              <li><span class="blank" data-reveal>NEP</span>(신경제 정책): 자본주의 요소 부분 허용</li>
+              <li><span class="blank" data-reveal>소련</span>(소비에트 사회주의 공화국 연방) 수립(1922)</li>
+              <li><span class="blank" data-reveal>스탈린</span>: 경제 개발 5개년 계획, 독재 정치 구축</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 25: 제1차 세계 대전 이후 ══ -->
+<div class="slide" data-slide="23">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🕊️</span><span class="browser-title">Ⅳ-1 · 제1차 세계 대전 이후의 세계 (91~92쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🤝 베르사유 체제·국제 연맹</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>파리 강화 회의(1919): <span class="blank" data-reveal>윌슨</span>의 평화 원칙 14개조</li>
+              <li><span class="blank" data-reveal>베르사유 조약</span>: 독일 식민지 상실, <span class="blank" data-reveal>알자스-로렌</span> 프랑스 반환, 배상금</li>
+              <li><span class="blank" data-reveal>국제 연맹</span>(1920): 미국 불참, 독일·소련 제외, 군사 제재 수단 미비</li>
+              <li>바이마르 공화국 수립, 보통 선거권 확산</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🌏 민족 운동</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>중국: 5·4 운동 → 국공 합작 → 장제스 실권 → <span class="blank" data-reveal>대장정</span>(1934)</li>
+              <li>인도: <span class="blank" data-reveal>간디</span>의 비폭력·불복종 운동(소금 행진)</li>
+              <li>터키: <span class="blank" data-reveal>케말 파샤</span> → 술탄제 폐지 → <span class="blank" data-reveal>터키 공화국</span>(1923) 수립</li>
+              <li>아랍: 민족 운동 → 시리아·이라크 독립</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 26: 제2차 세계 대전 ══ -->
+<div class="slide" data-slide="24">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">💥</span><span class="browser-title">Ⅳ-1 · 제2차 세계 대전 (93~94쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">📉 대공황·전체주의 등장</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>대공황(1929): 주식·상품 가격 폭락 → 전 세계로 확산</li>
+              <li>미국 루스벨트: <span class="blank" data-reveal>뉴딜 정책</span> (수정 자본주의·사회 보장)</li>
+              <li>영국·프랑스: <span class="blank" data-reveal>블록 경제</span>(본국↔식민지 경제 유대)</li>
+              <li>이탈리아: <span class="blank" data-reveal>무솔리니</span>·<span class="blank" data-reveal>파시스트</span>당(1922)</li>
+              <li>독일: <span class="blank" data-reveal>히틀러</span>·<span class="blank" data-reveal>나치</span>당 집권 (유대인 박해)</li>
+              <li>일본: 대외 침략 (만주 사변·중일 전쟁)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">⚔️ 전쟁 발발·전개·종결</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>독소 불가침 조약 → 독일의 <span class="blank" data-reveal>폴란드</span> 침공(1939) → 2차 세계대전 발발</li>
+              <li>일본: <span class="blank" data-reveal>진주만 공격</span>(1941) → 미국 참전</li>
+              <li>소련: <span class="blank" data-reveal>스탈린그라드 전투</span> 승리 → 전세 역전</li>
+              <li>연합군: <span class="blank" data-reveal>노르망디</span> 상륙 작전 → 파리 수복 → 독일 항복</li>
+              <li>히로시마·나가사키 <span class="blank" data-reveal>원자 폭탄</span> 투하 → 일본 항복(1945.8.)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 27: 전후 처리·국제 연합 ══ -->
+<div class="slide" data-slide="25">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🕊️</span><span class="browser-title">Ⅳ-1 · 전후 처리와 국제 연합의 창설 (95~96쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🤝 전후 처리 회담</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>대서양 헌장</span>(1941): 루스벨트·처칠, 전후 평화 원칙</li>
+              <li><span class="blank" data-reveal>카이로 회담</span>(1943): 미·영·중, 우리나라 독립 최초 약속</li>
+              <li><span class="blank" data-reveal>얄타 회담</span>(1945.2.): 미·영·소, 소련 대일전 참전·독일 분할</li>
+              <li><span class="blank" data-reveal>포츠담 회담</span>(1945.7.): 일본 무조건 항복 요구</li>
+              <li>샌프란시스코 강화 조약: 한반도 독립, 타이완 권리 포기</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🌐 국제 연합·전범 재판</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>국제 연합(UN)</span> 창설(1945): 안전 보장 이사회 중심</li>
+              <li>상임 이사국(미·영·프·소·중) <span class="blank" data-reveal>거부권</span> 부여</li>
+              <li>1948년 〈세계 인권 선언〉 채택</li>
+              <li><span class="blank" data-reveal>뉘른베르크 재판</span>(1945~46): 나치 전범, '<span class="blank" data-reveal>인도에 반한 죄</span>' 최초 등장</li>
+              <li>도쿄 재판: 도조 히데키 등 7명 사형, 히로히토 천황 <span class="blank" data-reveal>제외</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 28: 냉전 체제의 형성 ══ -->
+<div class="slide" data-slide="26">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🌍</span><span class="browser-title">Ⅳ-2 · 냉전 체제의 형성 (97~98쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🇺🇸 미국 vs 🇷🇺 소련 진영</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>미국: <span class="blank" data-reveal>트루먼 독트린</span>, <span class="blank" data-reveal>마셜 계획</span>(서유럽 경제 지원), <span class="blank" data-reveal>NATO</span>(북대서양 조약 기구)</li>
+              <li>소련: <span class="blank" data-reveal>코민포름</span>, <span class="blank" data-reveal>코메콘</span>(경제 상호 원조), <span class="blank" data-reveal>바르샤바 조약 기구</span></li>
+              <li><span class="blank" data-reveal>베를린 봉쇄</span>(1948): 소련이 서베를린 봉쇄</li>
+              <li>중국 내전: 공산당 승리 → <span class="blank" data-reveal>중화 인민 공화국</span> 수립</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🔥 냉전 속 열전·긴장</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>6·25 전쟁</span>(1950): 북한 남침, 유엔군 참전, 중국군 개입</li>
+              <li><span class="blank" data-reveal>베트남 전쟁</span>: 북베트남 승리 → 베트남 사회주의 공화국</li>
+              <li><span class="blank" data-reveal>쿠바 미사일 위기</span>: 소련의 쿠바 핵미사일 기지 → 철수 합의</li>
+              <li><span class="blank" data-reveal>제3 세계</span>: 아시아·아프리카 신생 독립국, 아시아·아프리카 회의 <span class="blank" data-reveal>평화 10원칙</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 29: 냉전 체제의 변화 ══ -->
+<div class="slide" data-slide="27">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🕊️</span><span class="browser-title">Ⅳ-2 · 냉전 체제의 변화 (99~100쪽)</span></div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="grid-2">
+        <div class="ruler-card">
+          <div class="ruler-card-header">☮️ 냉전 완화·소련 해체</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li><span class="blank" data-reveal>흐루쇼프</span>: 미국 방문, 자본주의 국가와 평화 공존</li>
+              <li><span class="blank" data-reveal>닉슨 독트린</span>: 베트남 철수, 전략 무기 제한 협정</li>
+              <li>서독 <span class="blank" data-reveal>브란트</span> 총리: <span class="blank" data-reveal>동방 정책</span></li>
+              <li><span class="blank" data-reveal>고르바초프</span>: <span class="blank" data-reveal>페레스트로이카</span>(개혁)·<span class="blank" data-reveal>글라스노스트</span>(개방)</li>
+              <li>옐친: <span class="blank" data-reveal>독립 국가 연합(CIS)</span> → <span class="blank" data-reveal>소련 해체</span>(1991)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🌐 동유럽 민주화·동아시아 변화</div>
+          <div class="ruler-card-body">
+            <ul class="info-list dense">
+              <li>독일: <span class="blank" data-reveal>베를린 장벽</span> 붕괴 → 서독의 동독 흡수 → 독일 통일</li>
+              <li>폴란드: 원탁 회의, <span class="blank" data-reveal>자유 노조</span> 승리 (바웬사)</li>
+              <li>루마니아: <span class="blank" data-reveal>차우셰스쿠</span> 독재 정권 붕괴</li>
+              <li>체코슬로바키아: <span class="blank" data-reveal>벨벳 혁명</span> (하벨 대통령)</li>
+              <li>중국: <span class="blank" data-reveal>대약진 운동</span> → <span class="blank" data-reveal>문화 대혁명</span> → <span class="blank" data-reveal>덩샤오핑</span>(개혁·개방, 경제 특구)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 30: 마무리 ══ -->
+<div class="slide" data-slide="28">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">세계사 Ⅲ·Ⅳ단원 전체범위 복습 완료</span></div>
+    <div class="browser-content">
+      <div class="cover-wrap">
+        <h1>수고하셨습니다!</h1>
+        <div class="hist-divider" style="width:60%;margin:.1rem auto;"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <div class="highlight-box" style="width:88%;text-align:left;">
+          <p style="font-size:.78rem;line-height:1.9;">
+            <strong>Ⅲ-1</strong> 아시아 다민족 제국: 청(팔기제·다민족 통치) · 에도(막번·산킨코타이·쇄국) · 무굴(아크바르·타지마할) · 오스만(티마르·데브시르메·밀레트)<br>
+            <strong>Ⅲ-2</strong> 시민 혁명: 미국(삼권 분립·연방 헌법) → 프랑스(구제도 타파·나폴레옹) → 빈 체제 → 이탈리아·독일 통일·남북 전쟁<br>
+            <strong>Ⅲ-3</strong> 산업·제국: 1차(증기) → 2차(전기·석유) → 러다이트·마르크스 → 아프리카·아시아 분할<br>
+            <strong>Ⅲ-4</strong> 민족 운동: 중국(아편→신해혁명) · 일본(메이지→청일·러일) · 인도(세포이→콜카타) · 서아시아·아프리카<br>
+            <strong>Ⅳ-1</strong> 세계 대전: 사라예보·총력전 → 러시아 혁명·NEP·소련 → 베르사유·간디·케말 → 대공황·나치 → 노르망디·원폭<br>
+            <strong>Ⅳ-2</strong> 냉전: 트루먼 독트린·마셜 계획·NATO → 6·25·쿠바 미사일 → 고르바초프·소련 해체·동유럽 민주화·덩샤오핑
+          </p>
+        </div>
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /presentation -->
+
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="prevAction()" disabled aria-label="이전">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-counter">
+    <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
+    / <span id="totalSlides">31</span>
+  </span>
+  <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('totalSlides').textContent = total;
+
+  function revealItems(slideEl) { return Array.from(slideEl.querySelectorAll('[data-reveal]')); }
+  function getRC(slideEl)       { return parseInt(slideEl.dataset.rc || '0'); }
+  function setRC(slideEl, n)    { slideEl.dataset.rc = n; }
+  function applyReveal(slideEl) {
+    const items = revealItems(slideEl);
+    const n = getRC(slideEl);
+    items.forEach((el, i) => el.classList.toggle('on', i < n));
+  }
+
+  function updateNav() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    document.getElementById('prevBtn').disabled = currentSlide === 0 && n === 0;
+    document.getElementById('nextBtn').disabled = currentSlide === total - 1 && n === items.length;
+    document.getElementById('slideInput').value = currentSlide + 1;
+    document.getElementById('progressBar').style.width = ((currentSlide + 1) / total * 100) + '%';
+  }
+
+  function goToSlide(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = idx;
+    setRC(slides[currentSlide], 0);
+    applyReveal(slides[currentSlide]);
+    slides[currentSlide].classList.add('active');
+    updateNav();
+  }
+
+  function nextAction() {
+    const el = slides[currentSlide];
+    const items = revealItems(el);
+    const n = getRC(el);
+    if (n < items.length) {
+      setRC(el, n + 1);
+      applyReveal(el);
+      updateNav();
+    } else if (currentSlide < total - 1) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide++;
+      setRC(slides[currentSlide], 0);
+      applyReveal(slides[currentSlide]);
+      slides[currentSlide].classList.add('active');
+      updateNav();
+    }
+  }
+
+  function prevAction() {
+    const el = slides[currentSlide];
+    const n = getRC(el);
+    if (n > 0) {
+      setRC(el, n - 1);
+      applyReveal(el);
+      updateNav();
+    } else if (currentSlide > 0) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide--;
+      const prevEl = slides[currentSlide];
+      setRC(prevEl, revealItems(prevEl).length);
+      applyReveal(prevEl);
+      prevEl.classList.add('active');
+      updateNav();
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.target === document.getElementById('slideInput')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextAction(); }
+    if (e.key === 'ArrowLeft'  || e.key === 'PageUp')  { e.preventDefault(); prevAction(); }
+    if (e.key === 'Home') goToSlide(0);
+    if (e.key === 'End')  goToSlide(total - 1);
+  });
+
+  const slideInput = document.getElementById('slideInput');
+  slideInput.addEventListener('focus', () => slideInput.select());
+  slideInput.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { const n = parseInt(slideInput.value) - 1; if (!isNaN(n)) goToSlide(Math.max(0, Math.min(n, total - 1))); slideInput.blur(); }
+    if (e.key === 'Escape') { slideInput.value = currentSlide + 1; slideInput.blur(); }
+  });
+  slideInput.addEventListener('blur', () => { const n = parseInt(slideInput.value) - 1; if (!isNaN(n)) goToSlide(Math.max(0, Math.min(n, total - 1))); });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive:true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].screenX - touchStartX;
+    if (Math.abs(dx) > 40) { if (dx < 0) nextAction(); else prevAction(); }
+  }, { passive:true });
+
+  updateNav();
+</script>
+</body>
+</html>
