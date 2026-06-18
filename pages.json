@@ -605,6 +605,19 @@
                 { "label": "역사 수업", "color": "green" }
               ],
               "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
+            },
+            {
+              "title": "43. 냉전 체제의 변화",
+              "path": "세계사/Ⅳ. 현대 세계의 과제/43. 냉전 체제의 변화/index.html",
+              "emoji": "🕊️",
+              "description": "02 냉전 체제의 변화. 흐루쇼프·닉슨 독트린·동방 정책, 고르바초프(페레스트로이카·글라스노스트)·소련 해체(1991), 독일 통일·동유럽 민주화(폴란드·루마니아·체코), 중국 대약진·문화 대혁명·덩샤오핑, 지역 공동체. 학습지 99~100쪽. 빈칸 포인터로 하나씩 공개.",
+              "tags": [
+                { "label": "냉전 완화", "color": "orange" },
+                { "label": "소련 해체", "color": "purple" },
+                { "label": "동유럽 민주화", "color": "blue" },
+                { "label": "역사 수업", "color": "green" }
+              ],
+              "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
             }
           ]
         },
