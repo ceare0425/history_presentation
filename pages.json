@@ -29,6 +29,19 @@
             { "label": "역사 수업", "color": "green" }
           ],
           "gradient": "linear-gradient(90deg, #6B3010, #8B4513)"
+        },
+        {
+          "title": "한국사 3단원 복습 (pp.66~154)",
+          "path": "한국사/한국사 3단원 복습.html",
+          "emoji": "🏯",
+          "description": "신분제(삼국·고려·조선) + 사상·문화 + 개항·근대화(강화도조약·갑신정변·동학·갑오개혁·대한제국) + 언론기관 발달 + 국권 침탈·의병·애국 계몽 운동. 빈칸 PageDown으로 하나씩 공개.",
+          "tags": [
+            { "label": "신분제·사상", "color": "orange" },
+            { "label": "개항·근대화", "color": "purple" },
+            { "label": "국권 수호", "color": "blue" },
+            { "label": "빈칸 학습", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
         }
       ]
     },
