@@ -61,7 +61,7 @@
       padding: 0.8rem;
     }
 
-    .slide { display: none; width: 100%; max-width: 1600px; height: 100%; }
+    .slide { display: none; aspect-ratio: 16/9; width: min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height: auto; }
     .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -343,6 +343,29 @@
       font-size: 0.85rem; font-weight: 700; color: var(--main);
       margin-bottom: 0.3rem; margin-top: 0.1rem;
     }
+
+    /* === 19. 사진 갤러리 (큰 이미지) === */
+    .photo-gallery { display: flex; gap: 0.9rem; flex: 1; min-height: 0; margin-top: 0.5rem; }
+    .photo-card {
+      flex: 1; min-width: 0; display: flex; flex-direction: column;
+      border: 1.5px solid var(--border); border-radius: 4px; overflow: hidden;
+      background: var(--card-bg); box-shadow: 0 3px 14px rgba(44,26,14,0.15);
+    }
+    .photo-frame {
+      flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;
+      background: var(--light); overflow: hidden;
+    }
+    .photo-frame img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    .photo-caption {
+      text-align: center; padding: 0.5rem 0.6rem; flex-shrink: 0;
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 1rem;
+      color: var(--accent-light);
+      background: linear-gradient(90deg, var(--main), var(--dark));
+      border-top: 1.5px solid var(--accent);
+    }
+    @media (max-width: 768px) {
+      .photo-gallery { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
@@ -406,26 +429,33 @@
           <div class="toc-item" onclick="goToSlide(4)">
             <div class="toc-num">3</div>
             <div>
-              <div class="toc-title">신석기 문화의 발전 — 전환 배경 · 생활</div>
-              <div class="toc-desc">약 1만 년 전~ · 농경·목축 · 정착 생활 · 애니미즘</div>
+              <div class="toc-title">구석기 시대 대표 유물 (사진)</div>
+              <div class="toc-desc">비너스 조각상 · 뗀석기 · 알타미라 동굴 벽화</div>
             </div>
           </div>
           <div class="toc-item" onclick="goToSlide(5)">
             <div class="toc-num">4</div>
             <div>
-              <div class="toc-title">신석기 문화의 발전 — 사회 · 유물</div>
-              <div class="toc-desc">촌락·씨족 사회 · 간석기 · 토기 · 스톤헨지</div>
+              <div class="toc-title">신석기 문화의 발전 — 전환 배경 · 생활</div>
+              <div class="toc-desc">약 1만 년 전~ · 농경·목축 · 정착 생활 · 애니미즘</div>
             </div>
           </div>
           <div class="toc-item" onclick="goToSlide(6)">
             <div class="toc-num">5</div>
             <div>
-              <div class="toc-title">⑴ 문명의 탄생 (기원전 3500년경)</div>
-              <div class="toc-desc">4대 문명 · 청동기 · 계급 분화 · 도시 형성</div>
+              <div class="toc-title">신석기 문화의 발전 — 사회 · 유물</div>
+              <div class="toc-desc">촌락·씨족 사회 · 간석기 · 토기 · 스톤헨지</div>
             </div>
           </div>
           <div class="toc-item" onclick="goToSlide(7)">
             <div class="toc-num">6</div>
+            <div>
+              <div class="toc-title">⑴ 문명의 탄생 (기원전 3500년경)</div>
+              <div class="toc-desc">4대 문명 · 청동기 · 계급 분화 · 도시 형성</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(8)">
+            <div class="toc-num">7</div>
             <div>
               <div class="toc-title">⑵ 초기 문명의 특징</div>
               <div class="toc-desc">문자 발명 · 사유 재산 · 직업 분화 · 역사 시대</div>
@@ -535,9 +565,41 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 5: 신석기 — 전환 배경 + 생활 -->
+  <!-- Slide 5: 구석기 시대 대표 유물 (사진) -->
   <!-- ══════════════════════════════════════════ -->
   <div class="slide" data-slide="4">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🖼️</span>
+        <span class="browser-title">1. 인류의 탄생과 구석기 시대 — 대표 유물 사진</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">구석기 시대 대표 유물</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="photo-gallery">
+          <div class="photo-card">
+            <div class="photo-frame"><img src="비너스.jpg" alt="비너스 조각상"></div>
+            <div class="photo-caption">비너스 조각상</div>
+          </div>
+          <div class="photo-card">
+            <div class="photo-frame"><img src="뗀석기.jpg" alt="뗀석기"></div>
+            <div class="photo-caption">뗀석기</div>
+          </div>
+          <div class="photo-card">
+            <div class="photo-frame"><img src="알타미라%20동굴벽화.png" alt="알타미라 동굴 벽화"></div>
+            <div class="photo-caption">알타미라 동굴 벽화</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 6: 신석기 — 전환 배경 + 생활 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="5">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🌾</span>
@@ -584,9 +646,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 6: 신석기 — 사회 + 유물 -->
+  <!-- Slide 7: 신석기 — 사회 + 유물 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="5">
+  <div class="slide" data-slide="6">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🏘️</span>
@@ -599,32 +661,19 @@
         </h2>
         <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
 
-        <div class="grid-2" style="gap:0.7rem;">
-          <div class="ruler-card" style="margin-bottom:0;">
-            <div class="ruler-card-header">【 사회 】</div>
-            <div class="ruler-card-body">
-              <ul class="info-list">
-                <li>촌락 형성</li>
-                <li>씨족 사회 형성
-                  <ul style="list-style:none; padding-left:0.8rem; margin-top:0.3rem; display:flex; flex-direction:column; gap:0.2rem;">
-                    <li style="font-size:0.85rem; color:var(--text-sec);">· 공동 조상 숭배</li>
-                    <li style="font-size:0.85rem; color:var(--text-sec);">· 공동 신 숭배</li>
-                    <li style="font-size:0.85rem; color:var(--text-sec);">· 생산물 분배</li>
-                  </ul>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="ruler-card" style="margin-bottom:0;">
-            <div class="ruler-card-header">【 대표 유물 】</div>
-            <div class="ruler-card-body">
-              <ul class="info-list">
-                <li>간석기 (돌을 갈아 만든 도구)</li>
-                <li>토기 (식량 보관·조리)</li>
-                <li>스톤헨지 (영국, 거석 유적)</li>
-              </ul>
-            </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">【 사회 】</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>촌락 형성</li>
+              <li>씨족 사회 형성
+                <ul style="list-style:none; padding-left:0.8rem; margin-top:0.3rem; display:flex; flex-direction:column; gap:0.2rem;">
+                  <li style="font-size:0.85rem; color:var(--text-sec);">· 공동 조상 숭배</li>
+                  <li style="font-size:0.85rem; color:var(--text-sec);">· 공동 신 숭배</li>
+                  <li style="font-size:0.85rem; color:var(--text-sec);">· 생산물 분배</li>
+                </ul>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -632,9 +681,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 7: ⑴ 문명의 탄생 -->
+  <!-- Slide 8: ⑴ 문명의 탄생 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="6">
+  <div class="slide" data-slide="7">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🏛️</span>
@@ -673,32 +722,14 @@
           </div>
         </div>
 
-        <div class="grid-4" style="margin-top:0.4rem;">
-          <div class="mini-card" style="text-align:center;">
-            <h3>메소포타미아</h3>
-            <p>티그리스강<br>유프라테스강</p>
-          </div>
-          <div class="mini-card" style="text-align:center;">
-            <h3>이집트</h3>
-            <p>나일강</p>
-          </div>
-          <div class="mini-card" style="text-align:center;">
-            <h3>인더스</h3>
-            <p>인더스강</p>
-          </div>
-          <div class="mini-card" style="text-align:center;">
-            <h3>황허</h3>
-            <p>황허(황하)강</p>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 8: ⑵ 초기 문명의 특징 -->
+  <!-- Slide 9: ⑵ 초기 문명의 특징 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="7">
+  <div class="slide" data-slide="8">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">📝</span>
@@ -732,16 +763,22 @@
           </div>
         </div>
 
-        <div class="ruler-card" style="margin-top:0.3rem;">
-          <div class="ruler-card-header">📌 선사 시대 → 역사 시대 전환의 기준</div>
-          <div class="ruler-card-body">
-            <div class="flow-wrap">
-              <div class="flow-step">선사 시대<br>(문자 이전)</div>
-              <span class="flow-arrow">→</span>
-              <div class="flow-step">문자 발명</div>
-              <span class="flow-arrow">→</span>
-              <div class="flow-step">역사 시대<br>(기록 시작)</div>
-            </div>
+        <div class="grid-4" style="margin-top:0.4rem;">
+          <div class="mini-card" style="text-align:center;">
+            <h3>메소포타미아</h3>
+            <p>티그리스강<br>유프라테스강</p>
+          </div>
+          <div class="mini-card" style="text-align:center;">
+            <h3>이집트</h3>
+            <p>나일강</p>
+          </div>
+          <div class="mini-card" style="text-align:center;">
+            <h3>인도</h3>
+            <p>인더스강</p>
+          </div>
+          <div class="mini-card" style="text-align:center;">
+            <h3>중국</h3>
+            <p>황허(황하)강</p>
           </div>
         </div>
       </div>
@@ -749,9 +786,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 9: 핵심 정리 -->
+  <!-- Slide 10: 핵심 정리 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="8">
+  <div class="slide" data-slide="9">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">📋</span>
@@ -817,9 +854,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 10: 개념 확인 문제 1 -->
+  <!-- Slide 11: 개념 확인 문제 1 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="9">
+  <div class="slide" data-slide="10">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -860,9 +897,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 11: 개념 확인 문제 2 -->
+  <!-- Slide 12: 개념 확인 문제 2 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="10">
+  <div class="slide" data-slide="11">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -903,9 +940,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 12: 개념 확인 문제 3 -->
+  <!-- Slide 13: 개념 확인 문제 3 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="11">
+  <div class="slide" data-slide="12">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
