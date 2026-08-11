@@ -72,7 +72,10 @@
       "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\('C:\\\\Users\\\\user\\\\Documents\\\\GitHub\\\\history_presentation\\\\세계사\\\\02-메소포타미아-이집트\\\\쐐기문자.jpg'\\); \"$\\($img.Width\\)x$\\($img.Height\\)\")",
       "WebFetch(domain:youtu.be)",
       "WebFetch(domain:www.youtube.com)",
-      "Bash(start *)"
+      "Bash(start *)",
+      "PowerShell(chkdsk C: *)",
+      "PowerShell(DISM *)",
+      "PowerShell(winget *)"
     ]
   }
 }
