@@ -53,7 +53,7 @@
       padding: 0.8rem;
     }
 
-    .slide { display: none; width: 100%; max-width: 1600px; height: 100%; }
+    .slide { display: none; aspect-ratio: 16/9; width: min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height: auto; }
     .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -348,33 +348,40 @@
           <div class="toc-item" onclick="goToSlide(5)">
             <div class="toc-num">4</div>
             <div>
-              <div class="toc-title">이집트 문명 — 성립 · 발전</div>
-              <div class="toc-desc">나일강 유역 · 파라오 · 폐쇄적 지형 · 안정적 왕조</div>
+              <div class="toc-title">메소포타미아 문명 — 문자 · 학문</div>
+              <div class="toc-desc">쐐기 문자 · 태음력 · 60진법</div>
             </div>
           </div>
           <div class="toc-item" onclick="goToSlide(6)">
             <div class="toc-num">5</div>
             <div>
-              <div class="toc-title">이집트 문명 — 문화</div>
-              <div class="toc-desc">내세적 세계관 · 미라 · 기하학 · 태양력 · 상형 문자</div>
+              <div class="toc-title">이집트 문명 — 성립 · 발전</div>
+              <div class="toc-desc">나일강 유역 · 파라오 · 폐쇄적 지형 · 안정적 왕조</div>
             </div>
           </div>
           <div class="toc-item" onclick="goToSlide(7)">
             <div class="toc-num">6</div>
             <div>
+              <div class="toc-title">이집트 문명 — 문화</div>
+              <div class="toc-desc">내세적 세계관 · 미라 · 기하학 · 태양력 · 상형 문자</div>
+            </div>
+          </div>
+          <div class="toc-item" onclick="goToSlide(8)">
+            <div class="toc-num">7</div>
+            <div>
               <div class="toc-title">동부 지중해 연안 국가들</div>
               <div class="toc-desc">히타이트 · 페니키아 · 헤브라이</div>
             </div>
           </div>
-          <div class="toc-item" onclick="goToSlide(10)">
-            <div class="toc-num">7</div>
+          <div class="toc-item" onclick="goToSlide(11)">
+            <div class="toc-num">8</div>
             <div>
               <div class="toc-title">에게 문명</div>
               <div class="toc-desc">크레타(미노스) 문명 · 미케네 문명</div>
             </div>
           </div>
-          <div class="toc-item" onclick="goToSlide(11)">
-            <div class="toc-num">8</div>
+          <div class="toc-item" onclick="goToSlide(12)">
+            <div class="toc-num">9</div>
             <div>
               <div class="toc-title">핵심 비교 정리</div>
               <div class="toc-desc">메소포타미아 vs 이집트 비교표</div>
@@ -465,6 +472,11 @@
               <li><strong>쐐기 문자</strong>로 기록</li>
               <li>당시 사회상 확인 가능</li>
             </ul>
+            <div class="highlight-box" style="font-size:0.85rem; font-style:italic; margin-top:0.5rem;">
+              제196조 &nbsp;만약 한 자유인이 다른 자유인의 눈을 멀게 하였다면, 그의 눈을 멀게 할 것이다.<br>
+              제198조 &nbsp;자유인이 평민의 눈이나 다리를 상하게 하면 은화 1미나(마누)를 바쳐야 한다.<br>
+              제205조 &nbsp;만약 한 자유인의 노예가 자유인의 뺨을 때렸다면, 그의 귀를 잘라낼 것이다.
+            </div>
           </div>
         </div>
       </div>
@@ -485,7 +497,7 @@
         <h2 style="margin-bottom:0.15rem;">메소포타미아 문명의 문화</h2>
         <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
 
-        <div class="grid-2" style="gap:0.6rem;">
+        <div class="grid-2" style="gap:0.6rem; flex:1; min-height:0;">
           <div class="ruler-card" style="margin-bottom:0;">
             <div class="ruler-card-header">🏯 종교 · 정치</div>
             <div class="ruler-card-body">
@@ -496,14 +508,10 @@
             </div>
           </div>
 
-          <div class="ruler-card" style="margin-bottom:0;">
-            <div class="ruler-card-header">📝 문자 · 학문</div>
-            <div class="ruler-card-body">
-              <ul class="info-list">
-                <li><strong>쐐기 문자</strong> 사용</li>
-                <li><strong>태음력</strong> 사용</li>
-                <li><strong>60진법</strong> 기본으로 한 숫자 체계 사용</li>
-              </ul>
+          <div class="ruler-card" style="margin-bottom:0; display:flex; flex-direction:column;">
+            <div class="ruler-card-header">🖼️ 지구라트</div>
+            <div class="ruler-card-body" style="flex:1; min-height:0; display:flex; align-items:center; justify-content:center; padding:0.4rem;">
+              <img src="지구라트.jpg" alt="지구라트" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:3px;">
             </div>
           </div>
         </div>
@@ -512,9 +520,37 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 6: 이집트 문명 — 성립·발전 -->
+  <!-- Slide 6: 메소포타미아 문명 — 문자 · 학문 -->
   <!-- ══════════════════════════════════════════ -->
   <div class="slide" data-slide="5">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">📝</span>
+        <span class="browser-title">1. 메소포타미아 문명 — 문자 · 학문</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.15rem;">메소포타미아 문명의 문자 · 학문</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">📝 문자 · 학문</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li><strong>쐐기 문자</strong> 사용</li>
+              <li><strong>태음력</strong> 사용</li>
+              <li><strong>60진법</strong> 기본으로 한 숫자 체계 사용</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Slide 7: 이집트 문명 — 성립·발전 -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="slide" data-slide="6">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">𓂀</span>
@@ -570,9 +606,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 7: 이집트 문명 — 문화 -->
+  <!-- Slide 8: 이집트 문명 — 문화 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="6">
+  <div class="slide" data-slide="7">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🔺</span>
@@ -613,9 +649,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 8: 히타이트 -->
+  <!-- Slide 9: 히타이트 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="7">
+  <div class="slide" data-slide="8">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">⚔️</span>
@@ -651,9 +687,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 9: 페니키아 -->
+  <!-- Slide 10: 페니키아 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="8">
+  <div class="slide" data-slide="9">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">⛵</span>
@@ -683,9 +719,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 10: 헤브라이 -->
+  <!-- Slide 11: 헤브라이 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="9">
+  <div class="slide" data-slide="10">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✡️</span>
@@ -715,9 +751,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 11: 에게 문명 -->
+  <!-- Slide 12: 에게 문명 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="10">
+  <div class="slide" data-slide="11">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🌊</span>
@@ -765,9 +801,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 12: 핵심 비교 정리 -->
+  <!-- Slide 13: 핵심 비교 정리 -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="11">
+  <div class="slide" data-slide="12">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">📊</span>
@@ -834,9 +870,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 13: 개념 확인 문제 1 (괄호 알맞은 말) -->
+  <!-- Slide 14: 개념 확인 문제 1 (괄호 알맞은 말) -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="12">
+  <div class="slide" data-slide="13">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -889,9 +925,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 14: 개념 확인 문제 2 (빈칸 채우기) -->
+  <!-- Slide 15: 개념 확인 문제 2 (빈칸 채우기) -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="13">
+  <div class="slide" data-slide="14">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -935,9 +971,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 15: 개념 확인 문제 3 (선다형) -->
+  <!-- Slide 16: 개념 확인 문제 3 (선다형) -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="14">
+  <div class="slide" data-slide="15">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -973,9 +1009,9 @@
   </div>
 
   <!-- ══════════════════════════════════════════ -->
-  <!-- Slide 16: 개념 확인 문제 4 (선다형) -->
+  <!-- Slide 17: 개념 확인 문제 4 (선다형) -->
   <!-- ══════════════════════════════════════════ -->
-  <div class="slide" data-slide="15">
+  <div class="slide" data-slide="16">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
