@@ -66,7 +66,8 @@
       "PowerShell(python \"C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-user-Documents-GitHub-history-presentation\\\\2b681084-0d9d-48cf-9e1d-baa06b0b5623\\\\scratchpad\\\\build_timetable.py\")",
       "Bash(cp \"/c/Users/user/Desktop/비너스.jpg\" \"/c/Users/user/Documents/GitHub/history_presentation/세계사/01-문명의형성/비너스.jpg\")",
       "Bash(cp \"/c/Users/user/Desktop/뗀석기.jpg\" \"/c/Users/user/Documents/GitHub/history_presentation/세계사/01-문명의형성/뗀석기.jpg\")",
-      "Bash(cp \"/c/Users/user/Desktop/알타미라 동굴벽화.png\" \"/c/Users/user/Documents/GitHub/history_presentation/세계사/01-문명의형성/알타미라 동굴벽화.png\")"
+      "Bash(cp \"/c/Users/user/Desktop/알타미라 동굴벽화.png\" \"/c/Users/user/Documents/GitHub/history_presentation/세계사/01-문명의형성/알타미라 동굴벽화.png\")",
+      "Bash(git *)"
     ]
   }
 }
