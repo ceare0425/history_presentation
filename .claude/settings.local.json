@@ -75,7 +75,15 @@
       "Bash(start *)",
       "PowerShell(chkdsk C: *)",
       "PowerShell(DISM *)",
-      "PowerShell(winget *)"
+      "PowerShell(winget *)",
+      "Bash(npm --version)",
+      "PowerShell(npm *)",
+      "PowerShell(py *)",
+      "Bash(iconv -f cp949 -t utf-8)",
+      "Bash(rm -f review-game/data/question_bank.json review-game/tools/extract_questions.py)",
+      "Bash(rmdir review-game/tools)",
+      "Bash(curl *)",
+      "Bash(taskkill //F //IM python.exe)"
     ]
   }
 }
