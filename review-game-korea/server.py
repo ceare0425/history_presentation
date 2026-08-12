@@ -314,9 +314,15 @@ class Handler(BaseHTTPRequestHandler):
                     if q:
                         question_out = {"id": q["id"], "text": q["question"], "unit": q["unit"]}
 
+                player_out = public_player(player)
+                if r["status"] == "ended":
+                    ranked = sorted(STATE["players"].values(), key=lambda p: (-p["floor"], -p["correct"]))
+                    player_out["rank"] = next((i + 1 for i, p in enumerate(ranked) if p["id"] == player["id"]), None)
+                    player_out["total_players"] = len(ranked)
+
                 self._send_json({
                     "round": r,
-                    "player": public_player(player),
+                    "player": player_out,
                     "question": question_out,
                 })
             return

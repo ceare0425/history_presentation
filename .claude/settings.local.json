@@ -83,7 +83,16 @@
       "Bash(rm -f review-game/data/question_bank.json review-game/tools/extract_questions.py)",
       "Bash(rmdir review-game/tools)",
       "Bash(curl *)",
-      "Bash(taskkill //F //IM python.exe)"
+      "Bash(taskkill //F //IM python.exe)",
+      "Bash(cp \"/c/Users/user/Documents/GitHub/history_presentation/review-game/static/play.html\" \"/c/Users/user/Documents/GitHub/history_presentation/review-game-korea/static/play.html\")",
+      "Bash(cp \"/c/Users/user/Documents/GitHub/history_presentation/review-game/static/board.html\" \"/c/Users/user/Documents/GitHub/history_presentation/review-game-korea/static/board.html\")",
+      "Bash(sed -i 's/세계사/한국사/g' static/play.html static/board.html)",
+      "Bash(cp review-game/static/board.html review-game-korea/static/board.html)",
+      "Bash(cp review-game/static/play.html review-game-korea/static/play.html)",
+      "Bash(sed -i 's/세계사/한국사/g' review-game-korea/static/board.html review-game-korea/static/play.html)",
+      "Bash(rm -f review-game-korea/server.py)",
+      "Bash(cp review-game/server.py review-game-korea/server.py)",
+      "Bash(sed -i 's/세계사/한국사/g; s/8899/8898/g' review-game-korea/server.py)"
     ]
   }
 }
