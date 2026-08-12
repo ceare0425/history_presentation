@@ -15,10 +15,19 @@
   html,body{height:100%;}
   body{
     margin:0; font-family:'Malgun Gothic','Pretendard',-apple-system,sans-serif;
-    background:linear-gradient(180deg,var(--sky1),var(--sky2) 60%,#3a6b8a);
+    background:linear-gradient(180deg,#0f2447,var(--sky1) 35%,var(--sky2) 65%,#3a6b8a);
     color:var(--ink); min-height:100vh; display:flex; align-items:center; justify-content:center;
-    padding:16px;
+    padding:16px; position:relative; overflow:hidden;
   }
+  .sky-layer{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+  .star{ position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; animation:twinkle 3.4s ease-in-out infinite; }
+  @keyframes twinkle{ 0%,100%{opacity:.15;} 50%{opacity:.85;} }
+  .cloud{
+    position:absolute; border-radius:50%; background:rgba(255,255,255,.35); filter:blur(8px);
+    animation-name:drift; animation-timing-function:linear; animation-iteration-count:infinite;
+  }
+  @keyframes drift{ from{ transform:translateX(-16vw); } to{ transform:translateX(116vw); } }
+  .card{ position:relative; z-index:1; }
   /* 16:9 와이드 카드 - 긴 문제도 잘리지 않도록 폭을 넉넉히 확보 */
   .card{
     width:min(1100px, 94vw);
@@ -103,17 +112,32 @@
     margin-top:1vh; gap:3px; flex:0 0 auto;
   }
   .tower-mini .bar{
-    width:10px; background:linear-gradient(180deg,var(--gold),var(--gold-dark)); border-radius:3px 3px 0 0;
-    transition:height .3s ease;
+    width:10px; border-radius:3px 3px 0 0; transition:height .35s cubic-bezier(.34,1.56,.64,1);
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,.4) 0px, rgba(255,255,255,.4) 2px, transparent 2px, transparent 9px),
+      linear-gradient(180deg,var(--gold),var(--gold-dark));
+  }
+
+  .floor-badge{ transition:transform .15s ease; }
+  .floor-badge.pop{ animation:floorPop .5s ease; }
+  @keyframes floorPop{
+    0%{ transform:scale(1); }
+    35%{ transform:scale(1.35); filter:drop-shadow(0 0 10px #ffe9a8); }
+    100%{ transform:scale(1); }
   }
 
   .ended{ text-align:center; }
   .ended .big{ font-size:3.4rem; font-weight:800; color:var(--sky1); margin:6px 0; }
+  .final-rank{ font-size:1.1rem; font-weight:700; color:var(--sub); margin-bottom:.4rem; min-height:1.4em; }
+  .final-rank.rank1{ font-size:1.6rem; color:var(--gold-dark); animation:rank1Pop .7s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes rank1Pop{ 0%{ transform:scale(.5); opacity:0; } 100%{ transform:scale(1); opacity:1; } }
 
   .hidden{ display:none !important; }
 </style>
 </head>
 <body>
+
+<div class="sky-layer" id="skyLayer"></div>
 
 <div class="card">
   <h1>🏯 세계사 탑 오르기</h1>
@@ -160,6 +184,7 @@
   <!-- 종료 화면 -->
   <div id="endedView" class="view center hidden">
     <div class="ended">
+      <div id="finalRank" class="final-rank"></div>
       <div>🏁 게임 종료!</div>
       <div class="big"><span id="finalFloor">0</span>층</div>
       <div class="sub" id="finalStat"></div>
@@ -210,6 +235,38 @@ function fmtTime(sec){
   if(sec===null || sec===undefined) return '--:--';
   const m = Math.floor(sec/60), s = sec%60;
   return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function buildBackground(){
+  const layer = el('skyLayer');
+  const frag = document.createDocumentFragment();
+  for(let i=0;i<25;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = (Math.random()*100)+'%';
+    s.style.top = (Math.random()*45)+'%';
+    s.style.animationDelay = (Math.random()*3.4)+'s';
+    frag.appendChild(s);
+  }
+  for(let i=0;i<4;i++){
+    const c = document.createElement('div');
+    c.className = 'cloud';
+    const size = 50 + Math.random()*70;
+    c.style.width = size+'px';
+    c.style.height = (size*0.45)+'px';
+    c.style.top = (8 + Math.random()*30)+'%';
+    c.style.animationDuration = (35 + Math.random()*30)+'s';
+    c.style.animationDelay = (-Math.random()*35)+'s';
+    frag.appendChild(c);
+  }
+  layer.appendChild(frag);
+}
+buildBackground();
+
+let lastFloor = 0;
+function popFloorBadge(){
+  const badge = document.querySelector('.floor-badge');
+  badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop');
 }
 
 function renderTowerMini(floor){
@@ -268,6 +325,8 @@ async function submitAnswer(){
   }
   el('floorVal').textContent = data.player.floor;
   el('streakVal').textContent = data.player.streak >= 2 ? `🔥 ${data.player.streak}연속 정답!` : '';
+  if(data.player.floor > lastFloor) popFloorBadge();
+  lastFloor = data.player.floor;
   renderTowerMini(data.player.floor);
   flashFeedback(data.correct, data.correct_answer, data.gain);
   setTimeout(()=>{
@@ -289,6 +348,7 @@ async function poll(){
     showView('waitingView');
   } else if(round.status === 'running'){
     el('floorVal').textContent = data.player.floor;
+    lastFloor = data.player.floor;
     el('timerVal').textContent = fmtTime(round.remaining_sec);
     renderTowerMini(data.player.floor);
     if(!currentQuestion || (data.question && data.question.id !== currentQuestion.id)){
@@ -299,6 +359,11 @@ async function poll(){
     el('finalFloor').textContent = data.player.floor;
     const acc = data.player.accuracy;
     el('finalStat').textContent = acc!==null ? `정답 ${data.player.correct}개 · 정답률 ${acc}%` : '아직 문제를 풀지 않았어요';
+    const rankEl = el('finalRank');
+    if(data.player.rank){
+      rankEl.textContent = data.player.rank === 1 ? '🏆 1등입니다!' : `${data.player.rank}등 / ${data.player.total_players}명 중`;
+      rankEl.classList.toggle('rank1', data.player.rank === 1);
+    }
     showView('endedView');
   }
 }
