@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>세계사 탑 오르기 - 관리자</title>
+<style>
+  :root{
+    --sky1:#1e3c72; --sky2:#2a5298; --gold:#e8c76f; --gold-dark:#c5a028;
+    --bg:#f2f4f9; --card:#fff; --ink:#22314f; --sub:#68758f; --line:#e3e8f2;
+    --good:#2e9e5b; --bad:#d9534f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Malgun Gothic','Pretendard',-apple-system,sans-serif;
+    background:var(--bg); color:var(--ink); padding:20px;
+  }
+  h1{ font-size:1.3rem; margin:0 0 4px; }
+  .sub{ color:var(--sub); font-size:.85rem; margin-bottom:18px; }
+  .grid{ display:grid; grid-template-columns:340px 1fr; gap:18px; align-items:start; }
+  @media (max-width:860px){ .grid{ grid-template-columns:1fr; } }
+
+  .card{ background:var(--card); border-radius:14px; padding:18px; box-shadow:0 4px 16px rgba(30,60,114,.08); margin-bottom:16px; }
+  .card h2{ font-size:1rem; margin:0 0 12px; color:var(--sky1); }
+
+  .units{ max-height:260px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:8px; margin-bottom:10px; }
+  .unit-row{ display:flex; align-items:center; gap:8px; padding:5px 4px; font-size:.9rem; }
+  .unit-row span.cnt{ color:var(--sub); font-size:.78rem; margin-left:auto; }
+
+  label{ font-size:.85rem; color:var(--sub); display:block; margin:10px 0 4px; }
+  input[type=text], input[type=number], textarea{
+    width:100%; padding:9px 10px; border:1.5px solid var(--line); border-radius:8px; font-size:.92rem;
+    font-family:inherit;
+  }
+  textarea{ resize:vertical; min-height:90px; }
+  .row{ display:flex; gap:8px; }
+  .row > *{ flex:1; }
+
+  button{
+    padding:10px 14px; border:none; border-radius:9px; font-weight:700; cursor:pointer; font-size:.9rem;
+    color:#fff; background:var(--sky1);
+  }
+  button.secondary{ background:#8b96ab; }
+  button.good{ background:var(--good); }
+  button.bad{ background:var(--bad); }
+  button:disabled{ opacity:.5; cursor:default; }
+  .btnrow{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+
+  .status-line{ display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+  .pill{ padding:4px 10px; border-radius:999px; font-size:.78rem; font-weight:700; }
+  .pill.idle{ background:#e6e9f0; color:#5b6a8a; }
+  .pill.running{ background:#e2f4e9; color:var(--good); }
+  .pill.ended{ background:#fdeaea; color:var(--bad); }
+  .timer-big{ font-size:1.3rem; font-weight:800; font-variant-numeric:tabular-nums; color:var(--sky1); }
+
+  table{ width:100%; border-collapse:collapse; font-size:.88rem; }
+  th, td{ text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); }
+  th{ color:var(--sub); font-weight:600; font-size:.78rem; text-transform:uppercase; }
+  tr:first-child td{ font-weight:700; }
+  .rank{ width:28px; }
+  .acc-ok{ color:var(--good); font-weight:700; }
+  .acc-bad{ color:var(--bad); font-weight:700; }
+  .muted{ color:var(--sub); }
+
+  .msg{ font-size:.82rem; margin-top:8px; min-height:1.2em; }
+  .msg.err{ color:var(--bad); }
+  .msg.ok{ color:var(--good); }
+  details{ margin-top:10px; }
+  summary{ cursor:pointer; font-size:.85rem; color:var(--sub); }
+</style>
+</head>
+<body>
+
+<h1>🏯 세계사 탑 오르기 · 관리자</h1>
+<div class="sub">학생 화면 <code>play.html</code> · 대형 화면 <code>board.html</code> — 어느 네트워크에서 접속해도 됩니다 (인터넷으로 동기화)</div>
+
+<div class="grid">
+  <div>
+    <div class="card">
+      <h2>① 출제 범위</h2>
+      <div class="units" id="unitList">불러오는 중...</div>
+      <div class="row">
+        <button class="secondary" id="selectAllBtn" type="button">전체 선택</button>
+        <button class="secondary" id="selectNoneBtn" type="button">전체 해제</button>
+      </div>
+      <label>제한 시간 (분)</label>
+      <input type="number" id="durationInput" value="7" min="1" max="60" step="1">
+      <div class="btnrow">
+        <button id="startBtn">▶ 게임 시작</button>
+        <button class="bad" id="endBtn">■ 종료</button>
+        <button class="secondary" id="resetBtn">↺ 전체 초기화</button>
+      </div>
+      <div class="msg" id="startMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>② 문제 추가</h2>
+      <label>단원 태그</label>
+      <input type="text" id="qUnit" placeholder="예: 01. 문명의 형성" list="unitOptions">
+      <datalist id="unitOptions"></datalist>
+      <label>문제 (빈칸은 ____ 로 표시, 안 쓰면 자동으로 뒤에 붙습니다)</label>
+      <input type="text" id="qQuestion" placeholder="예: 함무라비왕이 편찬한 법전은 ____이다.">
+      <label>정답 (여러 정답은 / 로 구분)</label>
+      <input type="text" id="qAnswer" placeholder="예: 함무라비 법전">
+      <div class="btnrow">
+        <button id="addBtn">문제 추가</button>
+      </div>
+      <div class="msg" id="addMsg"></div>
+
+      <details>
+        <summary>여러 문제 한번에 붙여넣기</summary>
+        <label>한 줄에 하나씩: <code>단원 | 문제(____포함) | 정답</code></label>
+        <textarea id="bulkInput" placeholder="01. 문명의 형성 | 현생 인류인 ____은/는 약 20~30만 년 전 아프리카에서 등장하였다. | 호모 사피엔스"></textarea>
+        <div class="btnrow">
+          <button class="secondary" id="bulkAddBtn">일괄 추가</button>
+        </div>
+        <div class="msg" id="bulkMsg"></div>
+      </details>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>③ 실시간 현황</h2>
+    <div class="status-line">
+      <span class="pill idle" id="statusPill">대기중</span>
+      <span class="timer-big" id="timerBig">--:--</span>
+      <span class="muted" id="poolInfo"></span>
+    </div>
+    <table>
+      <thead>
+        <tr><th class="rank">#</th><th>이름</th><th>층수</th><th>정답/오답</th><th>정답률</th><th>연속</th><th>상태</th></tr>
+      </thead>
+      <tbody id="roster"><tr><td colspan="7" class="muted">학생이 아직 없습니다.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script type="module">
+import {
+  roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
+  fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions
+} from '../shared/lib.js';
+
+const ROOM = 'world';
+const el = (id) => document.getElementById(id);
+
+let questionsObj = {};
+let allUnits = [];
+let selectedUnits = new Set();
+let roundState = { status:'idle', units:[], duration_sec:420, end_time:null, token:0 };
+let playersObj = {};
+
+function renderUnits(){
+  const box = el('unitList');
+  if(allUnits.length===0){ box.innerHTML = '<div class="muted">아직 문제가 없습니다. 아래 ②에서 추가해주세요.</div>'; return; }
+  box.innerHTML = '';
+  allUnits.forEach(u=>{
+    const row = document.createElement('label');
+    row.className = 'unit-row';
+    const checked = selectedUnits.has(u.unit) ? 'checked' : '';
+    row.innerHTML = `<input type="checkbox" data-unit="${escapeHtml(u.unit)}" ${checked}> ${escapeHtml(u.unit)} <span class="cnt">${u.count}문제</span>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.onchange = () => {
+      if(cb.checked) selectedUnits.add(cb.dataset.unit);
+      else selectedUnits.delete(cb.dataset.unit);
+    };
+  });
+  const dl = el('unitOptions');
+  dl.innerHTML = allUnits.map(u=>`<option value="${escapeHtml(u.unit)}">`).join('');
+}
+
+el('selectAllBtn').onclick = () => { selectedUnits = new Set(allUnits.map(u=>u.unit)); renderUnits(); };
+el('selectNoneBtn').onclick = () => { selectedUnits = new Set(); renderUnits(); };
+
+el('startBtn').onclick = async () => {
+  const msg = el('startMsg');
+  const units = Array.from(selectedUnits);
+  const minutes = parseFloat(el('durationInput').value) || 5;
+  const duration_sec = Math.max(30, Math.min(3600, Math.round(minutes*60)));
+
+  const pool = poolFromQuestions(questionsObj, units);
+  if(pool.length===0){ msg.className='msg err'; msg.textContent = '선택한 범위에 문제가 없습니다.'; return; }
+
+  el('startBtn').disabled = true;
+  try{
+    const updates = {};
+    updates[`rooms/${ROOM}/round`] = {
+      status: 'running', units, duration_sec,
+      end_time: serverNow() + duration_sec*1000,
+      token: serverNow()
+    };
+    Object.keys(playersObj).forEach(pid=>{
+      updates[`rooms/${ROOM}/players/${pid}/floor`] = 0;
+      updates[`rooms/${ROOM}/players/${pid}/correct`] = 0;
+      updates[`rooms/${ROOM}/players/${pid}/wrong`] = 0;
+      updates[`rooms/${ROOM}/players/${pid}/streak`] = 0;
+      updates[`rooms/${ROOM}/players/${pid}/bestStreak`] = 0;
+    });
+    await update(ref(db), updates);
+    msg.className='msg ok'; msg.textContent = `시작! 문제 풀 ${pool.length}개`;
+  } catch(err){
+    msg.className='msg err'; msg.textContent = '시작 실패: ' + err.message;
+  } finally {
+    el('startBtn').disabled = false;
+  }
+};
+
+el('endBtn').onclick = () => update(roomRef(ROOM,'round'), { status: 'ended' });
+
+el('resetBtn').onclick = async () => {
+  if(!confirm('모든 학생의 점수와 참여 목록을 초기화할까요?')) return;
+  await remove(roomRef(ROOM,'players'));
+  await update(roomRef(ROOM,'round'), { status: 'idle', end_time: null });
+};
+
+el('addBtn').onclick = async () => {
+  const unit = el('qUnit').value.trim();
+  const question0 = el('qQuestion').value.trim();
+  const answer = el('qAnswer').value.trim();
+  const msg = el('addMsg');
+  if(!unit || !question0 || !answer){ msg.className='msg err'; msg.textContent='단원/문제/정답을 모두 입력하세요.'; return; }
+  const question = question0.includes('____') ? question0 : question0 + ' ____';
+  const answers = answer.split('/').map(a=>a.trim()).filter(Boolean);
+  if(!answers.length){ msg.className='msg err'; msg.textContent='정답을 입력하세요.'; return; }
+
+  try{
+    const newRef = push(roomRef(ROOM,'questions'));
+    await set(newRef, { unit, question, answers });
+    msg.className='msg ok'; msg.textContent = '추가 완료!';
+    el('qQuestion').value=''; el('qAnswer').value='';
+  } catch(err){
+    msg.className='msg err'; msg.textContent = '추가 실패: ' + err.message;
+  }
+};
+
+el('bulkAddBtn').onclick = async () => {
+  const msg = el('bulkMsg');
+  const lines = el('bulkInput').value.split('\n');
+  const updates = {};
+  let n = 0;
+  for(const line of lines){
+    const parsed = parseQuestionLine(line);
+    if(!parsed) continue;
+    const key = push(roomRef(ROOM,'questions')).key;
+    updates[`rooms/${ROOM}/questions/${key}`] = parsed;
+    n++;
+  }
+  if(n===0){ msg.className='msg err'; msg.textContent='추가할 수 있는 줄이 없습니다. 형식을 확인하세요 (단원 | 문제 | 정답).'; return; }
+  try{
+    await update(ref(db), updates);
+    msg.className='msg ok'; msg.textContent = `${n}개 문제를 추가했습니다.`;
+    el('bulkInput').value = '';
+  } catch(err){
+    msg.className='msg err'; msg.textContent = '일괄 추가 실패: ' + err.message;
+  }
+};
+
+function renderRoster(){
+  const r = roundState;
+  const remaining = r.end_time!=null ? Math.max(0, Math.round((r.end_time - serverNow())/1000)) : null;
+  let effective = r.status;
+  if(r.status==='running' && remaining!==null && remaining<=0) effective='ended';
+
+  const pill = el('statusPill');
+  pill.className = 'pill ' + effective;
+  pill.textContent = effective==='idle' ? '대기중' : effective==='running' ? '진행중' : '종료';
+  el('timerBig').textContent = fmtTime(remaining);
+  const pool = poolFromQuestions(questionsObj, r.units);
+  el('poolInfo').textContent = effective!=='idle' ? `문제 풀 ${pool.length}개` : '';
+
+  const players = Object.entries(playersObj).map(([id,p])=>({id,...p}));
+  players.sort((a,b)=> (b.floor||0)-(a.floor||0) || (b.correct||0)-(a.correct||0));
+
+  const tbody = el('roster');
+  if(!players.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">학생이 아직 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = players.map((p,i)=>{
+    const total = (p.correct||0)+(p.wrong||0);
+    const accuracy = total ? Math.round(100*(p.correct||0)/total) : null;
+    const accClass = accuracy===null ? 'muted' : (accuracy>=70 ? 'acc-ok' : 'acc-bad');
+    const idleSec = p.lastActive ? Math.round((serverNow()-p.lastActive)/1000) : null;
+    const status = idleSec!==null && idleSec>20 ? `<span class="muted">${idleSec}초 유휴</span>` : '';
+    return `<tr>
+      <td class="rank">${i+1}</td>
+      <td>${escapeHtml(p.name||'')}</td>
+      <td>${p.floor||0}층</td>
+      <td>${p.correct||0}/${p.wrong||0}</td>
+      <td class="${accClass}">${accuracy===null?'-':accuracy+'%'}</td>
+      <td>${(p.streak||0)>=2 ? '🔥'+p.streak : (p.streak||0)}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join('');
+}
+
+onValue(roomRef(ROOM,'questions'), (snap)=>{
+  questionsObj = snap.val() || {};
+  allUnits = unitsFromQuestions(questionsObj);
+  if(selectedUnits.size===0){ allUnits.forEach(u=>selectedUnits.add(u.unit)); }
+  renderUnits();
+});
+
+onValue(roomRef(ROOM,'round'), (snap)=>{
+  const r = snap.val();
+  roundState = r ? {
+    status: r.status||'idle', units: r.units||[],
+    duration_sec: r.duration_sec||420, end_time: r.end_time ?? null, token: r.token||0
+  } : { status:'idle', units:[], duration_sec:420, end_time:null, token:0 };
+});
+
+onValue(roomRef(ROOM,'players'), (snap)=>{
+  playersObj = snap.val() || {};
+});
+
+setInterval(renderRoster, 500);
+</script>
+</body>
+</html>
