@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한국사 탑 오르기 - 관리자</title>
+<style>
+  :root{
+    --sky1:#1e3c72; --sky2:#2a5298; --gold:#e8c76f; --gold-dark:#c5a028;
+    --bg:#f2f4f9; --card:#fff; --ink:#22314f; --sub:#68758f; --line:#e3e8f2;
+    --good:#2e9e5b; --bad:#d9534f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Malgun Gothic','Pretendard',-apple-system,sans-serif;
+    background:var(--bg); color:var(--ink); padding:20px;
+  }
+  h1{ font-size:1.3rem; margin:0 0 4px; }
+  .sub{ color:var(--sub); font-size:.85rem; margin-bottom:18px; }
+  .grid{ display:grid; grid-template-columns:340px 1fr; gap:18px; align-items:start; }
+  @media (max-width:860px){ .grid{ grid-template-columns:1fr; } }
+
+  .card{ background:var(--card); border-radius:14px; padding:18px; box-shadow:0 4px 16px rgba(30,60,114,.08); margin-bottom:16px; }
+  .card h2{ font-size:1rem; margin:0 0 12px; color:var(--sky1); }
+
+  .units{ max-height:260px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:8px; margin-bottom:10px; }
+  .unit-row{ display:flex; align-items:center; gap:8px; padding:5px 4px; font-size:.9rem; }
+  .unit-row span.cnt{ color:var(--sub); font-size:.78rem; margin-left:auto; }
+
+  label{ font-size:.85rem; color:var(--sub); display:block; margin:10px 0 4px; }
+  input[type=text], input[type=number]{
+    width:100%; padding:9px 10px; border:1.5px solid var(--line); border-radius:8px; font-size:.92rem;
+  }
+  .row{ display:flex; gap:8px; }
+  .row > *{ flex:1; }
+
+  button{
+    padding:10px 14px; border:none; border-radius:9px; font-weight:700; cursor:pointer; font-size:.9rem;
+    color:#fff; background:var(--sky1);
+  }
+  button.secondary{ background:#8b96ab; }
+  button.good{ background:var(--good); }
+  button.bad{ background:var(--bad); }
+  button:disabled{ opacity:.5; cursor:default; }
+  .btnrow{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+
+  .status-line{ display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+  .pill{ padding:4px 10px; border-radius:999px; font-size:.78rem; font-weight:700; }
+  .pill.idle{ background:#e6e9f0; color:#5b6a8a; }
+  .pill.running{ background:#e2f4e9; color:var(--good); }
+  .pill.ended{ background:#fdeaea; color:var(--bad); }
+  .timer-big{ font-size:1.3rem; font-weight:800; font-variant-numeric:tabular-nums; color:var(--sky1); }
+
+  table{ width:100%; border-collapse:collapse; font-size:.88rem; }
+  th, td{ text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); }
+  th{ color:var(--sub); font-weight:600; font-size:.78rem; text-transform:uppercase; }
+  tr:first-child td{ font-weight:700; }
+  .rank{ width:28px; }
+  .acc-ok{ color:var(--good); font-weight:700; }
+  .acc-bad{ color:var(--bad); font-weight:700; }
+  .muted{ color:var(--sub); }
+
+  .msg{ font-size:.82rem; margin-top:8px; min-height:1.2em; }
+  .msg.err{ color:var(--bad); }
+  .msg.ok{ color:var(--good); }
+</style>
+</head>
+<body>
+
+<h1>🏯 한국사 탑 오르기 · 관리자</h1>
+<div class="sub">학생 화면 <code>/play</code> · 대형 화면 <code>/board</code> (같은 와이파이의 다른 기기에서 이 컴퓨터의 IP로 접속)</div>
+
+<div class="grid">
+  <div>
+    <div class="card">
+      <h2>① 출제 범위</h2>
+      <div class="units" id="unitList">불러오는 중...</div>
+      <div class="row">
+        <button class="secondary" id="selectAllBtn" type="button">전체 선택</button>
+        <button class="secondary" id="selectNoneBtn" type="button">전체 해제</button>
+      </div>
+      <label>제한 시간 (분)</label>
+      <input type="number" id="durationInput" value="7" min="1" max="60" step="1">
+      <div class="btnrow">
+        <button id="startBtn">▶ 게임 시작</button>
+        <button class="bad" id="endBtn">■ 종료</button>
+        <button class="secondary" id="resetBtn">↺ 전체 초기화</button>
+      </div>
+      <div class="msg" id="startMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>② 문제 추가</h2>
+      <label>단원 태그</label>
+      <input type="text" id="qUnit" placeholder="예: 01. 문명의 형성" list="unitOptions">
+      <datalist id="unitOptions"></datalist>
+      <label>문제 (빈칸은 ____ 로 표시, 안 쓰면 자동으로 뒤에 붙습니다)</label>
+      <input type="text" id="qQuestion" placeholder="예: 함무라비왕이 편찬한 법전은 ____이다.">
+      <label>정답 (여러 정답은 / 로 구분)</label>
+      <input type="text" id="qAnswer" placeholder="예: 함무라비 법전">
+      <div class="btnrow">
+        <button id="addBtn">문제 추가</button>
+        <button class="secondary" id="reloadBtn">문제 다시 불러오기</button>
+      </div>
+      <div class="msg" id="addMsg"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>③ 실시간 현황</h2>
+    <div class="status-line">
+      <span class="pill idle" id="statusPill">대기중</span>
+      <span class="timer-big" id="timerBig">--:--</span>
+      <span class="muted" id="poolInfo"></span>
+    </div>
+    <table>
+      <thead>
+        <tr><th class="rank">#</th><th>이름</th><th>층수</th><th>정답/오답</th><th>정답률</th><th>연속</th><th>상태</th></tr>
+      </thead>
+      <tbody id="roster"><tr><td colspan="7" class="muted">학생이 아직 없습니다.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const el = (id) => document.getElementById(id);
+let selectedUnits = new Set();
+let allUnits = [];
+
+async function api(path, method='GET', body){
+  const opts = {method};
+  if(body){ opts.headers = {'Content-Type':'application/json'}; opts.body = JSON.stringify(body); }
+  const res = await fetch(path, opts);
+  return res.json();
+}
+
+function renderUnits(){
+  const box = el('unitList');
+  if(allUnits.length===0){ box.innerHTML = '<div class="muted">questions.txt 에 문제를 추가해주세요.</div>'; return; }
+  box.innerHTML = '';
+  allUnits.forEach(u=>{
+    const row = document.createElement('label');
+    row.className = 'unit-row';
+    const checked = selectedUnits.has(u.unit) ? 'checked' : '';
+    row.innerHTML = `<input type="checkbox" data-unit="${u.unit}" ${checked}> ${u.unit} <span class="cnt">${u.count}문제</span>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.onchange = () => {
+      if(cb.checked) selectedUnits.add(cb.dataset.unit);
+      else selectedUnits.delete(cb.dataset.unit);
+    };
+  });
+  const dl = el('unitOptions');
+  dl.innerHTML = allUnits.map(u=>`<option value="${u.unit}">`).join('');
+}
+
+async function loadUnits(){
+  const data = await api('/api/units');
+  allUnits = data.units || [];
+  if(selectedUnits.size===0){ allUnits.forEach(u=>selectedUnits.add(u.unit)); }
+  renderUnits();
+}
+
+el('selectAllBtn').onclick = () => { selectedUnits = new Set(allUnits.map(u=>u.unit)); renderUnits(); };
+el('selectNoneBtn').onclick = () => { selectedUnits = new Set(); renderUnits(); };
+
+el('startBtn').onclick = async () => {
+  const units = Array.from(selectedUnits);
+  const minutes = parseFloat(el('durationInput').value) || 5;
+  const data = await api('/api/admin/start', 'POST', {units, duration_sec: Math.round(minutes*60)});
+  const msg = el('startMsg');
+  if(data.error){ msg.className='msg err'; msg.textContent = data.error; return; }
+  if(data.pool_size === 0){ msg.className='msg err'; msg.textContent = '선택한 범위에 문제가 없습니다.'; return; }
+  msg.className='msg ok'; msg.textContent = `시작! 문제 풀 ${data.pool_size}개`;
+};
+el('endBtn').onclick = () => api('/api/admin/end', 'POST', {});
+el('resetBtn').onclick = () => {
+  if(confirm('모든 학생의 점수와 참여 목록을 초기화할까요?')) api('/api/admin/reset', 'POST', {});
+};
+
+el('addBtn').onclick = async () => {
+  const unit = el('qUnit').value.trim();
+  const question = el('qQuestion').value.trim();
+  const answer = el('qAnswer').value.trim();
+  const msg = el('addMsg');
+  if(!unit || !question || !answer){ msg.className='msg err'; msg.textContent='단원/문제/정답을 모두 입력하세요.'; return; }
+  const data = await api('/api/admin/add_question', 'POST', {unit, question, answer});
+  if(data.error){ msg.className='msg err'; msg.textContent = data.error; return; }
+  msg.className='msg ok'; msg.textContent = `추가 완료! 현재 총 ${data.total}문제`;
+  el('qQuestion').value=''; el('qAnswer').value='';
+  allUnits = data.units || allUnits;
+  renderUnits();
+};
+el('reloadBtn').onclick = async () => {
+  const data = await api('/api/admin/reload', 'POST', {});
+  allUnits = data.units || [];
+  renderUnits();
+  const msg = el('addMsg'); msg.className='msg ok'; msg.textContent = `다시 불러옴: 총 ${data.total}문제`;
+};
+
+function fmtTime(sec){
+  if(sec===null || sec===undefined) return '--:--';
+  const m = Math.floor(sec/60), s = sec%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+async function pollRoster(){
+  const data = await api('/api/admin/roster');
+  const r = data.round;
+  const pill = el('statusPill');
+  pill.className = 'pill ' + r.status;
+  pill.textContent = r.status==='idle' ? '대기중' : r.status==='running' ? '진행중' : '종료';
+  el('timerBig').textContent = fmtTime(r.remaining_sec);
+  el('poolInfo').textContent = r.status!=='idle' ? `문제 풀 ${data.pool_size}개` : '';
+
+  const tbody = el('roster');
+  if(!data.players.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">학생이 아직 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.players.map((p,i)=>{
+    const accClass = p.accuracy===null ? 'muted' : (p.accuracy>=70 ? 'acc-ok' : 'acc-bad');
+    const status = p.idle_sec > 20 ? `<span class="muted">${p.idle_sec}초 유휴</span>` : '';
+    return `<tr>
+      <td class="rank">${i+1}</td>
+      <td>${escapeHtml(p.name)}</td>
+      <td>${p.floor}층</td>
+      <td>${p.correct}/${p.wrong}</td>
+      <td class="${accClass}">${p.accuracy===null?'-':p.accuracy+'%'}</td>
+      <td>${p.streak>=2 ? '🔥'+p.streak : p.streak}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join('');
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+loadUnits();
+pollRoster();
+setInterval(pollRoster, 1200);
+</script>
+</body>
+</html>
