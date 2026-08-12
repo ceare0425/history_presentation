@@ -70,12 +70,15 @@
 
   .qbox{
     background:#f4f6fb; border:2px solid #e3e8f2; border-radius:16px; padding:3vh 3vw; margin:1vh 0;
-    font-size:clamp(1.2rem,2.6vw,1.85rem); line-height:1.7;
-    flex:1; min-height:0; display:flex; align-items:center; justify-content:center; text-align:center;
+    flex:1; min-height:0; display:flex; align-items:center; justify-content:center;
     overflow-y:auto;
   }
+  .qbox .qtext-inner{
+    width:100%; font-size:clamp(1.2rem,2.6vw,1.85rem); line-height:1.9;
+    text-align:center; word-break:keep-all; overflow-wrap:break-word;
+  }
   .qbox .blank-mark{
-    display:inline-block; min-width:2.6em; height:1em; margin:0 .12em -0.18em;
+    display:inline-block; width:3em; height:0.9em; margin:0 .2em -0.15em;
     border-bottom:4px solid var(--sky1); border-radius:2px;
   }
   .unit-tag{
@@ -144,7 +147,7 @@
     <div id="feedback" class="feedback"></div>
 
     <div class="unit-tag" id="unitTag"></div>
-    <div class="qbox" id="qText">문제를 불러오는 중...</div>
+    <div class="qbox"><div class="qtext-inner" id="qText">문제를 불러오는 중...</div></div>
 
     <div class="answer-row">
       <input type="text" id="answerInput" placeholder="정답 입력 후 Enter" autocomplete="off">
