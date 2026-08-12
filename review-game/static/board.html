@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>세계사 탑 오르기 - 전광판</title>
+<style>
+  :root{
+    --sky1:#0f2447; --sky2:#1e3c72; --sky3:#3a6b9a;
+    --gold:#f2d27a; --gold-dark:#c5a028;
+    --panel:rgba(255,255,255,.06); --line:rgba(255,255,255,.15);
+  }
+  *{box-sizing:border-box;}
+  html,body{ height:100%; margin:0; }
+  body{
+    font-family:'Malgun Gothic','Pretendard',-apple-system,sans-serif;
+    background:linear-gradient(180deg,var(--sky1),var(--sky2) 55%,var(--sky3));
+    color:#fff; overflow:hidden; display:flex; flex-direction:column; height:100vh;
+  }
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 32px; border-bottom:1px solid var(--line);
+  }
+  header h1{ margin:0; font-size:2rem; text-shadow:0 2px 8px rgba(0,0,0,.4); }
+  .status{
+    display:flex; align-items:center; gap:20px;
+  }
+  .pill{ padding:6px 16px; border-radius:999px; font-weight:800; font-size:1rem; }
+  .pill.idle{ background:#4a5a7a; }
+  .pill.running{ background:#2e9e5b; }
+  .pill.ended{ background:#d9534f; }
+  .timer{ font-size:2.4rem; font-weight:900; font-variant-numeric:tabular-nums; color:var(--gold); text-shadow:0 2px 10px rgba(0,0,0,.5); }
+
+  main{ flex:1; display:grid; grid-template-columns:280px 1fr; gap:0; overflow:hidden; }
+
+  .leaderboard{ padding:20px; border-right:1px solid var(--line); overflow-y:auto; }
+  .leaderboard h2{ font-size:1rem; opacity:.8; margin:0 0 14px; letter-spacing:.05em; }
+  .lb-row{
+    display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:10px; margin-bottom:6px;
+    background:var(--panel);
+  }
+  .lb-row.rank1{ background:linear-gradient(90deg,rgba(242,210,122,.35),rgba(242,210,122,.08)); }
+  .lb-medal{ width:28px; text-align:center; font-size:1.2rem; }
+  .lb-name{ flex:1; font-weight:700; font-size:1.02rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lb-floor{ font-weight:900; color:var(--gold); }
+
+  .tower-area{ position:relative; overflow-x:auto; overflow-y:hidden; padding:0 20px; display:flex; align-items:flex-end; }
+  .tower-track{ position:relative; display:flex; align-items:flex-end; gap:22px; height:100%; padding-bottom:56px; padding-top:20px; }
+  .climber{
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; width:56px; flex:0 0 auto;
+  }
+  .climber .avatar{ font-size:1.7rem; margin-bottom:4px; transition:transform .35s ease; filter:drop-shadow(0 4px 6px rgba(0,0,0,.4)); }
+  .climber .col{
+    width:16px; border-radius:6px 6px 0 0; background:linear-gradient(180deg,var(--gold),var(--gold-dark));
+    box-shadow:0 0 10px rgba(242,210,122,.5); transition:height .5s ease;
+  }
+  .climber .base{
+    margin-top:6px; font-size:.72rem; text-align:center; max-width:60px; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; opacity:.9;
+  }
+  .climber .floorno{ font-size:.68rem; color:var(--gold); font-weight:700; }
+  .ground{
+    position:absolute; left:0; right:0; bottom:0; height:56px;
+    background:linear-gradient(180deg,#3d2b1a,#2a1c10); border-top:4px solid #5c4326;
+  }
+
+  .empty-msg{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.4rem; opacity:.6; }
+
+  footer{ text-align:center; padding:8px; font-size:.75rem; opacity:.5; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏯 세계사 탑 오르기</h1>
+  <div class="status">
+    <span class="pill idle" id="statusPill">대기중</span>
+    <span class="timer" id="timerVal">--:--</span>
+  </div>
+</header>
+
+<main>
+  <div class="leaderboard">
+    <h2>🏆 순위</h2>
+    <div id="lbList"></div>
+  </div>
+  <div class="tower-area">
+    <div class="ground"></div>
+    <div class="tower-track" id="towerTrack"></div>
+    <div class="empty-msg" id="emptyMsg">학생들이 접속하면 여기에 나타납니다</div>
+  </div>
+</main>
+
+<footer>같은 와이파이에서 /play 로 학생들이 접속합니다</footer>
+
+<script>
+const el = (id) => document.getElementById(id);
+const MEDALS = ['🥇','🥈','🥉'];
+
+function fmtTime(sec){
+  if(sec===null || sec===undefined) return '--:--';
+  const m = Math.floor(sec/60), s = sec%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+async function poll(){
+  const res = await fetch('/api/board');
+  const data = await res.json();
+  const r = data.round;
+
+  const pill = el('statusPill');
+  pill.className = 'pill ' + r.status;
+  pill.textContent = r.status==='idle' ? '대기중' : r.status==='running' ? '진행중' : '종료';
+  el('timerVal').textContent = fmtTime(r.remaining_sec);
+
+  el('emptyMsg').style.display = data.players.length ? 'none' : 'flex';
+
+  // 리더보드
+  el('lbList').innerHTML = data.players.slice(0,10).map((p,i)=>`
+    <div class="lb-row ${i===0?'rank1':''}">
+      <div class="lb-medal">${MEDALS[i] || (i+1)}</div>
+      <div class="lb-name">${escapeHtml(p.name)}</div>
+      <div class="lb-floor">${p.floor}층</div>
+    </div>
+  `).join('');
+
+  // 타워
+  const maxFloor = Math.max(10, ...data.players.map(p=>p.floor));
+  const trackHeight = el('towerTrack').clientHeight || 500;
+  const usable = trackHeight - 20;
+  const track = el('towerTrack');
+  track.innerHTML = data.players.map((p, i)=>{
+    const h = Math.round((p.floor / maxFloor) * usable);
+    const avatar = i===0 && p.floor>0 ? '🏃' : (p.streak>=3 ? '🔥' : '🧗');
+    return `<div class="climber">
+      <div class="floorno">${p.floor}</div>
+      <div class="avatar">${avatar}</div>
+      <div class="col" style="height:${Math.max(6,h)}px"></div>
+      <div class="base">${escapeHtml(p.name)}</div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+poll();
+setInterval(poll, 1000);
+</script>
+</body>
+</html>
