@@ -62,6 +62,7 @@
   .acc-bad{ color:var(--bad); font-weight:700; }
   .muted{ color:var(--sub); }
 
+  .kick-btn{ padding:5px 10px; font-size:.76rem; background:var(--bad); }
   .msg{ font-size:.82rem; margin-top:8px; min-height:1.2em; }
   .msg.err{ color:var(--bad); }
   .msg.ok{ color:var(--good); }
@@ -128,9 +129,9 @@
     </div>
     <table>
       <thead>
-        <tr><th class="rank">#</th><th>이름</th><th>층수</th><th>정답/오답</th><th>정답률</th><th>연속</th><th>상태</th></tr>
+        <tr><th class="rank">#</th><th>이름</th><th>층수</th><th>정답/오답</th><th>정답률</th><th>연속</th><th>상태</th><th>관리</th></tr>
       </thead>
-      <tbody id="roster"><tr><td colspan="7" class="muted">학생이 아직 없습니다.</td></tr></tbody>
+      <tbody id="roster"><tr><td colspan="8" class="muted">학생이 아직 없습니다.</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -275,7 +276,7 @@ function renderRoster(){
 
   const tbody = el('roster');
   if(!players.length){
-    tbody.innerHTML = '<tr><td colspan="7" class="muted">학생이 아직 없습니다.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">학생이 아직 없습니다.</td></tr>';
     return;
   }
   tbody.innerHTML = players.map((p,i)=>{
@@ -284,17 +285,29 @@ function renderRoster(){
     const accClass = accuracy===null ? 'muted' : (accuracy>=70 ? 'acc-ok' : 'acc-bad');
     const idleSec = p.lastActive ? Math.round((serverNow()-p.lastActive)/1000) : null;
     const status = idleSec!==null && idleSec>20 ? `<span class="muted">${idleSec}초 유휴</span>` : '';
+    const nameAttr = escapeHtml(p.name||'').replace(/"/g,'&quot;');
     return `<tr>
       <td class="rank">${i+1}</td>
-      <td>${escapeHtml(p.name||'')}</td>
+      <td>${p.avatar||''} ${escapeHtml(p.name||'')}</td>
       <td>${p.floor||0}층</td>
       <td>${p.correct||0}/${p.wrong||0}</td>
       <td class="${accClass}">${accuracy===null?'-':accuracy+'%'}</td>
       <td>${(p.streak||0)>=2 ? '🔥'+p.streak : (p.streak||0)}</td>
       <td>${status}</td>
+      <td><button class="kick-btn" data-id="${p.id}" data-name="${nameAttr}">내보내기</button></td>
     </tr>`;
   }).join('');
 }
+
+el('roster').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('.kick-btn');
+  if(!btn) return;
+  const pid = btn.dataset.id;
+  const name = btn.dataset.name || '이 학생';
+  if(!confirm(`${name} 학생을 내보낼까요? 학생 화면은 다시 이름을 입력하는 화면으로 돌아갑니다.`)) return;
+  btn.disabled = true;
+  await remove(roomRef(ROOM, 'players', pid));
+});
 
 onValue(roomRef(ROOM,'questions'), (snap)=>{
   questionsObj = snap.val() || {};

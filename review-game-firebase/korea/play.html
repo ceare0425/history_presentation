@@ -236,6 +236,7 @@ let currentQuestion = null;
 let currentStartedAt = null;
 let lastQid = null;
 let lastFloor = 0;
+let kicked = false;
 
 const el = (id) => document.getElementById(id);
 
@@ -485,7 +486,10 @@ function startListening(){
 
   onValue(roomRef(ROOM, 'players', playerId), (snap)=>{
     const p = snap.val();
-    if(!p) return;
+    if(!p){
+      handleRemovedFromRoster();
+      return;
+    }
     lastFloor = p.floor||0;
     el('floorVal').textContent = p.floor||0;
     renderTowerMini(p.floor||0);
@@ -501,7 +505,19 @@ function startListening(){
   setInterval(tick, 250);
 }
 
+function handleRemovedFromRoster(){
+  if(kicked) return; // 중복 알림 방지
+  kicked = true;
+  localStorage.removeItem(STORAGE_ID_KEY);
+  localStorage.removeItem(STORAGE_NAME_KEY);
+  playerId = '';
+  el('nameInput').value = '';
+  showView('joinView');
+  alert('선생님이 참여 목록에서 내보냈어요. 이름을 다시 입력하고 참여해주세요.');
+}
+
 async function join(name){
+  kicked = false;
   if(!playerId) playerId = genId();
   playerName = name;
   localStorage.setItem(STORAGE_ID_KEY, playerId);
