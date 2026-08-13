@@ -9,15 +9,23 @@
 
 깃허브에 올리면(push) GitHub Pages가 몇 분 안에 자동 반영합니다.
 
+메인 페이지(`https://ceare0425.github.io/history_presentation/review-game-firebase/`)를
+열어 클릭으로 이동해도 됩니다. 즐겨찾기 해두면 편합니다.
+
 **세계사**
 - 학생 접속: `https://ceare0425.github.io/history_presentation/review-game-firebase/world/play.html`
+  (짧은 주소: `tinyurl.com/segyesa`)
 - 관리자 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/world/admin.html`
 - 대형 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/world/board.html`
 
 **한국사**
 - 학생 접속: `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/play.html`
+  (짧은 주소: `tinyurl.com/hanguksa`)
 - 관리자 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/admin.html`
 - 대형 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/board.html`
+
+짧은 주소는 tinyurl.com에서 만든 것으로, 학생 접속 주소로만 연결됩니다(관리자 화면은 교사만 쓰니
+그대로 긴 주소나 메인 페이지에서 클릭해서 들어가면 됩니다).
 
 인터넷이 되는 기기라면 교실 컴퓨터든 학생 노트북이든 어떤 와이파이에 있어도 접속됩니다.
 
