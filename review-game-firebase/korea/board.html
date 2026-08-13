@@ -83,6 +83,14 @@
     35%{ transform:scale(1.55) translateY(-16px); filter:drop-shadow(0 0 12px #ffe9a8); }
     100%{ transform:scale(1) translateY(0); }
   }
+  .climber.sad .avatar{ animation:climberSad .7s ease; }
+  @keyframes climberSad{
+    0%{ transform:translateY(0) rotate(0deg) scale(1); }
+    20%{ transform:translateY(4px) rotate(-8deg) scale(.95); }
+    40%{ transform:translateY(7px) rotate(8deg) scale(.92); }
+    60%{ transform:translateY(7px) rotate(-6deg) scale(.92); }
+    100%{ transform:translateY(0) rotate(0deg) scale(1); }
+  }
   .climber .col{
     width:18px; border-radius:6px 6px 0 0; position:relative; overflow:hidden;
     background:
@@ -215,6 +223,7 @@ const ROOM = 'korea';
 const el = (id) => document.getElementById(id);
 const MEDALS = ['🥇','🥈','🥉'];
 const lastFloor = {};
+const lastWrong = {};
 const climberEls = {};
 
 let roundState = { status:'idle', end_time:null };
@@ -294,6 +303,13 @@ function renderTower(players){
       setTimeout(()=> popup.remove(), 900);
     }
     lastFloor[p.id] = floor;
+
+    const wrong = p.wrong||0;
+    const prevWrong = lastWrong[p.id];
+    if(prevWrong !== undefined && wrong > prevWrong){
+      node.classList.remove('sad'); void node.offsetWidth; node.classList.add('sad');
+    }
+    lastWrong[p.id] = wrong;
   });
 
   Object.keys(climberEls).forEach(id=>{
@@ -301,6 +317,7 @@ function renderTower(players){
       climberEls[id].remove();
       delete climberEls[id];
       delete lastFloor[id];
+      delete lastWrong[id];
     }
   });
 }
