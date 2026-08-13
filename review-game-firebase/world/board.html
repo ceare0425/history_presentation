@@ -68,6 +68,42 @@
     display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; width:58px; flex:0 0 auto;
     position:relative;
   }
+  .climber .crown-badge{
+    font-size:1.05rem; line-height:1; height:1.05rem; margin-bottom:1px;
+    opacity:0; transform:translateY(0) scale(.6); transition:opacity .2s, transform .2s;
+  }
+  .climber.leader .crown-badge{
+    opacity:1; transform:scale(1); animation:crownBob 1.2s ease-in-out infinite;
+  }
+  @keyframes crownBob{
+    0%,100%{ transform:translateY(0) rotate(-6deg) scale(1); }
+    50%{ transform:translateY(-4px) rotate(6deg) scale(1); }
+  }
+  .climber .avatar-wrap{ position:relative; }
+  .climber .avatar-wrap::before{
+    content:''; position:absolute; left:50%; top:50%; width:0; height:0; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,150,40,.9), rgba(255,80,0,.55) 55%, rgba(255,80,0,0) 76%);
+    transform:translate(-50%,-50%); opacity:0; pointer-events:none; z-index:-1;
+    transition:opacity .25s;
+  }
+  .climber.onfire .avatar-wrap::before{
+    width:50px; height:50px; opacity:1; animation:fireHalo .9s ease-in-out infinite;
+  }
+  @keyframes fireHalo{
+    0%,100%{ transform:translate(-50%,-50%) scale(.85); }
+    50%{ transform:translate(-50%,-50%) scale(1.15); }
+  }
+  .climber .fire-badge{
+    position:absolute; left:100%; top:-4px; margin-left:1px; font-size:.95rem;
+    opacity:0; pointer-events:none;
+  }
+  .climber.onfire .fire-badge{
+    opacity:1; animation:fireFlicker .5s ease-in-out infinite alternate;
+  }
+  @keyframes fireFlicker{
+    from{ transform:scale(.85) rotate(-6deg); }
+    to{ transform:scale(1.05) rotate(6deg); }
+  }
   .climber .avatar{
     font-size:1.8rem; margin-bottom:4px; filter:drop-shadow(0 4px 6px rgba(0,0,0,.4));
     transform-origin:center bottom;
@@ -257,7 +293,11 @@ function ensureClimberEl(track, id){
   div.className = 'climber';
   div.innerHTML = `
     <div class="floorno"></div>
-    <div class="avatar"></div>
+    <div class="crown-badge">👑</div>
+    <div class="avatar-wrap">
+      <div class="avatar"></div>
+      <div class="fire-badge">🔥</div>
+    </div>
     <div class="col" style="height:6px"></div>
     <div class="base"></div>
   `;
@@ -285,6 +325,8 @@ function renderTower(players){
     node.querySelector('.avatar').textContent = avatar;
     node.querySelector('.col').style.height = Math.max(6,h)+'px';
     node.querySelector('.base').textContent = p.name || '';
+    node.classList.toggle('leader', i === 0);
+    node.classList.toggle('onfire', (p.streak||0) >= 3);
 
     const prev = lastFloor[p.id];
     if(prev !== undefined && floor > prev){
