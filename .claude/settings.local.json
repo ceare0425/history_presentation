@@ -92,7 +92,10 @@
       "Bash(sed -i 's/세계사/한국사/g' review-game-korea/static/board.html review-game-korea/static/play.html)",
       "Bash(rm -f review-game-korea/server.py)",
       "Bash(cp review-game/server.py review-game-korea/server.py)",
-      "Bash(sed -i 's/세계사/한국사/g; s/8899/8898/g' review-game-korea/server.py)"
+      "Bash(sed -i 's/세계사/한국사/g; s/8899/8898/g' review-game-korea/server.py)",
+      "Bash(gh api *)",
+      "Bash(grep -cve '^\\\\s*$' -e '^\\\\s*#' review-game/data/questions.txt)",
+      "Bash(grep -cve '^\\\\s*$' -e '^\\\\s*#' review-game-korea/data/questions.txt)"
     ]
   }
 }
