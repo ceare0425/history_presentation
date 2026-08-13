@@ -109,13 +109,16 @@
       <div class="msg" id="addMsg"></div>
 
       <details>
-        <summary>여러 문제 한번에 붙여넣기 / txt 파일 불러오기</summary>
+        <summary>여러 문제 한번에 붙여넣기 / txt / 엑셀(xlsx) 불러오기</summary>
         <label>한 줄에 하나씩: <code>단원 | 문제(____포함) | 정답</code></label>
         <textarea id="bulkInput" placeholder="01. 문명의 형성 | 현생 인류인 ____은/는 약 20~30만 년 전 아프리카에서 등장하였다. | 호모 사피엔스"></textarea>
-        <label>또는 txt 파일 선택 (같은 형식으로 작성된 파일)</label>
+        <label>또는 엑셀(xlsx) 파일 선택 (양식 다운로드 후 표에 입력해서 작성하는 게 가장 편합니다)</label>
+        <input type="file" id="xlsxFileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <label>또는 txt 파일 선택</label>
         <input type="file" id="bulkFileInput" accept=".txt,text/plain">
         <div class="btnrow">
-          <button class="secondary" id="templateBtn" type="button">양식 다운로드</button>
+          <button class="secondary" id="xlsxTemplateBtn" type="button">엑셀 양식 다운로드</button>
+          <button class="secondary" id="templateBtn" type="button">txt 양식 다운로드</button>
           <button class="secondary" id="bulkAddBtn">일괄 추가</button>
         </div>
         <div class="msg" id="bulkMsg"></div>
@@ -139,6 +142,7 @@
   </div>
 </div>
 
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script type="module">
 import {
   roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
@@ -283,6 +287,65 @@ el('bulkFileInput').onchange = async () => {
     msg.className='msg err'; msg.textContent = '파일을 읽지 못했습니다: ' + err.message;
   } finally {
     el('bulkFileInput').value = '';
+  }
+};
+
+const XLSX_TEMPLATE_ROWS = [
+  ['단원', '문제 (빈칸은 ____ 로 표시)', '정답 (여러 정답은 / 로 구분)'],
+  ['01. 문명의 형성', '현생 인류인 ____은/는 약 20~30만 년 전 아프리카에서 등장하였다.', '호모 사피엔스'],
+  ['01. 문명의 형성', '신석기 시대 사람들은 돌을 갈아 만든 ____를 사용하였다.', '간석기'],
+  ['02. 메소포타미아, 이집트', '함무라비왕이 편찬한 성문법을 ____이라고 한다.', '함무라비 법전'],
+  ['02. 메소포타미아, 이집트', '이집트에서 왕의 무덤으로 만들어진 거대한 건축물은 ____이다.', '피라미드'],
+];
+
+const XLSX_GUIDE_ROWS = [
+  ['세계사 복습 게임 - 문제 양식 사용법'],
+  [''],
+  ["1. '문제' 시트에 단원 / 문제 / 정답 순서로 한 행에 문제 하나씩 입력하세요."],
+  ['2. 문제 칸의 빈칸은 ____ (밑줄 4개)로 표시하세요. 안 쓰면 문제 끝에 자동으로 붙습니다.'],
+  ['3. 정답이 여러 개일 수 있으면 / 로 구분해서 적으세요. 예: 호모 사피엔스/사피엔스'],
+  ['4. 단원 태그는 자유롭게 정하면 됩니다. 관리자 화면에서 이 태그 기준으로 출제 범위를 고릅니다.'],
+  ['5. 첫 줄(머리글)은 그대로 두고, 예시 행은 지운 뒤 문제를 입력하세요.'],
+  [''],
+  ["작성이 끝나면 관리자 화면에서 이 파일을 업로드하고 '일괄 추가'를 누르세요."],
+];
+
+el('xlsxTemplateBtn').onclick = () => {
+  const ws = XLSX.utils.aoa_to_sheet(XLSX_TEMPLATE_ROWS);
+  ws['!cols'] = [{ wch: 22 }, { wch: 60 }, { wch: 24 }];
+  const guideWs = XLSX.utils.aoa_to_sheet(XLSX_GUIDE_ROWS);
+  guideWs['!cols'] = [{ wch: 60 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '문제');
+  XLSX.utils.book_append_sheet(wb, guideWs, '안내');
+  XLSX.writeFile(wb, 'questions_양식.xlsx');
+};
+
+el('xlsxFileInput').onchange = async () => {
+  const file = el('xlsxFileInput').files[0];
+  const msg = el('bulkMsg');
+  if(!file) return;
+  try{
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data, { type: 'array' });
+    const sheetName = wb.SheetNames.includes('문제') ? '문제' : wb.SheetNames[0];
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: '' });
+    let dataRows = rows;
+    if(dataRows.length && String(dataRows[0][0] || '').trim() === '단원'){ dataRows = dataRows.slice(1); }
+    const lines = dataRows
+      .map(r => [String(r[0] ?? '').trim(), String(r[1] ?? '').trim(), String(r[2] ?? '').trim()])
+      .filter(([u,q,a]) => u || q || a)
+      .map(([u,q,a]) => `${u} | ${q} | ${a}`);
+    if(!lines.length){
+      msg.className='msg err'; msg.textContent = '엑셀 파일에서 문제를 찾지 못했습니다. "문제" 시트에 단원/문제/정답 순서로 입력했는지 확인하세요.';
+      return;
+    }
+    el('bulkInput').value = lines.join('\n');
+    msg.className='msg ok'; msg.textContent = `"${file.name}"에서 ${lines.length}개 줄을 불러왔습니다. 내용을 확인하고 "일괄 추가"를 누르세요.`;
+  } catch(err){
+    msg.className='msg err'; msg.textContent = '엑셀 파일을 읽지 못했습니다: ' + err.message;
+  } finally {
+    el('xlsxFileInput').value = '';
   }
 };
 
