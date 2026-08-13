@@ -109,9 +109,11 @@
       <div class="msg" id="addMsg"></div>
 
       <details>
-        <summary>여러 문제 한번에 붙여넣기</summary>
+        <summary>여러 문제 한번에 붙여넣기 / txt 파일 불러오기</summary>
         <label>한 줄에 하나씩: <code>단원 | 문제(____포함) | 정답</code></label>
         <textarea id="bulkInput" placeholder="01. 문명의 형성 | 현생 인류인 ____은/는 약 20~30만 년 전 아프리카에서 등장하였다. | 호모 사피엔스"></textarea>
+        <label>또는 txt 파일 선택 (같은 형식으로 작성된 파일)</label>
+        <input type="file" id="bulkFileInput" accept=".txt,text/plain">
         <div class="btnrow">
           <button class="secondary" id="bulkAddBtn">일괄 추가</button>
         </div>
@@ -233,6 +235,21 @@ el('addBtn').onclick = async () => {
     el('qQuestion').value=''; el('qAnswer').value='';
   } catch(err){
     msg.className='msg err'; msg.textContent = '추가 실패: ' + err.message;
+  }
+};
+
+el('bulkFileInput').onchange = async () => {
+  const file = el('bulkFileInput').files[0];
+  const msg = el('bulkMsg');
+  if(!file) return;
+  try{
+    const text = await file.text();
+    el('bulkInput').value = text;
+    msg.className='msg ok'; msg.textContent = `"${file.name}" 파일을 불러왔습니다. 내용을 확인하고 "일괄 추가"를 누르세요.`;
+  } catch(err){
+    msg.className='msg err'; msg.textContent = '파일을 읽지 못했습니다: ' + err.message;
+  } finally {
+    el('bulkFileInput').value = '';
   }
 };
 
