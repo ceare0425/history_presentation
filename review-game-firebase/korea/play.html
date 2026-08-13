@@ -215,7 +215,7 @@
 <script type="module">
 import {
   roomRef, onValue, get, set, update, serverNow,
-  isCorrect, computeGain, fmtTime, shuffle
+  isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji
 } from '../shared/lib.js';
 
 const ROOM = 'korea';
@@ -337,7 +337,7 @@ function assignNextQuestion(){
   renderQuestion({ id: qid, text: currentQuestion.question, unit: currentQuestion.unit });
 }
 
-const AVATAR_IDLE = '🧗';
+let AVATAR_IDLE = '🧗'; // 입장 시 배정받는 개인 캐릭터로 바뀜
 const AVATAR_HAPPY = '🙌';
 const AVATAR_SAD = '😢';
 
@@ -399,7 +399,7 @@ async function submitAnswer(){
     floor: p.floor, correct: p.correct, wrong: p.wrong,
     streak: p.streak, bestStreak: p.bestStreak, lastActive: serverNow()
   };
-  if(!existed) payload.name = playerName;
+  if(!existed){ payload.name = playerName; payload.avatar = AVATAR_IDLE; }
   await update(pRef, payload);
 
   el('floorVal').textContent = p.floor;
@@ -489,6 +489,13 @@ function startListening(){
     lastFloor = p.floor||0;
     el('floorVal').textContent = p.floor||0;
     renderTowerMini(p.floor||0);
+    if(p.avatar && AVATAR_IDLE !== p.avatar){
+      AVATAR_IDLE = p.avatar;
+      const av = el('avatarChar');
+      if(!av.classList.contains('happy') && !av.classList.contains('sad')){
+        av.textContent = AVATAR_IDLE;
+      }
+    }
   });
 
   setInterval(tick, 250);
@@ -505,8 +512,11 @@ async function join(name){
   if(snap.exists()){
     await update(pRef, { name: playerName, lastActive: serverNow() });
   } else {
+    const existingSnap = await get(roomRef(ROOM, 'players'));
+    const existingAvatars = Object.values(existingSnap.val()||{}).map(pp=>pp.avatar).filter(Boolean);
+    const avatar = pickAvatarEmoji(existingAvatars);
     await set(pRef, {
-      name: playerName, floor:0, correct:0, wrong:0, streak:0, bestStreak:0,
+      name: playerName, avatar, floor:0, correct:0, wrong:0, streak:0, bestStreak:0,
       joinedAt: serverNow(), lastActive: serverNow()
     });
   }

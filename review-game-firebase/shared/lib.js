@@ -108,3 +108,19 @@ export function poolFromQuestions(questionsObj, units) {
   const unitSet = new Set(units);
   return entries.filter(([, q]) => unitSet.has(q.unit));
 }
+
+// ── 학생별 랜덤 캐릭터 배정 ──
+export const ANIMAL_EMOJIS = [
+  "🐰", "🐱", "🐯", "🐻", "🐼", "🐨", "🦁", "🐵", "🐶", "🦊",
+  "🐸", "🐷", "🐹", "🐭", "🐮", "🐔", "🦉", "🐢", "🐙", "🦄",
+  "🐧", "🐬", "🦋", "🐿️"
+];
+
+// 이미 배정된 캐릭터(existingAvatars)와 겹치지 않는 걸 우선 고르고,
+// 다 떨어지면(학생 수 > 캐릭터 종류) 아무거나 랜덤으로 고름
+export function pickAvatarEmoji(existingAvatars) {
+  const taken = new Set(existingAvatars || []);
+  const free = ANIMAL_EMOJIS.filter((e) => !taken.has(e));
+  const pool = free.length ? free : ANIMAL_EMOJIS;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
