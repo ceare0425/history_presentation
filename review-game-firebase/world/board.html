@@ -70,12 +70,7 @@
   }
   .climber .avatar{
     font-size:1.8rem; margin-bottom:4px; filter:drop-shadow(0 4px 6px rgba(0,0,0,.4));
-    animation:bob 1.2s ease-in-out infinite;
     transform-origin:center bottom;
-  }
-  @keyframes bob{
-    0%,100%{ transform:translateY(0) rotate(-5deg); }
-    50%{ transform:translateY(-7px) rotate(5deg); }
   }
   .climber.leveling .avatar{ animation:levelPop .6s ease; }
   @keyframes levelPop{
@@ -266,7 +261,6 @@ function ensureClimberEl(track, id){
     <div class="col" style="height:6px"></div>
     <div class="base"></div>
   `;
-  div.style.animationDelay = (Math.random()*1.1)+'s';
   track.appendChild(div);
   climberEls[id] = div;
   return div;
