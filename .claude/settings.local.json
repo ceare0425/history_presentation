@@ -95,7 +95,12 @@
       "Bash(sed -i 's/세계사/한국사/g; s/8899/8898/g' review-game-korea/server.py)",
       "Bash(gh api *)",
       "Bash(grep -cve '^\\\\s*$' -e '^\\\\s*#' review-game/data/questions.txt)",
-      "Bash(grep -cve '^\\\\s*$' -e '^\\\\s*#' review-game-korea/data/questions.txt)"
+      "Bash(grep -cve '^\\\\s*$' -e '^\\\\s*#' review-game-korea/data/questions.txt)",
+      "Bash(sed -e \"s/세계사/한국사/g\" -e \"s/ROOM = 'world'/ROOM = 'korea'/\" \"world/play.html\")",
+      "Bash(sed -e \"s/세계사/한국사/g\" -e \"s/ROOM = 'world'/ROOM = 'korea'/\" \"world/board.html\")",
+      "Bash(sed -e \"s/세계사/한국사/g\" -e \"s/ROOM = 'world'/ROOM = 'korea'/\" \"world/admin.html\")",
+      "Bash(xxd)",
+      "Bash(awk 'NR==832' \"/c/Users/user/Documents/GitHub/history_presentation/세계사/02-메소포타미아-이집트/index.html\")"
     ]
   }
 }
