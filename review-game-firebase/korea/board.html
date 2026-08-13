@@ -279,7 +279,7 @@ function renderTower(players){
     track.appendChild(node);
     const floor = p.floor||0;
     const h = Math.round((floor / maxFloor) * usable);
-    const avatar = i===0 && floor>0 ? '🏃' : ((p.streak||0)>=3 ? '🔥' : '🧗');
+    const avatar = i===0 && floor>0 ? '🐰' : ((p.streak||0)>=3 ? '🐯' : '🐱');
 
     node.querySelector('.floorno').textContent = floor;
     node.querySelector('.avatar').textContent = avatar;
