@@ -91,6 +91,27 @@
     padding:3px 10px; margin-bottom:.8vh; flex:0 0 auto;
   }
 
+  .avatar-char{
+    text-align:center; font-size:2.4rem; line-height:1; margin:.2vh 0 .4vh;
+    flex:0 0 auto; user-select:none;
+  }
+  .avatar-char.happy{ animation:avatarHappy .8s ease; }
+  @keyframes avatarHappy{
+    0%{ transform:translateY(0) scale(1) rotate(0deg); }
+    25%{ transform:translateY(-16px) scale(1.2) rotate(-10deg); }
+    50%{ transform:translateY(0) scale(1.05) rotate(10deg); }
+    75%{ transform:translateY(-9px) scale(1.12) rotate(-6deg); }
+    100%{ transform:translateY(0) scale(1) rotate(0deg); }
+  }
+  .avatar-char.sad{ animation:avatarSad .9s ease; }
+  @keyframes avatarSad{
+    0%{ transform:translateY(0) rotate(0deg) scale(1); }
+    20%{ transform:translateY(5px) rotate(-7deg) scale(.97); }
+    40%{ transform:translateY(9px) rotate(7deg) scale(.95); }
+    60%{ transform:translateY(9px) rotate(-5deg) scale(.95); }
+    100%{ transform:translateY(3px) rotate(0deg) scale(.97); }
+  }
+
   .feedback{
     text-align:center; font-weight:800; font-size:1.15rem; border-radius:12px; padding:10px;
     margin-bottom:.8vh; display:none; flex:0 0 auto;
@@ -163,6 +184,8 @@
       <div class="timer">⏱ <span id="timerVal">--:--</span></div>
     </div>
     <div class="streak" id="streakVal"></div>
+
+    <div class="avatar-char" id="avatarChar">🧗</div>
 
     <div id="feedback" class="feedback"></div>
 
@@ -314,6 +337,22 @@ function assignNextQuestion(){
   renderQuestion({ id: qid, text: currentQuestion.question, unit: currentQuestion.unit });
 }
 
+const AVATAR_IDLE = '🧗';
+const AVATAR_HAPPY = '🙌';
+const AVATAR_SAD = '😢';
+
+function playCharacterReaction(correct){
+  const av = el('avatarChar');
+  av.classList.remove('happy','sad');
+  void av.offsetWidth; // 애니메이션 재시작을 위해 리플로우 강제
+  av.textContent = correct ? AVATAR_HAPPY : AVATAR_SAD;
+  av.classList.add(correct ? 'happy' : 'sad');
+  setTimeout(()=>{
+    av.textContent = AVATAR_IDLE;
+    av.classList.remove('happy','sad');
+  }, correct ? 750 : 950);
+}
+
 function flashFeedback(correct, correctAnswer, gain){
   const f = el('feedback');
   f.classList.add('show');
@@ -369,6 +408,7 @@ async function submitAnswer(){
   lastFloor = p.floor;
   renderTowerMini(p.floor);
   flashFeedback(correct, q.answers[0], gain);
+  playCharacterReaction(correct);
 
   setTimeout(()=>{
     el('submitBtn').disabled = false; el('answerInput').disabled = false;
