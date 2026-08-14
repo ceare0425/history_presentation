@@ -109,6 +109,13 @@
     .info-list li.sub { padding-left:2.3em; }
     .info-list li.sub::before { content:'—'; font-size:.88rem; top:.38em; }
 
+    /* 요약 테이블 */
+    .summary-table { width:100%; border-collapse:collapse; font-size:.88rem; margin:.35rem 0; }
+    .summary-table th { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); padding:.4rem .7rem; font-family:'Nanum Myeongjo',serif; font-weight:700; text-align:center; border:1px solid var(--border); }
+    .summary-table td { padding:.38rem .7rem; border:1px solid var(--border); line-height:1.65; vertical-align:top; }
+    .summary-table tr:nth-child(even) td { background:rgba(255,248,225,.6); }
+    .summary-table td:first-child { background:linear-gradient(135deg,rgba(139,69,19,.12),rgba(107,48,16,.08)); font-family:'Nanum Myeongjo',serif; font-weight:700; color:var(--main); text-align:center; white-space:nowrap; }
+
     /* 퀴즈 */
     .quiz-wrap { display:flex; flex-direction:column; gap:.32rem; margin-top:.15rem; }
     .quiz-row { display:flex; align-items:flex-start; gap:.5rem; border:1.5px solid var(--border); border-radius:3px; padding:.32rem .7rem; background:var(--card-bg); }
@@ -144,8 +151,134 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 2: 춘추 전국 시대 — (1) 주의 동천과 전개 ══ -->
+<!-- ══ 슬라이드 2: 지난 시간 복습 — 메소포타미아 vs 이집트 문명 ══ -->
 <div class="slide" data-slide="1">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">지난 시간 복습 — 메소포타미아 vs 이집트 문명</span>
+    </div>
+    <div class="browser-content">
+      <div class="ruler-card">
+        <div class="ruler-card-body">
+          <table class="summary-table">
+            <colgroup><col style="width:16%"><col><col></colgroup>
+            <thead>
+              <tr><th>구분</th><th>메소포타미아</th><th>이집트</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>발생지</td>
+                <td><span class="blank" data-reveal>티그리스·유프라테스강</span></td>
+                <td><span class="blank" data-reveal>나일강 유역</span></td>
+              </tr>
+              <tr>
+                <td>지형</td>
+                <td><span class="blank" data-reveal>개방적 → 지배 세력 잦은 교체</span></td>
+                <td><span class="blank" data-reveal>폐쇄적(사막·바다) → 안정적 왕조</span></td>
+              </tr>
+              <tr>
+                <td>최고 통치자</td>
+                <td><span class="blank" data-reveal>왕 = 지배자, 제사장 (신정 정치)</span></td>
+                <td><span class="blank" data-reveal>파라오 (태양신 '라'의 아들)</span></td>
+              </tr>
+              <tr>
+                <td>세계관</td>
+                <td><span class="blank" data-reveal>현세 중시 (길가메시 서사시)</span></td>
+                <td><span class="blank" data-reveal>내세적 (사후 세계 중시)</span></td>
+              </tr>
+              <tr>
+                <td>문자</td>
+                <td><span class="blank" data-reveal>쐐기 문자</span></td>
+                <td><span class="blank" data-reveal>상형 문자 (파피루스에 기록)</span></td>
+              </tr>
+              <tr>
+                <td>역법·수학</td>
+                <td><span class="blank" data-reveal>태음력 · 60진법</span></td>
+                <td><span class="blank" data-reveal>태양력 · 10진법</span></td>
+              </tr>
+              <tr>
+                <td>대표 건축</td>
+                <td><span class="blank" data-reveal>지구라트</span></td>
+                <td><span class="blank" data-reveal>피라미드 (파라오의 무덤)</span></td>
+              </tr>
+              <tr>
+                <td>대표 법전</td>
+                <td><span class="blank" data-reveal>《함무라비 법전》</span></td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 지난 시간 복습 — 인도 문명 ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">지난 시간 복습 — 인도 문명</span>
+    </div>
+    <div class="browser-content">
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏙️ 인더스 문명</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>기원전 2500년경 <span class="blank" data-reveal>인더스 강</span> 상류 펀자브 지방에서 드라비다인이 형성한 것으로 추정</li>
+            <li>계획도시 <span class="blank" data-reveal>하라파</span>, <span class="blank" data-reveal>모헨조다로</span> 건설</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🚶 아리아인의 이동과 사회</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>기원전 1500년경 <span class="blank" data-reveal>아리아인</span> 진출 — 중앙아시아에서 북인도로 이동, 이후 갠지스강까지 진출</li>
+            <li>원주민을 지배하기 위해 <span class="blank" data-reveal>카스트제</span> 성립(브라만·크샤트리아·바이샤·수드라)</li>
+            <li>자연신을 숭배하는 <span class="blank" data-reveal>브라만교</span> 성립, 경전 <span class="blank" data-reveal>《베다》</span> 사용</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 지난 시간 복습 — 중국 문명 ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">지난 시간 복습 — 중국 문명</span>
+    </div>
+    <div class="browser-content">
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌊 하·상 왕조</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>기원전 2500년경 <span class="blank" data-reveal>황허강</span>과 창장강 일대에서 문명 발전, 하 왕조(얼리터우 유적)는 문헌상 최초의 국가</li>
+            <li>상 왕조: 왕이 점친 내용을 갑골에 기록하는 <span class="blank" data-reveal>신권 정치</span> 실시</li>
+            <li>점친 내용과 결과를 <span class="blank" data-reveal>갑골문</span>으로 기록 → 한자의 기원</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ 주 왕조</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>상을 멸망시키고 건국, 왕이 수도 인근을 직접 지배하고 제후에게 나머지 지역을 다스리게 하는 <span class="blank" data-reveal>봉건제</span> 실시</li>
+            <li><span class="blank" data-reveal>혈연</span>에 기초한 종법 제도 발전</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 춘추 전국 시대 — (1) 주의 동천과 전개 ══ -->
+<div class="slide" data-slide="4">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">⚔️</span>
@@ -167,8 +300,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 3: 춘추 전국 시대 — (2) 제자백가 ══ -->
-<div class="slide" data-slide="2">
+<!-- ══ 슬라이드 6: 춘추 전국 시대 — (2) 제자백가 ══ -->
+<div class="slide" data-slide="5">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">📚</span>
@@ -190,8 +323,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 4: 춘추 전국 시대 — (3) 사회의 변화 ══ -->
-<div class="slide" data-slide="3">
+<!-- ══ 슬라이드 7: 춘추 전국 시대 — (3) 사회의 변화 ══ -->
+<div class="slide" data-slide="6">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🏗️</span>
@@ -214,8 +347,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 5: 진의 통일 ══ -->
-<div class="slide" data-slide="4">
+<!-- ══ 슬라이드 8: 진의 통일 ══ -->
+<div class="slide" data-slide="7">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🐉</span>
@@ -253,8 +386,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 6: 한의 발전 — 건국 + 통치 ══ -->
-<div class="slide" data-slide="5">
+<!-- ══ 슬라이드 9: 한의 발전 — 건국 + 통치 ══ -->
+<div class="slide" data-slide="8">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🏯</span>
@@ -284,8 +417,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 7: 한의 발전 — 후한 ══ -->
-<div class="slide" data-slide="6">
+<!-- ══ 슬라이드 10: 한의 발전 — 후한 ══ -->
+<div class="slide" data-slide="9">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🔄</span>
@@ -307,8 +440,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 8: 흉노의 발전 ══ -->
-<div class="slide" data-slide="7">
+<!-- ══ 슬라이드 11: 흉노의 발전 ══ -->
+<div class="slide" data-slide="10">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🐎</span>
@@ -339,8 +472,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 9: 개념 확인 문제 1번 ══ -->
-<div class="slide" data-slide="8">
+<!-- ══ 슬라이드 12: 개념 확인 문제 1번 ══ -->
+<div class="slide" data-slide="11">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -371,8 +504,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 10: 개념 확인 문제 2번 ══ -->
-<div class="slide" data-slide="9">
+<!-- ══ 슬라이드 13: 개념 확인 문제 2번 ══ -->
+<div class="slide" data-slide="12">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -409,8 +542,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 11: 개념 확인 문제 3번 ══ -->
-<div class="slide" data-slide="10">
+<!-- ══ 슬라이드 14: 개념 확인 문제 3번 ══ -->
+<div class="slide" data-slide="13">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -447,7 +580,7 @@
   </button>
   <span class="nav-counter">
     <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
-    / <span id="totalSlides">11</span>
+    / <span id="totalSlides">14</span>
   </span>
   <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
     <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
