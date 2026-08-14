@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>03. 인도, 중국, 메소아메리카 문명</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@300;400;500;600;700&family=Cactus+Classical+Serif&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -52,7 +52,7 @@
       padding: 0.8rem;
     }
 
-    .slide { display: none; width: 100%; max-width: 1600px; height: 100%; }
+    .slide { display: none; aspect-ratio: 16/9; width: min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height: auto; }
     .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -303,6 +303,15 @@
     /* ── 표지 ── */
     .cover-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: 0.65rem; }
 
+    .hanja-display {
+      font-family: 'Cactus Classical Serif', 'Nanum Myeongjo', serif;
+      font-size: 7rem; line-height: 1.2;
+      color: var(--main);
+      text-shadow: 2px 2px 0 var(--accent-light), 0 6px 24px rgba(44,26,14,0.25);
+      letter-spacing: 0.08em;
+    }
+    .hanja-reading { font-family: 'Nanum Myeongjo', serif; font-size: 1.3rem; font-weight: 700; color: var(--text-sec); letter-spacing: 0.3em; }
+
     /* ── 목차 ── */
     .toc-list { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
     .toc-item {
@@ -386,60 +395,70 @@
   </div>
 
   <!-- ════════════════════════════════════════════════ -->
-  <!-- Slide 2: 목차 -->
+  <!-- Slide 2: 지난 시간 복습 — 메소포타미아 vs 이집트 [빈칸] -->
   <!-- ════════════════════════════════════════════════ -->
   <div class="slide" data-slide="1">
     <div class="browser-card">
       <div class="browser-topbar">
-        <span class="topbar-icon">📜</span>
-        <span class="browser-title">학습 목차</span>
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">지난 시간 복습 — 메소포타미아 vs 이집트 문명</span>
       </div>
-      <div class="browser-content" style="justify-content:center;">
+      <div class="browser-content">
         <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
-        <h2 style="text-align:center; margin-bottom:0.2rem;">학습 내용 정리</h2>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">지난 시간 복습</h2>
         <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
-        <div class="toc-list">
-          <div class="toc-item" onclick="goToSlide(2)">
-            <div class="toc-num">1</div>
-            <div>
-              <div class="toc-title">인도 문명 — 인더스 문명</div>
-              <div class="toc-desc">드라비다인 · 하라파 · 모헨조다로 · 계획 도시</div>
-            </div>
-          </div>
-          <div class="toc-item" onclick="goToSlide(3)">
-            <div class="toc-num">2</div>
-            <div>
-              <div class="toc-title">인도 문명 — 아리아인의 이동</div>
-              <div class="toc-desc">카스트제 · 브라만교 · 《베다》</div>
-            </div>
-          </div>
-          <div class="toc-item" onclick="goToSlide(4)">
-            <div class="toc-num">3</div>
-            <div>
-              <div class="toc-title">중국 문명 — 하·상 왕조</div>
-              <div class="toc-desc">얼리터우 · 신권 정치 · 갑골문</div>
-            </div>
-          </div>
-          <div class="toc-item" onclick="goToSlide(5)">
-            <div class="toc-num">4</div>
-            <div>
-              <div class="toc-title">중국 문명 — 주 왕조</div>
-              <div class="toc-desc">봉건제 · 종법 제도</div>
-            </div>
-          </div>
-          <div class="toc-item" onclick="goToSlide(6)">
-            <div class="toc-num">5</div>
-            <div>
-              <div class="toc-title">메소아메리카 문명 — 올메카 · 마야</div>
-              <div class="toc-desc">멕시코만 · 유카탄반도 · 티칼 · 치첸이트사 · 피라미드형 신전</div>
-            </div>
-          </div>
-          <div class="toc-item" onclick="goToSlide(7)">
-            <div class="toc-num">6</div>
-            <div>
-              <div class="toc-title">개념 확인 문제</div>
-              <div class="toc-desc">OX · 빈칸 채우기 · 선택형</div>
-            </div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">🔄 &nbsp;메소포타미아 vs 이집트 — 빈칸에 들어갈 알맞은 말을 쓰시오.</div>
+          <div class="ruler-card-body">
+            <table class="summary-table">
+              <colgroup><col style="width:16%"><col><col></colgroup>
+              <thead>
+                <tr><th>구분</th><th>메소포타미아</th><th>이집트</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>발생지</td>
+                  <td><span class="q-blank">티그리스·유프라테스강</span></td>
+                  <td><span class="q-blank">나일강 유역</span></td>
+                </tr>
+                <tr>
+                  <td>지형</td>
+                  <td><span class="q-blank">개방적 → 지배 세력 잦은 교체</span></td>
+                  <td><span class="q-blank">폐쇄적(사막·바다) → 안정적 왕조</span></td>
+                </tr>
+                <tr>
+                  <td>최고 통치자</td>
+                  <td><span class="q-blank">왕 = 지배자, 제사장 (신정 정치)</span></td>
+                  <td><span class="q-blank">파라오 (태양신 '라'의 아들)</span></td>
+                </tr>
+                <tr>
+                  <td>세계관</td>
+                  <td><span class="q-blank">현세 중시 (길가메시 서사시)</span></td>
+                  <td><span class="q-blank">내세적 (사후 세계 중시)</span></td>
+                </tr>
+                <tr>
+                  <td>문자</td>
+                  <td><span class="q-blank">쐐기 문자</span></td>
+                  <td><span class="q-blank">상형 문자 (파피루스에 기록)</span></td>
+                </tr>
+                <tr>
+                  <td>역법·수학</td>
+                  <td><span class="q-blank">태음력 · 60진법</span></td>
+                  <td><span class="q-blank">태양력 · 10진법</span></td>
+                </tr>
+                <tr>
+                  <td>대표 건축</td>
+                  <td><span class="q-blank">지구라트</span></td>
+                  <td><span class="q-blank">피라미드 (파라오의 무덤)</span></td>
+                </tr>
+                <tr>
+                  <td>대표 법전</td>
+                  <td><span class="q-blank">《함무라비 법전》</span></td>
+                  <td>—</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -561,13 +580,63 @@
   </div>
 
   <!-- ════════════════════════════════════════════════ -->
-  <!-- Slide 5: 중국 문명 — 하·상 왕조 (빈칸 없음) -->
+  <!-- Slide 5: 사진 자료 -->
   <!-- ════════════════════════════════════════════════ -->
   <div class="slide" data-slide="4">
     <div class="browser-card">
       <div class="browser-topbar">
+        <span class="topbar-icon">🖼️</span>
+        <span class="browser-title">사진 자료</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">사진 자료</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div style="display:flex; flex:1; min-height:0; gap:0.6rem;">
+          <div style="flex:1; min-width:0; border:1.5px solid var(--border); border-radius:3px; overflow:hidden; background:var(--card-bg);">
+            <img src="장.jpg" alt="장" style="width:100%; height:100%; object-fit:cover;">
+          </div>
+          <div style="flex:1; min-width:0; border:1.5px solid var(--border); border-radius:3px; overflow:hidden; background:var(--card-bg);">
+            <img src="카.jpg" alt="카" style="width:100%; height:100%; object-fit:cover;">
+          </div>
+          <div style="flex:1; min-width:0; border:1.5px solid var(--border); border-radius:3px; overflow:hidden; background:var(--card-bg);">
+            <img src="설.jpg" alt="설" style="width:100%; height:100%; object-fit:cover;">
+          </div>
+          <div style="flex:1; min-width:0; border:1.5px solid var(--border); border-radius:3px; overflow:hidden; background:var(--card-bg);">
+            <img src="유.jpg" alt="유" style="width:100%; height:100%; object-fit:cover;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- Slide 6: 傾國之色 -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="slide" data-slide="5">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🖌️</span>
+        <span class="browser-title">傾國之色</span>
+      </div>
+      <div class="browser-content">
+        <div class="cover-wrap">
+          <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+          <div class="hanja-display">傾國之色</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- Slide 7: 중국 문명 — 하 왕조 (빈칸 없음) -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="slide" data-slide="6">
+    <div class="browser-card">
+      <div class="browser-topbar">
         <span class="topbar-icon">🏯</span>
-        <span class="browser-title">2. 중국 문명 — 하·상 왕조</span>
+        <span class="browser-title">2. 중국 문명 — 하 왕조</span>
       </div>
       <div class="browser-content">
         <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
@@ -583,26 +652,42 @@
           </div>
         </div>
 
-        <div class="grid-2" style="gap:0.6rem; margin-bottom:0.5rem;">
-          <div class="ruler-card" style="margin-bottom:0;">
-            <div class="ruler-card-header">🏛️ &nbsp;하 왕조</div>
-            <div class="ruler-card-body">
-              <ul class="info-list">
-                <li>문헌상 <strong>최초의 국가</strong></li>
-                <li><strong>얼리터우</strong> 유적 발굴로 실존 가능성 인정</li>
-              </ul>
-            </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏛️ &nbsp;하 왕조</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>문헌상 <strong>최초의 국가</strong></li>
+              <li><strong>얼리터우</strong> 유적 발굴로 실존 가능성 인정</li>
+            </ul>
           </div>
-          <div class="ruler-card" style="margin-bottom:0;">
-            <div class="ruler-card-header">⚡ &nbsp;상 왕조</div>
-            <div class="ruler-card-body">
-              <ul class="info-list">
-                <li>기원전 <strong>1600년경</strong> 건국</li>
-                <li><strong>신권 정치</strong> — 왕이 점친 내용을 갑골에 기록</li>
-                <li>기록 문자: <strong>갑골문</strong> → 한자의 기원</li>
-                <li>청동 솥 등을 제사 도구로 사용</li>
-              </ul>
-            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════ -->
+  <!-- Slide 8: 중국 문명 — 상 왕조 (빈칸 없음) -->
+  <!-- ════════════════════════════════════════════════ -->
+  <div class="slide" data-slide="7">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🏯</span>
+        <span class="browser-title">2. 중국 문명 — 상 왕조</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="margin-bottom:0.2rem;">2. 중국 문명</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
+        <div class="ruler-card">
+          <div class="ruler-card-header">⚡ &nbsp;상 왕조</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>기원전 <strong>1600년경</strong> 건국</li>
+              <li><strong>신권 정치</strong> — 왕이 점친 내용을 갑골에 기록</li>
+              <li>기록 문자: <strong>갑골문</strong> → 한자의 기원</li>
+              <li>청동 솥 등을 제사 도구로 사용</li>
+            </ul>
           </div>
         </div>
 
@@ -614,9 +699,9 @@
   </div>
 
   <!-- ════════════════════════════════════════════════ -->
-  <!-- Slide 6: 중국 문명 — 주 왕조 [빈칸 ➋ 봉건제] -->
+  <!-- Slide 9: 중국 문명 — 주 왕조 [빈칸 ➋ 봉건제] -->
   <!-- ════════════════════════════════════════════════ -->
-  <div class="slide" data-slide="5">
+  <div class="slide" data-slide="8">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🏯</span>
@@ -676,9 +761,9 @@
   </div>
 
   <!-- ════════════════════════════════════════════════ -->
-  <!-- Slide 7: 메소아메리카 문명 — 올메카·마야 (빈칸 없음) -->
+  <!-- Slide 10: 메소아메리카 문명 — 올메카·마야 (빈칸 없음) -->
   <!-- ════════════════════════════════════════════════ -->
-  <div class="slide" data-slide="6">
+  <div class="slide" data-slide="9">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🗿</span>
@@ -723,9 +808,9 @@
   </div>
 
   <!-- ════════════════════════════════════════════════ -->
-  <!-- Slide 8: 개념 확인 문제 1 — OX (정답 숨김) -->
+  <!-- Slide 11: 개념 확인 문제 1 — OX (정답 숨김) -->
   <!-- ════════════════════════════════════════════════ -->
-  <div class="slide" data-slide="7">
+  <div class="slide" data-slide="10">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -773,9 +858,9 @@
   </div>
 
   <!-- ════════════════════════════════════════════════ -->
-  <!-- Slide 9: 개념 확인 문제 2 — 빈칸 채우기 -->
+  <!-- Slide 12: 개념 확인 문제 2 — 빈칸 채우기 -->
   <!-- ════════════════════════════════════════════════ -->
-  <div class="slide" data-slide="8">
+  <div class="slide" data-slide="11">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -817,9 +902,9 @@
   </div>
 
   <!-- ════════════════════════════════════════════════ -->
-  <!-- Slide 10: 개념 확인 문제 3 — 선택형 -->
+  <!-- Slide 13: 개념 확인 문제 3 — 선택형 -->
   <!-- ════════════════════════════════════════════════ -->
-  <div class="slide" data-slide="9">
+  <div class="slide" data-slide="12">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -865,9 +950,9 @@
   </div>
 
   <!-- ════════════════════════════════════════════════ -->
-  <!-- Slide 11: 개념 확인 문제 4 — 선택형 -->
+  <!-- Slide 14: 개념 확인 문제 4 — 선택형 -->
   <!-- ════════════════════════════════════════════════ -->
-  <div class="slide" data-slide="10">
+  <div class="slide" data-slide="13">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -913,7 +998,7 @@
   </button>
   <span class="nav-counter">
     <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
-    / <span id="totalSlides">11</span>
+    / <span id="totalSlides">14</span>
   </span>
   <button class="nav-btn" id="nextBtn" onclick="advance()" aria-label="다음">
     <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
