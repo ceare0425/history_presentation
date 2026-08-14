@@ -100,7 +100,16 @@
       "Bash(sed -e \"s/세계사/한국사/g\" -e \"s/ROOM = 'world'/ROOM = 'korea'/\" \"world/board.html\")",
       "Bash(sed -e \"s/세계사/한국사/g\" -e \"s/ROOM = 'world'/ROOM = 'korea'/\" \"world/admin.html\")",
       "Bash(xxd)",
-      "Bash(awk 'NR==832' \"/c/Users/user/Documents/GitHub/history_presentation/세계사/02-메소포타미아-이집트/index.html\")"
+      "Bash(awk 'NR==832' \"/c/Users/user/Documents/GitHub/history_presentation/세계사/02-메소포타미아-이집트/index.html\")",
+      "Bash(gh run *)",
+      "Bash(gh auth *)",
+      "PowerShell(Get-Command *)",
+      "Bash(unset TOKEN)",
+      "Bash(cp \"C:/Users/user/Desktop/장.jpg\" \"C:/Users/user/Documents/GitHub/history_presentation/세계사/03-인도-중국-메소아메리카/장.jpg\")",
+      "Bash(cp \"C:/Users/user/Desktop/카.jpg\" \"C:/Users/user/Documents/GitHub/history_presentation/세계사/03-인도-중국-메소아메리카/카.jpg\")",
+      "Bash(cp \"C:/Users/user/Desktop/설.jpg\" \"C:/Users/user/Documents/GitHub/history_presentation/세계사/03-인도-중국-메소아메리카/설.jpg\")",
+      "Bash(cp \"C:/Users/user/Desktop/유.jpg\" \"C:/Users/user/Documents/GitHub/history_presentation/세계사/03-인도-중국-메소아메리카/유.jpg\")",
+      "Bash(xxd \"C:/Users/user/Documents/GitHub/history_presentation/세계사/03-인도-중국-메소아메리카/장.jpg\")"
     ]
   }
 }
