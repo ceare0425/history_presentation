@@ -109,7 +109,8 @@
       "Bash(cp \"C:/Users/user/Desktop/카.jpg\" \"C:/Users/user/Documents/GitHub/history_presentation/세계사/03-인도-중국-메소아메리카/카.jpg\")",
       "Bash(cp \"C:/Users/user/Desktop/설.jpg\" \"C:/Users/user/Documents/GitHub/history_presentation/세계사/03-인도-중국-메소아메리카/설.jpg\")",
       "Bash(cp \"C:/Users/user/Desktop/유.jpg\" \"C:/Users/user/Documents/GitHub/history_presentation/세계사/03-인도-중국-메소아메리카/유.jpg\")",
-      "Bash(xxd \"C:/Users/user/Documents/GitHub/history_presentation/세계사/03-인도-중국-메소아메리카/장.jpg\")"
+      "Bash(xxd \"C:/Users/user/Documents/GitHub/history_presentation/세계사/03-인도-중국-메소아메리카/장.jpg\")",
+      "Bash(PYTHONIOENCODING=utf-8 python3 *)"
     ]
   }
 }
