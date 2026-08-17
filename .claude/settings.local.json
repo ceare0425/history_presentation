@@ -114,7 +114,8 @@
       "PowerShell(Copy-Item *)",
       "PowerShell(Test-Path *)",
       "Bash(cp *)",
-      "Bash(ls *)"
+      "Bash(ls *)",
+      "Bash(pip install *)"
     ]
   }
 }
