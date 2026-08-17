@@ -269,6 +269,7 @@ let prevEffective = null;
 
 // ── 배경음악: 외부 파일 없이 Web Audio API로 자체 생성하는 잔잔한 루프 ──
 const BGM_MUTE_KEY = 'rg_fb_bgm_muted';
+const BGM_VOLUME = 0.55; // 마스터 볼륨(컴퓨터 볼륨은 그대로 따라가고, 이 값은 우리 소리 자체의 크기)
 let audioCtx = null;
 let masterGain = null;
 let bgmStarted = false;
@@ -289,8 +290,16 @@ function ensureAudioCtx(){
   if(audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = bgmMuted ? 0 : 0.1;
-  masterGain.connect(audioCtx.destination);
+  masterGain.gain.value = bgmMuted ? 0 : BGM_VOLUME;
+  // 여러 음이 겹쳐도 소리가 찌그러지지 않도록 리미터 역할의 컴프레서를 마지막 단에 건다
+  const compressor = audioCtx.createDynamicsCompressor();
+  compressor.threshold.value = -18;
+  compressor.knee.value = 24;
+  compressor.ratio.value = 8;
+  compressor.attack.value = 0.003;
+  compressor.release.value = 0.25;
+  masterGain.connect(compressor);
+  compressor.connect(audioCtx.destination);
 }
 
 function playTone(freq, startTime, duration, peak, type){
@@ -309,10 +318,10 @@ function playTone(freq, startTime, duration, peak, type){
 function scheduleBgmNote(){
   const chord = BGM_CHORDS[bgmChordIndex];
   if(bgmBeatIndex === 0){
-    chord.pad.forEach(f => playTone(f, bgmNextTime, BGM_BEAT_SEC*BGM_BEATS_PER_CHORD*0.95, 0.06, 'sine'));
+    chord.pad.forEach(f => playTone(f, bgmNextTime, BGM_BEAT_SEC*BGM_BEATS_PER_CHORD*0.95, 0.16, 'sine'));
   }
   const note = chord.arp[bgmBeatIndex % chord.arp.length];
-  playTone(note, bgmNextTime, BGM_BEAT_SEC*0.9, 0.05, 'triangle');
+  playTone(note, bgmNextTime, BGM_BEAT_SEC*0.9, 0.14, 'triangle');
 
   bgmBeatIndex++;
   if(bgmBeatIndex >= BGM_BEATS_PER_CHORD){
@@ -350,7 +359,7 @@ function startBgm(){
 function setBgmMuted(muted){
   bgmMuted = muted;
   localStorage.setItem(BGM_MUTE_KEY, muted ? '1' : '0');
-  if(masterGain) masterGain.gain.value = muted ? 0 : 0.1;
+  if(masterGain) masterGain.gain.value = muted ? 0 : BGM_VOLUME;
   updateBgmBtn();
 }
 
@@ -361,11 +370,11 @@ function playFanfare(){
   const t0 = audioCtx.currentTime + 0.05;
   const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
   notes.forEach((f,i)=>{
-    playTone(f, t0 + i*0.12, 0.35, 0.22, 'triangle');
+    playTone(f, t0 + i*0.12, 0.35, 0.5, 'triangle');
   });
   const chordTime = t0 + notes.length*0.12 + 0.05;
   [783.99, 987.77, 1174.66, 1567.98].forEach(f=>{ // G5 B5 D6 G6
-    playTone(f, chordTime, 1.1, 0.18, 'sawtooth');
+    playTone(f, chordTime, 1.1, 0.4, 'sawtooth');
   });
 }
 
