@@ -237,6 +237,7 @@ let currentStartedAt = null;
 let lastQid = null;
 let lastFloor = 0;
 let kicked = false;
+let myAnswered = false; // 이번 라운드에서 한 문제라도 제출했는지 (아직 안 했으면 종료 화면 대신 대기 화면을 보여줌)
 
 const el = (id) => document.getElementById(id);
 
@@ -469,7 +470,12 @@ function tick(){
     }
     showView('playView');
   } else if(effective === 'ended'){
-    if(prevEffective !== 'ended'){
+    if(!myAnswered){
+      // 이 라운드가 시작된 뒤 한 번도 참여하지 못했다면(예: 라운드가 끝난 뒤 새로 들어온 학생)
+      // 지난 게임의 종료 화면 대신 대기 화면을 보여준다
+      el('waitName').textContent = playerName + '님';
+      showView('waitingView');
+    } else if(prevEffective !== 'ended'){
       showEndedView();
     }
   }
@@ -499,6 +505,7 @@ function startListening(){
       return;
     }
     lastFloor = p.floor||0;
+    myAnswered = ((p.correct||0) + (p.wrong||0)) > 0;
     el('floorVal').textContent = p.floor||0;
     renderTowerMini(p.floor||0);
     if(p.avatar && AVATAR_IDLE !== p.avatar){
