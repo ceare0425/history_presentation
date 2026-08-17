@@ -226,7 +226,7 @@ let playerId = localStorage.getItem(STORAGE_ID_KEY) || '';
 let playerName = localStorage.getItem(STORAGE_NAME_KEY) || '';
 
 let questionsObj = {};
-let roundState = { status: 'idle', units: [], duration_sec: 300, end_time: null, token: 0, order: 'random' };
+let roundState = { status: 'idle', units: [], duration_sec: 300, end_time: null, token: 0, order: 'random', qids: [] };
 let lastSeenToken = null;
 let prevEffective = null;
 
@@ -311,6 +311,9 @@ function renderQuestion(q){
 }
 
 function currentPool(){
+  if(roundState.qids && roundState.qids.length>0){
+    return roundState.qids.filter(qid=>questionsObj[qid]).map(qid=>[qid, questionsObj[qid]]);
+  }
   const entries = Object.entries(questionsObj);
   if(!roundState.units || roundState.units.length===0) return entries;
   const unitSet = new Set(roundState.units);
@@ -485,8 +488,8 @@ function startListening(){
     roundState = r ? {
       status: r.status || 'idle', units: r.units || [],
       duration_sec: r.duration_sec || 300, end_time: r.end_time ?? null, token: r.token || 0,
-      order: r.order || 'random'
-    } : { status:'idle', units:[], duration_sec:300, end_time:null, token:0, order:'random' };
+      order: r.order || 'random', qids: r.qids || []
+    } : { status:'idle', units:[], duration_sec:300, end_time:null, token:0, order:'random', qids:[] };
   });
 
   onValue(roomRef(ROOM, 'players', playerId), (snap)=>{
