@@ -62,6 +62,10 @@
   .acc-bad{ color:var(--bad); font-weight:700; }
   .muted{ color:var(--sub); }
 
+  .toggle-row{ display:flex; gap:8px; margin-top:4px; }
+  .toggle-row button{ flex:1; background:#e6e9f0; color:var(--sub); font-weight:700; }
+  .toggle-row button.active{ background:var(--sky1); color:#fff; }
+
   .kick-btn{ padding:5px 10px; font-size:.76rem; background:var(--bad); }
   .msg{ font-size:.82rem; margin-top:8px; min-height:1.2em; }
   .msg.err{ color:var(--bad); }
@@ -86,6 +90,11 @@
       </div>
       <label>제한 시간 (분)</label>
       <input type="number" id="durationInput" value="7" min="1" max="60" step="1">
+      <label>출제 순서</label>
+      <div class="toggle-row" id="orderToggle">
+        <button type="button" class="active" data-order="random">🔀 랜덤</button>
+        <button type="button" data-order="sequential">➡ 순서대로</button>
+      </div>
       <div class="btnrow">
         <button id="startBtn">▶ 게임 시작</button>
         <button class="bad" id="endBtn">■ 종료</button>
@@ -152,8 +161,16 @@ const el = (id) => document.getElementById(id);
 let questionsObj = {};
 let allUnits = [];
 let selectedUnits = new Set();
-let roundState = { status:'idle', units:[], duration_sec:420, end_time:null, token:0 };
+let roundState = { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random' };
 let playersObj = {};
+let questionOrder = 'random';
+
+el('orderToggle').querySelectorAll('button').forEach(btn=>{
+  btn.onclick = () => {
+    questionOrder = btn.dataset.order;
+    el('orderToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+  };
+});
 
 function renderUnits(){
   const box = el('unitList');
@@ -194,7 +211,8 @@ el('startBtn').onclick = async () => {
     updates[`rooms/${ROOM}/round`] = {
       status: 'running', units, duration_sec,
       end_time: serverNow() + duration_sec*1000,
-      token: serverNow()
+      token: serverNow(),
+      order: questionOrder
     };
     Object.keys(playersObj).forEach(pid=>{
       updates[`rooms/${ROOM}/players/${pid}/floor`] = 0;
@@ -332,7 +350,8 @@ function renderRoster(){
   pill.textContent = effective==='idle' ? '대기중' : effective==='running' ? '진행중' : '종료';
   el('timerBig').textContent = fmtTime(remaining);
   const pool = poolFromQuestions(questionsObj, r.units);
-  el('poolInfo').textContent = effective!=='idle' ? `문제 풀 ${pool.length}개` : '';
+  const orderLabel = r.order === 'sequential' ? '순서대로' : '랜덤';
+  el('poolInfo').textContent = effective!=='idle' ? `문제 풀 ${pool.length}개 · ${orderLabel} 출제` : '';
 
   const players = Object.entries(playersObj).map(([id,p])=>({id,...p}));
   players.sort((a,b)=> (b.floor||0)-(a.floor||0) || (b.correct||0)-(a.correct||0));
@@ -383,8 +402,9 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
   const r = snap.val();
   roundState = r ? {
     status: r.status||'idle', units: r.units||[],
-    duration_sec: r.duration_sec||420, end_time: r.end_time ?? null, token: r.token||0
-  } : { status:'idle', units:[], duration_sec:420, end_time:null, token:0 };
+    duration_sec: r.duration_sec||420, end_time: r.end_time ?? null, token: r.token||0,
+    order: r.order||'random'
+  } : { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random' };
 });
 
 onValue(roomRef(ROOM,'players'), (snap)=>{
