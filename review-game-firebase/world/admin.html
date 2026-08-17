@@ -259,8 +259,20 @@ el('endBtn').onclick = () => update(roomRef(ROOM,'round'), { status: 'ended' });
 
 el('resetBtn').onclick = async () => {
   if(!confirm('모든 학생의 점수와 참여 목록을 초기화할까요?')) return;
-  await remove(roomRef(ROOM,'players'));
-  await update(roomRef(ROOM,'round'), { status: 'idle', end_time: null });
+  const msg = el('startMsg');
+  // players 상위 노드 자체는 보안 규칙상 쓰기 권한이 없고 players/$playerId 단위에만 있으므로,
+  // 각 학생 id를 하나씩 지우는 멀티패스 업데이트로 보낸다 (경로별로 권한이 개별 검사됨)
+  const updates = {};
+  Object.keys(playersObj).forEach(pid=>{
+    updates[`rooms/${ROOM}/players/${pid}`] = null;
+  });
+  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null };
+  try{
+    await update(ref(db), updates);
+    msg.className='msg ok'; msg.textContent = '전체 초기화 완료! 접속해 있던 학생은 모두 내보내졌습니다.';
+  } catch(err){
+    msg.className='msg err'; msg.textContent = '초기화 실패: ' + err.message;
+  }
 };
 
 el('addBtn').onclick = async () => {
