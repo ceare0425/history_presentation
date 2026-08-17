@@ -3,7 +3,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
-  getDatabase, ref, onValue, get, set, update, remove, push, child
+  getDatabase, ref, onValue, get, set, update, remove, push, child, onDisconnect
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
 export const firebaseConfig = {
@@ -18,7 +18,7 @@ export const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
-export { ref, onValue, get, set, update, remove, push, child };
+export { ref, onValue, get, set, update, remove, push, child, onDisconnect };
 
 // ── 방(room) 경로 헬퍼 ─────────────────────────────
 export function roomPath(roomId, ...parts) {

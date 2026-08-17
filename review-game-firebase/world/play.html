@@ -214,7 +214,7 @@
 
 <script type="module">
 import {
-  roomRef, onValue, get, set, update, serverNow,
+  roomRef, ref, onValue, get, set, update, serverNow, db, onDisconnect,
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji
 } from '../shared/lib.js';
 
@@ -514,6 +514,14 @@ function startListening(){
       if(!av.classList.contains('happy') && !av.classList.contains('sad')){
         av.textContent = AVATAR_IDLE;
       }
+    }
+  });
+
+  // 연결이 끊기면(탭을 닫거나 네트워크가 끊기면) 서버가 자동으로 이 학생을 명단에서 지우도록 예약.
+  // 재연결될 때마다(.info/connected가 true가 될 때마다) 다시 걸어줘야 안전하다 (Firebase 권장 방식)
+  onValue(ref(db, '.info/connected'), (snap)=>{
+    if(snap.val() === true){
+      onDisconnect(roomRef(ROOM, 'players', playerId)).remove();
     }
   });
 
