@@ -153,6 +153,16 @@
   .conn-warn{ position:fixed; left:0; right:0; bottom:0; background:#d9534f; color:#fff; text-align:center;
     font-size:.8rem; padding:6px; z-index:5; display:none; }
   .conn-warn.show{ display:block; }
+
+  /* 스마트폰(세로 화면)에서는 16:9 카드 대신 화면 전체를 채우는 세로형 레이아웃으로 자동 전환 */
+  @media (max-width:700px), (orientation:portrait){
+    body{ padding:0; }
+    .card{
+      width:100vw; height:100vh; max-height:100vh;
+      aspect-ratio:auto; border-radius:0; box-shadow:none;
+      padding:3vh 5vw;
+    }
+  }
 </style>
 </head>
 <body>
