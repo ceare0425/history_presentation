@@ -354,6 +354,21 @@ function setBgmMuted(muted){
   updateBgmBtn();
 }
 
+// 게임 종료 · 1등 발표 팡파레 (상승 아르페지오 + 마무리 화음)
+function playFanfare(){
+  ensureAudioCtx();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  const t0 = audioCtx.currentTime + 0.05;
+  const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+  notes.forEach((f,i)=>{
+    playTone(f, t0 + i*0.12, 0.35, 0.22, 'triangle');
+  });
+  const chordTime = t0 + notes.length*0.12 + 0.05;
+  [783.99, 987.77, 1174.66, 1567.98].forEach(f=>{ // G5 B5 D6 G6
+    playTone(f, chordTime, 1.1, 0.18, 'sawtooth');
+  });
+}
+
 el('bgmToggle').onclick = () => {
   if(!bgmStarted) startBgm();
   else setBgmMuted(!bgmMuted);
@@ -506,6 +521,7 @@ function showEndCelebration(players){
   spawnConfettiBatch(70);
   if(confettiTimer) clearInterval(confettiTimer);
   confettiTimer = setInterval(()=> spawnConfettiBatch(12), 900);
+  playFanfare();
 }
 
 function hideEndCelebration(){
