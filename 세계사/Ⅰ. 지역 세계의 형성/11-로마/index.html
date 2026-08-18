@@ -61,7 +61,7 @@
       padding: 0.8rem;
     }
 
-    .slide { display: none; width: 100%; max-width: 1600px; height: 100%; }
+    .slide { display: none; aspect-ratio: 16/9; width: min(100%, calc((100vh - 2.2rem - 1.6rem) * (16/9))); height: auto; }
     .slide.active { display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
