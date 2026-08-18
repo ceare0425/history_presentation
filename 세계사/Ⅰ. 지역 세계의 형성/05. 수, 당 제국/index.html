@@ -109,6 +109,13 @@
     .info-list li.sub { padding-left:2.3em; }
     .info-list li.sub::before { content:'—'; font-size:.88rem; top:.38em; }
 
+    /* 요약 테이블 */
+    .summary-table { width:100%; border-collapse:collapse; font-size:.88rem; margin:.35rem 0; }
+    .summary-table th { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); padding:.4rem .7rem; font-family:'Nanum Myeongjo',serif; font-weight:700; text-align:center; border:1px solid var(--border); }
+    .summary-table td { padding:.38rem .7rem; border:1px solid var(--border); line-height:1.65; vertical-align:top; }
+    .summary-table tr:nth-child(even) td { background:rgba(255,248,225,.6); }
+    .summary-table td:first-child { background:linear-gradient(135deg,rgba(139,69,19,.12),rgba(107,48,16,.08)); font-family:'Nanum Myeongjo',serif; font-weight:700; color:var(--main); text-align:center; white-space:nowrap; }
+
     /* 퀴즈 */
     .quiz-wrap { display:flex; flex-direction:column; gap:.3rem; margin-top:.15rem; }
     .quiz-row { display:flex; align-items:flex-start; gap:.5rem; border:1.5px solid var(--border); border-radius:3px; padding:.3rem .7rem; background:var(--card-bg); }
@@ -119,6 +126,37 @@
     .sub-list { display:flex; flex-direction:column; gap:.15rem; padding-left:2rem; font-size:.88rem; line-height:1.75; }
     .sub-list span { display:block; }
     .source-box { background:rgba(255,248,225,.7); border:1.5px solid var(--border); border-left:4px solid var(--accent); border-radius:3px; padding:.35rem .85rem; font-size:.85rem; line-height:1.75; font-style:italic; margin-top:.3rem; }
+
+    /* 관계도 */
+    .rel-diagram { display:flex; flex-direction:column; align-items:center; padding-top:.4rem; }
+    .rel-box { border:1.5px solid var(--border); border-radius:4px; background:var(--card-bg); padding:.32rem .95rem; text-align:center; }
+    .rel-box .rel-name { font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.98rem; color:var(--main); }
+    .rel-box .rel-desc { font-size:.7rem; color:var(--text-sec); margin-top:.1rem; line-height:1.4; }
+    .rel-box.highlight { border-color:var(--accent); box-shadow:0 0 0 2px rgba(197,160,40,.3); }
+    .rel-vline { width:2px; height:.5rem; background:var(--accent); }
+    .rel-row { display:flex; justify-content:center; position:relative; width:88%; }
+    .rel-row::before { content:''; position:absolute; top:0; left:calc(100%/6); right:calc(100%/6); height:2px; background:var(--accent); }
+    .rel-child { display:flex; flex-direction:column; align-items:center; flex:1; padding-top:.5rem; position:relative; gap:.4rem; }
+    .rel-child::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-1px); width:2px; height:.5rem; background:var(--accent); }
+    .rel-outcome { font-size:.66rem; line-height:1.55; text-align:center; padding:.18rem .5rem; border-radius:3px; font-weight:700; }
+    .rel-outcome.bad { background:rgba(139,32,16,.08); color:#8B2010; border:1px solid rgba(139,32,16,.35); }
+    .rel-outcome.good { background:rgba(197,160,40,.16); color:var(--dark); border:1px solid var(--accent); }
+    .rel-hrow { display:flex; align-items:flex-end; justify-content:center; }
+    .rel-hlink { display:flex; flex-direction:column; align-items:center; width:4.4rem; flex-shrink:0; }
+    .rel-hlink .rel-hlabel { font-size:.64rem; color:var(--text-sec); text-align:center; line-height:1.35; margin-bottom:.25rem; white-space:nowrap; }
+    .rel-hlink .rel-hline { width:100%; height:2px; background:var(--accent); }
+    .rel-couple-link { width:2.4rem; height:2px; background:var(--accent); flex-shrink:0; }
+    .rel-drop { position:relative; margin-top:.5rem; }
+    .rel-drop::before { content:''; position:absolute; top:-.5rem; left:50%; transform:translateX(-1px); width:2px; height:.5rem; background:var(--accent); }
+
+    /* 사진 비교 */
+    .photo-row { display:flex; gap:1.5rem; align-items:stretch; justify-content:center; width:100%; height:100%; }
+    .photo-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:.45rem; min-width:0; }
+    .photo-frame { flex:1; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1.5px solid var(--border); border-radius:4px; background:var(--card-bg); box-shadow:0 2px 10px rgba(44,26,14,.12); }
+    .photo-frame img { width:100%; height:100%; object-fit:contain; display:block; }
+    .photo-cap { font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.85rem; color:var(--main); text-align:center; }
+    .img-reveal { opacity:0; transform:translateY(.4rem); transition:opacity .45s ease, transform .45s ease; }
+    .img-reveal.on { opacity:1; transform:translateY(0); }
   </style>
 </head>
 <body>
@@ -145,12 +183,231 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 2: 9쪽 — 위진 남북조 (1)삼국 + (2)강남 이주 ══ -->
+<!-- ══ 슬라이드 2: 지난 시간 복습 — 메소포타미아 vs 이집트 문명 ══ -->
 <div class="slide" data-slide="1">
   <div class="browser-card">
     <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">지난 시간 복습 — 메소포타미아 vs 이집트 문명</span>
+    </div>
+    <div class="browser-content">
+      <div class="ruler-card">
+        <div class="ruler-card-body">
+          <table class="summary-table">
+            <colgroup><col style="width:16%"><col><col></colgroup>
+            <thead>
+              <tr><th>구분</th><th>메소포타미아</th><th>이집트</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>발생지</td>
+                <td><span class="blank" data-reveal>티그리스·유프라테스강</span></td>
+                <td><span class="blank" data-reveal>나일강 유역</span></td>
+              </tr>
+              <tr>
+                <td>지형</td>
+                <td><span class="blank" data-reveal>개방적 → 지배 세력 잦은 교체</span></td>
+                <td><span class="blank" data-reveal>폐쇄적(사막·바다) → 안정적 왕조</span></td>
+              </tr>
+              <tr>
+                <td>최고 통치자</td>
+                <td><span class="blank" data-reveal>왕 = 지배자, 제사장 (신정 정치)</span></td>
+                <td><span class="blank" data-reveal>파라오 (태양신 '라'의 아들)</span></td>
+              </tr>
+              <tr>
+                <td>세계관</td>
+                <td><span class="blank" data-reveal>현세 중시 (길가메시 서사시)</span></td>
+                <td><span class="blank" data-reveal>내세적 (사후 세계 중시)</span></td>
+              </tr>
+              <tr>
+                <td>문자</td>
+                <td><span class="blank" data-reveal>쐐기 문자</span></td>
+                <td><span class="blank" data-reveal>상형 문자 (파피루스에 기록)</span></td>
+              </tr>
+              <tr>
+                <td>역법·수학</td>
+                <td><span class="blank" data-reveal>태음력 · 60진법</span></td>
+                <td><span class="blank" data-reveal>태양력 · 10진법</span></td>
+              </tr>
+              <tr>
+                <td>대표 건축</td>
+                <td><span class="blank" data-reveal>지구라트</span></td>
+                <td><span class="blank" data-reveal>피라미드 (파라오의 무덤)</span></td>
+              </tr>
+              <tr>
+                <td>대표 법전</td>
+                <td><span class="blank" data-reveal>《함무라비 법전》</span></td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 3: 지난 시간 복습 — 인도 문명 ══ -->
+<div class="slide" data-slide="2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">지난 시간 복습 — 인도 문명</span>
+    </div>
+    <div class="browser-content">
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏙️ 인더스 문명</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>기원전 2500년경 <span class="blank" data-reveal>인더스 강</span> 상류 펀자브 지방에서 드라비다인이 형성한 것으로 추정</li>
+            <li>계획도시 <span class="blank" data-reveal>하라파</span>, <span class="blank" data-reveal>모헨조다로</span> 건설</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🚶 아리아인의 이동과 사회</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>기원전 1500년경 <span class="blank" data-reveal>아리아인</span> 진출 — 중앙아시아에서 북인도로 이동, 이후 갠지스강까지 진출</li>
+            <li>원주민을 지배하기 위해 <span class="blank" data-reveal>카스트제</span> 성립(브라만·크샤트리아·바이샤·수드라)</li>
+            <li>자연신을 숭배하는 <span class="blank" data-reveal>브라만교</span> 성립, 경전 <span class="blank" data-reveal>《베다》</span> 사용</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 4: 지난 시간 복습 — 중국 문명 ══ -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">지난 시간 복습 — 중국 문명</span>
+    </div>
+    <div class="browser-content">
+      <div class="ruler-card">
+        <div class="ruler-card-header">🌊 하·상 왕조</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>기원전 2500년경 <span class="blank" data-reveal>황허강</span>과 창장강 일대에서 문명 발전, 하 왕조(얼리터우 유적)는 문헌상 최초의 국가</li>
+            <li>상 왕조: 왕이 점친 내용을 갑골에 기록하는 <span class="blank" data-reveal>신권 정치</span> 실시</li>
+            <li>점친 내용과 결과를 <span class="blank" data-reveal>갑골문</span>으로 기록 → 한자의 기원</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">⚔️ 주 왕조</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>상을 멸망시키고 건국, 왕이 수도 인근을 직접 지배하고 제후에게 나머지 지역을 다스리게 하는 <span class="blank" data-reveal>봉건제</span> 실시</li>
+            <li><span class="blank" data-reveal>혈연</span>에 기초한 종법 제도 발전</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 5: 지난 시간 복습 — 춘추 전국 시대 ══ -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">복습 — 춘추 전국 시대 빈칸 채우기</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.55rem;">춘추 전국 시대 복습</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>춘추 시대에는 춘추 5패가 <span class="blank" data-reveal>존왕양이</span>를 명분으로 제후국들을 통솔하였다.</li>
+            <li>전국 시대에는 전국 7웅이 서로 패권을 다투는 <span class="blank" data-reveal>약육강식</span>의 시대였다.</li>
+            <li>부국강병을 위한 제후국들의 경쟁 속에서 유가·법가·도가·묵가 등 다양한 사상가 집단인 <span class="blank" data-reveal>제자백가</span>가 등장하였다.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 지난 시간 복습 — 진나라 (1) ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">복습 — 진나라 빈칸 채우기 (1)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.55rem;">진나라 복습</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>기원전 221년 전국을 통일한 진왕 정은 스스로를 <span class="blank" data-reveal>시황제</span>라 칭하였다.</li>
+            <li>진시황제는 전국에 관리를 파견하여 다스리는 <span class="blank" data-reveal>군현제</span>를 실시하였다.</li>
+            <li>중앙 집권 강화를 위해 <span class="blank" data-reveal>화폐 통일</span>과 <span class="blank" data-reveal>도량형 통일</span>을 단행하였다.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7: 지난 시간 복습 — 진나라 (2) ══ -->
+<div class="slide" data-slide="6">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">복습 — 진나라 빈칸 채우기 (2)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.55rem;">진나라 복습</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>사상 통제를 위해 책을 불태우고 유생들을 산 채로 묻은 <span class="blank" data-reveal>분서갱유</span>를 단행하였다.</li>
+            <li>북방 흉노족의 침입을 막기 위해 <span class="blank" data-reveal>만리장성</span>을 축조하였다.</li>
+            <li>대규모 토목 공사와 무리한 대외 원정으로 백성들의 불만이 커져 <span class="blank" data-reveal>진승 오광의 난</span> 등 농민 반란이 일어났고, 결국 진은 멸망하였다.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 8: 지난 시간 복습 — 한나라 ══ -->
+<div class="slide" data-slide="7">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">복습 — 한나라 빈칸 채우기</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.55rem;">한나라 복습</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>한 고조(유방)는 봉건제와 군현제를 절충한 <span class="blank" data-reveal>군국제</span>를 실시하였다.</li>
+            <li>한 무제는 유교를 통치 이념으로 삼아 <span class="blank" data-reveal>오경박사</span>를 설치하고 <span class="blank" data-reveal>태학</span>을 설립하였다.</li>
+            <li>인재 등용을 위해 지방관이 향촌의 인물을 추천하는 <span class="blank" data-reveal>향거리선제</span>를 실시하였다.</li>
+            <li>물자 유통과 재정 확충을 위해 <span class="blank" data-reveal>균수법</span>과 <span class="blank" data-reveal>평준법</span>을 시행하고, 화폐를 <span class="blank" data-reveal>오수전</span>으로 통일하였다.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 9: 9쪽 — 위진 남북조 (1) 삼국 시대 ══ -->
+<div class="slide" data-slide="8">
+  <div class="browser-card">
+    <div class="browser-topbar">
       <span class="topbar-icon">⚔️</span>
-      <span class="browser-title">학습지 9쪽 — 1. 위진 남북조 시대 (1)(2)</span>
+      <span class="browser-title">학습지 9쪽 — 1. 위진 남북조 시대 (1) 삼국 시대</span>
     </div>
     <div class="browser-content">
       <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
@@ -164,6 +421,20 @@
           </ul>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 10: 9쪽 — 위진 남북조 (2) 진의 강남 이주 ══ -->
+<div class="slide" data-slide="9">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🌊</span>
+      <span class="browser-title">학습지 9쪽 — 1. 위진 남북조 시대 (2) 진의 강남 이주</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 위진 남북조 시대</h2>
       <div class="ruler-card">
         <div class="ruler-card-header">🌊 (2) 진의 강남 이주</div>
         <div class="ruler-card-body">
@@ -177,8 +448,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 3: 9쪽 — (3) 북위의 화북 통일 [➊ 효문제] ══ -->
-<div class="slide" data-slide="2">
+<!-- ══ 슬라이드 11: 9쪽 — (3) 북위의 화북 통일 [➊ 효문제] ══ -->
+<div class="slide" data-slide="10">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🏰</span>
@@ -201,8 +472,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 4: 9쪽 — (4) 위진 남북조 시대의 문화 [➋ 9품중정제] ══ -->
-<div class="slide" data-slide="3">
+<!-- ══ 슬라이드 12: 9쪽 — (4) 위진 남북조 시대의 문화 (호한융합·화북·강남) ══ -->
+<div class="slide" data-slide="11">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">📜</span>
@@ -218,6 +489,27 @@
             <li>① <strong>호한 융합:</strong> 북방 민족과 한족의 문화 융합</li>
             <li>② <strong>화북 지방:</strong> 국가적 차원의 불교 장려 → 윈강 석굴 등 조성</li>
             <li>③ <strong>강남 지방:</strong> 한족 이주(농업 생산력의 발전)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 13: 9쪽 — (4) 위진 남북조 시대의 문화 (문벌 사회·청담) [➋ 9품중정제] ══ -->
+<div class="slide" data-slide="12">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">📜</span>
+      <span class="browser-title">학습지 9쪽 — 1. 위진 남북조 시대 (4) 문화</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 위진 남북조 시대</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">📜 (4) 위진 남북조 시대의 문화</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
             <li>④ <strong>문벌 사회 형성:</strong> ➋ <span class="blank" data-reveal>9품중정제</span>(추천에 따른 인재 선발) → 문벌 사회 형성 → 고위 관직 독점, 대토지 소유</li>
             <li>⑤ <strong>청담 유행:</strong> 정치적 혼란 속에서 자유로운 삶 추구 → 죽림칠현 등</li>
           </ul>
@@ -227,8 +519,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 5: 위진 남북조 지도 ══ -->
-<div class="slide" data-slide="4">
+<!-- ══ 슬라이드 14: 위진 남북조 지도 ══ -->
+<div class="slide" data-slide="13">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🗺️</span>
@@ -242,8 +534,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 6: 9쪽 — 2. 수의 통일 [➌ 과거제] ══ -->
-<div class="slide" data-slide="5">
+<!-- ══ 슬라이드 15: 9쪽 — 2. 수의 통일 [➌ 과거제] ══ -->
+<div class="slide" data-slide="14">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🏛️</span>
@@ -267,12 +559,12 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 7: 11쪽 — 1. 당의 발전 건국+발전 ══ -->
-<div class="slide" data-slide="6">
+<!-- ══ 슬라이드 16: 11쪽 — 1. 당의 발전 건국 ══ -->
+<div class="slide" data-slide="15">
   <div class="browser-card">
     <div class="browser-topbar">
-      <span class="topbar-icon">🐉</span>
-      <span class="browser-title">학습지 11쪽 — 1. 당의 발전 (건국·발전)</span>
+      <span class="topbar-icon">🏗️</span>
+      <span class="browser-title">학습지 11쪽 — 1. 당의 발전 (건국)</span>
     </div>
     <div class="browser-content">
       <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
@@ -285,13 +577,25 @@
           </ul>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 17: 11쪽 — 1. 당의 발전 태종 ══ -->
+<div class="slide" data-slide="16">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🐎</span>
+      <span class="browser-title">학습지 11쪽 — 1. 당의 발전 (태종)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 당의 발전</h2>
       <div class="ruler-card">
-        <div class="ruler-card-header">📈 발전</div>
+        <div class="ruler-card-header">🐎 태종</div>
         <div class="ruler-card-body">
           <ul class="info-list">
-            <li><strong>태종:</strong> 동돌궐 정복, 율령 체제 정비('정관의 치')</li>
-            <li><strong>고종:</strong> 서돌궐 복속, 백제와 고구려 멸망</li>
-            <li><strong>현종:</strong> 당의 전성기</li>
+            <li>동돌궐 정복, 율령 체제 정비('정관의 치')</li>
           </ul>
         </div>
       </div>
@@ -299,8 +603,172 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 8: 11쪽 — 1. 당의 발전 쇠퇴 [➊ 양세법] ══ -->
-<div class="slide" data-slide="7">
+<!-- ══ 슬라이드 18: 11쪽 — 1. 당의 발전 고종 ══ -->
+<div class="slide" data-slide="17">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🛡️</span>
+      <span class="browser-title">학습지 11쪽 — 1. 당의 발전 (고종)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 당의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🛡️ 고종</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>서돌궐 복속, 백제와 고구려 멸망</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 19: 당 태종·고종과 측천무후의 관계도 ══ -->
+<div class="slide" data-slide="18">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👪</span>
+      <span class="browser-title">심화 — 당 태종·고종과 측천무후의 관계도</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="rel-diagram">
+        <div class="rel-hrow">
+          <div class="rel-box">
+            <div class="rel-name">당 태종</div>
+            <div class="rel-desc">제2대 황제</div>
+          </div>
+          <div class="rel-couple-link"></div>
+          <div class="rel-box highlight">
+            <div class="rel-name">측천무후</div>
+            <div class="rel-desc">태종의 후궁</div>
+          </div>
+        </div>
+        <div class="rel-box rel-drop">
+          <div class="rel-name">당 고종</div>
+          <div class="rel-desc">제3대 황제</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 20: 측천무후 초상 사진 ══ -->
+<div class="slide" data-slide="19">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🖼️</span>
+      <span class="browser-title">심화 — 측천무후의 초상</span>
+    </div>
+    <div class="browser-content">
+      <div class="photo-row">
+        <div class="photo-col">
+          <div class="photo-frame"><img src="./측천무후.webp" alt="측천무후"></div>
+        </div>
+        <div class="photo-col img-reveal" data-reveal>
+          <div class="photo-frame"><img src="./무미랑.jpeg" alt="무미랑"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 21: 당 고종과 왕황후·소숙비·측천무후 관계도 ══ -->
+<div class="slide" data-slide="20">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👸</span>
+      <span class="browser-title">심화 — 당 고종과 후궁들의 관계도</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="rel-diagram">
+        <div class="rel-box rel-root">
+          <div class="rel-name">당 고종</div>
+          <div class="rel-desc">제3대 황제 (재위 649~683)</div>
+        </div>
+        <div class="rel-vline"></div>
+        <div class="rel-row">
+          <div class="rel-child">
+            <div class="rel-box">
+              <div class="rel-name">왕황후</div>
+              <div class="rel-desc">고종의 정비(원비)</div>
+            </div>
+          </div>
+          <div class="rel-child">
+            <div class="rel-box">
+              <div class="rel-name">소숙비</div>
+              <div class="rel-desc">고종의 총애를 받던 후궁</div>
+            </div>
+          </div>
+          <div class="rel-child">
+            <div class="rel-box">
+              <div class="rel-name">측천무후</div>
+              <div class="rel-desc">태종의 후궁 출신,<br>고종의 후궁으로 재입궁</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 22: 측천무후 가계도 사진 ══ -->
+<div class="slide" data-slide="21">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🖼️</span>
+      <span class="browser-title">심화 — 측천무후 가계도</span>
+    </div>
+    <div class="browser-content" style="padding:0; align-items:center; justify-content:center;">
+      <img src="./측천무후 가계도.png"
+           alt="측천무후 가계도"
+           style="width:100%; height:100%; object-fit:contain; display:block;">
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 23: 측천무후 소개 ══ -->
+<div class="slide" data-slide="22">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🖼️</span>
+      <span class="browser-title">심화 — 측천무후 소개</span>
+    </div>
+    <div class="browser-content" style="padding:0; align-items:center; justify-content:center;">
+      <img src="./측천무후_소개.png"
+           alt="측천무후 소개"
+           style="width:100%; height:100%; object-fit:contain; display:block;">
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 24: 11쪽 — 1. 당의 발전 현종 ══ -->
+<div class="slide" data-slide="23">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">👑</span>
+      <span class="browser-title">학습지 11쪽 — 1. 당의 발전 (현종)</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">1. 당의 발전</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 현종</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>당의 전성기</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 25: 11쪽 — 1. 당의 발전 쇠퇴 [➊ 양세법] ══ -->
+<div class="slide" data-slide="24">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">📉</span>
@@ -322,8 +790,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 9: 11쪽 — (2) 당의 사회·경제·문화 ══ -->
-<div class="slide" data-slide="8">
+<!-- ══ 슬라이드 26: 11쪽 — (2) 당의 사회·경제·문화 ══ -->
+<div class="slide" data-slide="25">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🎨</span>
@@ -346,8 +814,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 10: 11쪽 — 동아시아 문화권 배경+형성 ══ -->
-<div class="slide" data-slide="9">
+<!-- ══ 슬라이드 27: 11쪽 — 동아시아 문화권 배경+형성 ══ -->
+<div class="slide" data-slide="26">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🌏</span>
@@ -377,8 +845,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 11: 11쪽 — 동아시아 문화권 공통 요소 [➋ 율령] ══ -->
-<div class="slide" data-slide="10">
+<!-- ══ 슬라이드 28: 11쪽 — 동아시아 문화권 공통 요소 [➋ 율령] ══ -->
+<div class="slide" data-slide="27">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">📚</span>
@@ -402,8 +870,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 12: 10쪽 개념 확인 문제 1번 ══ -->
-<div class="slide" data-slide="11">
+<!-- ══ 슬라이드 29: 10쪽 개념 확인 문제 1번 ══ -->
+<div class="slide" data-slide="28">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -427,8 +895,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 13: 10쪽 개념 확인 문제 2번 ══ -->
-<div class="slide" data-slide="12">
+<!-- ══ 슬라이드 30: 10쪽 개념 확인 문제 2번 ══ -->
+<div class="slide" data-slide="29">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -459,8 +927,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 14: 10쪽 개념 확인 문제 3번 ══ -->
-<div class="slide" data-slide="13">
+<!-- ══ 슬라이드 31: 10쪽 개념 확인 문제 3번 ══ -->
+<div class="slide" data-slide="30">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -488,8 +956,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 15: 10쪽 개념 확인 문제 4번 ══ -->
-<div class="slide" data-slide="14">
+<!-- ══ 슬라이드 32: 10쪽 개념 확인 문제 4번 ══ -->
+<div class="slide" data-slide="31">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -513,8 +981,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 16: 12쪽 개념 확인 문제 1번 ══ -->
-<div class="slide" data-slide="15">
+<!-- ══ 슬라이드 33: 12쪽 개념 확인 문제 1번 ══ -->
+<div class="slide" data-slide="32">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -545,8 +1013,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 17: 12쪽 개념 확인 문제 2번 ══ -->
-<div class="slide" data-slide="16">
+<!-- ══ 슬라이드 34: 12쪽 개념 확인 문제 2번 ══ -->
+<div class="slide" data-slide="33">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -574,8 +1042,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 18: 12쪽 개념 확인 문제 3번 ══ -->
-<div class="slide" data-slide="17">
+<!-- ══ 슬라이드 35: 12쪽 개념 확인 문제 3번 ══ -->
+<div class="slide" data-slide="34">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -599,8 +1067,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 19: 12쪽 개념 확인 문제 4번 ══ -->
-<div class="slide" data-slide="18">
+<!-- ══ 슬라이드 36: 12쪽 개념 확인 문제 4번 ══ -->
+<div class="slide" data-slide="35">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -610,7 +1078,12 @@
       <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
       <h2 style="margin-bottom:.35rem;">개념 확인 문제 — 4번</h2>
       <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.35rem;">당의 문화에 대한 설명으로 옳은 것을 &lt;보기&gt;에서 있는 대로 고른 것은?</p>
-      <p style="font-size:.82rem;color:var(--text-sec);margin-bottom:.4rem;">ㄱ. 당삼채가 제작되었다. &nbsp;·&nbsp; ㄴ. 이백, 두보 등의 시인이 활약하였다. &nbsp;·&nbsp; ㄷ. 자유로운 삶을 추구하는 청담이 유행하였다. &nbsp;·&nbsp; ㄹ. 조로아스터교, 마니교, 경교 등이 유행하였다.</p>
+      <div class="sub-list" style="padding-left:0; color:var(--text-sec); font-size:.82rem; margin-bottom:.4rem;">
+        <span>ㄱ. 당삼채가 제작되었다.</span>
+        <span>ㄴ. 이백, 두보 등의 시인이 활약하였다.</span>
+        <span>ㄷ. 자유로운 삶을 추구하는 청담이 유행하였다.</span>
+        <span>ㄹ. 조로아스터교, 마니교, 경교 등이 유행하였다.</span>
+      </div>
       <div class="quiz-wrap">
         <div class="quiz-row col">
           <div class="inner">
@@ -626,6 +1099,76 @@
   </div>
 </div>
 
+<!-- ══ 슬라이드 37: 복습 — 위진 남북조와 수 빈칸 채우기 ══ -->
+<div class="slide" data-slide="36">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">복습 — 위진 남북조와 수 빈칸 채우기</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.55rem;">위진 남북조와 수 복습</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>북위의 <span class="blank" data-reveal>효문제</span>는 평성에서 뤄양으로 천도하고 선비족의 언어와 복장을 금지하는 등 <span class="blank" data-reveal>한화 정책</span>을 추진하였다.</li>
+            <li>위진 남북조 시대에는 추천을 통해 인재를 선발하는 <span class="blank" data-reveal>9품중정제</span>가 실시되어 문벌 사회가 형성되었다.</li>
+            <li>북위 효문제 때 처음 시행된 <span class="blank" data-reveal>균전제</span>는 농민에게 국가가 토지를 지급하는 토지 제도로, 이후 수·당 대까지 이어졌다.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 38: 복습 — 수 빈칸 채우기 ══ -->
+<div class="slide" data-slide="37">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">복습 — 수 빈칸 채우기</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.55rem;">수 복습</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>수 문제는 9품중정제를 폐지하고 시험을 통해 인재를 선발하는 <span class="blank" data-reveal>과거제</span>를 실시하였다.</li>
+            <li>수 문제는 중앙 관제를 정비하여 <span class="blank" data-reveal>3성 6부제</span>를 마련하였다.</li>
+            <li>수 양제는 강남과 화북을 잇는 <span class="blank" data-reveal>대운하</span>를 완성하여 남북 간 경제 교류를 촉진하였다.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 39: 복습 — 당 빈칸 채우기 ══ -->
+<div class="slide" data-slide="38">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🔄</span>
+      <span class="browser-title">복습 — 당 빈칸 채우기</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.55rem;">당 복습</h2>
+      <div class="ruler-card">
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li>당 태종은 동돌궐을 정복하고 율령 체제를 정비하였는데, 이 시기를 <span class="blank" data-reveal>정관의 치</span>라 부른다.</li>
+            <li>8세기 균전제가 붕괴하는 가운데 절도사 안녹산과 사사명이 일으킨 <span class="blank" data-reveal>안사의 난</span>으로 당은 크게 쇠퇴하였다.</li>
+            <li>균전제 붕괴 이후 당은 토지와 자산을 기준으로 세금을 부과하는 <span class="blank" data-reveal>양세법</span>을 실시하였다.</li>
+            <li>결국 절도사 <span class="blank" data-reveal>주전충</span>에 의해 당은 멸망하였다(907).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /presentation -->
 
 <!-- 네비게이션 -->
@@ -635,7 +1178,7 @@
   </button>
   <span class="nav-counter">
     <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
-    / <span id="totalSlides">19</span>
+    / <span id="totalSlides">39</span>
   </span>
   <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
     <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
