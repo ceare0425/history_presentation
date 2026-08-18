@@ -42,6 +42,11 @@
   }
   header h1{ margin:0; font-size:2rem; text-shadow:0 2px 8px rgba(0,0,0,.4); }
   .status{ display:flex; align-items:center; gap:20px; }
+  .bgm-btn{
+    padding:6px 14px; border-radius:999px; font-weight:800; font-size:.85rem;
+    border:1px solid var(--line); background:rgba(255,255,255,.12); color:#fff; cursor:pointer;
+  }
+  .bgm-btn.muted{ opacity:.55; }
   .pill{ padding:6px 16px; border-radius:999px; font-weight:800; font-size:1rem; }
   .pill.idle{ background:#4a5a7a; }
   .pill.running{ background:#2e9e5b; }
@@ -221,6 +226,7 @@
 <header>
   <h1>🏯 한국사 탑 오르기</h1>
   <div class="status">
+    <button class="bgm-btn" id="bgmToggle" type="button">🔊 배경음</button>
     <span class="pill idle" id="statusPill">대기중</span>
     <span class="timer" id="timerVal">--:--</span>
   </div>
@@ -260,6 +266,131 @@ const climberEls = {};
 let roundState = { status:'idle', end_time:null };
 let playersObj = {};
 let prevEffective = null;
+
+// ── 배경음악: 외부 파일 없이 Web Audio API로 자체 생성하는 잔잔한 루프 ──
+const BGM_MUTE_KEY = 'rg_fb_bgm_muted';
+const BGM_VOLUME = 0.55; // 마스터 볼륨(컴퓨터 볼륨은 그대로 따라가고, 이 값은 우리 소리 자체의 크기)
+let audioCtx = null;
+let masterGain = null;
+let bgmStarted = false;
+let bgmMuted = localStorage.getItem(BGM_MUTE_KEY) === '1';
+
+// 코드 진행 C - Am - F - G (패드 + 아르페지오)
+const BGM_CHORDS = [
+  { pad: [130.81, 164.81, 196.00], arp: [261.63, 329.63, 392.00, 523.25] },
+  { pad: [110.00, 130.81, 164.81], arp: [220.00, 261.63, 329.63, 440.00] },
+  { pad: [87.31, 110.00, 130.81], arp: [174.61, 220.00, 261.63, 349.23] },
+  { pad: [98.00, 123.47, 146.83], arp: [196.00, 246.94, 293.66, 392.00] },
+];
+const BGM_BEAT_SEC = 0.55;
+const BGM_BEATS_PER_CHORD = 4;
+let bgmChordIndex = 0, bgmBeatIndex = 0, bgmNextTime = 0, bgmSchedulerId = null;
+
+function ensureAudioCtx(){
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = bgmMuted ? 0 : BGM_VOLUME;
+  // 여러 음이 겹쳐도 소리가 찌그러지지 않도록 리미터 역할의 컴프레서를 마지막 단에 건다
+  const compressor = audioCtx.createDynamicsCompressor();
+  compressor.threshold.value = -18;
+  compressor.knee.value = 24;
+  compressor.ratio.value = 8;
+  compressor.attack.value = 0.003;
+  compressor.release.value = 0.25;
+  masterGain.connect(compressor);
+  compressor.connect(audioCtx.destination);
+}
+
+function playTone(freq, startTime, duration, peak, type){
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.0001, startTime);
+  gain.gain.exponentialRampToValueAtTime(peak, startTime + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  osc.connect(gain); gain.connect(masterGain);
+  osc.start(startTime);
+  osc.stop(startTime + duration + 0.05);
+}
+
+function scheduleBgmNote(){
+  const chord = BGM_CHORDS[bgmChordIndex];
+  if(bgmBeatIndex === 0){
+    chord.pad.forEach(f => playTone(f, bgmNextTime, BGM_BEAT_SEC*BGM_BEATS_PER_CHORD*0.95, 0.16, 'sine'));
+  }
+  const note = chord.arp[bgmBeatIndex % chord.arp.length];
+  playTone(note, bgmNextTime, BGM_BEAT_SEC*0.9, 0.14, 'triangle');
+
+  bgmBeatIndex++;
+  if(bgmBeatIndex >= BGM_BEATS_PER_CHORD){
+    bgmBeatIndex = 0;
+    bgmChordIndex = (bgmChordIndex+1) % BGM_CHORDS.length;
+  }
+  bgmNextTime += BGM_BEAT_SEC;
+}
+
+function bgmSchedulerTick(){
+  while(bgmNextTime < audioCtx.currentTime + 0.2){
+    scheduleBgmNote();
+  }
+}
+
+function updateBgmBtn(){
+  const btn = el('bgmToggle');
+  btn.textContent = bgmMuted ? '🔇 배경음 꺼짐' : '🔊 배경음 켜짐';
+  btn.classList.toggle('muted', bgmMuted);
+}
+
+function startBgm(){
+  window.removeEventListener('click', tryAutoStartBgm);
+  window.removeEventListener('keydown', tryAutoStartBgm);
+  window.removeEventListener('touchstart', tryAutoStartBgm);
+  if(bgmStarted) return;
+  ensureAudioCtx();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  bgmStarted = true;
+  bgmNextTime = audioCtx.currentTime + 0.1;
+  bgmSchedulerId = setInterval(bgmSchedulerTick, 100);
+  updateBgmBtn();
+}
+
+function setBgmMuted(muted){
+  bgmMuted = muted;
+  localStorage.setItem(BGM_MUTE_KEY, muted ? '1' : '0');
+  if(masterGain) masterGain.gain.value = muted ? 0 : BGM_VOLUME;
+  updateBgmBtn();
+}
+
+// 게임 종료 · 1등 발표 팡파레 (상승 아르페지오 + 마무리 화음)
+function playFanfare(){
+  ensureAudioCtx();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  const t0 = audioCtx.currentTime + 0.05;
+  const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+  notes.forEach((f,i)=>{
+    playTone(f, t0 + i*0.12, 0.35, 0.5, 'triangle');
+  });
+  const chordTime = t0 + notes.length*0.12 + 0.05;
+  [783.99, 987.77, 1174.66, 1567.98].forEach(f=>{ // G5 B5 D6 G6
+    playTone(f, chordTime, 1.1, 0.4, 'sawtooth');
+  });
+}
+
+el('bgmToggle').onclick = () => {
+  if(!bgmStarted) startBgm();
+  else setBgmMuted(!bgmMuted);
+};
+
+// 브라우저 자동재생 정책 때문에 화면을 처음 클릭/터치/키 입력하면 자동으로 시작
+function tryAutoStartBgm(){
+  startBgm();
+}
+window.addEventListener('click', tryAutoStartBgm);
+window.addEventListener('keydown', tryAutoStartBgm);
+window.addEventListener('touchstart', tryAutoStartBgm);
+updateBgmBtn();
 
 function buildBackground(){
   const layer = el('skyLayer');
@@ -399,6 +530,7 @@ function showEndCelebration(players){
   spawnConfettiBatch(70);
   if(confettiTimer) clearInterval(confettiTimer);
   confettiTimer = setInterval(()=> spawnConfettiBatch(12), 900);
+  playFanfare();
 }
 
 function hideEndCelebration(){
