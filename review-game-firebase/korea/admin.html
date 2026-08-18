@@ -26,6 +26,8 @@
   .units{ max-height:260px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:8px; margin-bottom:10px; }
   .unit-row{ display:flex; align-items:center; gap:8px; padding:5px 4px; font-size:.9rem; }
   .unit-row span.cnt{ color:var(--sub); font-size:.78rem; margin-left:auto; }
+  .pool-count{ font-size:.8rem; color:var(--sub); margin:-4px 0 10px; }
+  .pool-count b{ color:var(--sky1); }
 
   label{ font-size:.85rem; color:var(--sub); display:block; margin:10px 0 4px; }
   input[type=text], input[type=number], textarea{
@@ -62,6 +64,10 @@
   .acc-bad{ color:var(--bad); font-weight:700; }
   .muted{ color:var(--sub); }
 
+  .toggle-row{ display:flex; gap:8px; margin-top:4px; }
+  .toggle-row button{ flex:1; background:#e6e9f0; color:var(--sub); font-weight:700; }
+  .toggle-row button.active{ background:var(--sky1); color:#fff; }
+
   .kick-btn{ padding:5px 10px; font-size:.76rem; background:var(--bad); }
   .msg{ font-size:.82rem; margin-top:8px; min-height:1.2em; }
   .msg.err{ color:var(--bad); }
@@ -80,12 +86,20 @@
     <div class="card">
       <h2>① 출제 범위</h2>
       <div class="units" id="unitList">불러오는 중...</div>
+      <div class="pool-count" id="poolCountInfo"></div>
       <div class="row">
         <button class="secondary" id="selectAllBtn" type="button">전체 선택</button>
         <button class="secondary" id="selectNoneBtn" type="button">전체 해제</button>
       </div>
       <label>제한 시간 (분)</label>
       <input type="number" id="durationInput" value="7" min="1" max="60" step="1">
+      <label>출제 순서</label>
+      <div class="toggle-row" id="orderToggle">
+        <button type="button" class="active" data-order="random">🔀 랜덤</button>
+        <button type="button" data-order="sequential">➡ 순서대로</button>
+      </div>
+      <label>출제 문항 수 (비워두면 선택 범위 전체 사용)</label>
+      <input type="number" id="questionCountInput" min="1" placeholder="전체 사용">
       <div class="btnrow">
         <button id="startBtn">▶ 게임 시작</button>
         <button class="bad" id="endBtn">■ 종료</button>
@@ -143,7 +157,7 @@
 <script type="module">
 import {
   roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
-  fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions
+  fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, shuffle
 } from '../shared/lib.js';
 
 const ROOM = 'korea';
@@ -152,12 +166,30 @@ const el = (id) => document.getElementById(id);
 let questionsObj = {};
 let allUnits = [];
 let selectedUnits = new Set();
-let roundState = { status:'idle', units:[], duration_sec:420, end_time:null, token:0 };
+let roundState = { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random', qids:[] };
 let playersObj = {};
+let questionOrder = 'random';
+
+el('orderToggle').querySelectorAll('button').forEach(btn=>{
+  btn.onclick = () => {
+    questionOrder = btn.dataset.order;
+    el('orderToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+  };
+});
+
+function updatePoolCountInfo(){
+  const totalCount = Object.keys(questionsObj).length;
+  const selectedCount = poolFromQuestions(questionsObj, Array.from(selectedUnits)).length;
+  el('poolCountInfo').innerHTML = totalCount===0 ? '' :
+    `전체 등록 문제 <b>${totalCount}</b>개 · 선택한 범위 <b>${selectedCount}</b>개`;
+  const countInput = el('questionCountInput');
+  countInput.max = selectedCount || '';
+  countInput.placeholder = selectedCount ? `전체 사용 (${selectedCount}개)` : '전체 사용';
+}
 
 function renderUnits(){
   const box = el('unitList');
-  if(allUnits.length===0){ box.innerHTML = '<div class="muted">아직 문제가 없습니다. 아래 ②에서 추가해주세요.</div>'; return; }
+  if(allUnits.length===0){ box.innerHTML = '<div class="muted">아직 문제가 없습니다. 아래 ②에서 추가해주세요.</div>'; updatePoolCountInfo(); return; }
   box.innerHTML = '';
   allUnits.forEach(u=>{
     const row = document.createElement('label');
@@ -170,10 +202,12 @@ function renderUnits(){
     cb.onchange = () => {
       if(cb.checked) selectedUnits.add(cb.dataset.unit);
       else selectedUnits.delete(cb.dataset.unit);
+      updatePoolCountInfo();
     };
   });
   const dl = el('unitOptions');
   dl.innerHTML = allUnits.map(u=>`<option value="${escapeHtml(u.unit)}">`).join('');
+  updatePoolCountInfo();
 }
 
 el('selectAllBtn').onclick = () => { selectedUnits = new Set(allUnits.map(u=>u.unit)); renderUnits(); };
@@ -188,13 +222,22 @@ el('startBtn').onclick = async () => {
   const pool = poolFromQuestions(questionsObj, units);
   if(pool.length===0){ msg.className='msg err'; msg.textContent = '선택한 범위에 문제가 없습니다.'; return; }
 
+  const countRaw = el('questionCountInput').value.trim();
+  const desiredCount = countRaw ? Math.max(1, Math.round(parseFloat(countRaw))) : null;
+  let qids = pool.map(([qid])=>qid);
+  if(desiredCount && desiredCount < qids.length){
+    qids = shuffle(qids).slice(0, desiredCount);
+  }
+
   el('startBtn').disabled = true;
   try{
     const updates = {};
     updates[`rooms/${ROOM}/round`] = {
       status: 'running', units, duration_sec,
       end_time: serverNow() + duration_sec*1000,
-      token: serverNow()
+      token: serverNow(),
+      order: questionOrder,
+      qids
     };
     Object.keys(playersObj).forEach(pid=>{
       updates[`rooms/${ROOM}/players/${pid}/floor`] = 0;
@@ -204,7 +247,7 @@ el('startBtn').onclick = async () => {
       updates[`rooms/${ROOM}/players/${pid}/bestStreak`] = 0;
     });
     await update(ref(db), updates);
-    msg.className='msg ok'; msg.textContent = `시작! 문제 풀 ${pool.length}개`;
+    msg.className='msg ok'; msg.textContent = `시작! 출제 문항 ${qids.length}개 (선택 범위 ${pool.length}개 중)`;
   } catch(err){
     msg.className='msg err'; msg.textContent = '시작 실패: ' + err.message;
   } finally {
@@ -216,8 +259,20 @@ el('endBtn').onclick = () => update(roomRef(ROOM,'round'), { status: 'ended' });
 
 el('resetBtn').onclick = async () => {
   if(!confirm('모든 학생의 점수와 참여 목록을 초기화할까요?')) return;
-  await remove(roomRef(ROOM,'players'));
-  await update(roomRef(ROOM,'round'), { status: 'idle', end_time: null });
+  const msg = el('startMsg');
+  // players 상위 노드 자체는 보안 규칙상 쓰기 권한이 없고 players/$playerId 단위에만 있으므로,
+  // 각 학생 id를 하나씩 지우는 멀티패스 업데이트로 보낸다 (경로별로 권한이 개별 검사됨)
+  const updates = {};
+  Object.keys(playersObj).forEach(pid=>{
+    updates[`rooms/${ROOM}/players/${pid}`] = null;
+  });
+  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null };
+  try{
+    await update(ref(db), updates);
+    msg.className='msg ok'; msg.textContent = '전체 초기화 완료! 접속해 있던 학생은 모두 내보내졌습니다.';
+  } catch(err){
+    msg.className='msg err'; msg.textContent = '초기화 실패: ' + err.message;
+  }
 };
 
 el('addBtn').onclick = async () => {
@@ -330,8 +385,9 @@ function renderRoster(){
   pill.className = 'pill ' + effective;
   pill.textContent = effective==='idle' ? '대기중' : effective==='running' ? '진행중' : '종료';
   el('timerBig').textContent = fmtTime(remaining);
-  const pool = poolFromQuestions(questionsObj, r.units);
-  el('poolInfo').textContent = effective!=='idle' ? `문제 풀 ${pool.length}개` : '';
+  const poolCount = (r.qids && r.qids.length) ? r.qids.length : poolFromQuestions(questionsObj, r.units).length;
+  const orderLabel = r.order === 'sequential' ? '순서대로' : '랜덤';
+  el('poolInfo').textContent = effective!=='idle' ? `출제 문항 ${poolCount}개 · ${orderLabel} 출제` : '';
 
   const players = Object.entries(playersObj).map(([id,p])=>({id,...p}));
   players.sort((a,b)=> (b.floor||0)-(a.floor||0) || (b.correct||0)-(a.correct||0));
@@ -382,8 +438,9 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
   const r = snap.val();
   roundState = r ? {
     status: r.status||'idle', units: r.units||[],
-    duration_sec: r.duration_sec||420, end_time: r.end_time ?? null, token: r.token||0
-  } : { status:'idle', units:[], duration_sec:420, end_time:null, token:0 };
+    duration_sec: r.duration_sec||420, end_time: r.end_time ?? null, token: r.token||0,
+    order: r.order||'random', qids: r.qids||[]
+  } : { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random', qids:[] };
 });
 
 onValue(roomRef(ROOM,'players'), (snap)=>{
