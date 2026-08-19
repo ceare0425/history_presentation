@@ -254,7 +254,7 @@
 </div>
 
 <script type="module">
-import { roomRef, onValue, serverNow, fmtTime, escapeHtml } from '../shared/lib.js';
+import { roomRef, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers } from '../shared/lib.js';
 
 const ROOM = 'world';
 const el = (id) => document.getElementById(id);
@@ -437,14 +437,14 @@ function ensureClimberEl(track, id){
   return div;
 }
 
-function renderTower(players){
+function renderTower(players, leaderId){
   const track = el('towerTrack');
   const maxFloor = Math.max(10, ...players.map(p=>p.floor||0));
   const trackHeight = track.clientHeight || 500;
   const usable = trackHeight - 20;
   const seen = new Set();
 
-  players.forEach((p, i)=>{
+  players.forEach((p)=>{
     seen.add(p.id);
     const node = ensureClimberEl(track, p.id);
     track.appendChild(node);
@@ -456,7 +456,7 @@ function renderTower(players){
     node.querySelector('.avatar').textContent = avatar;
     node.querySelector('.col').style.height = Math.max(6,h)+'px';
     node.querySelector('.base').textContent = p.name || '';
-    node.classList.toggle('leader', i === 0);
+    node.classList.toggle('leader', leaderId != null && p.id === leaderId);
     node.classList.toggle('onfire', (p.streak||0) >= 3);
 
     const prev = lastFloor[p.id];
@@ -508,9 +508,13 @@ function spawnConfettiBatch(n){
   }
 }
 
-function buildPodium(players){
+function buildPodium(ranked){
   const podium = el('podium');
-  const top3 = players.slice(0,3);
+  if(!ranked.length){
+    podium.innerHTML = '<div style="opacity:.75; font-size:1.1rem;">정답률 70%를 넘는 학생이 없어 시상대가 비어있습니다</div>';
+    return;
+  }
+  const top3 = ranked.slice(0,3);
   const classes = ['p1','p2','p3'];
   const crowns = ['👑','🥈','🥉'];
   podium.innerHTML = top3.map((p,i)=>`
@@ -523,9 +527,9 @@ function buildPodium(players){
   `).join('');
 }
 
-function showEndCelebration(players){
+function showEndCelebration(players, ranked){
   if(!players.length) return;
-  buildPodium(players);
+  buildPodium(ranked);
   el('endOverlay').classList.add('show');
   spawnConfettiBatch(70);
   if(confettiTimer) clearInterval(confettiTimer);
@@ -551,21 +555,22 @@ function render(){
 
   const players = Object.entries(playersObj).map(([id,p])=>({id,...p}));
   players.sort((a,b)=> (b.floor||0)-(a.floor||0) || (b.correct||0)-(a.correct||0));
+  const ranked = rankedPlayers(players); // 정답률 70% 초과인 학생만 순위에 포함
 
   el('emptyMsg').style.display = players.length ? 'none' : 'flex';
 
-  el('lbList').innerHTML = players.slice(0,10).map((p,i)=>`
+  el('lbList').innerHTML = ranked.length ? ranked.slice(0,10).map((p,i)=>`
     <div class="lb-row ${i===0?'rank1':''}">
       <div class="lb-medal">${MEDALS[i] || (i+1)}</div>
       <div class="lb-name">${escapeHtml(p.name||'')}</div>
       <div class="lb-floor">${p.floor||0}층</div>
     </div>
-  `).join('');
+  `).join('') : '<div style="opacity:.6; font-size:.85rem; padding:6px 4px;">정답률 70%를 넘는 학생이 아직 없습니다</div>';
 
-  renderTower(players);
+  renderTower(players, ranked[0]?.id);
 
   if(effective === 'ended' && prevEffective !== 'ended'){
-    showEndCelebration(players);
+    showEndCelebration(players, ranked);
   } else if(effective !== 'ended' && prevEffective === 'ended'){
     hideEndCelebration();
   }
