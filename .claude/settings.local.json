@@ -115,7 +115,8 @@
       "PowerShell(Test-Path *)",
       "Bash(cp *)",
       "Bash(ls *)",
-      "Bash(pip install *)"
+      "Bash(pip install *)",
+      "Artifact"
     ]
   }
 }
