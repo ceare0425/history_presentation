@@ -225,7 +225,7 @@
 <script type="module">
 import {
   roomRef, ref, onValue, get, set, update, serverNow, db, onDisconnect,
-  isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji
+  isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers
 } from '../shared/lib.js';
 
 const ROOM = 'world';
@@ -441,21 +441,23 @@ el('answerInput').addEventListener('keydown', e=>{ if(e.key==='Enter') submitAns
 async function showEndedView(){
   const snap = await get(roomRef(ROOM, 'players'));
   const players = Object.entries(snap.val()||{}).map(([id,p])=>({id, ...p}));
-  players.sort((a,b)=> (b.floor||0)-(a.floor||0) || (b.correct||0)-(a.correct||0));
-  const idx = players.findIndex(p=>p.id===playerId);
-  const me = idx>=0 ? players[idx] : { floor:0, correct:0, wrong:0 };
+  const me = players.find(p=>p.id===playerId) || { floor:0, correct:0, wrong:0 };
 
   el('finalFloor').textContent = me.floor||0;
   const total = (me.correct||0)+(me.wrong||0);
   const acc = total ? Math.round(100*(me.correct||0)/total) : null;
   el('finalStat').textContent = acc!==null ? `정답 ${me.correct}개 · 정답률 ${acc}%` : '아직 문제를 풀지 않았어요';
+
+  const ranked = rankedPlayers(players); // 정답률 70% 초과인 학생만 순위에 포함
   const rankEl = el('finalRank');
+  const idx = ranked.findIndex(p=>p.id===playerId);
   const rank = idx>=0 ? idx+1 : null;
   if(rank){
-    rankEl.textContent = rank===1 ? '🏆 1등입니다!' : `${rank}등 / ${players.length}명 중`;
+    rankEl.textContent = rank===1 ? '🏆 1등입니다!' : `${rank}등 / ${ranked.length}명 중`;
     rankEl.classList.toggle('rank1', rank===1);
   } else {
-    rankEl.textContent = '';
+    rankEl.textContent = '정답률 70%를 넘어야 순위에 포함돼요';
+    rankEl.classList.remove('rank1');
   }
   showView('endedView');
 }
