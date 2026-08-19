@@ -99,7 +99,7 @@ export function shuffle(arr) {
   return a;
 }
 
-// ── 문제 은행 텍스트(단원 | 문제 | 정답) 한 줄 파싱 ──
+// ── 문제 은행 텍스트(주제 | 문제 | 정답) 한 줄 파싱 ──
 export function parseQuestionLine(line) {
   line = (line || "").trim();
   if (!line || line.startsWith("#")) return null;
