@@ -74,6 +74,18 @@
   .msg.ok{ color:var(--good); }
   details{ margin-top:10px; }
   summary{ cursor:pointer; font-size:.85rem; color:var(--sub); }
+
+  select{
+    width:100%; padding:9px 10px; border:1.5px solid var(--line); border-radius:8px; font-size:.92rem;
+    font-family:inherit; background:#fff;
+  }
+  .qlist{ max-height:320px; overflow-y:auto; margin-top:10px; border:1px solid var(--line); border-radius:10px; }
+  .qrow{ display:flex; align-items:flex-start; gap:8px; padding:8px 10px; border-bottom:1px solid var(--line); font-size:.85rem; }
+  .qrow:last-child{ border-bottom:none; }
+  .qrow .qtext{ flex:1; }
+  .qrow .qunit{ display:inline-block; font-size:.72rem; color:var(--sky1); background:#eef2fb; padding:1px 6px; border-radius:6px; margin-right:6px; }
+  .qrow .qans{ color:var(--sub); font-size:.78rem; margin-top:2px; }
+  .qrow button{ padding:5px 10px; font-size:.76rem; background:var(--bad); flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -135,10 +147,23 @@
         <div class="msg" id="bulkMsg"></div>
       </details>
     </div>
+
+    <div class="card">
+      <h2>③ 문제 목록 관리 / 삭제</h2>
+      <label>단원 필터</label>
+      <select id="manageUnitFilter">
+        <option value="">전체 (<span id="manageAllCount">0</span>개)</option>
+      </select>
+      <div class="btnrow">
+        <button class="bad" id="deleteUnitBtn" type="button">선택한 단원 문제 전체 삭제</button>
+      </div>
+      <div class="qlist" id="questionList"><div class="qrow muted">불러오는 중...</div></div>
+      <div class="msg" id="manageMsg"></div>
+    </div>
   </div>
 
   <div class="card">
-    <h2>③ 실시간 현황</h2>
+    <h2>④ 실시간 현황</h2>
     <div class="status-line">
       <span class="pill idle" id="statusPill">대기중</span>
       <span class="timer-big" id="timerBig">--:--</span>
@@ -375,6 +400,62 @@ el('bulkAddBtn').onclick = async () => {
   }
 };
 
+function renderManageUnitOptions(){
+  const sel = el('manageUnitFilter');
+  const prev = sel.value;
+  el('manageAllCount').textContent = Object.keys(questionsObj).length;
+  sel.innerHTML = `<option value="">전체 (${Object.keys(questionsObj).length}개)</option>` +
+    allUnits.map(u=>`<option value="${escapeHtml(u.unit)}">${escapeHtml(u.unit)} (${u.count}개)</option>`).join('');
+  sel.value = prev && allUnits.some(u=>u.unit===prev) ? prev : '';
+}
+
+function renderQuestionList(){
+  const filter = el('manageUnitFilter').value;
+  const box = el('questionList');
+  const entries = Object.entries(questionsObj).filter(([, q]) => !filter || q.unit === filter);
+  if(!entries.length){ box.innerHTML = '<div class="qrow muted">문제가 없습니다.</div>'; return; }
+  box.innerHTML = entries.map(([id, q]) => `
+    <div class="qrow">
+      <div class="qtext">
+        <span class="qunit">${escapeHtml(q.unit||'')}</span>${escapeHtml(q.question||'')}
+        <div class="qans">정답: ${escapeHtml((q.answers||[]).join(' / '))}</div>
+      </div>
+      <button type="button" data-id="${id}">삭제</button>
+    </div>`).join('');
+}
+
+el('manageUnitFilter').onchange = renderQuestionList;
+
+el('questionList').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-id]');
+  if(!btn) return;
+  if(!confirm('이 문제를 삭제할까요?')) return;
+  btn.disabled = true;
+  try{
+    await remove(roomRef(ROOM, 'questions', btn.dataset.id));
+  } catch(err){
+    alert('삭제 실패: ' + err.message);
+    btn.disabled = false;
+  }
+});
+
+el('deleteUnitBtn').onclick = async () => {
+  const filter = el('manageUnitFilter').value;
+  const msg = el('manageMsg');
+  if(!filter){ msg.className='msg err'; msg.textContent='삭제할 단원을 먼저 선택하세요 (전체 일괄 삭제는 지원하지 않습니다).'; return; }
+  const ids = Object.entries(questionsObj).filter(([, q]) => q.unit === filter).map(([id]) => id);
+  if(!ids.length) return;
+  if(!confirm(`"${filter}" 단원의 문제 ${ids.length}개를 모두 삭제할까요? 되돌릴 수 없습니다.`)) return;
+  const updates = {};
+  ids.forEach(id => { updates[`rooms/${ROOM}/questions/${id}`] = null; });
+  try{
+    await update(ref(db), updates);
+    msg.className='msg ok'; msg.textContent = `${ids.length}개 문제를 삭제했습니다.`;
+  } catch(err){
+    msg.className='msg err'; msg.textContent = '삭제 실패: ' + err.message;
+  }
+};
+
 function renderRoster(){
   const r = roundState;
   const remaining = r.end_time!=null ? Math.max(0, Math.round((r.end_time - serverNow())/1000)) : null;
@@ -432,6 +513,8 @@ onValue(roomRef(ROOM,'questions'), (snap)=>{
   allUnits = unitsFromQuestions(questionsObj);
   if(selectedUnits.size===0){ allUnits.forEach(u=>selectedUnits.add(u.unit)); }
   renderUnits();
+  renderManageUnitOptions();
+  renderQuestionList();
 });
 
 onValue(roomRef(ROOM,'round'), (snap)=>{
