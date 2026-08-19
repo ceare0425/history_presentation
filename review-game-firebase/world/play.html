@@ -372,7 +372,7 @@ function playCharacterReaction(correct){
   }, correct ? 750 : 950);
 }
 
-function flashFeedback(correct, correctAnswer, gain){
+function flashFeedback(correct, gain){
   const f = el('feedback');
   f.classList.add('show');
   if(correct){
@@ -380,7 +380,7 @@ function flashFeedback(correct, correctAnswer, gain){
     f.textContent = `정답! +${gain}층 올라갑니다 🎉`;
   } else {
     f.classList.remove('correct'); f.classList.add('wrong');
-    f.textContent = `아쉬워요. 정답: ${correctAnswer}`;
+    f.textContent = '아쉬워요. 틀렸습니다';
   }
   setTimeout(()=>{ f.classList.remove('show'); }, 1400);
 }
@@ -426,7 +426,7 @@ async function submitAnswer(){
   if(p.floor > lastFloor) popFloorBadge();
   lastFloor = p.floor;
   renderTowerMini(p.floor);
-  flashFeedback(correct, q.answers[0], gain);
+  flashFeedback(correct, gain);
   playCharacterReaction(correct);
 
   setTimeout(()=>{
