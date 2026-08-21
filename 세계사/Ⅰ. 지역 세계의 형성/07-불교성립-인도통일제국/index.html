@@ -352,6 +352,12 @@
     /* === 19. 보기 표 === */
     .bogi-table { width: 100%; border-collapse: collapse; margin-bottom: 0.5rem; border: 1px solid var(--gray-200); }
     .bogi-table td { padding: 0.3rem 0.6rem; font-size: 0.88rem; line-height: 1.6; background: var(--light); border: none; }
+
+    /* === 20. 사진 갤러리 === */
+    .photo-row { display:flex; gap:1.5rem; align-items:stretch; justify-content:center; width:100%; }
+    .photo-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:.45rem; min-width:0; }
+    .photo-frame { flex:1; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:4px; background:var(--card-bg); }
+    .photo-frame img { width:100%; height:100%; object-fit:contain; display:block; }
   </style>
 </head>
 <body>
@@ -827,9 +833,31 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 17: 불교와 자이나교의 성립 ③ 불교 -->
+  <!-- Slide 17: 자이나교의 극단적 고행 -->
   <!-- ─────────────────────────────────────────── -->
   <div class="slide" data-slide="16">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🖼️</span>
+        <span class="browser-title">자이나교의 극단적 고행</span>
+      </div>
+      <div class="browser-content" style="align-items:center; justify-content:center;">
+        <div class="photo-row" style="flex:none; width:75%; height:70%;">
+          <div class="photo-col">
+            <div class="photo-frame"><img src="./자이나교1.jpg" alt="자이나교의 극단적 고행"></div>
+          </div>
+          <div class="photo-col">
+            <div class="photo-frame"><img src="./자이나교2.jpg" alt="자이나교의 극단적 고행"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 18: 불교와 자이나교의 성립 ③ 불교 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="17">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">☸️</span>
@@ -855,9 +883,39 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 18: 마우리아 왕조 ① 성립 -->
+  <!-- Slide 19: 불교 설화 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="17">
+  <div class="slide" data-slide="18">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🐘</span>
+        <span class="browser-title">불교 설화</span>
+      </div>
+      <div class="browser-content" style="padding:0; align-items:center; justify-content:center;">
+        <img src="./불교1.png" alt="불교 설화" style="width:100%; height:100%; object-fit:contain; display:block;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 20: 불교 설화 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="19">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🐘</span>
+        <span class="browser-title">불교 설화</span>
+      </div>
+      <div class="browser-content" style="padding:0; align-items:center; justify-content:center;">
+        <img src="./불교2.png" alt="불교 설화" style="width:100%; height:100%; object-fit:contain; display:block;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 21: 마우리아 왕조 ① 성립 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="20">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🏗️</span>
@@ -887,9 +945,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 19: 마우리아 왕조 ② 전성기 — 아소카왕 -->
+  <!-- Slide 22: 마우리아 왕조 ② 전성기 — 아소카왕 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="18">
+  <div class="slide" data-slide="21">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">⭐</span>
@@ -916,9 +974,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 20: 쿠샨 왕조 ① 발전 -->
+  <!-- Slide 23: 쿠샨 왕조 ① 발전 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="19">
+  <div class="slide" data-slide="22">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🏗️</span>
@@ -943,9 +1001,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 21: 쿠샨 왕조 ② 카니슈카왕의 통치 -->
+  <!-- Slide 24: 쿠샨 왕조 ② 카니슈카왕의 통치 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="20">
+  <div class="slide" data-slide="23">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">⭐</span>
@@ -974,9 +1032,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 22: 간다라 미술 ① 출현 -->
+  <!-- Slide 25: 간다라 미술 ① 출현 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="21">
+  <div class="slide" data-slide="24">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🌐</span>
@@ -1001,9 +1059,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 23: 간다라 미술 ② 특징 및 전파 -->
+  <!-- Slide 26: 간다라 미술 ② 특징 및 전파 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="22">
+  <div class="slide" data-slide="25">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✨</span>
@@ -1037,9 +1095,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 24: 불교의 두 흐름 비교 -->
+  <!-- Slide 27: 불교의 두 흐름 비교 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="23">
+  <div class="slide" data-slide="26">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">⚖️</span>
@@ -1091,9 +1149,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 25: 개념 확인 ① OX ⑴⑵⑶ -->
+  <!-- Slide 28: 개념 확인 ① OX ⑴⑵⑶ -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="24">
+  <div class="slide" data-slide="27">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✅</span>
@@ -1132,9 +1190,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 26: 개념 확인 ② 빈칸 채우기 ⑴⑵⑶⑷ -->
+  <!-- Slide 29: 개념 확인 ② 빈칸 채우기 ⑴⑵⑶⑷ -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="25">
+  <div class="slide" data-slide="28">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -1176,9 +1234,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 27: 개념 확인 ③ 객관식 -->
+  <!-- Slide 30: 개념 확인 ③ 객관식 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="26">
+  <div class="slide" data-slide="29">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">📝</span>
@@ -1228,7 +1286,7 @@
   <span class="nav-counter">
     <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
     &nbsp;/&nbsp;
-    <span id="totalSlides">27</span>
+    <span id="totalSlides">30</span>
   </span>
   <button class="nav-btn" id="nextBtn" onclick="advance()" aria-label="다음">
     <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
