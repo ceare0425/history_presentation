@@ -104,8 +104,8 @@
     .ruler-card-body { padding:.55rem .9rem; background:var(--card-bg); }
     .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
     .info-list { list-style:none; display:flex; flex-direction:column; gap:.42rem; }
-    .info-list li { display:flex; gap:.45rem; align-items:flex-start; font-size:.93rem; line-height:1.65; }
-    .info-list li::before { content:'◆'; color:var(--accent); font-size:.62rem; margin-top:.42em; flex-shrink:0; }
+    .info-list li { position:relative; padding-left:1.3em; font-size:.93rem; line-height:1.65; }
+    .info-list li::before { content:'◆'; color:var(--accent); font-size:.62rem; position:absolute; left:0; top:.42em; }
     .highlight-box { background:var(--light); border-left:4px solid var(--accent); border-right:1px solid var(--border); padding:.5rem .9rem .5rem 1rem; margin:.38rem 0 0; border-radius:0 3px 3px 0; font-size:.9rem; line-height:1.65; }
     .highlight-box strong { color:var(--main); }
 

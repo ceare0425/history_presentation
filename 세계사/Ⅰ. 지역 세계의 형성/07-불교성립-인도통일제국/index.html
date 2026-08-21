@@ -37,9 +37,8 @@
     @media (max-width: 1024px) { html { font-size: clamp(18px, 2.7vw, 30px); } }
     @media (max-width: 768px)  { html { font-size: clamp(16px, 3.8vw, 24px); } }
 
-    h1 { font-family: 'Nanum Myeongjo', serif; font-size: 2.4rem; font-weight: 800; letter-spacing: 0.04em; line-height: 1.3; }
-    h2 { font-family: 'Nanum Myeongjo', serif; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.04em; }
-    h3 { font-family: 'Nanum Myeongjo', serif; font-size: 1rem; font-weight: 700; }
+    h1 { font-family: 'Nanum Myeongjo', serif; font-size: 2.3rem; font-weight: 800; letter-spacing: 0.04em; line-height: 1.3; }
+    h2 { font-family: 'Nanum Myeongjo', serif; font-size: 1.35rem; font-weight: 700; letter-spacing: 0.04em; }
     p  { font-size: 0.95rem; line-height: 1.7; }
 
     /* === 3. Parchment Background === */
@@ -167,7 +166,7 @@
     .ruler-card-header {
       background: linear-gradient(90deg, var(--main), var(--dark));
       color: var(--accent-light);
-      font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 0.9rem;
+      font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: 0.88rem;
       padding: 0.35rem 0.8rem; display: flex; align-items: center; gap: 0.4rem;
     }
     .ruler-card-body { padding: 0.5rem 0.8rem; background: var(--card-bg); }
@@ -183,8 +182,8 @@
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; }
 
     .info-list { list-style: none; display: flex; flex-direction: column; gap: 0.38rem; }
-    .info-list li { display: flex; gap: 0.45rem; align-items: flex-start; font-size: 0.9rem; line-height: 1.6; }
-    .info-list li::before { content: '◆'; color: var(--accent); font-size: 0.65rem; margin-top: 0.38em; flex-shrink: 0; }
+    .info-list li { position: relative; padding-left: 1.3em; font-size: 0.9rem; line-height: 1.6; }
+    .info-list li::before { content: '◆'; color: var(--accent); font-size: 0.65rem; position: absolute; left: 0; top: 0.42em; }
 
     .highlight-box {
       background: var(--light);

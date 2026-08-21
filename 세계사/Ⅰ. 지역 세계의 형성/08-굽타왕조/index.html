@@ -183,8 +183,8 @@
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; }
 
     .info-list { list-style: none; display: flex; flex-direction: column; gap: 0.38rem; }
-    .info-list li { display: flex; gap: 0.45rem; align-items: flex-start; font-size: 0.9rem; line-height: 1.6; }
-    .info-list li::before { content: '◆'; color: var(--accent); font-size: 0.65rem; margin-top: 0.38em; flex-shrink: 0; }
+    .info-list li { position: relative; padding-left: 1.3em; font-size: 0.9rem; line-height: 1.6; }
+    .info-list li::before { content: '◆'; color: var(--accent); font-size: 0.65rem; position: absolute; left: 0; top: 0.42em; }
 
     .highlight-box {
       background: var(--light);
@@ -331,6 +331,12 @@
     .comp-table td { padding: 0.38rem 0.6rem; border-bottom: 1px solid var(--gray-200); line-height: 1.55; vertical-align: top; }
     .comp-table tr:nth-child(even) td { background: var(--light); }
 
+    .summary-table { width:100%; border-collapse:collapse; font-size:.88rem; margin:.35rem 0; }
+    .summary-table th { background:linear-gradient(90deg,var(--main),var(--dark)); color:var(--accent-light); padding:.4rem .7rem; font-family:'Nanum Myeongjo',serif; font-weight:700; text-align:center; border:1px solid var(--border); }
+    .summary-table td { padding:.38rem .7rem; border:1px solid var(--border); line-height:1.65; vertical-align:top; }
+    .summary-table tr:nth-child(even) td { background:rgba(255,248,225,.6); }
+    .summary-table td:first-child { background:linear-gradient(135deg,rgba(139,69,19,.12),rgba(107,48,16,.08)); font-family:'Nanum Myeongjo',serif; font-weight:700; color:var(--main); text-align:center; white-space:nowrap; }
+
     /* === 17. 해설 숨김/공개 === */
     .hint { display: none; }
     .ox.on + .hint { display: block; margin-top: 0.3rem; }
@@ -376,9 +382,472 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 3: 굽타 왕조의 북인도 통일 ① 건국 -->
+  <!-- Slide 2: 복습 — 한나라 -->
   <!-- ─────────────────────────────────────────── -->
   <div class="slide" data-slide="1">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 한나라 빈칸 채우기</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">한나라 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>한 고조(유방)는 봉건제와 군현제를 절충한 <span class="blank" onclick="this.classList.toggle('on')">군국제</span>를 실시하였다.</li>
+              <li>한 무제는 유교를 통치 이념으로 삼아 <span class="blank" onclick="this.classList.toggle('on')">오경박사</span>를 설치하고 <span class="blank" onclick="this.classList.toggle('on')">태학</span>을 설립하였다.</li>
+              <li>인재 등용을 위해 지방관이 향촌의 인물을 추천하는 <span class="blank" onclick="this.classList.toggle('on')">향거리선제</span>를 실시하였다.</li>
+              <li>물자 유통과 재정 확충을 위해 <span class="blank" onclick="this.classList.toggle('on')">균수법</span>과 <span class="blank" onclick="this.classList.toggle('on')">평준법</span>을 시행하고, 화폐를 <span class="blank" onclick="this.classList.toggle('on')">오수전</span>으로 통일하였다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 3: 복습 — 수 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="2">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 수 빈칸 채우기</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">수 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>수 문제는 9품중정제를 폐지하고 시험을 통해 인재를 선발하는 <span class="blank" onclick="this.classList.toggle('on')">과거제</span>를 실시하였다.</li>
+              <li>수 문제는 중앙 관제를 정비하여 <span class="blank" onclick="this.classList.toggle('on')">3성 6부제</span>를 마련하였다.</li>
+              <li>수 양제는 강남과 화북을 잇는 <span class="blank" onclick="this.classList.toggle('on')">대운하</span>를 완성하여 남북 간 경제 교류를 촉진하였다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 4: 복습 — 헤이안 시대 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="3">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 헤이안 시대 빈칸 채우기</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">헤이안 시대 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>794년 귀족 세력을 견제하기 위해 <span class="blank" onclick="this.classList.toggle('on')">헤이안쿄</span>(교토)로 천도하면서 헤이안 시대가 시작되었다.</li>
+              <li>9세기 말 당이 쇠퇴하자 <span class="blank" onclick="this.classList.toggle('on')">견당사</span> 파견을 중지하였다.</li>
+              <li>이후에도 민간 무역은 지속되어 대외 무역 창구가 규슈의 <span class="blank" onclick="this.classList.toggle('on')">다자이후</span>로 집중되었다.</li>
+              <li>견당사 파견 중지를 계기로 가나 문자 성립, 와카 유행 등 일본 고유의 <span class="blank" onclick="this.classList.toggle('on')">국풍 문화</span>가 발달하였다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 5: 복습 — 위진 남북조와 수 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="4">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 위진 남북조와 수 빈칸 채우기</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">위진 남북조 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>북위의 <span class="blank" onclick="this.classList.toggle('on')">효문제</span>는 평성에서 뤄양으로 천도하고 선비족의 언어와 복장을 금지하는 등 <span class="blank" onclick="this.classList.toggle('on')">한화 정책</span>을 추진하였다.</li>
+              <li>위진 남북조 시대에는 추천을 통해 인재를 선발하는 <span class="blank" onclick="this.classList.toggle('on')">9품중정제</span>가 실시되어 문벌 사회가 형성되었다.</li>
+              <li>북위 효문제 때 처음 시행된 <span class="blank" onclick="this.classList.toggle('on')">균전제</span>는 농민에게 국가가 토지를 지급하는 토지 제도로, 이후 수·당 대까지 이어졌다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 6: 복습 — 마우리아 왕조 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="5">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 마우리아 왕조 빈칸 채우기</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">마우리아 왕조 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>찬드라굽타는 알렉산드로스의 침략 이후 북인도의 혼란을 수습하며 <span class="blank" onclick="this.classList.toggle('on')">마우리아 왕조</span>를 세웠다.</li>
+              <li>마우리아 왕조의 전성기를 이끈 <span class="blank" onclick="this.classList.toggle('on')">아소카왕</span>은 <span class="blank" onclick="this.classList.toggle('on')">칼링가 전투</span>의 참상을 겪은 뒤 불교에 귀의하여 선정을 베풀었다.</li>
+              <li>아소카왕 때 개인의 해탈을 강조하는 <span class="blank" onclick="this.classList.toggle('on')">상좌부 불교</span>가 발달하였다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 7: 복습 — 진나라 (2) -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="6">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 진나라 빈칸 채우기 (2)</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">진나라 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>사상 통제를 위해 책을 불태우고 유생들을 산 채로 묻은 <span class="blank" onclick="this.classList.toggle('on')">분서갱유</span>를 단행하였다.</li>
+              <li>북방 흉노족의 침입을 막기 위해 <span class="blank" onclick="this.classList.toggle('on')">만리장성</span>을 축조하였다.</li>
+              <li>대규모 토목 공사와 무리한 대외 원정으로 백성들의 불만이 커져 <span class="blank" onclick="this.classList.toggle('on')">진승 오광의 난</span> 등 농민 반란이 일어났고, 결국 진은 멸망하였다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 8: 복습 — 인도 문명 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="7">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">지난 시간 복습 — 인도 문명</span>
+      </div>
+      <div class="browser-content">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🏙️ 인도 문명</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>기원전 2500년경 <span class="blank" onclick="this.classList.toggle('on')">인더스 강</span> 상류 펀자브 지방에서 드라비다인이 형성한 것으로 추정</li>
+              <li>계획도시 <span class="blank" onclick="this.classList.toggle('on')">하라파</span>, <span class="blank" onclick="this.classList.toggle('on')">모헨조다로</span> 건설</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">🚶 아리아인의 이동과 사회</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>기원전 1500년경 <span class="blank" onclick="this.classList.toggle('on')">아리아인</span> 진출 — 중앙아시아에서 북인도로 이동, 이후 갠지스강까지 진출</li>
+              <li>원주민을 지배하기 위해 <span class="blank" onclick="this.classList.toggle('on')">카스트제</span> 성립(브라만·크샤트리아·바이샤·수드라)</li>
+              <li>자연신을 숭배하는 <span class="blank" onclick="this.classList.toggle('on')">브라만교</span> 성립, 경전 <span class="blank" onclick="this.classList.toggle('on')">《베다》</span> 사용</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 9: 복습 — 일본 고대 국가의 성립 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="8">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 일본 고대 국가의 성립 빈칸 채우기</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">일본 고대 국가의 성립 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>6세기 초 <span class="blank" onclick="this.classList.toggle('on')">쇼토쿠 태자</span>는 중국과 한반도의 선진 문화를 수용하여 정치 개혁을 추진하였다.</li>
+              <li>이 시기 불교 장려책이 실시되면서 <span class="blank" onclick="this.classList.toggle('on')">아스카 문화</span>가 발전하였다.</li>
+              <li>7세기 중반 군주 중심의 중앙 집권적 체제를 지향한 <span class="blank" onclick="this.classList.toggle('on')">다이카 개신</span>이 단행되었다(645).</li>
+              <li>이후 당의 율령을 모방한 <span class="blank" onclick="this.classList.toggle('on')">다이호 율령</span>이 반포되었다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 10: 복습 — 나라 시대 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="9">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 나라 시대 빈칸 채우기</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">나라 시대 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>710년 당의 장안을 본떠 조성한 <span class="blank" onclick="this.classList.toggle('on')">헤이조쿄</span>(나라)로 천도하면서 나라 시대가 시작되었다.</li>
+              <li>나라 시대에는 <span class="blank" onclick="this.classList.toggle('on')">견신라사</span>와 견당사가 파견되어 대외 교류가 이루어졌다.</li>
+              <li>불교 진흥을 위해 <span class="blank" onclick="this.classList.toggle('on')">도다이사</span>가 건립되었다.</li>
+              <li>일본의 고대 신화와 역사를 정리한 《고사기》와 《<span class="blank" onclick="this.classList.toggle('on')">일본서기</span>》가 편찬되었다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 11: 복습 — 쿠샨 왕조 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="10">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 쿠샨 왕조 빈칸 채우기</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">쿠샨 왕조 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>이란 계통의 민족이 세운 <span class="blank" onclick="this.classList.toggle('on')">쿠샨 왕조</span>는 인도 서북부를 통일하고 동서 교역로를 장악하여 번영하였다.</li>
+              <li><span class="blank" onclick="this.classList.toggle('on')">카니슈카왕</span> 때 쿠샨 왕조는 북인도에서 중앙아시아에 이르는 최대 영토를 확보하며 전성기를 맞았다.</li>
+              <li>중생의 구제를 목표로 부처를 초월적 존재로 신격화한 <span class="blank" onclick="this.classList.toggle('on')">대승 불교</span>가 발달하였다.</li>
+              <li>헬레니즘 문화와 인도 문화가 융합된 <span class="blank" onclick="this.classList.toggle('on')">간다라 미술</span>이 대승 불교와 함께 동아시아로 전파되었다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 12: 복습 — 춘추 전국 시대 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="11">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 춘추 전국 시대 빈칸 채우기</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">춘추 전국 시대 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>춘추 시대에는 춘추 5패가 <span class="blank" onclick="this.classList.toggle('on')">존왕양이</span>를 명분으로 제후국들을 통솔하였다.</li>
+              <li>전국 시대에는 전국 7웅이 서로 패권을 다투는 <span class="blank" onclick="this.classList.toggle('on')">약육강식</span>의 시대였다.</li>
+              <li>부국강병을 위한 제후국들의 경쟁 속에서 유가·법가·도가·묵가 등 다양한 사상가 집단인 <span class="blank" onclick="this.classList.toggle('on')">제자백가</span>가 등장하였다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 13: 복습 — 진나라 (1) -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="12">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 진나라 빈칸 채우기 (1)</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">진나라 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>기원전 221년 전국을 통일한 진왕 정은 스스로를 <span class="blank" onclick="this.classList.toggle('on')">시황제</span>라 칭하였다.</li>
+              <li>진시황제는 전국에 관리를 파견하여 다스리는 <span class="blank" onclick="this.classList.toggle('on')">군현제</span>를 실시하였다.</li>
+              <li>중앙 집권 강화를 위해 <span class="blank" onclick="this.classList.toggle('on')">화폐 통일</span>과 <span class="blank" onclick="this.classList.toggle('on')">도량형 통일</span>을 단행하였다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 14: 복습 — 당 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="13">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 당 빈칸 채우기</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">당 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>당 태종은 동돌궐을 정복하고 율령 체제를 정비하였는데, 이 시기를 <span class="blank" onclick="this.classList.toggle('on')">정관의 치</span>라 부른다.</li>
+              <li>8세기 균전제가 붕괴하는 가운데 절도사 안녹산과 사사명이 일으킨 <span class="blank" onclick="this.classList.toggle('on')">안사의 난</span>으로 당은 크게 쇠퇴하였다.</li>
+              <li>균전제 붕괴 이후 당은 토지와 자산을 기준으로 세금을 부과하는 <span class="blank" onclick="this.classList.toggle('on')">양세법</span>을 실시하였다.</li>
+              <li>결국 절도사 <span class="blank" onclick="this.classList.toggle('on')">주전충</span>에 의해 당은 멸망하였다(907).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 15: 복습 — 메소포타미아 vs 이집트 문명 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="14">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">지난 시간 복습 — 메소포타미아 vs 이집트 문명</span>
+      </div>
+      <div class="browser-content">
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <table class="summary-table">
+              <colgroup><col style="width:16%"><col><col></colgroup>
+              <thead>
+                <tr><th>구분</th><th>메소포타미아</th><th>이집트</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>발생지</td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">티그리스·유프라테스강</span></td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">나일강 유역</span></td>
+                </tr>
+                <tr>
+                  <td>지형</td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">개방적 → 지배 세력 잦은 교체</span></td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">폐쇄적(사막·바다) → 안정적 왕조</span></td>
+                </tr>
+                <tr>
+                  <td>최고 통치자</td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">왕 = 지배자, 제사장 (신정 정치)</span></td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">파라오 (태양신 '라'의 아들)</span></td>
+                </tr>
+                <tr>
+                  <td>세계관</td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">현세 중시 (길가메시 서사시)</span></td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">내세적 (사후 세계 중시)</span></td>
+                </tr>
+                <tr>
+                  <td>문자</td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">쐐기 문자</span></td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">상형 문자 (파피루스에 기록)</span></td>
+                </tr>
+                <tr>
+                  <td>역법·수학</td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">태음력 · 60진법</span></td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">태양력 · 10진법</span></td>
+                </tr>
+                <tr>
+                  <td>대표 건축</td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">지구라트</span></td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">피라미드 (파라오의 무덤)</span></td>
+                </tr>
+                <tr>
+                  <td>대표 법전</td>
+                  <td><span class="blank" onclick="this.classList.toggle('on')">《함무라비 법전》</span></td>
+                  <td>—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 16: 복습 — 불교와 자이나교의 성립 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="15">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">복습 — 불교와 자이나교의 성립 빈칸 채우기</span>
+      </div>
+      <div class="browser-content">
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+        <h2 style="margin-bottom:.55rem;">불교와 자이나교의 성립 복습</h2>
+        <div class="ruler-card">
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li><span class="blank" onclick="this.classList.toggle('on')">윤회 사상</span>을 바탕으로, 카스트제를 극복하고자 하는 움직임 속에서 자이나교와 불교가 성립하였다.</li>
+              <li>바르다마나(마하비라)가 창시한 <span class="blank" onclick="this.classList.toggle('on')">자이나교</span>는 엄격한 계율과 <span class="blank" onclick="this.classList.toggle('on')">고행</span>을 통한 해탈을 추구하였다.</li>
+              <li>고타마 싯다르타(석가모니)가 창시한 <span class="blank" onclick="this.classList.toggle('on')">불교</span>는 인간의 평등과 <span class="blank" onclick="this.classList.toggle('on')">윤리적 실천</span>을 통한 해탈을 강조하였다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 17: 복습 — 중국 문명 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="16">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🔄</span>
+        <span class="browser-title">지난 시간 복습 — 중국 문명</span>
+      </div>
+      <div class="browser-content">
+        <div class="ruler-card">
+          <div class="ruler-card-header">🌊 하·상 왕조</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>기원전 2500년경 <span class="blank" onclick="this.classList.toggle('on')">황허강</span>과 창장강 일대에서 문명 발전, 하 왕조(얼리터우 유적)는 문헌상 최초의 국가</li>
+              <li>상 왕조: 왕이 점친 내용을 갑골에 기록하는 <span class="blank" onclick="this.classList.toggle('on')">신권 정치</span> 실시</li>
+              <li>점친 내용과 결과를 <span class="blank" onclick="this.classList.toggle('on')">갑골문</span>으로 기록 → 한자의 기원</li>
+            </ul>
+          </div>
+        </div>
+        <div class="ruler-card">
+          <div class="ruler-card-header">⚔️ 주 왕조</div>
+          <div class="ruler-card-body">
+            <ul class="info-list">
+              <li>상을 멸망시키고 건국, 왕이 수도 인근을 직접 지배하고 제후에게 나머지 지역을 다스리게 하는 <span class="blank" onclick="this.classList.toggle('on')">봉건제</span> 실시</li>
+              <li><span class="blank" onclick="this.classList.toggle('on')">혈연</span>에 기초한 종법 제도 발전</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- Slide 18: 굽타 왕조의 북인도 통일 ① 건국 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="slide" data-slide="17">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">👑</span>
@@ -404,9 +873,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 4: 굽타 왕조의 북인도 통일 ② 전성기 -->
+  <!-- Slide 19: 굽타 왕조의 북인도 통일 ② 전성기 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="2">
+  <div class="slide" data-slide="18">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">⭐</span>
@@ -432,9 +901,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 5: 굽타 왕조의 북인도 통일 ③ 멸망 -->
+  <!-- Slide 20: 굽타 왕조의 북인도 통일 ③ 멸망 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="3">
+  <div class="slide" data-slide="19">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">⚔️</span>
@@ -468,9 +937,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 6: 힌두교의 성립과 발전 ① 성립·특징 -->
+  <!-- Slide 21: 힌두교의 성립과 발전 ① 성립·특징 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="4">
+  <div class="slide" data-slide="20">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🕉️</span>
@@ -506,9 +975,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 7: 힌두교의 성립과 발전 ② 영향 (빈칸 ➊ = 마누 법전) -->
+  <!-- Slide 22: 힌두교의 성립과 발전 ② 영향 (빈칸 ➊ = 마누 법전) -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="5">
+  <div class="slide" data-slide="21">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🕉️</span>
@@ -535,9 +1004,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 8: 인도 고전 문화의 발달 (빈칸 ➋ = 마하바라타) -->
+  <!-- Slide 23: 인도 고전 문화의 발달 (빈칸 ➋ = 마하바라타) -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="6">
+  <div class="slide" data-slide="22">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">📚</span>
@@ -584,9 +1053,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 9: 이슬람 세력의 인도 진출과 델리 술탄 왕조 -->
+  <!-- Slide 24: 이슬람 세력의 인도 진출과 델리 술탄 왕조 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="7">
+  <div class="slide" data-slide="23">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🕌</span>
@@ -638,9 +1107,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 10: 개념 확인 문제 ① — ○× 문제 -->
+  <!-- Slide 25: 개념 확인 문제 ① — ○× 문제 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="8">
+  <div class="slide" data-slide="24">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✅</span>
@@ -681,9 +1150,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 11: 개념 확인 문제 ② — 빈칸 채우기 -->
+  <!-- Slide 26: 개념 확인 문제 ② — 빈칸 채우기 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="9">
+  <div class="slide" data-slide="25">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -727,9 +1196,9 @@
   </div>
 
   <!-- ─────────────────────────────────────────── -->
-  <!-- Slide 12: 개념 확인 문제 ③ — 객관식 -->
+  <!-- Slide 27: 개념 확인 문제 ③ — 객관식 -->
   <!-- ─────────────────────────────────────────── -->
-  <div class="slide" data-slide="10">
+  <div class="slide" data-slide="26">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🔍</span>

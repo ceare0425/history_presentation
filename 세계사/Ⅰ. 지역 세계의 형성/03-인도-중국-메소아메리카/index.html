@@ -167,8 +167,8 @@
 
     /* ── 리스트 ── */
     .info-list { list-style: none; display: flex; flex-direction: column; gap: 0.38rem; }
-    .info-list li { display: flex; gap: 0.45rem; align-items: flex-start; font-size: 0.9rem; line-height: 1.6; }
-    .info-list li::before { content: '◆'; color: var(--accent); font-size: 0.65rem; margin-top: 0.38em; flex-shrink: 0; }
+    .info-list li { position: relative; padding-left: 1.3em; font-size: 0.9rem; line-height: 1.6; }
+    .info-list li::before { content: '◆'; color: var(--accent); font-size: 0.65rem; position: absolute; left: 0; top: 0.38em; }
 
     /* ── 하이라이트 박스 ── */
     .highlight-box {

@@ -184,8 +184,8 @@
     .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.65rem; }
 
     .info-list { list-style: none; display: flex; flex-direction: column; gap: 0.38rem; }
-    .info-list li { display: flex; gap: 0.45rem; align-items: flex-start; font-size: 0.9rem; line-height: 1.6; }
-    .info-list li::before { content: '◆'; color: var(--accent); font-size: 0.65rem; margin-top: 0.38em; flex-shrink: 0; }
+    .info-list li { position: relative; padding-left: 1.3em; font-size: 0.9rem; line-height: 1.6; }
+    .info-list li::before { content: '◆'; color: var(--accent); font-size: 0.65rem; position: absolute; left: 0; top: 0.38em; }
 
     .highlight-box {
       background: var(--light);
