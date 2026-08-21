@@ -97,6 +97,8 @@
     box-shadow:none; background:var(--tcolor,#999);
   }
   .team-buttons button.selected{ opacity:1; box-shadow:0 0 0 3px rgba(0,0,0,.15) inset, 0 4px 10px rgba(0,0,0,.25); }
+  .team-buttons button:disabled{ opacity:.25; cursor:not-allowed; }
+  .team-buttons button small{ display:block; font-weight:400; font-size:.72rem; opacity:.85; margin-top:2px; }
 
   .team-badge{
     font-size:.85rem; font-weight:800; padding:4px 10px; border-radius:10px; color:#fff;
@@ -590,11 +592,23 @@ function startListening(){
   setInterval(tick, 250);
 }
 
-function renderTeamPicker(count){
+let teamModeActive = false;
+let teamCountConfig = 4;
+let joinedAlready = false; // 참여를 마치면 팀 인원수 실시간 갱신을 멈춘다
+let liveTeamCounts = {};
+
+// 팀별 인원이 가장 적은 팀만 고를 수 있게 해서(동률은 모두 허용) 한쪽으로 쏠리는 것을 막는다
+function renderTeamPicker(){
+  if(!teamModeActive) return;
+  const teams = TEAM_OPTIONS.slice(0, teamCountConfig);
+  const counts = teams.map(t=>liveTeamCounts[t.key]||0);
+  const minCount = counts.length ? Math.min(...counts) : 0;
   const box = el('teamButtons');
-  box.innerHTML = TEAM_OPTIONS.slice(0, count).map(t=>
-    `<button type="button" data-key="${t.key}" style="--tcolor:${t.color}">${t.label}</button>`
-  ).join('');
+  box.innerHTML = teams.map(t=>{
+    const cnt = liveTeamCounts[t.key]||0;
+    const full = cnt > minCount;
+    return `<button type="button" data-key="${t.key}" style="--tcolor:${t.color}" ${full?'disabled':''}>${t.label}<br><small>${cnt}명${full?' · 가득참':''}</small></button>`;
+  }).join('');
   box.querySelectorAll('button').forEach(b=>{
     b.classList.toggle('selected', b.dataset.key === selectedTeam);
     b.onclick = () => {
@@ -605,19 +619,22 @@ function renderTeamPicker(count){
   });
 }
 
-let teamModeActive = false;
+onValue(roomRef(ROOM,'players'), (snap)=>{
+  if(joinedAlready) return;
+  const players = Object.values(snap.val()||{});
+  liveTeamCounts = {};
+  players.forEach(p=>{ if(p.team) liveTeamCounts[p.team] = (liveTeamCounts[p.team]||0)+1; });
+  renderTeamPicker();
+});
 
 async function refreshTeamMode(){
   try{
     const snap = await get(roomRef(ROOM,'round'));
     const r = snap.val() || {};
     teamModeActive = !!r.team_mode;
-    if(teamModeActive){
-      renderTeamPicker(r.team_count || 4);
-      el('teamPickRow').classList.remove('hidden');
-    } else {
-      el('teamPickRow').classList.add('hidden');
-    }
+    teamCountConfig = r.team_count || 4;
+    el('teamPickRow').classList.toggle('hidden', !teamModeActive);
+    if(teamModeActive) renderTeamPicker();
   } catch(_e){}
 }
 refreshTeamMode();
@@ -630,6 +647,7 @@ function handleRemovedFromRoster(){
   localStorage.removeItem(STORAGE_TEAM_KEY);
   playerId = '';
   selectedTeam = null;
+  joinedAlready = false;
   el('nameInput').value = '';
   refreshTeamMode();
   showView('joinView');
@@ -638,6 +656,7 @@ function handleRemovedFromRoster(){
 
 async function join(name, team){
   kicked = false;
+  joinedAlready = true;
   if(!playerId) playerId = genId();
   playerName = name;
   localStorage.setItem(STORAGE_ID_KEY, playerId);
@@ -669,7 +688,7 @@ el('joinBtn').onclick = () => {
   if(!name){ el('nameInput').focus(); return; }
   if(teamModeActive && !selectedTeam){ alert('참여할 팀을 먼저 선택해주세요.'); return; }
   el('joinBtn').disabled = true;
-  join(name, teamModeActive ? selectedTeam : null).catch(err=>{ alert('참여 실패: '+err.message); }).finally(()=>{ el('joinBtn').disabled=false; });
+  join(name, teamModeActive ? selectedTeam : null).catch(err=>{ joinedAlready = false; alert('참여 실패: '+err.message); }).finally(()=>{ el('joinBtn').disabled=false; });
 };
 el('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') el('joinBtn').click(); });
 
