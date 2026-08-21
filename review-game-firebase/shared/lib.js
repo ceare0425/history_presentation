@@ -120,6 +120,57 @@ export function poolFromQuestions(questionsObj, units) {
   return entries.filter(([, q]) => unitSet.has(q.unit));
 }
 
+// ── 팀전 모드 ──
+export const TEAM_OPTIONS = [
+  { key: "red", label: "🔴 빨강팀", color: "#e85d75" },
+  { key: "blue", label: "🔵 파랑팀", color: "#5aa9e6" },
+  { key: "green", label: "🟢 초록팀", color: "#7bd389" },
+  { key: "purple", label: "🟣 보라팀", color: "#c792ea" },
+];
+
+export function teamInfo(key) {
+  return TEAM_OPTIONS.find((t) => t.key === key) || null;
+}
+
+export function teamStandings(players) {
+  const map = new Map();
+  (players || []).forEach((p) => {
+    if (!p.team) return;
+    const cur = map.get(p.team) || { team: p.team, floor: 0, correct: 0, members: 0 };
+    cur.floor += p.floor || 0;
+    cur.correct += p.correct || 0;
+    cur.members += 1;
+    map.set(p.team, cur);
+  });
+  return Array.from(map.values()).sort((a, b) => b.floor - a.floor || b.correct - a.correct);
+}
+
+// ── 역전 이벤트(2배 찬스) ──
+// 라운드가 너무 짧으면(90초 미만) 보너스 없이 진행
+export function computeBonusWindows(durationSec) {
+  if (durationSec < 90) return [];
+  const windowLen = Math.min(20, Math.max(10, Math.round(durationSec * 0.06)));
+  const slots = durationSec >= 300 ? [[0.28, 0.45], [0.62, 0.82]] : [[0.5, 0.78]];
+  return slots.map(([lo, hi]) => {
+    const rangeStart = Math.round(durationSec * lo);
+    const rangeEnd = Math.round(durationSec * hi) - windowLen;
+    const start = rangeEnd > rangeStart
+      ? rangeStart + Math.floor(Math.random() * (rangeEnd - rangeStart))
+      : rangeStart;
+    return { start, end: start + windowLen, mult: 2 };
+  });
+}
+
+// round(status/end_time/duration_sec/bonus)와 현재 시각(serverNow())을 받아
+// 지금 보너스 구간이면 {start,end,mult,remaining}, 아니면 null 반환
+export function activeBonus(round, nowMs) {
+  if (!round || !round.bonus || !round.bonus.length || round.end_time == null || !round.duration_sec) return null;
+  const startMs = round.end_time - round.duration_sec * 1000;
+  const elapsed = (nowMs - startMs) / 1000;
+  const win = round.bonus.find((b) => elapsed >= b.start && elapsed < b.end);
+  return win ? { ...win, remaining: Math.max(0, Math.ceil(win.end - elapsed)) } : null;
+}
+
 // ── 학생별 랜덤 캐릭터 배정 ──
 export const ANIMAL_EMOJIS = [
   "🐰", "🐱", "🐯", "🐻", "🐼", "🐨", "🦁", "🐵", "🐶", "🦊",

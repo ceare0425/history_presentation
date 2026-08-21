@@ -67,6 +67,14 @@
   .toggle-row{ display:flex; gap:8px; margin-top:4px; }
   .toggle-row button{ flex:1; background:#e6e9f0; color:var(--sub); font-weight:700; }
   .toggle-row button.active{ background:var(--sky1); color:#fff; }
+  .hidden{ display:none !important; }
+
+  .team-standings{ display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
+  .team-bar-row{ display:flex; align-items:center; gap:8px; font-size:.82rem; }
+  .team-bar-row .tlabel{ width:78px; flex-shrink:0; font-weight:700; }
+  .team-bar-track{ flex:1; height:10px; background:#e6e9f0; border-radius:6px; overflow:hidden; }
+  .team-bar-fill{ height:100%; border-radius:6px; transition:width .3s ease; }
+  .team-bar-row .tval{ width:52px; text-align:right; flex-shrink:0; color:var(--sub); }
 
   .kick-btn{ padding:5px 10px; font-size:.76rem; background:var(--bad); }
   .msg{ font-size:.82rem; margin-top:8px; min-height:1.2em; }
@@ -112,6 +120,16 @@
       </div>
       <label>출제 문항 수 (비워두면 선택 범위 전체 사용)</label>
       <input type="number" id="questionCountInput" min="1" placeholder="전체 사용">
+      <label>팀전 모드 (학생이 참여 화면에서 팀을 고릅니다)</label>
+      <div class="toggle-row" id="teamModeToggle">
+        <button type="button" class="active" data-mode="off">개인전</button>
+        <button type="button" data-mode="on">팀전</button>
+      </div>
+      <div class="toggle-row hidden" id="teamCountRow">
+        <button type="button" data-count="2">2팀</button>
+        <button type="button" data-count="3">3팀</button>
+        <button type="button" class="active" data-count="4">4팀</button>
+      </div>
       <div class="btnrow">
         <button id="startBtn">▶ 게임 시작</button>
         <button class="bad" id="endBtn">■ 종료</button>
@@ -168,12 +186,15 @@
       <span class="pill idle" id="statusPill">대기중</span>
       <span class="timer-big" id="timerBig">--:--</span>
       <span class="muted" id="poolInfo"></span>
+      <button type="button" id="bonusNowBtn" class="secondary" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;" disabled>🔥 지금 2배 찬스 발동</button>
+      <span class="muted" id="bonusNowMsg"></span>
     </div>
+    <div class="team-standings hidden" id="teamStandingsBox"></div>
     <table>
       <thead>
-        <tr><th class="rank">#</th><th>이름</th><th>층수</th><th>정답/오답</th><th>정답률</th><th>연속</th><th>상태</th><th>관리</th></tr>
+        <tr><th class="rank">#</th><th>이름</th><th id="teamTh" class="hidden">팀</th><th>층수</th><th>정답/오답</th><th>정답률</th><th>연속</th><th>상태</th><th>관리</th></tr>
       </thead>
-      <tbody id="roster"><tr><td colspan="8" class="muted">학생이 아직 없습니다.</td></tr></tbody>
+      <tbody id="roster"><tr><td colspan="9" class="muted">학생이 아직 없습니다.</td></tr></tbody>
     </table>
   </div>
 </div>
@@ -182,7 +203,8 @@
 <script type="module">
 import {
   roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
-  fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, shuffle
+  fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, shuffle,
+  teamInfo, teamStandings, computeBonusWindows, activeBonus
 } from '../shared/lib.js';
 
 const ROOM = 'world';
@@ -191,14 +213,33 @@ const el = (id) => document.getElementById(id);
 let questionsObj = {};
 let allUnits = [];
 let selectedUnits = new Set();
-let roundState = { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random', qids:[] };
+let roundState = { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random', qids:[], team_mode:false, team_count:4, bonus:[] };
 let playersObj = {};
 let questionOrder = 'random';
+let teamModeState = false;
+let teamCountState = 4;
+let teamStateHydrated = false; // round 리스너에서 한 번이라도 값을 읽어왔는지 (버튼 초기 상태 복원용)
 
 el('orderToggle').querySelectorAll('button').forEach(btn=>{
   btn.onclick = () => {
     questionOrder = btn.dataset.order;
     el('orderToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+  };
+});
+
+el('teamModeToggle').querySelectorAll('button').forEach(btn=>{
+  btn.onclick = async () => {
+    teamModeState = btn.dataset.mode === 'on';
+    el('teamModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+    el('teamCountRow').classList.toggle('hidden', !teamModeState);
+    await update(roomRef(ROOM,'round'), { team_mode: teamModeState, team_count: teamCountState });
+  };
+});
+el('teamCountRow').querySelectorAll('button').forEach(btn=>{
+  btn.onclick = async () => {
+    teamCountState = parseInt(btn.dataset.count, 10);
+    el('teamCountRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+    await update(roomRef(ROOM,'round'), { team_mode: teamModeState, team_count: teamCountState });
   };
 });
 
@@ -256,13 +297,17 @@ el('startBtn').onclick = async () => {
 
   el('startBtn').disabled = true;
   try{
+    const bonus = computeBonusWindows(duration_sec);
     const updates = {};
     updates[`rooms/${ROOM}/round`] = {
       status: 'running', units, duration_sec,
       end_time: serverNow() + duration_sec*1000,
       token: serverNow(),
       order: questionOrder,
-      qids
+      qids,
+      team_mode: teamModeState,
+      team_count: teamCountState,
+      bonus
     };
     Object.keys(playersObj).forEach(pid=>{
       updates[`rooms/${ROOM}/players/${pid}/floor`] = 0;
@@ -272,7 +317,8 @@ el('startBtn').onclick = async () => {
       updates[`rooms/${ROOM}/players/${pid}/bestStreak`] = 0;
     });
     await update(ref(db), updates);
-    msg.className='msg ok'; msg.textContent = `시작! 출제 문항 ${qids.length}개 (선택 범위 ${pool.length}개 중)`;
+    const bonusNote = bonus.length ? ` · 🔥 2배 찬스 ${bonus.length}회 예정` : '';
+    msg.className='msg ok'; msg.textContent = `시작! 출제 문항 ${qids.length}개 (선택 범위 ${pool.length}개 중)${bonusNote}`;
   } catch(err){
     msg.className='msg err'; msg.textContent = '시작 실패: ' + err.message;
   } finally {
@@ -291,12 +337,29 @@ el('resetBtn').onclick = async () => {
   Object.keys(playersObj).forEach(pid=>{
     updates[`rooms/${ROOM}/players/${pid}`] = null;
   });
-  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null };
+  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null, team_mode: teamModeState, team_count: teamCountState };
   try{
     await update(ref(db), updates);
     msg.className='msg ok'; msg.textContent = '전체 초기화 완료! 접속해 있던 학생은 모두 내보내졌습니다.';
   } catch(err){
     msg.className='msg err'; msg.textContent = '초기화 실패: ' + err.message;
+  }
+};
+
+el('bonusNowBtn').onclick = async () => {
+  const r = roundState;
+  if(r.status !== 'running' || r.end_time == null) return;
+  const bonusMsg = el('bonusNowMsg');
+  const elapsedNow = r.duration_sec - Math.max(0, Math.round((r.end_time - serverNow())/1000));
+  const newWindow = { start: elapsedNow, end: elapsedNow + 20, mult: 2 };
+  const bonus = [...(r.bonus||[]), newWindow];
+  el('bonusNowBtn').disabled = true;
+  try{
+    await update(roomRef(ROOM,'round'), { bonus });
+    bonusMsg.textContent = '🔥 발동! 20초간 2배';
+    setTimeout(()=>{ bonusMsg.textContent=''; }, 4000);
+  } catch(err){
+    bonusMsg.textContent = '발동 실패: ' + err.message;
   }
 };
 
@@ -471,12 +534,42 @@ function renderRoster(){
   const orderLabel = r.order === 'sequential' ? '순서대로' : '랜덤';
   el('poolInfo').textContent = effective!=='idle' ? `출제 문항 ${poolCount}개 · ${orderLabel} 출제` : '';
 
+  el('bonusNowBtn').disabled = effective !== 'running';
+  const bonus = activeBonus(r, serverNow());
+  if(bonus && !el('bonusNowMsg').textContent){
+    el('bonusNowMsg').textContent = `🔥 2배 찬스 진행 중 (${bonus.remaining}초)`;
+  } else if(!bonus && el('bonusNowMsg').textContent.startsWith('🔥 2배 찬스 진행')){
+    el('bonusNowMsg').textContent = '';
+  }
+
   const players = Object.entries(playersObj).map(([id,p])=>({id,...p}));
   players.sort((a,b)=> (b.floor||0)-(a.floor||0) || (b.correct||0)-(a.correct||0));
 
+  const teamBox = el('teamStandingsBox');
+  const teamTh = el('teamTh');
+  if(r.team_mode){
+    teamTh.classList.remove('hidden');
+    const standings = teamStandings(players);
+    teamBox.classList.toggle('hidden', standings.length===0);
+    const maxFloor = Math.max(1, ...standings.map(s=>s.floor));
+    teamBox.innerHTML = standings.map(s=>{
+      const info = teamInfo(s.team);
+      const pct = Math.round((s.floor/maxFloor)*100);
+      return `<div class="team-bar-row">
+        <span class="tlabel">${info ? info.label : s.team}</span>
+        <span class="team-bar-track"><span class="team-bar-fill" style="width:${pct}%; background:${info ? info.color : '#999'};"></span></span>
+        <span class="tval">${s.floor}층</span>
+      </div>`;
+    }).join('');
+  } else {
+    teamTh.classList.add('hidden');
+    teamBox.classList.add('hidden');
+    teamBox.innerHTML = '';
+  }
+
   const tbody = el('roster');
   if(!players.length){
-    tbody.innerHTML = '<tr><td colspan="8" class="muted">학생이 아직 없습니다.</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${r.team_mode?9:8}" class="muted">학생이 아직 없습니다.</td></tr>`;
     return;
   }
   tbody.innerHTML = players.map((p,i)=>{
@@ -486,9 +579,12 @@ function renderRoster(){
     const idleSec = p.lastActive ? Math.round((serverNow()-p.lastActive)/1000) : null;
     const status = idleSec!==null && idleSec>20 ? `<span class="muted">${idleSec}초 유휴</span>` : '';
     const nameAttr = escapeHtml(p.name||'').replace(/"/g,'&quot;');
+    const tInfo = p.team ? teamInfo(p.team) : null;
+    const teamCell = r.team_mode ? `<td>${tInfo ? tInfo.label : '-'}</td>` : '';
     return `<tr>
       <td class="rank">${i+1}</td>
       <td>${p.avatar||''} ${escapeHtml(p.name||'')}</td>
+      ${teamCell}
       <td>${p.floor||0}층</td>
       <td>${p.correct||0}/${p.wrong||0}</td>
       <td class="${accClass}">${accuracy===null?'-':accuracy+'%'}</td>
@@ -523,8 +619,18 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
   roundState = r ? {
     status: r.status||'idle', units: r.units||[],
     duration_sec: r.duration_sec||420, end_time: r.end_time ?? null, token: r.token||0,
-    order: r.order||'random', qids: r.qids||[]
-  } : { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random', qids:[] };
+    order: r.order||'random', qids: r.qids||[],
+    team_mode: !!r.team_mode, team_count: r.team_count||4, bonus: r.bonus||[]
+  } : { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random', qids:[], team_mode:false, team_count:4, bonus:[] };
+
+  if(!teamStateHydrated){
+    teamStateHydrated = true;
+    teamModeState = roundState.team_mode;
+    teamCountState = roundState.team_count;
+    el('teamModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', (b.dataset.mode==='on')===teamModeState));
+    el('teamCountRow').classList.toggle('hidden', !teamModeState);
+    el('teamCountRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.count,10)===teamCountState));
+  }
 });
 
 onValue(roomRef(ROOM,'players'), (snap)=>{
