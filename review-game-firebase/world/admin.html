@@ -130,6 +130,10 @@
         <button type="button" data-count="3">3팀</button>
         <button type="button" class="active" data-count="4">4팀</button>
       </div>
+      <div class="btnrow hidden" id="teamShuffleRow">
+        <button type="button" class="secondary" id="teamShuffleBtn">🎲 참여자 랜덤 배정</button>
+      </div>
+      <div class="msg" id="teamShuffleMsg"></div>
       <div class="btnrow">
         <button id="startBtn">▶ 게임 시작</button>
         <button class="bad" id="endBtn">■ 종료</button>
@@ -204,7 +208,7 @@
 import {
   roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, shuffle,
-  teamInfo, teamStandings, computeBonusWindows, activeBonus
+  teamInfo, teamStandings, computeBonusWindows, activeBonus, TEAM_OPTIONS
 } from '../shared/lib.js';
 
 const ROOM = 'world';
@@ -232,6 +236,7 @@ el('teamModeToggle').querySelectorAll('button').forEach(btn=>{
     teamModeState = btn.dataset.mode === 'on';
     el('teamModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
     el('teamCountRow').classList.toggle('hidden', !teamModeState);
+    el('teamShuffleRow').classList.toggle('hidden', !teamModeState);
     await update(roomRef(ROOM,'round'), { team_mode: teamModeState, team_count: teamCountState });
   };
 });
@@ -242,6 +247,28 @@ el('teamCountRow').querySelectorAll('button').forEach(btn=>{
     await update(roomRef(ROOM,'round'), { team_mode: teamModeState, team_count: teamCountState });
   };
 });
+
+el('teamShuffleBtn').onclick = async () => {
+  const msg = el('teamShuffleMsg');
+  if(!teamModeState){ msg.className='msg err'; msg.textContent='먼저 팀전 모드를 켜주세요.'; return; }
+  const pids = Object.keys(playersObj);
+  if(!pids.length){ msg.className='msg err'; msg.textContent='참여한 학생이 없습니다.'; return; }
+  const teamKeys = TEAM_OPTIONS.slice(0, teamCountState).map(t=>t.key);
+  const shuffled = shuffle(pids);
+  const updates = {};
+  shuffled.forEach((pid, i)=>{
+    updates[`rooms/${ROOM}/players/${pid}/team`] = teamKeys[i % teamKeys.length];
+  });
+  el('teamShuffleBtn').disabled = true;
+  try{
+    await update(ref(db), updates);
+    msg.className='msg ok'; msg.textContent = `${pids.length}명을 ${teamKeys.length}개 팀에 랜덤 배정했습니다.`;
+  } catch(err){
+    msg.className='msg err'; msg.textContent = '배정 실패: ' + err.message;
+  } finally {
+    el('teamShuffleBtn').disabled = false;
+  }
+};
 
 function updatePoolCountInfo(){
   const totalCount = Object.keys(questionsObj).length;
@@ -629,6 +656,7 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
     teamCountState = roundState.team_count;
     el('teamModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', (b.dataset.mode==='on')===teamModeState));
     el('teamCountRow').classList.toggle('hidden', !teamModeState);
+    el('teamShuffleRow').classList.toggle('hidden', !teamModeState);
     el('teamCountRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.count,10)===teamCountState));
   }
 });
