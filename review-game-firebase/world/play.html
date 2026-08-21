@@ -676,10 +676,10 @@ el('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') el('joinBtn
 window.addEventListener('offline', ()=> el('connWarn').classList.add('show'));
 window.addEventListener('online', ()=> el('connWarn').classList.remove('show'));
 
-if(playerId){
-  el('nameInput').value = playerName;
-  join(playerName || '이름없음', selectedTeam).catch(()=>{});
-}
+// 이전에 이 기기(브라우저)로 참여한 기록이 있어도 자동으로 다시 들어가지 않는다.
+// 학생용 기기를 여러 명이 돌려 쓰는 교실 환경에서, 이전 학생 이름으로 조용히
+// 자동 참여되어 버리는 문제를 막기 위함 — 항상 이름을 직접 입력/확인하고
+// "참여하기"를 눌러야 들어가진다.
 </script>
 </body>
 </html>
