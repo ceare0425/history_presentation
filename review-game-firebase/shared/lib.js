@@ -70,22 +70,13 @@ export function escapeHtml(s) {
   }[c]));
 }
 
-// ── 순위 계산: 정답률이 70%를 넘는 학생만 순위에 포함 ──
-export const RANK_MIN_ACCURACY = 0.7;
-
 export function playerAccuracy(p) {
   const total = (p.correct || 0) + (p.wrong || 0);
   return total ? (p.correct || 0) / total : null;
 }
 
-export function isRankEligible(p) {
-  const acc = playerAccuracy(p);
-  return acc !== null && acc > RANK_MIN_ACCURACY;
-}
-
 export function rankedPlayers(players) {
   return players
-    .filter(isRankEligible)
     .slice()
     .sort((a, b) => (b.floor || 0) - (a.floor || 0) || (b.correct || 0) - (a.correct || 0));
 }

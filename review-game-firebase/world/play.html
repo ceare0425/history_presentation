@@ -448,7 +448,7 @@ async function showEndedView(){
   const acc = total ? Math.round(100*(me.correct||0)/total) : null;
   el('finalStat').textContent = acc!==null ? `정답 ${me.correct}개 · 정답률 ${acc}%` : '아직 문제를 풀지 않았어요';
 
-  const ranked = rankedPlayers(players); // 정답률 70% 초과인 학생만 순위에 포함
+  const ranked = rankedPlayers(players);
   const rankEl = el('finalRank');
   const idx = ranked.findIndex(p=>p.id===playerId);
   const rank = idx>=0 ? idx+1 : null;
@@ -456,7 +456,7 @@ async function showEndedView(){
     rankEl.textContent = rank===1 ? '🏆 1등입니다!' : `${rank}등 / ${ranked.length}명 중`;
     rankEl.classList.toggle('rank1', rank===1);
   } else {
-    rankEl.textContent = '정답률 70%를 넘어야 순위에 포함돼요';
+    rankEl.textContent = '';
     rankEl.classList.remove('rank1');
   }
   showView('endedView');

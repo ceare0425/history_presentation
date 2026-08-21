@@ -511,7 +511,7 @@ function spawnConfettiBatch(n){
 function buildPodium(ranked){
   const podium = el('podium');
   if(!ranked.length){
-    podium.innerHTML = '<div style="opacity:.75; font-size:1.1rem;">정답률 70%를 넘는 학생이 없어 시상대가 비어있습니다</div>';
+    podium.innerHTML = '<div style="opacity:.75; font-size:1.1rem;">참가한 학생이 없어 시상대가 비어있습니다</div>';
     return;
   }
   const top3 = ranked.slice(0,3);
@@ -555,7 +555,7 @@ function render(){
 
   const players = Object.entries(playersObj).map(([id,p])=>({id,...p}));
   players.sort((a,b)=> (b.floor||0)-(a.floor||0) || (b.correct||0)-(a.correct||0));
-  const ranked = rankedPlayers(players); // 정답률 70% 초과인 학생만 순위에 포함
+  const ranked = rankedPlayers(players);
 
   el('emptyMsg').style.display = players.length ? 'none' : 'flex';
 
@@ -565,7 +565,7 @@ function render(){
       <div class="lb-name">${escapeHtml(p.name||'')}</div>
       <div class="lb-floor">${p.floor||0}층</div>
     </div>
-  `).join('') : '<div style="opacity:.6; font-size:.85rem; padding:6px 4px;">정답률 70%를 넘는 학생이 아직 없습니다</div>';
+  `).join('') : '<div style="opacity:.6; font-size:.85rem; padding:6px 4px;">아직 참가한 학생이 없습니다</div>';
 
   renderTower(players, ranked[0]?.id);
 
