@@ -91,6 +91,26 @@
     padding:3px 10px; margin-bottom:.8vh; flex:0 0 auto;
   }
 
+  .team-buttons{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+  .team-buttons button{
+    width:auto; padding:12px; font-size:1rem; border-radius:12px; opacity:.55;
+    box-shadow:none; background:var(--tcolor,#999);
+  }
+  .team-buttons button.selected{ opacity:1; box-shadow:0 0 0 3px rgba(0,0,0,.15) inset, 0 4px 10px rgba(0,0,0,.25); }
+
+  .team-badge{
+    font-size:.85rem; font-weight:800; padding:4px 10px; border-radius:10px; color:#fff;
+    background:var(--tcolor,#999);
+  }
+
+  .bonus-banner{
+    display:none; text-align:center; font-weight:800; font-size:1.05rem; color:#7a3b00;
+    background:linear-gradient(90deg,#ffe08a,#ffc857); border-radius:12px; padding:8px;
+    margin-bottom:.8vh; flex:0 0 auto; animation:bonusPulse 1s ease-in-out infinite;
+  }
+  .bonus-banner.show{ display:block; }
+  @keyframes bonusPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.03); } }
+
   .avatar-char{
     text-align:center; font-size:2.4rem; line-height:1; margin:.2vh 0 .4vh;
     flex:0 0 auto; user-select:none;
@@ -176,6 +196,10 @@
     <div class="inner">
       <p class="sub">이름을 입력하고 참여하세요. 선생님이 게임을 시작하면 자동으로 시작됩니다.</p>
       <input type="text" id="nameInput" placeholder="이름 (예: 2반 홍길동)" maxlength="20">
+      <div id="teamPickRow" class="hidden">
+        <p class="sub" style="margin:0 0 8px;">우리 팀을 선택하세요</p>
+        <div class="team-buttons" id="teamButtons"></div>
+      </div>
       <button id="joinBtn">참여하기</button>
     </div>
   </div>
@@ -189,8 +213,10 @@
   </div>
 
   <div id="playView" class="view hidden">
+    <div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! <span id="bonusRemain"></span>초 남음</div>
     <div class="hud">
       <div class="floor-badge">🏢 <span id="floorVal">0</span>층</div>
+      <span class="team-badge hidden" id="teamBadge"></span>
       <div class="timer">⏱ <span id="timerVal">--:--</span></div>
     </div>
     <div class="streak" id="streakVal"></div>
@@ -225,18 +251,21 @@
 <script type="module">
 import {
   roomRef, ref, onValue, get, set, update, serverNow, db, onDisconnect,
-  isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers
+  isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
+  TEAM_OPTIONS, teamInfo, activeBonus
 } from '../shared/lib.js';
 
 const ROOM = 'world';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
 const STORAGE_NAME_KEY = 'rg_fb_' + ROOM + '_name';
+const STORAGE_TEAM_KEY = 'rg_fb_' + ROOM + '_team';
 
 let playerId = localStorage.getItem(STORAGE_ID_KEY) || '';
 let playerName = localStorage.getItem(STORAGE_NAME_KEY) || '';
+let selectedTeam = localStorage.getItem(STORAGE_TEAM_KEY) || null;
 
 let questionsObj = {};
-let roundState = { status: 'idle', units: [], duration_sec: 300, end_time: null, token: 0, order: 'random', qids: [] };
+let roundState = { status: 'idle', units: [], duration_sec: 300, end_time: null, token: 0, order: 'random', qids: [], team_mode:false, team_count:4, bonus:[] };
 let lastSeenToken = null;
 let prevEffective = null;
 
@@ -372,12 +401,12 @@ function playCharacterReaction(correct){
   }, correct ? 750 : 950);
 }
 
-function flashFeedback(correct, correctAnswer, gain){
+function flashFeedback(correct, correctAnswer, gain, bonusApplied){
   const f = el('feedback');
   f.classList.add('show');
   if(correct){
     f.classList.remove('wrong'); f.classList.add('correct');
-    f.textContent = `정답! +${gain}층 올라갑니다 🎉`;
+    f.textContent = bonusApplied ? `정답! 🔥 2배 찬스로 +${gain}층!` : `정답! +${gain}층 올라갑니다 🎉`;
   } else {
     f.classList.remove('correct'); f.classList.add('wrong');
     f.textContent = `아쉬워요. 정답: ${correctAnswer}`;
@@ -400,9 +429,12 @@ async function submitAnswer(){
   const existed = snap.exists();
   const p = snap.val() || { name: playerName, floor:0, correct:0, wrong:0, streak:0, bestStreak:0 };
   let gain = 0;
+  let bonusApplied = false;
 
   if(correct){
     gain = computeGain(elapsed);
+    const bonus = activeBonus(roundState, serverNow());
+    if(bonus){ gain *= bonus.mult; bonusApplied = true; }
     p.floor = (p.floor||0) + gain;
     p.correct = (p.correct||0) + 1;
     p.streak = (p.streak||0) + 1;
@@ -426,7 +458,7 @@ async function submitAnswer(){
   if(p.floor > lastFloor) popFloorBadge();
   lastFloor = p.floor;
   renderTowerMini(p.floor);
-  flashFeedback(correct, q.answers[0], gain);
+  flashFeedback(correct, q.answers[0], gain, bonusApplied);
   playCharacterReaction(correct);
 
   setTimeout(()=>{
@@ -480,6 +512,14 @@ function tick(){
     if(currentQid === null && Object.keys(questionsObj).length>0){
       assignNextQuestion();
     }
+    const bonus = activeBonus(roundState, serverNow());
+    const banner = el('bonusBanner');
+    if(bonus){
+      banner.classList.add('show');
+      el('bonusRemain').textContent = bonus.remaining;
+    } else {
+      banner.classList.remove('show');
+    }
     showView('playView');
   } else if(effective === 'ended'){
     if(!myAnswered){
@@ -506,8 +546,9 @@ function startListening(){
     roundState = r ? {
       status: r.status || 'idle', units: r.units || [],
       duration_sec: r.duration_sec || 300, end_time: r.end_time ?? null, token: r.token || 0,
-      order: r.order || 'random', qids: r.qids || []
-    } : { status:'idle', units:[], duration_sec:300, end_time:null, token:0, order:'random', qids:[] };
+      order: r.order || 'random', qids: r.qids || [],
+      team_mode: !!r.team_mode, team_count: r.team_count || 4, bonus: r.bonus || []
+    } : { status:'idle', units:[], duration_sec:300, end_time:null, token:0, order:'random', qids:[], team_mode:false, team_count:4, bonus:[] };
   });
 
   onValue(roomRef(ROOM, 'players', playerId), (snap)=>{
@@ -527,6 +568,15 @@ function startListening(){
         av.textContent = AVATAR_IDLE;
       }
     }
+    const badge = el('teamBadge');
+    const tInfo = p.team ? teamInfo(p.team) : null;
+    if(tInfo){
+      badge.textContent = tInfo.label;
+      badge.style.setProperty('--tcolor', tInfo.color);
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
   });
 
   // 연결이 끊기면(탭을 닫거나 네트워크가 끊기면) 서버가 자동으로 이 학생을 명단에서 지우도록 예약.
@@ -540,36 +590,76 @@ function startListening(){
   setInterval(tick, 250);
 }
 
+function renderTeamPicker(count){
+  const box = el('teamButtons');
+  box.innerHTML = TEAM_OPTIONS.slice(0, count).map(t=>
+    `<button type="button" data-key="${t.key}" style="--tcolor:${t.color}">${t.label}</button>`
+  ).join('');
+  box.querySelectorAll('button').forEach(b=>{
+    b.classList.toggle('selected', b.dataset.key === selectedTeam);
+    b.onclick = () => {
+      selectedTeam = b.dataset.key;
+      localStorage.setItem(STORAGE_TEAM_KEY, selectedTeam);
+      box.querySelectorAll('button').forEach(bb=>bb.classList.toggle('selected', bb===b));
+    };
+  });
+}
+
+let teamModeActive = false;
+
+async function refreshTeamMode(){
+  try{
+    const snap = await get(roomRef(ROOM,'round'));
+    const r = snap.val() || {};
+    teamModeActive = !!r.team_mode;
+    if(teamModeActive){
+      renderTeamPicker(r.team_count || 4);
+      el('teamPickRow').classList.remove('hidden');
+    } else {
+      el('teamPickRow').classList.add('hidden');
+    }
+  } catch(_e){}
+}
+refreshTeamMode();
+
 function handleRemovedFromRoster(){
   if(kicked) return; // 중복 알림 방지
   kicked = true;
   localStorage.removeItem(STORAGE_ID_KEY);
   localStorage.removeItem(STORAGE_NAME_KEY);
+  localStorage.removeItem(STORAGE_TEAM_KEY);
   playerId = '';
+  selectedTeam = null;
   el('nameInput').value = '';
+  refreshTeamMode();
   showView('joinView');
   alert('선생님이 참여 목록에서 내보냈어요. 이름을 다시 입력하고 참여해주세요.');
 }
 
-async function join(name){
+async function join(name, team){
   kicked = false;
   if(!playerId) playerId = genId();
   playerName = name;
   localStorage.setItem(STORAGE_ID_KEY, playerId);
   localStorage.setItem(STORAGE_NAME_KEY, playerName);
+  if(team){ selectedTeam = team; localStorage.setItem(STORAGE_TEAM_KEY, team); }
 
   const pRef = roomRef(ROOM, 'players', playerId);
   const snap = await get(pRef);
   if(snap.exists()){
-    await update(pRef, { name: playerName, lastActive: serverNow() });
+    const payload = { name: playerName, lastActive: serverNow() };
+    if(team) payload.team = team;
+    await update(pRef, payload);
   } else {
     const existingSnap = await get(roomRef(ROOM, 'players'));
     const existingAvatars = Object.values(existingSnap.val()||{}).map(pp=>pp.avatar).filter(Boolean);
     const avatar = pickAvatarEmoji(existingAvatars);
-    await set(pRef, {
+    const payload = {
       name: playerName, avatar, floor:0, correct:0, wrong:0, streak:0, bestStreak:0,
       joinedAt: serverNow(), lastActive: serverNow()
-    });
+    };
+    if(team) payload.team = team;
+    await set(pRef, payload);
   }
   startListening();
 }
@@ -577,8 +667,9 @@ async function join(name){
 el('joinBtn').onclick = () => {
   const name = el('nameInput').value.trim();
   if(!name){ el('nameInput').focus(); return; }
+  if(teamModeActive && !selectedTeam){ alert('참여할 팀을 먼저 선택해주세요.'); return; }
   el('joinBtn').disabled = true;
-  join(name).catch(err=>{ alert('참여 실패: '+err.message); }).finally(()=>{ el('joinBtn').disabled=false; });
+  join(name, teamModeActive ? selectedTeam : null).catch(err=>{ alert('참여 실패: '+err.message); }).finally(()=>{ el('joinBtn').disabled=false; });
 };
 el('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') el('joinBtn').click(); });
 
@@ -587,7 +678,7 @@ window.addEventListener('online', ()=> el('connWarn').classList.remove('show'));
 
 if(playerId){
   el('nameInput').value = playerName;
-  join(playerName || '이름없음').catch(()=>{});
+  join(playerName || '이름없음', selectedTeam).catch(()=>{});
 }
 </script>
 </body>

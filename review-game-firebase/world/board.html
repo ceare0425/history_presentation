@@ -131,12 +131,36 @@
     width:18px; border-radius:6px 6px 0 0; position:relative; overflow:hidden;
     background:
       repeating-linear-gradient(180deg, rgba(255,255,255,.35) 0px, rgba(255,255,255,.35) 2px, transparent 2px, transparent 13px),
-      linear-gradient(180deg,var(--gold),var(--gold-dark));
+      linear-gradient(180deg,var(--team-color,var(--gold)),var(--team-color,var(--gold-dark)));
     background-size:100% 26px, 100% 100%;
     box-shadow:0 0 10px rgba(242,210,122,.5);
     transition:height .5s cubic-bezier(.34,1.56,.64,1);
     animation:rungs 1.8s linear infinite;
   }
+
+  .bonus-banner{
+    display:none; position:relative; z-index:3; text-align:center; font-weight:900; font-size:1.4rem;
+    padding:10px; margin:0; color:#3a2c05;
+    background:linear-gradient(90deg,#ffe08a,#ffc857);
+    animation:bonusPulseBoard 1s ease-in-out infinite;
+  }
+  .bonus-banner.show{ display:block; }
+  @keyframes bonusPulseBoard{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.015); } }
+
+  .team-scorebar{
+    display:none; gap:14px; padding:8px 32px; position:relative; z-index:2; flex-wrap:wrap;
+    border-bottom:1px solid var(--line); background:rgba(10,20,45,.2);
+  }
+  .team-scorebar.show{ display:flex; }
+  .team-chip{
+    display:flex; align-items:center; gap:8px; padding:6px 14px; border-radius:999px;
+    font-weight:800; font-size:.95rem; background:rgba(255,255,255,.1);
+  }
+  .team-chip .tfloor{ color:var(--gold); }
+  .team-chip.leading{ box-shadow:0 0 0 2px var(--gold); }
+
+  .team-winner{ font-size:1.4rem; font-weight:800; color:#fff; margin:-1.4rem 0 1.8rem; text-shadow:0 2px 8px rgba(0,0,0,.5); z-index:1; }
+  .hidden{ display:none !important; }
   @keyframes rungs{ from{ background-position:0 0, 0 0; } to{ background-position:0 26px, 0 0; } }
   .climber .base{
     margin-top:6px; font-size:.72rem; text-align:center; max-width:64px; overflow:hidden; text-overflow:ellipsis;
@@ -232,6 +256,9 @@
   </div>
 </header>
 
+<div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! 남은 시간 <span id="bonusRemain"></span>초</div>
+<div class="team-scorebar" id="teamScoreBar"></div>
+
 <main>
   <div class="leaderboard">
     <h2>🏆 순위</h2>
@@ -249,12 +276,13 @@
 <div class="end-overlay" id="endOverlay">
   <div class="confetti-layer" id="confettiLayer" style="position:absolute; inset:0; pointer-events:none;"></div>
   <div class="end-title">🎉 게임 종료! 축하합니다 🎉</div>
+  <div class="team-winner hidden" id="teamWinner"></div>
   <div class="podium" id="podium"></div>
   <div class="end-hint">다음 라운드를 시작하면 이 화면은 사라집니다</div>
 </div>
 
 <script type="module">
-import { roomRef, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers } from '../shared/lib.js';
+import { roomRef, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers, teamInfo, teamStandings, activeBonus } from '../shared/lib.js';
 
 const ROOM = 'world';
 const el = (id) => document.getElementById(id);
@@ -263,9 +291,10 @@ const lastFloor = {};
 const lastWrong = {};
 const climberEls = {};
 
-let roundState = { status:'idle', end_time:null };
+let roundState = { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4 };
 let playersObj = {};
 let prevEffective = null;
+let prevBonusActive = false;
 
 // ── 배경음악: 외부 파일 없이 Web Audio API로 자체 생성하는 잔잔한 루프 ──
 const BGM_MUTE_KEY = 'rg_fb_bgm_muted';
@@ -378,6 +407,16 @@ function playFanfare(){
   });
 }
 
+// 2배 찬스 발동 알림음 (짧은 상승 두 음)
+function playBonusChime(){
+  ensureAudioCtx();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  const t0 = audioCtx.currentTime + 0.02;
+  [880, 1318.51].forEach((f,i)=>{ // A5, E6
+    playTone(f, t0 + i*0.11, 0.3, 0.45, 'triangle');
+  });
+}
+
 el('bgmToggle').onclick = () => {
   if(!bgmStarted) startBgm();
   else setBgmMuted(!bgmMuted);
@@ -452,9 +491,13 @@ function renderTower(players, leaderId){
     const h = Math.round((floor / maxFloor) * usable);
     const avatar = p.avatar || '🐱'; // 입장 시 배정된 개인 캐릭터 (예전 데이터엔 없을 수 있어 기본값)
 
+    const tInfo = p.team ? teamInfo(p.team) : null;
     node.querySelector('.floorno').textContent = floor;
     node.querySelector('.avatar').textContent = avatar;
-    node.querySelector('.col').style.height = Math.max(6,h)+'px';
+    const colEl = node.querySelector('.col');
+    colEl.style.height = Math.max(6,h)+'px';
+    if(tInfo) colEl.style.setProperty('--team-color', tInfo.color);
+    else colEl.style.removeProperty('--team-color');
     node.querySelector('.base').textContent = p.name || '';
     node.classList.toggle('leader', leaderId != null && p.id === leaderId);
     node.classList.toggle('onfire', (p.streak||0) >= 3);
@@ -487,6 +530,23 @@ function renderTower(players, leaderId){
       delete lastWrong[id];
     }
   });
+}
+
+function renderTeamBar(players){
+  const box = el('teamScoreBar');
+  if(!roundState.team_mode){
+    box.classList.remove('show');
+    return;
+  }
+  const standings = teamStandings(players);
+  box.classList.toggle('show', standings.length>0);
+  box.innerHTML = standings.map((s,i)=>{
+    const info = teamInfo(s.team);
+    return `<div class="team-chip ${i===0?'leading':''}">
+      <span>${info ? info.label : s.team}</span>
+      <span class="tfloor">${s.floor}층</span>
+    </div>`;
+  }).join('');
 }
 
 const CONFETTI_COLORS = ['#f2d27a','#e85d75','#5aa9e6','#7bd389','#c792ea','#ffffff'];
@@ -530,6 +590,19 @@ function buildPodium(ranked){
 function showEndCelebration(players, ranked){
   if(!players.length) return;
   buildPodium(ranked);
+  const teamWinnerEl = el('teamWinner');
+  if(roundState.team_mode){
+    const standings = teamStandings(players);
+    if(standings.length){
+      const info = teamInfo(standings[0].team);
+      teamWinnerEl.textContent = `🏆 우승팀: ${info ? info.label : standings[0].team} (${standings[0].floor}층)`;
+      teamWinnerEl.classList.remove('hidden');
+    } else {
+      teamWinnerEl.classList.add('hidden');
+    }
+  } else {
+    teamWinnerEl.classList.add('hidden');
+  }
   el('endOverlay').classList.add('show');
   spawnConfettiBatch(70);
   if(confettiTimer) clearInterval(confettiTimer);
@@ -568,6 +641,18 @@ function render(){
   `).join('') : '<div style="opacity:.6; font-size:.85rem; padding:6px 4px;">아직 참가한 학생이 없습니다</div>';
 
   renderTower(players, ranked[0]?.id);
+  renderTeamBar(players);
+
+  const bonus = activeBonus(roundState, serverNow());
+  const banner = el('bonusBanner');
+  if(bonus){
+    banner.classList.add('show');
+    el('bonusRemain').textContent = bonus.remaining;
+    if(!prevBonusActive){ spawnConfettiBatch(24); playBonusChime(); }
+  } else {
+    banner.classList.remove('show');
+  }
+  prevBonusActive = !!bonus;
 
   if(effective === 'ended' && prevEffective !== 'ended'){
     showEndCelebration(players, ranked);
@@ -579,7 +664,10 @@ function render(){
 
 onValue(roomRef(ROOM,'round'), (snap)=>{
   const r = snap.val();
-  roundState = r ? { status: r.status||'idle', end_time: r.end_time ?? null } : { status:'idle', end_time:null };
+  roundState = r ? {
+    status: r.status||'idle', end_time: r.end_time ?? null, duration_sec: r.duration_sec||420,
+    bonus: r.bonus||[], team_mode: !!r.team_mode, team_count: r.team_count||4
+  } : { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4 };
 });
 onValue(roomRef(ROOM,'players'), (snap)=>{
   playersObj = snap.val() || {};
