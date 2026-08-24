@@ -201,6 +201,12 @@
     }
     .highlight-box strong { color: var(--main); }
 
+    /* === 9-1. 사진 비교 === */
+    .photo-row { display:flex; gap:1.5rem; align-items:stretch; justify-content:center; width:100%; height:100%; }
+    .photo-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:.45rem; min-width:0; }
+    .photo-frame { flex:1; width:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:4px; background:var(--card-bg); }
+    .photo-frame img { width:100%; height:100%; object-fit:contain; display:block; }
+
     /* === 10. 빈칸 (클릭 → 정답 공개) === */
     .blank {
       display: inline-block;
@@ -888,13 +894,13 @@
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 21: 아시리아의 발전 ② — 쇠퇴와 멸망 -->
+  <!-- Slide 21: 아시리아의 발전 ② — 쇠퇴 -->
   <!-- ───────────────────────────────────────────── -->
   <div class="slide" data-slide="20">
     <div class="browser-card">
       <div class="browser-topbar">
-        <span class="topbar-icon">📉</span>
-        <span class="browser-title">1. 아시리아의 발전 ② — 쇠퇴와 멸망</span>
+        <span class="topbar-icon">⚠️</span>
+        <span class="browser-title">1. 아시리아의 발전 ② — 쇠퇴</span>
       </div>
       <div class="browser-content">
         <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
@@ -910,6 +916,46 @@
           </div>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 22: 강압적 통치 (사진) -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="21">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🖼️</span>
+        <span class="browser-title">강압적 통치</span>
+      </div>
+      <div class="browser-content">
+        <div class="photo-row">
+          <div class="photo-col">
+            <div class="photo-frame"><img src="./아시리아1.jpg" alt="강압적 통치"></div>
+          </div>
+          <div class="photo-col">
+            <div class="photo-frame"><img src="./아시리아2.jpg" alt="강압적 통치"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 23: 아시리아의 발전 ③ — 멸망 -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="22">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">💀</span>
+        <span class="browser-title">1. 아시리아의 발전 ③ — 멸망</span>
+      </div>
+      <div class="browser-content">
+        <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <h2 style="text-align:center; margin-bottom:0.2rem;">1. 아시리아의 발전 ③</h2>
+        <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+
         <div class="ruler-card">
           <div class="ruler-card-header">💀 멸망</div>
           <div class="ruler-card-body">
@@ -919,18 +965,14 @@
           </div>
         </div>
 
-        <div class="highlight-box">
-          철제 무기로 서아시아를 통일했던 아시리아는 피지배 민족에 대한 <strong>강압적 통치</strong> 탓에 각지에서 반란이 잇따르며 무너졌다.
-        </div>
-
       </div>
     </div>
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 22: 아케메네스 왕조 페르시아 ① — 키루스 2세 -->
+  <!-- Slide 24: 아케메네스 왕조 페르시아 ① — 키루스 2세 -->
   <!-- ───────────────────────────────────────────── -->
-  <div class="slide" data-slide="21">
+  <div class="slide" data-slide="23">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">👑</span>
@@ -957,9 +999,26 @@
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 23: 아케메네스 왕조 페르시아 ② — 다리우스 1세 -->
+  <!-- Slide 25: 포용 정책 (사진) -->
   <!-- ───────────────────────────────────────────── -->
-  <div class="slide" data-slide="22">
+  <div class="slide" data-slide="24">
+    <div class="browser-card">
+      <div class="browser-topbar">
+        <span class="topbar-icon">🖼️</span>
+        <span class="browser-title">포용 정책</span>
+      </div>
+      <div class="browser-content" style="padding:0; align-items:center; justify-content:center;">
+        <img src="./키루스 2세.jpg"
+             alt="포용 정책"
+             style="width:100%; height:100%; object-fit:contain; display:block;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────── -->
+  <!-- Slide 26: 아케메네스 왕조 페르시아 ② — 다리우스 1세 -->
+  <!-- ───────────────────────────────────────────── -->
+  <div class="slide" data-slide="25">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🗺️</span>
@@ -987,9 +1046,9 @@
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 24: 아케메네스 왕조 페르시아 ③ — 쇠퇴 (빈칸 ➊) -->
+  <!-- Slide 27: 아케메네스 왕조 페르시아 ③ — 쇠퇴 (빈칸 ➊) -->
   <!-- ───────────────────────────────────────────── -->
-  <div class="slide" data-slide="23">
+  <div class="slide" data-slide="26">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">📉</span>
@@ -1019,9 +1078,9 @@
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 25: 아케메네스 왕조 페르시아 ④ — 멸망 -->
+  <!-- Slide 28: 아케메네스 왕조 페르시아 ④ — 멸망 -->
   <!-- ───────────────────────────────────────────── -->
-  <div class="slide" data-slide="24">
+  <div class="slide" data-slide="27">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">💀</span>
@@ -1049,9 +1108,9 @@
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 26: 파르티아 (빈칸 ➋) -->
+  <!-- Slide 29: 파르티아 (빈칸 ➋) -->
   <!-- ───────────────────────────────────────────── -->
-  <div class="slide" data-slide="25">
+  <div class="slide" data-slide="28">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🐎</span>
@@ -1090,9 +1149,9 @@
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 27: 사산 왕조 페르시아 (빈칸 ➌) -->
+  <!-- Slide 30: 사산 왕조 페르시아 (빈칸 ➌) -->
   <!-- ───────────────────────────────────────────── -->
-  <div class="slide" data-slide="26">
+  <div class="slide" data-slide="29">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🕌</span>
@@ -1137,9 +1196,9 @@
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 28: 조로아스터교와 페르시아 문화 ① — 조로아스터교 -->
+  <!-- Slide 31: 조로아스터교와 페르시아 문화 ① — 조로아스터교 -->
   <!-- ───────────────────────────────────────────── -->
-  <div class="slide" data-slide="27">
+  <div class="slide" data-slide="30">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🔥</span>
@@ -1167,9 +1226,9 @@
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 29: 조로아스터교와 페르시아 문화 ② — 페르시아 문화 -->
+  <!-- Slide 32: 조로아스터교와 페르시아 문화 ② — 페르시아 문화 -->
   <!-- ───────────────────────────────────────────── -->
-  <div class="slide" data-slide="28">
+  <div class="slide" data-slide="31">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">🌍</span>
@@ -1199,9 +1258,9 @@
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 30: 개념 확인 ① OX 문제 -->
+  <!-- Slide 33: 개념 확인 ① OX 문제 -->
   <!-- ───────────────────────────────────────────── -->
-  <div class="slide" data-slide="29">
+  <div class="slide" data-slide="32">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -1239,9 +1298,9 @@
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 31: 개념 확인 ② 빈칸 채우기 -->
+  <!-- Slide 34: 개념 확인 ② 빈칸 채우기 -->
   <!-- ───────────────────────────────────────────── -->
-  <div class="slide" data-slide="30">
+  <div class="slide" data-slide="33">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -1281,9 +1340,9 @@
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 32: 개념 확인 ③ 서술형 -->
+  <!-- Slide 35: 개념 확인 ③ 서술형 -->
   <!-- ───────────────────────────────────────────── -->
-  <div class="slide" data-slide="31">
+  <div class="slide" data-slide="34">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">✏️</span>
@@ -1327,9 +1386,9 @@
   </div>
 
   <!-- ───────────────────────────────────────────── -->
-  <!-- Slide 33: 핵심 정리 -->
+  <!-- Slide 36: 핵심 정리 -->
   <!-- ───────────────────────────────────────────── -->
-  <div class="slide" data-slide="32">
+  <div class="slide" data-slide="35">
     <div class="browser-card">
       <div class="browser-topbar">
         <span class="topbar-icon">📋</span>
