@@ -146,20 +146,7 @@ export function teamStandings(players) {
 }
 
 // ── 역전 이벤트(2배 찬스) ──
-// 라운드가 너무 짧으면(90초 미만) 보너스 없이 진행
-export function computeBonusWindows(durationSec) {
-  if (durationSec < 90) return [];
-  const windowLen = Math.min(20, Math.max(10, Math.round(durationSec * 0.06)));
-  const slots = durationSec >= 300 ? [[0.28, 0.45], [0.62, 0.82]] : [[0.5, 0.78]];
-  return slots.map(([lo, hi]) => {
-    const rangeStart = Math.round(durationSec * lo);
-    const rangeEnd = Math.round(durationSec * hi) - windowLen;
-    const start = rangeEnd > rangeStart
-      ? rangeStart + Math.floor(Math.random() * (rangeEnd - rangeStart))
-      : rangeStart;
-    return { start, end: start + windowLen, mult: 2 };
-  });
-}
+// 관리자가 버튼으로 수동 발동만 함 (admin.html의 bonusNowBtn)
 
 // round(status/end_time/duration_sec/bonus)와 현재 시각(serverNow())을 받아
 // 지금 보너스 구간이면 {start,end,mult,remaining}, 아니면 null 반환

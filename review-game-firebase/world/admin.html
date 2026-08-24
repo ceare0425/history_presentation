@@ -208,7 +208,7 @@
 import {
   roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, shuffle,
-  teamInfo, teamStandings, computeBonusWindows, activeBonus, TEAM_OPTIONS
+  teamInfo, teamStandings, activeBonus, TEAM_OPTIONS
 } from '../shared/lib.js';
 
 const ROOM = 'world';
@@ -324,7 +324,7 @@ el('startBtn').onclick = async () => {
 
   el('startBtn').disabled = true;
   try{
-    const bonus = computeBonusWindows(duration_sec);
+    const bonus = [];
     const updates = {};
     updates[`rooms/${ROOM}/round`] = {
       status: 'running', units, duration_sec,
