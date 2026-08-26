@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모바일 복습</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #F7F3EE;
+    --surface:   #FFFFFF;
+    --header-bg: #2C1A0E;
+    --accent:    #C5A028;
+    --main:      #8B4513;
+    --text:      #1A1208;
+    --text-sec:  #6B5740;
+    --border:    #E2D5C3;
+  }
+
+  html, body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* ── 상단바 ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--header-bg);
+    border-bottom: 3px solid var(--accent);
+    padding: 0.85rem 1rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .topbar .logo {
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 1.05rem; font-weight: 800; color: var(--accent);
+  }
+  .back-btn {
+    display: none;
+    align-items: center; gap: 0.3rem;
+    background: transparent; border: 1.5px solid rgba(197,160,40,0.5);
+    color: var(--accent); border-radius: 6px;
+    padding: 0.35rem 0.7rem; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+  }
+  .back-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+  /* ── 목록 화면 ── */
+  #listView { padding: 1rem; max-width: 640px; margin: 0 auto; }
+  .search-box {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 0.6rem 0.9rem; margin-bottom: 1.1rem;
+  }
+  .search-box svg { width: 16px; height: 16px; fill: var(--text-sec); flex-shrink: 0; }
+  .search-box input { border: none; outline: none; background: transparent; font-family: inherit; font-size: 0.95rem; width: 100%; }
+
+  .subject-name {
+    font-family: 'Nanum Myeongjo', serif; font-size: 1.05rem; font-weight: 700;
+    margin: 1.1rem 0 0.5rem; padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--border);
+  }
+  .group-name {
+    font-size: 0.85rem; font-weight: 700; color: var(--main);
+    margin: 0.9rem 0 0.4rem; display: flex; align-items: center; gap: 0.35rem;
+  }
+  .lesson-row {
+    display: flex; align-items: center; gap: 0.7rem;
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 0.75rem 0.9rem; margin-bottom: 0.5rem;
+    text-decoration: none; color: inherit;
+  }
+  .lesson-row:active { background: #FDFAF5; border-color: var(--accent); }
+  .lesson-emoji { font-size: 1.3rem; flex-shrink: 0; }
+  .lesson-title { font-weight: 700; font-size: 0.94rem; line-height: 1.4; }
+  .lesson-desc { font-size: 0.78rem; color: var(--text-sec); margin-top: 0.15rem; line-height: 1.5; }
+  .lesson-arrow { margin-left: auto; flex-shrink: 0; width: 14px; height: 14px; fill: var(--text-sec); }
+
+  .status-box { text-align: center; padding: 3rem 1rem; color: var(--text-sec); }
+  .status-box .icon { font-size: 2.3rem; margin-bottom: 0.7rem; }
+  .status-box h3 { font-size: 1rem; margin-bottom: 0.4rem; color: var(--text); }
+  .status-box p { font-size: 0.85rem; line-height: 1.7; }
+  .status-box code { display: inline-block; background: #F0E8DC; border: 1px solid var(--border); border-radius: 4px; padding: 0.2rem 0.5rem; font-size: 0.8rem; color: var(--main); margin-top: 0.5rem; }
+
+  /* ── 뷰어 화면 ── */
+  #viewerView { display: none; }
+  .viewer-head { padding: 1rem 1rem 0.4rem; max-width: 760px; margin: 0 auto; }
+  .viewer-title { font-family: 'Nanum Myeongjo', serif; font-size: 1.15rem; font-weight: 800; }
+  .viewer-hint { font-size: 0.78rem; color: var(--text-sec); margin-top: 0.3rem; }
+  #slideList { padding: 0.6rem 0.8rem 3rem; max-width: 760px; margin: 0 auto; }
+
+  .mslide { margin-bottom: 1.3rem; }
+  .mslide-num {
+    display: inline-block; font-size: 0.72rem; font-weight: 700;
+    color: #fff; background: var(--main); border-radius: 20px;
+    padding: 0.15rem 0.6rem; margin-bottom: 0.4rem;
+  }
+
+  /* ── 레슨별 원본 스타일을 뒤엎는 규칙 (항상 이겨야 하므로 !important) ──
+     원본은 16:9 고정 · 화면 꽉 채우기 전제로 만들어졌기 때문에,
+     여기서는 세로로 자연스럽게 이어지는 스크롤 레이아웃으로 강제 전환한다.
+     특히 원본의 html,body{overflow:hidden}을 반드시 덮어써야
+     페이지 전체 스크롤이 살아난다. */
+  html, body { overflow: visible !important; height: auto !important; font-size: clamp(15px, 4.2vw, 18px) !important; }
+  #slideList .slide {
+    display: block !important; position: static !important;
+    aspect-ratio: auto !important; width: 100% !important; height: auto !important;
+    margin: 0 !important; animation: none !important;
+  }
+  #slideList .browser-card {
+    width: 100% !important; height: auto !important;
+    box-shadow: 0 2px 12px rgba(44,26,14,0.18) !important;
+  }
+  #slideList .browser-content {
+    overflow: visible !important; flex: none !important; height: auto !important;
+  }
+  #slideList .photo-gallery { flex-direction: column !important; }
+  #slideList .photo-frame { height: auto !important; }
+  #slideList .photo-frame img { width: 100% !important; height: auto !important; max-height: none !important; }
+  #slideList .grid-2, #slideList .grid-3, #slideList .grid-4 { grid-template-columns: 1fr !important; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" id="backBtn" onclick="showList()">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+    목록
+  </button>
+  <span class="logo">📱 모바일 복습</span>
+</div>
+
+<!-- 목록 화면 -->
+<div id="listView">
+  <div class="search-box">
+    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+    <input type="text" id="searchInput" placeholder="자료 검색..." oninput="filterList()">
+  </div>
+  <div id="listContent">
+    <div class="status-box"><div class="icon">⏳</div><h3>불러오는 중...</h3></div>
+  </div>
+</div>
+
+<!-- 뷰어 화면 -->
+<div id="viewerView">
+  <div class="viewer-head">
+    <div class="viewer-title" id="viewerTitle"></div>
+    <div class="viewer-hint">🔎 빈칸이나 정답 버튼을 탭하면 정답이 보여요 · 전체 슬라이드를 이어서 볼 수 있어요</div>
+  </div>
+  <div id="slideList"></div>
+</div>
+
+<script>
+  let allLessons = [];
+
+  async function loadPages() {
+    try {
+      const res = await fetch('../pages.json');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      flattenLessons(data);
+      renderList(allLessons);
+    } catch (err) {
+      document.getElementById('listContent').innerHTML = `
+        <div class="status-box">
+          <div class="icon">⚠️</div>
+          <h3>목록을 불러올 수 없습니다</h3>
+          <p>브라우저에서 파일을 직접 열면 보안 정책으로 데이터를 읽을 수 없습니다.<br>로컬 서버나 GitHub Pages 주소로 접속해 주세요.</p>
+          <code>python -m http.server 8000</code>
+          <p style="margin-top:0.5rem; font-size:0.72rem; color:#B0A090;">${esc(err.message)}</p>
+        </div>`;
+    }
+  }
+
+  function flattenLessons(data) {
+    allLessons = [];
+    (data.subjects || []).forEach(sub => {
+      (sub.pages || []).forEach(p => allLessons.push({ ...p, subjectName: sub.name, subjectEmoji: sub.emoji, groupName: null }));
+      (sub.groups || []).forEach(g => {
+        (g.pages || []).forEach(p => allLessons.push({ ...p, subjectName: sub.name, subjectEmoji: sub.emoji, groupName: g.name, groupEmoji: g.emoji }));
+      });
+    });
+  }
+
+  function renderList(lessons) {
+    const content = document.getElementById('listContent');
+    if (lessons.length === 0) {
+      content.innerHTML = `<div class="status-box"><div class="icon">📭</div><h3>검색 결과가 없습니다</h3></div>`;
+      return;
+    }
+    let html = '';
+    let lastSubject = null, lastGroup = null;
+    lessons.forEach(p => {
+      if (p.subjectName !== lastSubject) {
+        html += `<div class="subject-name">${p.subjectEmoji || '📁'} ${esc(p.subjectName)}</div>`;
+        lastSubject = p.subjectName; lastGroup = null;
+      }
+      if (p.groupName && p.groupName !== lastGroup) {
+        html += `<div class="group-name">${p.groupEmoji || '📂'} ${esc(p.groupName)}</div>`;
+        lastGroup = p.groupName;
+      }
+      if (!p.groupName) lastGroup = null;
+      html += `
+        <a class="lesson-row" href="?path=${encodeURIComponent(p.path)}" onclick="openLesson(event,'${escAttr(p.path)}','${escAttr(p.title)}')">
+          <span class="lesson-emoji">${p.emoji || '📄'}</span>
+          <span style="flex:1; min-width:0;">
+            <div class="lesson-title">${esc(p.title)}</div>
+            ${p.description ? `<div class="lesson-desc">${esc(truncate(p.description, 60))}</div>` : ''}
+          </span>
+          <svg class="lesson-arrow" viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+        </a>`;
+    });
+    content.innerHTML = html;
+  }
+
+  function filterList() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    if (!q) { renderList(allLessons); return; }
+    renderList(allLessons.filter(p =>
+      (p.title || '').toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q)
+    ));
+  }
+
+  function openLesson(e, path, title) {
+    e.preventDefault();
+    history.pushState({ path }, '', '?path=' + encodeURIComponent(path));
+    showViewer(path, title);
+  }
+
+  function showList() {
+    history.pushState({}, '', location.pathname);
+    document.getElementById('listView').style.display = 'block';
+    document.getElementById('viewerView').style.display = 'none';
+    document.getElementById('backBtn').style.display = 'none';
+  }
+
+  async function showViewer(path, title) {
+    document.getElementById('listView').style.display = 'none';
+    document.getElementById('viewerView').style.display = 'block';
+    document.getElementById('backBtn').style.display = 'inline-flex';
+    document.getElementById('viewerTitle').textContent = title || path;
+    const slideList = document.getElementById('slideList');
+    slideList.innerHTML = `<div class="status-box"><div class="icon">⏳</div><h3>불러오는 중...</h3></div>`;
+
+    // 기존 레슨 스타일 제거 후 새로 주입
+    const oldStyle = document.getElementById('lessonStyle');
+    if (oldStyle) oldStyle.remove();
+
+    try {
+      const res = await fetch('../' + path);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+
+      // 원본 <style> 그대로 가져와 주입 (색상/폰트/디자인 유지)
+      const styleEl = doc.querySelector('style');
+      if (styleEl) {
+        const injected = document.createElement('style');
+        injected.id = 'lessonStyle';
+        injected.textContent = styleEl.textContent;
+        document.head.appendChild(injected);
+      }
+
+      const lessonDir = path.split('/').slice(0, -1).join('/');
+      const slides = [...doc.querySelectorAll('.slide')];
+      if (!title) document.getElementById('viewerTitle').textContent = doc.querySelector('title')?.textContent || path;
+
+      slideList.innerHTML = slides.map((s, i) => {
+        // 이미지 상대경로를 mobile/ 기준으로 재계산
+        s.querySelectorAll('img').forEach(img => {
+          const raw = img.getAttribute('src') || '';
+          if (!/^(https?:)?\/\//i.test(raw)) {
+            img.setAttribute('src', '../' + lessonDir + '/' + raw);
+          }
+        });
+        return `<div class="mslide"><span class="mslide-num">${i + 1} / ${slides.length}</span>${s.outerHTML}</div>`;
+      }).join('');
+    } catch (err) {
+      slideList.innerHTML = `<div class="status-box"><div class="icon">⚠️</div><h3>불러오지 못했습니다</h3><p>${esc(err.message)}</p></div>`;
+    }
+  }
+
+  function truncate(str, n) { return str.length > n ? str.slice(0, n) + '…' : str; }
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function escAttr(str) { return esc(str).replace(/'/g, '&#39;'); }
+
+  window.addEventListener('popstate', () => {
+    const params = new URLSearchParams(location.search);
+    const path = params.get('path');
+    if (path) showViewer(path, null); else showList();
+  });
+
+  // 초기 진입 처리
+  loadPages().then(() => {
+    const params = new URLSearchParams(location.search);
+    const path = params.get('path');
+    if (path) showViewer(path, null);
+  });
+</script>
+</body>
+</html>
