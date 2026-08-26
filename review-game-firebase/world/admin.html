@@ -178,6 +178,7 @@
       </select>
       <div class="btnrow">
         <button class="bad" id="deleteUnitBtn" type="button">선택한 주제 문제 전체 삭제</button>
+        <button class="bad" id="deleteAllBtn" type="button">전체 문항 삭제</button>
       </div>
       <div class="qlist" id="questionList"><div class="qrow muted">불러오는 중...</div></div>
       <div class="msg" id="manageMsg"></div>
@@ -191,6 +192,7 @@
       <span class="timer-big" id="timerBig">--:--</span>
       <span class="muted" id="poolInfo"></span>
       <button type="button" id="bonusNowBtn" class="secondary" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;" disabled>🔥 지금 2배 찬스 발동</button>
+      <input type="number" id="bonusDurationInput" value="20" min="5" max="300" step="5" style="width:60px; flex:0 0 auto;" title="2배 찬스 지속 시간(초)">초
       <span class="muted" id="bonusNowMsg"></span>
     </div>
     <div class="team-standings hidden" id="teamStandingsBox"></div>
@@ -378,12 +380,13 @@ el('bonusNowBtn').onclick = async () => {
   if(r.status !== 'running' || r.end_time == null) return;
   const bonusMsg = el('bonusNowMsg');
   const elapsedNow = r.duration_sec - Math.max(0, Math.round((r.end_time - serverNow())/1000));
-  const newWindow = { start: elapsedNow, end: elapsedNow + 20, mult: 2 };
+  const durationSec = Math.max(5, Math.min(300, Math.round(parseFloat(el('bonusDurationInput').value)) || 20));
+  const newWindow = { start: elapsedNow, end: elapsedNow + durationSec, mult: 2 };
   const bonus = [...(r.bonus||[]), newWindow];
   el('bonusNowBtn').disabled = true;
   try{
     await update(roomRef(ROOM,'round'), { bonus });
-    bonusMsg.textContent = '🔥 발동! 20초간 2배';
+    bonusMsg.textContent = `🔥 발동! ${durationSec}초간 2배`;
     setTimeout(()=>{ bonusMsg.textContent=''; }, 4000);
   } catch(err){
     bonusMsg.textContent = '발동 실패: ' + err.message;
@@ -542,6 +545,21 @@ el('deleteUnitBtn').onclick = async () => {
   try{
     await update(ref(db), updates);
     msg.className='msg ok'; msg.textContent = `${ids.length}개 문제를 삭제했습니다.`;
+  } catch(err){
+    msg.className='msg err'; msg.textContent = '삭제 실패: ' + err.message;
+  }
+};
+
+el('deleteAllBtn').onclick = async () => {
+  const msg = el('manageMsg');
+  const ids = Object.keys(questionsObj);
+  if(!ids.length){ msg.className='msg err'; msg.textContent='삭제할 문제가 없습니다.'; return; }
+  if(!confirm(`전체 문제 ${ids.length}개를 모두 삭제할까요? 되돌릴 수 없습니다.`)) return;
+  const updates = {};
+  ids.forEach(id => { updates[`rooms/${ROOM}/questions/${id}`] = null; });
+  try{
+    await update(ref(db), updates);
+    msg.className='msg ok'; msg.textContent = `${ids.length}개 문제를 모두 삭제했습니다.`;
   } catch(err){
     msg.className='msg err'; msg.textContent = '삭제 실패: ' + err.message;
   }
