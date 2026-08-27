@@ -9,8 +9,11 @@
 
 깃허브에 올리면(push) GitHub Pages가 몇 분 안에 자동 반영합니다.
 
-메인 페이지(`https://ceare0425.github.io/history_presentation/review-game-firebase/`)를
-열어 클릭으로 이동해도 됩니다. 즐겨찾기 해두면 편합니다.
+메인 페이지(`https://ceare0425.github.io/history_presentation/review-game-firebase/`)에는
+관리자 화면 링크도 있어 교사용입니다. 학생에게는 대신 학생용 페이지
+(`https://ceare0425.github.io/history_presentation/review-game-firebase/student.html`)를
+공유하세요 — 수업 참여하기 / 혼자 연습하기 두 버튼만 있고 관리자·대형 화면 링크는 없습니다.
+즐겨찾기 해두면 편합니다.
 
 **세계사**
 - 학생 접속 (수업용, 선생님이 시작): `https://ceare0425.github.io/history_presentation/review-game-firebase/world/play.html`
@@ -77,6 +80,8 @@ python tools/import_questions.py ../review-game-korea/data/questions.txt korea
 
 ```
 review-game-firebase/
+  index.html              메인 페이지 (교사용 - 관리자/대형 화면 링크 포함)
+  student.html            학생용 페이지 (수업 참여하기 / 혼자 연습하기 링크만)
   shared/lib.js          채점 로직, Firebase 연결, 시간 동기화 (world/korea 공용)
   world/play.html         세계사 - 학생 화면 (수업용, 선생님이 시작)
   world/solo.html         세계사 - 혼자 연습 화면 (학생이 직접 범위/시간 정해서 시작)
