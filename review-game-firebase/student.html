@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>복습 게임 - 학생용</title>
+<style>
+  body{
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    font-family:'Malgun Gothic','Pretendard',-apple-system,sans-serif;
+    background:linear-gradient(180deg,#1e3c72,#2a5298 60%,#3a6b8a); color:#fff;
+    padding:24px;
+  }
+  .wrap{ display:flex; gap:32px; flex-wrap:wrap; justify-content:center; }
+  .box{ text-align:center; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.2);
+    border-radius:16px; padding:24px; width:280px; }
+  h1{ font-size:1.3rem; margin:0 0 1.2rem; }
+  a{
+    display:block; margin:10px auto; padding:16px; border-radius:12px;
+    background:rgba(255,255,255,.12); color:#fff; text-decoration:none; font-weight:700; font-size:1rem;
+    border:1px solid rgba(255,255,255,.25);
+  }
+  a:hover{ background:rgba(255,255,255,.22); }
+  .hint{ font-size:.78rem; opacity:.7; margin-top:1rem; line-height:1.5; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="box">
+      <h1>🏯 세계사 탑 오르기</h1>
+      <a href="world/play.html">🎮 수업 참여하기</a>
+      <a href="world/solo.html">🧗 혼자 연습하기</a>
+    </div>
+    <div class="box">
+      <h1>🏯 한국사 탑 오르기</h1>
+      <a href="korea/play.html">🎮 수업 참여하기</a>
+      <a href="korea/solo.html">🧗 혼자 연습하기</a>
+    </div>
+  </div>
+  <div class="hint" style="position:fixed; bottom:16px; left:0; right:0; text-align:center;">
+    이 페이지를 즐겨찾기(북마크)에 추가해두면 다음부터 주소를 안 쳐도 됩니다.
+  </div>
+</body>
+</html>
