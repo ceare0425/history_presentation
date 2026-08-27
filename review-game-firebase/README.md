@@ -11,9 +11,9 @@
 
 메인 페이지(`https://ceare0425.github.io/history_presentation/review-game-firebase/`)에는
 관리자 화면 링크도 있어 교사용입니다. 학생에게는 대신 학생용 페이지
-(`https://ceare0425.github.io/history_presentation/review-game-firebase/student.html`)를
-공유하세요 — 수업 참여하기 / 혼자 연습하기 두 버튼만 있고 관리자·대형 화면 링크는 없습니다.
-즐겨찾기 해두면 편합니다.
+(`https://ceare0425.github.io/history_presentation/review-game-firebase/student.html`,
+짧은 주소: `tinyurl.com/25ggn9jj`)를 공유하세요 — 수업 참여하기 / 혼자 연습하기 두 버튼만 있고
+관리자·대형 화면 링크는 없습니다. 즐겨찾기 해두면 편합니다.
 
 **세계사**
 - 학생 접속 (수업용, 선생님이 시작): `https://ceare0425.github.io/history_presentation/review-game-firebase/world/play.html`
