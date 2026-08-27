@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>한국사 탑 오르기 - 혼자 연습</title>
+<style>
+  :root{
+    --sky1:#1e3c72; --sky2:#2a5298;
+    --gold:#e8c76f; --gold-dark:#c5a028;
+    --card:#ffffff; --ink:#22314f; --sub:#5b6a8a;
+    --good:#2e9e5b; --bad:#d9534f; --line:#e3e8f2;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; font-family:'Malgun Gothic','Pretendard',-apple-system,sans-serif;
+    background:linear-gradient(180deg,#0f2447,var(--sky1) 35%,var(--sky2) 65%,#3a6b8a);
+    color:var(--ink); min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:16px; position:relative; overflow:hidden;
+  }
+  .sky-layer{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+  .star{ position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; animation:twinkle 3.4s ease-in-out infinite; }
+  @keyframes twinkle{ 0%,100%{opacity:.15;} 50%{opacity:.85;} }
+  .cloud{
+    position:absolute; border-radius:50%; background:rgba(255,255,255,.35); filter:blur(8px);
+    animation-name:drift; animation-timing-function:linear; animation-iteration-count:infinite;
+  }
+  @keyframes drift{ from{ transform:translateX(-16vw); } to{ transform:translateX(116vw); } }
+  .card{ position:relative; z-index:1; }
+  .card{
+    width:min(1100px, 94vw);
+    aspect-ratio:16/9;
+    max-height:92vh;
+    background:var(--card); border-radius:22px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.35); padding:2.6vh 4vw; position:relative; overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .card::before{
+    content:''; position:absolute; top:0; left:0; right:0; height:6px;
+    background:linear-gradient(90deg,var(--gold-dark),var(--gold));
+  }
+  h1{ font-size:clamp(1.2rem,2.4vw,1.7rem); margin:0 0 1.2vh; text-align:center; color:var(--sky1); flex:0 0 auto; }
+  .sub{ text-align:center; color:var(--sub); font-size:1rem; margin-bottom:1.4rem; }
+
+  .view{ flex:1; min-height:0; display:flex; flex-direction:column; }
+  .view.center{ justify-content:center; align-items:center; }
+
+  input[type=text], input[type=number]{
+    width:100%; padding:14px 16px; font-size:1.15rem; border:2px solid #dfe3ec; border-radius:12px;
+    outline:none; margin-bottom:12px; font-family:inherit;
+  }
+  input[type=text]:focus, input[type=number]:focus{ border-color:var(--gold-dark); }
+  button{
+    width:100%; padding:14px; font-size:1.1rem; font-weight:700; color:#fff; border:none;
+    border-radius:12px; cursor:pointer; background:linear-gradient(90deg,var(--sky1),var(--sky2));
+    transition:transform .1s; flex:0 0 auto;
+  }
+  button:active{ transform:scale(.98); }
+  button:disabled{ opacity:.5; cursor:default; }
+  button.secondary{ background:#8b96ab; }
+
+  #setupView, #setupView .inner{ width:100%; max-width:520px; }
+  #setupView .inner{ overflow-y:auto; max-height:100%; padding-right:4px; }
+  label{ font-size:.85rem; color:var(--sub); display:block; margin:10px 0 4px; text-align:left; }
+  .units{ max-height:22vh; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:8px; margin-bottom:6px; text-align:left; }
+  .unit-row{ display:flex; align-items:center; gap:8px; padding:5px 4px; font-size:.9rem; }
+  .unit-row span.cnt{ color:var(--sub); font-size:.78rem; margin-left:auto; }
+  .pool-count{ font-size:.8rem; color:var(--sub); margin:0 0 10px; text-align:left; }
+  .pool-count b{ color:var(--sky1); }
+  .row{ display:flex; gap:8px; }
+  .row > *{ flex:1; margin-bottom:12px; }
+  .toggle-row{ display:flex; gap:8px; margin-bottom:12px; }
+  .toggle-row button{ flex:1; background:#e6e9f0; color:var(--sub); font-weight:700; }
+  .toggle-row button.active{ background:var(--sky1); color:#fff; }
+  .setup-msg{ font-size:.85rem; color:var(--bad); min-height:1.2em; margin-bottom:8px; text-align:left; }
+  .muted{ color:var(--sub); font-size:.85rem; }
+
+  .waiting{ text-align:center; }
+  .waiting .big{ font-size:3rem; margin-bottom:.6rem; }
+
+  .hud{ display:flex; justify-content:space-between; align-items:center; margin-bottom:1vh; flex:0 0 auto; }
+  .floor-badge{
+    background:linear-gradient(135deg,var(--gold),var(--gold-dark)); color:#3a2c05; font-weight:800;
+    border-radius:14px; padding:8px 16px; font-size:1.25rem; box-shadow:0 4px 10px rgba(197,160,40,.4);
+  }
+  .timer{ font-weight:700; color:var(--sky1); font-variant-numeric:tabular-nums; font-size:1.25rem; }
+  .streak{ font-size:.9rem; color:var(--sub); text-align:right; min-height:1.3em; flex:0 0 auto; }
+
+  .qbox{
+    background:#f4f6fb; border:2px solid #e3e8f2; border-radius:16px; padding:3vh 3vw; margin:1vh 0;
+    flex:1; min-height:0; display:flex; align-items:center; justify-content:center;
+    overflow-y:auto;
+  }
+  .qbox .qtext-inner{
+    width:100%; font-size:clamp(1.2rem,2.6vw,1.85rem); line-height:1.9;
+    text-align:center; word-break:keep-all; overflow-wrap:break-word;
+  }
+  .qbox .blank-mark{
+    display:inline-block; width:3em; height:0.9em; margin:0 .2em -0.15em;
+    border-bottom:4px solid var(--sky1); border-radius:2px;
+  }
+  .unit-tag{
+    display:inline-block; font-size:.8rem; color:#fff; background:var(--sky2); border-radius:6px;
+    padding:3px 10px; margin-bottom:.8vh; flex:0 0 auto;
+  }
+
+  .avatar-char{
+    text-align:center; font-size:2.4rem; line-height:1; margin:.2vh 0 .4vh;
+    flex:0 0 auto; user-select:none;
+  }
+  .avatar-char.happy{ animation:avatarHappy .8s ease; }
+  @keyframes avatarHappy{
+    0%{ transform:translateY(0) scale(1) rotate(0deg); }
+    25%{ transform:translateY(-16px) scale(1.2) rotate(-10deg); }
+    50%{ transform:translateY(0) scale(1.05) rotate(10deg); }
+    75%{ transform:translateY(-9px) scale(1.12) rotate(-6deg); }
+    100%{ transform:translateY(0) scale(1) rotate(0deg); }
+  }
+  .avatar-char.sad{ animation:avatarSad .9s ease; }
+  @keyframes avatarSad{
+    0%{ transform:translateY(0) rotate(0deg) scale(1); }
+    20%{ transform:translateY(5px) rotate(-7deg) scale(.97); }
+    40%{ transform:translateY(9px) rotate(7deg) scale(.95); }
+    60%{ transform:translateY(9px) rotate(-5deg) scale(.95); }
+    100%{ transform:translateY(3px) rotate(0deg) scale(.97); }
+  }
+
+  .feedback{
+    text-align:center; font-weight:800; font-size:1.15rem; border-radius:12px; padding:10px;
+    margin-bottom:.8vh; display:none; flex:0 0 auto;
+  }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background:#e6f7ec; color:var(--good); }
+  .feedback.wrong{ background:#fbeaea; color:var(--bad); }
+
+  .answer-row{ display:flex; gap:10px; flex:0 0 auto; }
+  .answer-row input[type=text]{ flex:1; margin-bottom:0; }
+  .answer-row button{ width:auto; padding:14px 28px; flex:0 0 auto; }
+
+  .tower-mini{
+    height:6vh; min-height:36px; display:flex; align-items:flex-end; justify-content:center;
+    margin-top:1vh; gap:3px; flex:0 0 auto;
+  }
+  .tower-mini .bar{
+    width:10px; border-radius:3px 3px 0 0; transition:height .35s cubic-bezier(.34,1.56,.64,1);
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,.4) 0px, rgba(255,255,255,.4) 2px, transparent 2px, transparent 9px),
+      linear-gradient(180deg,var(--gold),var(--gold-dark));
+  }
+
+  .floor-badge{ transition:transform .15s ease; }
+  .floor-badge.pop{ animation:floorPop .5s ease; }
+  @keyframes floorPop{
+    0%{ transform:scale(1); }
+    35%{ transform:scale(1.35); filter:drop-shadow(0 0 10px #ffe9a8); }
+    100%{ transform:scale(1); }
+  }
+
+  .ended{ text-align:center; width:100%; max-width:420px; }
+  .ended .big{ font-size:3.4rem; font-weight:800; color:var(--sky1); margin:6px 0; }
+  .final-stat{ font-size:1.05rem; font-weight:700; color:var(--sub); margin-bottom:1.2rem; }
+  .best-note{ font-size:.85rem; color:var(--gold-dark); font-weight:700; margin-bottom:1.2rem; min-height:1.2em; }
+
+  .hidden{ display:none !important; }
+
+  @media (max-width:700px), (orientation:portrait){
+    body{ padding:0; }
+    .card{
+      width:100vw; height:100vh; max-height:100vh;
+      aspect-ratio:auto; border-radius:0; box-shadow:none;
+      padding:3vh 5vw;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="sky-layer" id="skyLayer"></div>
+
+<div class="card">
+  <h1>🏯 한국사 탑 오르기 · 혼자 연습</h1>
+
+  <div id="setupView" class="view center">
+    <div class="inner">
+      <p class="sub">원하는 범위를 골라서 언제든 혼자 연습할 수 있어요. 문제는 선생님만 추가/수정할 수 있습니다.</p>
+      <label>연습 범위</label>
+      <div class="units" id="unitList">불러오는 중...</div>
+      <div class="pool-count" id="poolCountInfo"></div>
+      <div class="row">
+        <button type="button" class="secondary" id="selectAllBtn">전체 선택</button>
+        <button type="button" class="secondary" id="selectNoneBtn">전체 해제</button>
+      </div>
+      <label>제한 시간 (분)</label>
+      <input type="number" id="durationInput" value="5" min="1" max="60" step="1">
+      <label>출제 순서</label>
+      <div class="toggle-row" id="orderToggle">
+        <button type="button" class="active" data-order="random">🔀 랜덤</button>
+        <button type="button" data-order="sequential">➡ 순서대로</button>
+      </div>
+      <div class="setup-msg" id="setupMsg"></div>
+      <button id="startBtn">▶ 연습 시작</button>
+    </div>
+  </div>
+
+  <div id="playView" class="view hidden">
+    <div class="hud">
+      <div class="floor-badge">🏢 <span id="floorVal">0</span>층</div>
+      <div class="timer">⏱ <span id="timerVal">--:--</span></div>
+    </div>
+    <div class="streak" id="streakVal"></div>
+
+    <div class="avatar-char" id="avatarChar">🧗</div>
+
+    <div id="feedback" class="feedback"></div>
+
+    <div class="unit-tag" id="unitTag"></div>
+    <div class="qbox"><div class="qtext-inner" id="qText">문제를 불러오는 중...</div></div>
+
+    <div class="answer-row">
+      <input type="text" id="answerInput" placeholder="정답 입력 후 Enter" autocomplete="off">
+      <button id="submitBtn">제출</button>
+    </div>
+
+    <div class="tower-mini" id="towerMini"></div>
+  </div>
+
+  <div id="endedView" class="view center hidden">
+    <div class="ended">
+      <div>🏁 연습 종료!</div>
+      <div class="big"><span id="finalFloor">0</span>층</div>
+      <div class="final-stat" id="finalStat"></div>
+      <div class="best-note" id="bestNote"></div>
+      <button id="retryBtn">↺ 다른 범위로 다시 연습하기</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import {
+  roomRef, onValue, serverNow,
+  isCorrect, computeGain, fmtTime, escapeHtml, shuffle,
+  unitsFromQuestions, poolFromQuestions
+} from '../shared/lib.js';
+
+const ROOM = 'korea';
+const STORAGE_BEST_KEY = 'rg_fb_' + ROOM + '_solo_best_floor';
+
+let questionsObj = {};
+let allUnits = [];
+let selectedUnits = new Set();
+
+let roundState = null; // { duration_sec, end_time, order, qids }
+let queue = [];
+let currentQid = null;
+let currentQuestion = null;
+let currentStartedAt = null;
+let lastQid = null;
+
+let floor = 0, correctCount = 0, wrongCount = 0, streak = 0;
+let lastFloor = 0;
+let ended = false;
+
+const el = (id) => document.getElementById(id);
+
+function showView(name){
+  ['setupView','playView','endedView'].forEach(v=>{
+    el(v).classList.toggle('hidden', v!==name);
+  });
+}
+
+function buildBackground(){
+  const layer = el('skyLayer');
+  const frag = document.createDocumentFragment();
+  for(let i=0;i<25;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = (Math.random()*100)+'%';
+    s.style.top = (Math.random()*45)+'%';
+    s.style.animationDelay = (Math.random()*3.4)+'s';
+    frag.appendChild(s);
+  }
+  for(let i=0;i<4;i++){
+    const c = document.createElement('div');
+    c.className = 'cloud';
+    const size = 50 + Math.random()*70;
+    c.style.width = size+'px';
+    c.style.height = (size*0.45)+'px';
+    c.style.top = (8 + Math.random()*30)+'%';
+    c.style.animationDuration = (35 + Math.random()*30)+'s';
+    c.style.animationDelay = (-Math.random()*35)+'s';
+    frag.appendChild(c);
+  }
+  layer.appendChild(frag);
+}
+buildBackground();
+
+function updatePoolCountInfo(){
+  const totalCount = Object.keys(questionsObj).length;
+  const selectedCount = poolFromQuestions(questionsObj, Array.from(selectedUnits)).length;
+  el('poolCountInfo').innerHTML = totalCount===0 ? '' :
+    `전체 등록 문제 <b>${totalCount}</b>개 · 선택한 범위 <b>${selectedCount}</b>개`;
+}
+
+function renderUnits(){
+  const box = el('unitList');
+  if(allUnits.length===0){ box.innerHTML = '<div class="muted">아직 등록된 문제가 없습니다. 선생님께 문의하세요.</div>'; updatePoolCountInfo(); return; }
+  box.innerHTML = '';
+  allUnits.forEach(u=>{
+    const row = document.createElement('label');
+    row.className = 'unit-row';
+    const checked = selectedUnits.has(u.unit) ? 'checked' : '';
+    row.innerHTML = `<input type="checkbox" data-unit="${escapeHtml(u.unit)}" ${checked}> ${escapeHtml(u.unit)} <span class="cnt">${u.count}문제</span>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.onchange = () => {
+      if(cb.checked) selectedUnits.add(cb.dataset.unit);
+      else selectedUnits.delete(cb.dataset.unit);
+      updatePoolCountInfo();
+    };
+  });
+  updatePoolCountInfo();
+}
+
+el('selectAllBtn').onclick = () => { selectedUnits = new Set(allUnits.map(u=>u.unit)); renderUnits(); };
+el('selectNoneBtn').onclick = () => { selectedUnits = new Set(); renderUnits(); };
+
+let questionOrder = 'random';
+el('orderToggle').querySelectorAll('button').forEach(btn=>{
+  btn.onclick = () => {
+    questionOrder = btn.dataset.order;
+    el('orderToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+  };
+});
+
+onValue(roomRef(ROOM,'questions'), (snap)=>{
+  questionsObj = snap.val() || {};
+  allUnits = unitsFromQuestions(questionsObj);
+  if(selectedUnits.size===0){ allUnits.forEach(u=>selectedUnits.add(u.unit)); }
+  renderUnits();
+});
+
+function popFloorBadge(){
+  const badge = document.querySelector('.floor-badge');
+  badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop');
+}
+
+function renderTowerMini(f){
+  const box = el('towerMini');
+  box.innerHTML = '';
+  const n = Math.min(24, Math.max(4, f));
+  for(let i=0;i<n;i++){
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    const active = i < Math.min(f, n);
+    bar.style.height = active ? (14 + (i%6)*6)+'px' : '4px';
+    bar.style.opacity = active ? '1' : '.25';
+    box.appendChild(bar);
+  }
+}
+
+function renderQuestion(q){
+  if(!q){
+    el('qText').textContent = '풀 수 있는 문제가 없습니다.';
+    el('unitTag').textContent = '';
+    return;
+  }
+  el('unitTag').textContent = q.unit;
+  el('qText').innerHTML = q.text.replace(/____/g, '<span class="blank-mark"></span>');
+  el('answerInput').value = '';
+  el('answerInput').disabled = false;
+  el('submitBtn').disabled = false;
+  el('answerInput').focus();
+}
+
+function currentPool(){
+  if(roundState && roundState.qids && roundState.qids.length>0){
+    return roundState.qids.filter(qid=>questionsObj[qid]).map(qid=>[qid, questionsObj[qid]]);
+  }
+  return [];
+}
+
+function assignNextQuestion(){
+  const pool = currentPool();
+  if(pool.length===0){
+    currentQid = null; currentQuestion = null; currentStartedAt = null;
+    renderQuestion(null);
+    return;
+  }
+  if(queue.length===0){
+    if(roundState.order === 'sequential'){
+      queue = pool.map(([qid])=>qid);
+    } else {
+      queue = shuffle(pool.map(([qid])=>qid));
+      if(queue.length>1 && queue[0]===lastQid){
+        [queue[0],queue[1]] = [queue[1],queue[0]];
+      }
+    }
+  }
+  const qid = queue.shift();
+  currentQid = qid;
+  currentQuestion = questionsObj[qid];
+  currentStartedAt = serverNow();
+  lastQid = qid;
+  renderQuestion({ id: qid, text: currentQuestion.question, unit: currentQuestion.unit });
+}
+
+const AVATAR_IDLE = '🧗';
+const AVATAR_HAPPY = '🙌';
+const AVATAR_SAD = '😢';
+
+function playCharacterReaction(correct){
+  const av = el('avatarChar');
+  av.classList.remove('happy','sad');
+  void av.offsetWidth;
+  av.textContent = correct ? AVATAR_HAPPY : AVATAR_SAD;
+  av.classList.add(correct ? 'happy' : 'sad');
+  setTimeout(()=>{
+    av.textContent = AVATAR_IDLE;
+    av.classList.remove('happy','sad');
+  }, correct ? 750 : 950);
+}
+
+function flashFeedback(correct, correctAnswer, gain){
+  const f = el('feedback');
+  f.classList.add('show');
+  if(correct){
+    f.classList.remove('wrong'); f.classList.add('correct');
+    f.textContent = `정답! +${gain}층 올라갑니다 🎉`;
+  } else {
+    f.classList.remove('correct'); f.classList.add('wrong');
+    f.textContent = `아쉬워요. 정답: ${correctAnswer}`;
+  }
+  setTimeout(()=>{ f.classList.remove('show'); }, 1400);
+}
+
+function submitAnswer(){
+  const text = el('answerInput').value.trim();
+  if(!text || !currentQid || !currentQuestion || ended) return;
+  el('submitBtn').disabled = true;
+  el('answerInput').disabled = true;
+
+  const q = currentQuestion;
+  const elapsed = (serverNow() - currentStartedAt) / 1000;
+  const correct = isCorrect(text, q.answers);
+  let gain = 0;
+
+  if(correct){
+    gain = computeGain(elapsed);
+    floor += gain;
+    correctCount += 1;
+    streak += 1;
+  } else {
+    wrongCount += 1;
+    streak = 0;
+  }
+
+  el('floorVal').textContent = floor;
+  el('streakVal').textContent = streak >= 2 ? `🔥 ${streak}연속 정답!` : '';
+  if(floor > lastFloor) popFloorBadge();
+  lastFloor = floor;
+  renderTowerMini(floor);
+  flashFeedback(correct, q.answers[0], gain);
+  playCharacterReaction(correct);
+
+  setTimeout(()=>{
+    if(ended) return;
+    el('submitBtn').disabled = false; el('answerInput').disabled = false;
+    assignNextQuestion();
+  }, correct ? 700 : 1100);
+}
+
+el('submitBtn').onclick = submitAnswer;
+el('answerInput').addEventListener('keydown', e=>{ if(e.key==='Enter') submitAnswer(); });
+
+function showEndedView(){
+  ended = true;
+  el('finalFloor').textContent = floor;
+  const total = correctCount + wrongCount;
+  const acc = total ? Math.round(100*correctCount/total) : null;
+  el('finalStat').textContent = acc!==null ? `정답 ${correctCount}개 · 오답 ${wrongCount}개 · 정답률 ${acc}%` : '아직 문제를 풀지 않았어요';
+
+  const prevBest = parseInt(localStorage.getItem(STORAGE_BEST_KEY) || '0', 10);
+  const bestNote = el('bestNote');
+  if(floor > prevBest){
+    localStorage.setItem(STORAGE_BEST_KEY, String(floor));
+    bestNote.textContent = prevBest > 0 ? `🎉 개인 최고 기록 갱신! (이전 ${prevBest}층)` : '🎉 첫 기록 달성!';
+  } else {
+    bestNote.textContent = `개인 최고 기록: ${prevBest}층`;
+  }
+  showView('endedView');
+}
+
+function tick(){
+  if(!roundState || ended) return;
+  const remaining = Math.max(0, Math.round((roundState.end_time - serverNow())/1000));
+  el('timerVal').textContent = fmtTime(remaining);
+  if(remaining<=0){
+    showEndedView();
+    return;
+  }
+  if(currentQid === null){
+    assignNextQuestion();
+  }
+}
+
+let tickHandle = null;
+
+el('startBtn').onclick = () => {
+  const msg = el('setupMsg');
+  const units = Array.from(selectedUnits);
+  const pool = poolFromQuestions(questionsObj, units);
+  if(pool.length===0){ msg.textContent = '선택한 범위에 문제가 없습니다.'; return; }
+
+  const minutes = parseFloat(el('durationInput').value) || 5;
+  const duration_sec = Math.max(30, Math.min(3600, Math.round(minutes*60)));
+  msg.textContent = '';
+
+  floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
+  queue = []; currentQid = null; currentQuestion = null; lastQid = null;
+  roundState = {
+    duration_sec,
+    end_time: serverNow() + duration_sec*1000,
+    order: questionOrder,
+    qids: pool.map(([qid])=>qid)
+  };
+
+  el('floorVal').textContent = 0;
+  el('streakVal').textContent = '';
+  renderTowerMini(0);
+  el('feedback').classList.remove('show');
+  showView('playView');
+  assignNextQuestion();
+
+  if(tickHandle) clearInterval(tickHandle);
+  tickHandle = setInterval(tick, 250);
+};
+
+el('retryBtn').onclick = () => {
+  ended = true;
+  roundState = null;
+  showView('setupView');
+};
+</script>
+</body>
+</html>

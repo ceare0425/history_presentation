@@ -13,14 +13,16 @@
 열어 클릭으로 이동해도 됩니다. 즐겨찾기 해두면 편합니다.
 
 **세계사**
-- 학생 접속: `https://ceare0425.github.io/history_presentation/review-game-firebase/world/play.html`
+- 학생 접속 (수업용, 선생님이 시작): `https://ceare0425.github.io/history_presentation/review-game-firebase/world/play.html`
   (짧은 주소: `tinyurl.com/segyesa`)
+- 혼자 연습 (학생이 직접 범위/시간 정해서 언제든 시작): `https://ceare0425.github.io/history_presentation/review-game-firebase/world/solo.html`
 - 관리자 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/world/admin.html`
 - 대형 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/world/board.html`
 
 **한국사**
-- 학생 접속: `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/play.html`
+- 학생 접속 (수업용, 선생님이 시작): `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/play.html`
   (짧은 주소: `tinyurl.com/hanguksa`)
+- 혼자 연습 (학생이 직접 범위/시간 정해서 언제든 시작): `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/solo.html`
 - 관리자 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/admin.html`
 - 대형 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/board.html`
 
@@ -36,6 +38,22 @@
    선생님이 시작하면 자동으로 문제가 나옵니다.
 3. 대형 화면(`board.html`)을 교실 화면에 띄워두면 실시간으로 탑 오르는 모습이 보입니다.
 4. 채점 규칙은 그대로입니다: 5초 이내 +3층, 10초 이내 +2층, 그 이후 +1층. 오답은 그 자리에 머무름.
+
+## 혼자 연습하기 (`solo.html`)
+
+수업 시간이 아니어도 학생이 스스로 연습할 수 있는 버전입니다. `play.html`과 달리 선생님이 게임을 시작해줄
+필요가 없고, 학생이 직접:
+
+- 연습할 범위(주제)를 하나 이상 고르고
+- 제한 시간과 출제 순서(랜덤/순서대로)를 정한 뒤
+- **연습 시작** 버튼을 눌러 바로 시작합니다.
+
+문제 은행은 관리자 화면(`admin.html`)에서 선생님만 추가/수정/삭제할 수 있고, `solo.html`은 그 문제를
+**읽기만** 합니다 — 학생은 범위 선택과 시작만 할 수 있을 뿐, 문제를 추가하거나 고칠 권한은 없습니다.
+
+연습은 완전히 개인 화면 안에서만 진행되고(다른 학생·관리자 화면·`board.html`과 실시간 동기화되지 않음),
+점수판에도 올라가지 않습니다. 대신 브라우저에 개인 최고 기록(최고 층수)만 저장되어, 다시 연습할 때
+갱신 여부를 보여줍니다.
 
 ## 문제 추가하기
 
@@ -60,10 +78,12 @@ python tools/import_questions.py ../review-game-korea/data/questions.txt korea
 ```
 review-game-firebase/
   shared/lib.js          채점 로직, Firebase 연결, 시간 동기화 (world/korea 공용)
-  world/play.html         세계사 - 학생 화면
+  world/play.html         세계사 - 학생 화면 (수업용, 선생님이 시작)
+  world/solo.html         세계사 - 혼자 연습 화면 (학생이 직접 범위/시간 정해서 시작)
   world/admin.html        세계사 - 관리자 화면
   world/board.html        세계사 - 대형 화면
   korea/play.html         한국사 - 학생 화면 (world와 동일 구조)
+  korea/solo.html
   korea/admin.html
   korea/board.html
   tools/import_questions.py   questions.txt 형식 파일을 일괄 등록하는 도구
