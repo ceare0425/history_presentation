@@ -142,6 +142,10 @@
   .answer-row input[type=text]{ flex:1; margin-bottom:0; }
   .answer-row button{ width:auto; padding:14px 28px; flex:0 0 auto; }
 
+  .hint-row{ display:flex; align-items:center; gap:10px; margin-top:8px; flex:0 0 auto; min-height:2.2em; }
+  .hint-row button{ width:auto; flex:0 0 auto; padding:8px 14px; font-size:.9rem; }
+  .hint-text{ font-size:1.2rem; font-weight:800; letter-spacing:.18em; color:var(--sky1); }
+
   .tower-mini{
     height:6vh; min-height:36px; display:flex; align-items:flex-end; justify-content:center;
     margin-top:1vh; gap:3px; flex:0 0 auto;
@@ -241,6 +245,10 @@
       <input type="text" id="answerInput" placeholder="정답 입력 후 Enter" autocomplete="off">
       <button id="submitBtn">제출</button>
     </div>
+    <div class="hint-row">
+      <button type="button" id="hintBtn" class="secondary">💡 힌트 (초성)</button>
+      <span class="hint-text" id="hintText"></span>
+    </div>
 
     <div class="tower-mini" id="towerMini"></div>
   </div>
@@ -259,7 +267,7 @@
 <script type="module">
 import {
   roomRef, onValue, push, serverNow,
-  isCorrect, computeGain, fmtTime, escapeHtml, shuffle,
+  isCorrect, computeGain, fmtTime, escapeHtml, shuffle, choseongHint,
   unitsFromQuestions, poolFromQuestions
 } from '../shared/lib.js';
 
@@ -408,6 +416,8 @@ function renderTowerMini(f){
 }
 
 function renderQuestion(q){
+  el('hintText').textContent = '';
+  el('hintBtn').disabled = !q;
   if(!q){
     el('qText').textContent = '풀 수 있는 문제가 없습니다.';
     el('unitTag').textContent = '';
@@ -506,6 +516,7 @@ function submitAnswer(){
   if(!text || !currentQid || !currentQuestion || ended) return;
   el('submitBtn').disabled = true;
   el('answerInput').disabled = true;
+  el('hintBtn').disabled = true;
 
   const q = currentQuestion;
   const answeredQid = currentQid;
@@ -548,6 +559,13 @@ function submitAnswer(){
 
 el('submitBtn').onclick = submitAnswer;
 el('answerInput').addEventListener('keydown', e=>{ if(e.key==='Enter') submitAnswer(); });
+
+el('hintBtn').onclick = () => {
+  if(ended || !currentQuestion || !(currentQuestion.answers||[]).length) return;
+  el('hintText').textContent = choseongHint(currentQuestion.answers[0]);
+  el('hintBtn').disabled = true;
+  el('answerInput').focus();
+};
 
 function logSoloSession(){
   if(soloLogged) return;

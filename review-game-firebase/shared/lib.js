@@ -70,6 +70,21 @@ export function escapeHtml(s) {
   }[c]));
 }
 
+// ── 정답의 초성만 남긴 힌트 문자열 (예: "함무라비 법전" → "ㅎㅁㄹㅂ ㅂㅈ") ──
+export function choseongHint(text) {
+  const CHO = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+  let out = "";
+  for (const ch of String(text || "")) {
+    const code = ch.codePointAt(0);
+    if (code >= 0xac00 && code <= 0xd7a3) {
+      out += CHO[Math.floor((code - 0xac00) / 588)];
+    } else {
+      out += ch; // 공백·숫자·영문·한자 등은 그대로 둔다 (그 자체로 힌트가 됨)
+    }
+  }
+  return out;
+}
+
 export function playerAccuracy(p) {
   const total = (p.correct || 0) + (p.wrong || 0);
   return total ? (p.correct || 0) / total : null;
