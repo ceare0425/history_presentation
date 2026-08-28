@@ -117,6 +117,7 @@
       <div class="toggle-row" id="orderToggle">
         <button type="button" class="active" data-order="random">🔀 랜덤</button>
         <button type="button" data-order="sequential">➡ 순서대로</button>
+        <button type="button" data-order="recent" title="주제 번호가 큰(최근) 주제일수록 더 자주 출제">🆕 최근 우선</button>
       </div>
       <label>출제 문항 수 (비워두면 선택 범위 전체 사용)</label>
       <input type="number" id="questionCountInput" min="1" placeholder="전체 사용">
@@ -218,6 +219,7 @@
 import {
   roomRef, ref, onValue, get, update, remove, push, db, serverNow,
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, shuffle,
+  recencyWeightFn, weightedSample,
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS
 } from '../shared/lib.js';
 
@@ -327,7 +329,9 @@ el('startBtn').onclick = async () => {
   const desiredCount = countRaw ? Math.max(1, Math.round(parseFloat(countRaw))) : null;
   let qids = pool.map(([qid])=>qid);
   if(desiredCount && desiredCount < qids.length){
-    qids = shuffle(qids).slice(0, desiredCount);
+    qids = questionOrder === 'recent'
+      ? weightedSample(pool, recencyWeightFn(pool.map(([,q])=>q.unit)), desiredCount)
+      : shuffle(qids).slice(0, desiredCount);
   }
 
   el('startBtn').disabled = true;
@@ -563,7 +567,7 @@ function renderRoster(){
   pill.textContent = effective==='idle' ? '대기중' : effective==='running' ? '진행중' : '종료';
   el('timerBig').textContent = fmtTime(remaining);
   const poolCount = (r.qids && r.qids.length) ? r.qids.length : poolFromQuestions(questionsObj, r.units).length;
-  const orderLabel = r.order === 'sequential' ? '순서대로' : '랜덤';
+  const orderLabel = r.order === 'sequential' ? '순서대로' : r.order === 'recent' ? '최근 주제 우선' : '랜덤';
   el('poolInfo').textContent = effective!=='idle' ? `출제 문항 ${poolCount}개 · ${orderLabel} 출제` : '';
 
   el('bonusNowBtn').disabled = effective !== 'running';

@@ -221,6 +221,7 @@
       <div class="toggle-row" id="orderToggle">
         <button type="button" class="active" data-order="random">🔀 랜덤</button>
         <button type="button" data-order="sequential">➡ 순서대로</button>
+        <button type="button" data-order="recent" title="주제 번호가 큰(최근) 주제일수록 더 자주 출제">🆕 최근 우선</button>
       </div>
       <div class="setup-msg" id="setupMsg"></div>
       <button id="startBtn">▶ 연습 시작</button>
@@ -268,7 +269,7 @@
 import {
   roomRef, onValue, push, serverNow,
   isCorrect, computeGain, fmtTime, escapeHtml, shuffle, choseongHint,
-  unitsFromQuestions, poolFromQuestions
+  unitsFromQuestions, poolFromQuestions, recencyWeightFn, weightedQueue
 } from '../shared/lib.js';
 
 const ROOM = 'korea';
@@ -467,6 +468,11 @@ function assignNextQuestion(){
   if(queue.length===0){
     if(roundState.order === 'sequential'){
       queue = pool.map(([qid])=>qid);
+    } else if(roundState.order === 'recent'){
+      queue = weightedQueue(pool, recencyWeightFn(pool.map(([,q])=>q.unit)));
+      if(queue.length>1 && queue[0]===lastQid){
+        [queue[0],queue[1]] = [queue[1],queue[0]];
+      }
     } else {
       queue = shuffle(pool.map(([qid])=>qid));
       if(queue.length>1 && queue[0]===lastQid){

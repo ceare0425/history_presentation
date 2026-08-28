@@ -135,6 +135,55 @@ export function poolFromQuestions(questionsObj, units) {
   return entries.filter(([, q]) => unitSet.has(q.unit));
 }
 
+// ── "최근 주제 우선" 출제: 주제명 앞 숫자(주제 01 → 1)가 클수록 최근으로 본다 ──
+export function unitOrderNum(unit) {
+  const m = String(unit || "").match(/\d+/);
+  return m ? parseInt(m[0], 10) : null;
+}
+
+// unitList: 이번 라운드에 등장하는 주제명 배열. 반환값은 주제명 → 가중치(가장 예전 주제=1, 가장 최근=maxWeight) 함수.
+// 숫자가 없는 주제는 가장 예전(=1)으로 취급한다.
+export function recencyWeightFn(unitList, maxWeight = 3) {
+  const nums = (unitList || []).map(unitOrderNum).filter((n) => n !== null);
+  if (nums.length === 0) return () => 1;
+  const lo = Math.min(...nums), hi = Math.max(...nums);
+  return (unit) => {
+    const n = unitOrderNum(unit);
+    if (n === null || hi === lo) return 1;
+    return 1 + ((n - lo) / (hi - lo)) * (maxWeight - 1);
+  };
+}
+
+// 가중치에 따라 문제가 여러 번 들어간 큐를 만든다(같은 문제가 바로 붙지 않게 최대한 벌려줌).
+export function weightedQueue(entries, weightOf) {
+  const bag = [];
+  for (const [qid, q] of entries) {
+    const w = Math.max(1, Math.round(weightOf(q.unit)));
+    for (let i = 0; i < w; i++) bag.push(qid);
+  }
+  const arr = shuffle(bag);
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] === arr[i - 1]) {
+      for (let j = i + 1; j < arr.length; j++) {
+        if (arr[j] !== arr[i - 1] && (j + 1 >= arr.length || arr[j + 1] !== arr[i])) {
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+          break;
+        }
+      }
+    }
+  }
+  return arr;
+}
+
+// 가중치를 반영해 k개를 비복원 추출 (Efraimidis–Spirakis). 출제 문항 수를 제한할 때 사용.
+export function weightedSample(entries, weightOf, k) {
+  return entries
+    .map(([qid, q]) => [qid, Math.pow(Math.random(), 1 / Math.max(0.01, weightOf(q.unit)))])
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, k)
+    .map((x) => x[0]);
+}
+
 // ── 팀전 모드 ──
 export const TEAM_OPTIONS = [
   { key: "red", label: "🔴 빨강팀", color: "#e85d75" },

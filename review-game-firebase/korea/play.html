@@ -254,6 +254,7 @@
 import {
   roomRef, onValue, get, set, update, serverNow,
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
+  recencyWeightFn, weightedQueue,
   TEAM_OPTIONS, teamInfo, activeBonus
 } from '../shared/lib.js';
 
@@ -395,6 +396,11 @@ function assignNextQuestion(){
   if(queue.length===0){
     if(roundState.order === 'sequential'){
       queue = pool.map(([qid])=>qid);
+    } else if(roundState.order === 'recent'){
+      queue = weightedQueue(pool, recencyWeightFn(pool.map(([,q])=>q.unit)));
+      if(queue.length>1 && queue[0]===lastQid){
+        [queue[0],queue[1]] = [queue[1],queue[0]];
+      }
     } else {
       queue = shuffle(pool.map(([qid])=>qid));
       if(queue.length>1 && queue[0]===lastQid){
