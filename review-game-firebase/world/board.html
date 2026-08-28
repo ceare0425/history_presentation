@@ -296,30 +296,87 @@ let playersObj = {};
 let prevEffective = null;
 let prevBonusActive = false;
 
-// ── 배경음악: 외부 파일 없이 Web Audio API로 자체 생성하는 잔잔한 루프 ──
+// ── 배경음악: 외부 파일 없이 Web Audio로 만든 '신나는' 루프. 라운드마다 여러 곡 중 랜덤 ──
 const BGM_MUTE_KEY = 'rg_fb_bgm_muted';
-const BGM_VOLUME = 0.55; // 마스터 볼륨(컴퓨터 볼륨은 그대로 따라가고, 이 값은 우리 소리 자체의 크기)
+const BGM_VOLUME = 0.5; // 마스터 볼륨(컴퓨터 볼륨은 그대로 따라가고, 이 값은 우리 소리 자체의 크기)
 let audioCtx = null;
 let masterGain = null;
 let bgmStarted = false;
 let bgmMuted = localStorage.getItem(BGM_MUTE_KEY) === '1';
 
-// 코드 진행 C - Am - F - G (패드 + 아르페지오)
-const BGM_CHORDS = [
-  { pad: [130.81, 164.81, 196.00], arp: [261.63, 329.63, 392.00, 523.25] },
-  { pad: [110.00, 130.81, 164.81], arp: [220.00, 261.63, 329.63, 440.00] },
-  { pad: [87.31, 110.00, 130.81], arp: [174.61, 220.00, 261.63, 349.23] },
-  { pad: [98.00, 123.47, 146.83], arp: [196.00, 246.94, 293.66, 392.00] },
-];
-const BGM_BEAT_SEC = 0.55;       // 남은 시간이 충분할 때의 기본 박자(초/박)
-const BGM_BEAT_SEC_FAST = 0.30;  // 시간이 임박했을 때 최고 속도
-const BGM_BEATS_PER_CHORD = 4;
-let bgmChordIndex = 0, bgmBeatIndex = 0, bgmNextTime = 0, bgmSchedulerId = null;
+// 음이름 → 주파수 (C1~C6)
+const NOTE = (() => {
+  const names = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const map = {};
+  for(let oct = 1; oct <= 6; oct++){
+    for(let i = 0; i < 12; i++){
+      const midi = (oct + 1) * 12 + i;           // C1 = midi 24
+      map[names[i] + oct] = 440 * Math.pow(2, (midi - 69) / 12);
+    }
+  }
+  return map;
+})();
+const nf = (n) => (n && NOTE[n]) || 0;
 
-// 남은 시간이 줄수록 1에 가까워진다 (render()에서 매번 갱신). 0이면 기본 속도.
-let bgmIntensity = 0;
+// 스텝 = 8분음표. 남은 시간이 충분하면 느긋, 임박하면 빨라진다.
+const BGM_STEP_SEC = 0.30;        // 기본 (≈100 BPM)
+const BGM_STEP_SEC_FAST = 0.17;  // 최고 속도 (≈176 BPM)
+let bgmIntensity = 0;            // render()에서 0~1로 갱신
 function currentBeatSec(){
-  return BGM_BEAT_SEC - (BGM_BEAT_SEC - BGM_BEAT_SEC_FAST) * bgmIntensity;
+  return BGM_STEP_SEC - (BGM_STEP_SEC - BGM_STEP_SEC_FAST) * bgmIntensity;
+}
+
+// 곡 정의: 16스텝(2마디) 루프. 코드는 4스텝마다 하나. bass/lead는 음이름 배열(16), '.'=쉼.
+// drums: 스텝별 문자열 (K=킥, S=스네어, h=닫힌 하이햇, H=열린 하이햇)
+const SONG_DEFS = [
+  {
+    name: '업비트 팝',
+    prog: [['C3','E3','G3'], ['G2','B2','D3'], ['A2','C3','E3'], ['F2','A2','C3']],
+    bass: ['C2','.','C2','G2','G2','.','G2','D3','A2','.','A2','E3','F2','.','F2','C3'],
+    lead: ['E4','.','G4','A4','G4','.','E4','.','C4','.','E4','G4','A4','.','G4','.'],
+    drums:['Kh','h','Sh','h','Kh','h','Sh','h','Kh','h','Sh','h','Kh','h','SH','h'],
+    leadWave: 'triangle', bassWave: 'square',
+  },
+  {
+    name: '레트로 러너',
+    prog: [['A2','C3','E3'], ['F2','A2','C3'], ['C3','E3','G3'], ['G2','B2','D3']],
+    bass: ['A1','A2','A1','A2','F1','F2','F1','F2','C2','C3','C2','C3','G1','G2','G1','G2'],
+    lead: ['A4','E4','C5','E4','A4','F4','C5','A4','G4','E4','C5','G4','B4','G4','D5','B4'],
+    drums:['Kh','h','h','Kh','Sh','h','Kh','h','Kh','h','h','Kh','Sh','h','KH','h'],
+    leadWave: 'square', bassWave: 'square',
+  },
+  {
+    name: '행진 팡파르',
+    prog: [['C3','E3','G3'], ['C3','E3','G3'], ['F2','A2','C3'], ['G2','B2','D3']],
+    bass: ['C2','.','G2','.','C2','.','G2','.','F2','.','C3','.','G2','.','G2','D3'],
+    lead: ['C4','.','.','C4','E4','.','G4','.','C5','.','G4','.','E4','.','D4','.'],
+    drums:['K','h','S','h','K','h','S','h','K','h','S','h','K','S','KH','h'],
+    leadWave: 'sawtooth', bassWave: 'square',
+  },
+  {
+    name: '통통 튀는 신스',
+    prog: [['D3','F3','A3'], ['A2','C#3','E3'], ['B2','D3','F#3'], ['G2','B2','D3']],
+    bass: ['D2','D3','A2','D3','A1','A2','E2','A2','B1','B2','F#2','B2','G1','G2','D2','G2'],
+    lead: ['A4','.','D5','F#4','A4','.','E5','.','F#4','.','B4','D5','G4','.','D4','.'],
+    drums:['Kh','h','Sh','h','Kh','h','Sh','h','Kh','h','Sh','h','Kh','h','SH','h'],
+    leadWave: 'triangle', bassWave: 'sawtooth',
+  },
+];
+const SONGS = SONG_DEFS.map(d => ({
+  name: d.name,
+  chords: d.prog.map(c => c.map(nf)),
+  bass: d.bass.map(n => n === '.' ? 0 : nf(n)),
+  lead: d.lead.map(n => n === '.' ? 0 : nf(n)),
+  drums: d.drums,
+  leadWave: d.leadWave || 'triangle',
+  bassWave: d.bassWave || 'square',
+}));
+let currentSong = SONGS[0];
+let bgmStep = 0, bgmNextTime = 0, bgmSchedulerId = null;
+
+function pickRandomSong(){
+  currentSong = SONGS[Math.floor(Math.random() * SONGS.length)];
+  updateBgmBtn();
 }
 
 function ensureAudioCtx(){
@@ -351,32 +408,77 @@ function playTone(freq, startTime, duration, peak, type){
   osc.stop(startTime + duration + 0.05);
 }
 
-function scheduleBgmNote(){
-  const beatSec = currentBeatSec();
-  const chord = BGM_CHORDS[bgmChordIndex];
-  if(bgmBeatIndex === 0){
-    chord.pad.forEach(f => playTone(f, bgmNextTime, beatSec*BGM_BEATS_PER_CHORD*0.95, 0.16, 'sine'));
-  }
-  const note = chord.arp[bgmBeatIndex % chord.arp.length];
-  playTone(note, bgmNextTime, beatSec*0.9, 0.14, 'triangle');
+function noiseBurst(t, dur, filterType, freq, peak){
+  const n = Math.max(1, Math.floor(audioCtx.sampleRate * dur));
+  const buf = audioCtx.createBuffer(1, n, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const filt = audioCtx.createBiquadFilter(); filt.type = filterType; filt.frequency.value = freq;
+  const g = audioCtx.createGain(); g.gain.value = peak;
+  src.connect(filt); filt.connect(g); g.connect(masterGain);
+  src.start(t);
+}
+function playKick(t){
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(150, t);
+  o.frequency.exponentialRampToValueAtTime(45, t + 0.11);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.95, t + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.19);
+  o.connect(g); g.connect(masterGain);
+  o.start(t); o.stop(t + 0.2);
+}
+function playSnare(t){
+  noiseBurst(t, 0.2, 'bandpass', 1900, 0.3);
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = 'triangle'; o.frequency.setValueAtTime(220, t);
+  g.gain.setValueAtTime(0.28, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+  o.connect(g); g.connect(masterGain);
+  o.start(t); o.stop(t + 0.14);
+}
+function playHat(t, open){
+  noiseBurst(t, open ? 0.13 : 0.04, 'highpass', 8000, open ? 0.15 : 0.10);
+}
 
-  bgmBeatIndex++;
-  if(bgmBeatIndex >= BGM_BEATS_PER_CHORD){
-    bgmBeatIndex = 0;
-    bgmChordIndex = (bgmChordIndex+1) % BGM_CHORDS.length;
+function scheduleBgmStep(){
+  const stepSec = currentBeatSec();
+  const s = bgmStep % 16;
+  const song = currentSong;
+  const chord = song.chords[(s >> 2) & 3];
+
+  const d = song.drums[s] || '';
+  if(d.indexOf('K') >= 0) playKick(bgmNextTime);
+  if(d.indexOf('S') >= 0) playSnare(bgmNextTime);
+  if(d.indexOf('H') >= 0) playHat(bgmNextTime, true);
+  else if(d.indexOf('h') >= 0) playHat(bgmNextTime, false);
+
+  const bass = song.bass[s];
+  if(bass) playTone(bass, bgmNextTime, stepSec * 1.9, 0.24, song.bassWave);
+
+  const lead = song.lead[s];
+  if(lead) playTone(lead, bgmNextTime, stepSec * 1.5, 0.15, song.leadWave);
+
+  if((s & 3) === 0 && chord){
+    chord.forEach(fr => playTone(fr, bgmNextTime, stepSec * 4 * 0.9, 0.07, 'sine'));
   }
-  bgmNextTime += beatSec;
+
+  bgmStep++;
+  bgmNextTime += stepSec;
 }
 
 function bgmSchedulerTick(){
   while(bgmNextTime < audioCtx.currentTime + 0.2){
-    scheduleBgmNote();
+    scheduleBgmStep();
   }
 }
 
 function updateBgmBtn(){
   const btn = el('bgmToggle');
-  btn.textContent = bgmMuted ? '🔇 배경음 꺼짐' : '🔊 배경음 켜짐';
+  if(!bgmStarted) btn.textContent = '🔊 배경음';
+  else btn.textContent = bgmMuted ? '🔇 배경음 꺼짐' : `🔊 ${currentSong.name}`;
   btn.classList.toggle('muted', bgmMuted);
 }
 
@@ -388,6 +490,8 @@ function startBgm(){
   ensureAudioCtx();
   if(audioCtx.state === 'suspended') audioCtx.resume();
   bgmStarted = true;
+  bgmStep = 0;
+  pickRandomSong();
   bgmNextTime = audioCtx.currentTime + 0.1;
   bgmSchedulerId = setInterval(bgmSchedulerTick, 100);
   updateBgmBtn();
@@ -676,6 +780,11 @@ function render(){
     showEndCelebration(players, ranked);
   } else if(effective !== 'ended' && prevEffective === 'ended'){
     hideEndCelebration();
+  }
+  // 새 라운드가 시작될 때마다 배경음 곡을 새로 뽑는다
+  if(effective === 'running' && prevEffective !== 'running' && bgmStarted){
+    pickRandomSong();
+    bgmStep = 0;
   }
   prevEffective = effective;
 }
