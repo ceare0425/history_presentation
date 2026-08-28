@@ -12,25 +12,34 @@
 메인 페이지(`https://ceare0425.github.io/history_presentation/review-game-firebase/`)에는
 관리자 화면 링크도 있어 교사용입니다. 학생에게는 대신 학생용 페이지
 (`https://ceare0425.github.io/history_presentation/review-game-firebase/student.html`,
-짧은 주소: `tinyurl.com/25ggn9jj`)를 공유하세요 — 수업 참여하기 / 혼자 연습하기 두 버튼만 있고
-관리자·대형 화면 링크는 없습니다. 즐겨찾기 해두면 편합니다.
+짧은 주소: **`ceare0425.github.io/h`**)를 공유하세요 —
+수업 참여하기 / 혼자 연습하기 두 버튼만 있고 관리자·대형 화면 링크는 없습니다. 즐겨찾기 해두면 편합니다.
+
+> ⚠️ **학교 학생 노트북에서는 `tinyurl.com` 단축주소가 유해차단 필터에 막힙니다.**
+> 그래서 짧은 주소는 별도 저장소 `ceare0425.github.io`(사이트 최상위)에 리다이렉트로 둡니다:
+> - `ceare0425.github.io/h` → 수업참여/혼자연습 메뉴 화면(`student.html`)
+> - `ceare0425.github.io/w` → 세계사 수업용(`world/play.html`)
+> - `ceare0425.github.io/k` → 한국사 수업용(`korea/play.html`)
+>
+> 학생에게는 tinyurl 대신 이 주소들을 주세요. (이 폴더가 아니라 `ceare0425/ceare0425.github.io` 저장소에서 수정)
 
 **세계사**
 - 학생 접속 (수업용, 선생님이 시작): `https://ceare0425.github.io/history_presentation/review-game-firebase/world/play.html`
-  (짧은 주소: `tinyurl.com/segyesa`)
+  (짧은 주소: `ceare0425.github.io/w` — tinyurl은 학교에서 막힘)
 - 혼자 연습 (학생이 직접 범위/시간 정해서 언제든 시작): `https://ceare0425.github.io/history_presentation/review-game-firebase/world/solo.html`
 - 관리자 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/world/admin.html`
 - 대형 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/world/board.html`
 
 **한국사**
 - 학생 접속 (수업용, 선생님이 시작): `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/play.html`
-  (짧은 주소: `tinyurl.com/hanguksa`)
+  (짧은 주소: `ceare0425.github.io/k` — tinyurl은 학교에서 막힘)
 - 혼자 연습 (학생이 직접 범위/시간 정해서 언제든 시작): `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/solo.html`
 - 관리자 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/admin.html`
 - 대형 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/board.html`
 
-짧은 주소는 tinyurl.com에서 만든 것으로, 학생 접속 주소로만 연결됩니다(관리자 화면은 교사만 쓰니
-그대로 긴 주소나 메인 페이지에서 클릭해서 들어가면 됩니다).
+짧은 주소(`ceare0425.github.io/h`,`/w`,`/k`)는 별도 저장소 `ceare0425/ceare0425.github.io`의
+리다이렉트 페이지입니다. 학생 접속 주소로만 연결됩니다(관리자 화면은 교사만 쓰니 그대로 긴 주소나
+메인 페이지에서 클릭해서 들어가면 됩니다). tinyurl 단축주소는 학교 유해차단 필터에 막히므로 쓰지 마세요.
 
 인터넷이 되는 기기라면 교실 컴퓨터든 학생 노트북이든 어떤 와이파이에 있어도 접속됩니다.
 
