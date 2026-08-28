@@ -213,17 +213,17 @@
     </div>
     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; align-items:start;">
       <div>
-        <div class="pool-count"><b>학생별</b> (연습 많이 한 순)</div>
+        <div class="pool-count"><b>학생별</b> (반 순)</div>
         <table>
-          <thead><tr><th>이름</th><th>횟수</th><th>평균 층수</th><th>최고</th><th>최근 연습</th></tr></thead>
-          <tbody id="soloByStudent"><tr><td colspan="5" class="muted">아직 기록이 없습니다.</td></tr></tbody>
+          <thead><tr><th>반</th><th>이름</th><th>횟수</th><th>평균 층수</th><th>최고</th><th>최근 연습</th></tr></thead>
+          <tbody id="soloByStudent"><tr><td colspan="6" class="muted">아직 기록이 없습니다.</td></tr></tbody>
         </table>
       </div>
       <div>
         <div class="pool-count"><b>최근 세션</b> (최대 40개)</div>
         <table>
-          <thead><tr><th>시각</th><th>이름</th><th>범위</th><th>층수</th><th>정답/오답</th></tr></thead>
-          <tbody id="soloRecent"><tr><td colspan="5" class="muted">아직 기록이 없습니다.</td></tr></tbody>
+          <thead><tr><th>시각</th><th>반</th><th>이름</th><th>범위</th><th>층수</th><th>정답/오답</th></tr></thead>
+          <tbody id="soloRecent"><tr><td colspan="6" class="muted">아직 기록이 없습니다.</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -741,18 +741,24 @@ function renderSoloStats(){
     ? `총 <b>${entries.length}</b>회 · 오늘 <b>${todayCount}</b>회 · 최근 7일 <b>${weekCount}</b>회 · 연습한 학생 <b>${students.size}</b>명`
     : '아직 혼자 연습 기록이 없습니다.';
 
-  const byName = {};
+  const clsLabel = (c) => (c === undefined || c === null || c === '' || c === '-') ? '-' : escapeHtml(String(c)) + '반';
+
+  const byStu = {};
   entries.forEach(e=>{
     const n = e.name || '(이름 없음)';
-    const b = byName[n] || (byName[n] = { count:0, floorSum:0, best:0, last:0 });
+    const cls = (e.cls === undefined || e.cls === null || e.cls === '') ? '-' : String(e.cls);
+    const key = cls + '' + n;
+    const b = byStu[key] || (byStu[key] = { cls, name:n, count:0, floorSum:0, best:0, last:0 });
     b.count++; b.floorSum += (e.floor||0);
     b.best = Math.max(b.best, e.floor||0);
     b.last = Math.max(b.last, e.ts||0);
   });
-  const nameRows = Object.entries(byName).sort((a,b)=> b[1].count-a[1].count || b[1].last-a[1].last);
-  el('soloByStudent').innerHTML = nameRows.length ? nameRows.map(([n,b])=>
-    `<tr><td>${escapeHtml(n)}</td><td>${b.count}</td><td>${Math.round(b.floorSum/b.count)}층</td><td>${b.best}층</td><td class="muted">${fmtSoloTime(b.last)}</td></tr>`
-  ).join('') : '<tr><td colspan="5" class="muted">아직 기록이 없습니다.</td></tr>';
+  const stuRows = Object.values(byStu).sort((a,b)=>
+    (Number(a.cls)||99) - (Number(b.cls)||99) || b.count - a.count || b.last - a.last
+  );
+  el('soloByStudent').innerHTML = stuRows.length ? stuRows.map(b=>
+    `<tr><td>${clsLabel(b.cls)}</td><td>${escapeHtml(b.name)}</td><td>${b.count}</td><td>${Math.round(b.floorSum/b.count)}층</td><td>${b.best}층</td><td class="muted">${fmtSoloTime(b.last)}</td></tr>`
+  ).join('') : '<tr><td colspan="6" class="muted">아직 기록이 없습니다.</td></tr>';
 
   el('soloRecent').innerHTML = entries.length ? entries.slice(0,40).map(e=>{
     const total = (e.correct||0)+(e.wrong||0);
@@ -760,12 +766,13 @@ function renderSoloStats(){
     const accClass = acc===null ? 'muted' : (acc>=70 ? 'acc-ok' : 'acc-bad');
     return `<tr>
       <td class="muted">${fmtSoloTime(e.ts)}</td>
+      <td>${clsLabel(e.cls)}</td>
       <td>${escapeHtml(e.name || '(이름 없음)')}</td>
       <td>${escapeHtml(soloRangeLabel(e.units))}</td>
       <td>${e.floor||0}층</td>
       <td class="${accClass}">${e.correct||0}/${e.wrong||0}${acc===null?'':` (${acc}%)`}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="5" class="muted">아직 기록이 없습니다.</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="muted">아직 기록이 없습니다.</td></tr>';
 }
 
 onValue(roomRef(ROOM,'solo_log'), (snap)=>{

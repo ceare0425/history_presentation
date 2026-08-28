@@ -74,6 +74,9 @@
   .toggle-row{ display:flex; gap:8px; margin-bottom:12px; }
   .toggle-row button{ flex:1; background:#e6e9f0; color:var(--sub); font-weight:700; }
   .toggle-row button.active{ background:var(--sky1); color:#fff; }
+  .class-row{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:12px; }
+  .class-row button{ width:auto; padding:10px 0; font-size:.95rem; font-weight:700; background:#e6e9f0; color:var(--sub); border:none; border-radius:10px; cursor:pointer; }
+  .class-row button.active{ background:var(--sky1); color:#fff; }
   .setup-msg{ font-size:.85rem; color:var(--bad); min-height:1.2em; margin-bottom:8px; text-align:left; }
   .muted{ color:var(--sub); font-size:.85rem; }
 
@@ -185,9 +188,22 @@
   <div id="setupView" class="view center">
     <div class="inner">
       <p class="sub">원하는 범위를 골라서 언제든 혼자 연습할 수 있어요. 문제는 선생님만 추가/수정할 수 있습니다.</p>
+      <label>반</label>
+      <div class="class-row" id="classRow">
+        <button type="button" data-class="1">1반</button>
+        <button type="button" data-class="2">2반</button>
+        <button type="button" data-class="3">3반</button>
+        <button type="button" data-class="4">4반</button>
+        <button type="button" data-class="5">5반</button>
+        <button type="button" data-class="6">6반</button>
+        <button type="button" data-class="7">7반</button>
+        <button type="button" data-class="8">8반</button>
+        <button type="button" data-class="9">9반</button>
+        <button type="button" data-class="10">10반</button>
+      </div>
       <label>이름</label>
-      <input type="text" id="nameInput" placeholder="이름 (예: 2반 홍길동)" maxlength="20" autocomplete="off">
-      <div class="muted" style="margin:-6px 0 6px; font-size:.78rem;">이름을 입력해야 연습을 시작할 수 있어요. 연습 기록(범위·층수)이 선생님 화면에 표시됩니다.</div>
+      <input type="text" id="nameInput" placeholder="이름 (예: 홍길동)" maxlength="20" autocomplete="off">
+      <div class="muted" style="margin:-6px 0 6px; font-size:.78rem;">반과 이름을 모두 선택·입력해야 연습을 시작할 수 있어요. 연습 기록(반·범위·층수)이 선생님 화면에 표시됩니다.</div>
       <label>연습 범위</label>
       <div class="units" id="unitList">불러오는 중...</div>
       <div class="pool-count" id="poolCountInfo"></div>
@@ -250,8 +266,11 @@ import {
 const ROOM = 'korea';
 const STORAGE_BEST_KEY = 'rg_fb_' + ROOM + '_solo_best_floor';
 const STORAGE_NAME_KEY = 'rg_fb_' + ROOM + '_name'; // play.html과 공용 — 참여했던 기기면 이름 자동 입력
+const STORAGE_CLASS_KEY = 'rg_fb_class';            // 세계사/한국사 공용 — 한 번 고르면 다음에도 유지
 
+let selectedClass = localStorage.getItem(STORAGE_CLASS_KEY) || null;
 let sessionStartedAt = null, sessionUnits = [], sessionDuration = null, sessionOrder = 'random';
+let sessionClass = null;
 let soloLogged = false;
 
 let questionsObj = {};
@@ -305,6 +324,17 @@ buildBackground();
 
 // 이 기기로 수업(play.html) 또는 이전 연습에 이름을 넣은 적이 있으면 자동으로 채워줌
 el('nameInput').value = localStorage.getItem(STORAGE_NAME_KEY) || '';
+
+// 반 선택 버튼 (한 번 고르면 localStorage에 저장돼 다음에도 유지)
+el('classRow').querySelectorAll('button').forEach(btn=>{
+  if(btn.dataset.class === selectedClass) btn.classList.add('active');
+  btn.onclick = () => {
+    selectedClass = btn.dataset.class;
+    localStorage.setItem(STORAGE_CLASS_KEY, selectedClass);
+    el('classRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+    el('setupMsg').textContent = '';
+  };
+});
 
 function updatePoolCountInfo(){
   const totalCount = Object.keys(questionsObj).length;
@@ -493,6 +523,7 @@ function logSoloSession(){
   try{
     push(roomRef(ROOM, 'solo_log'), {
       name,
+      cls: sessionClass || null,
       ts: serverNow(),
       started_ts: sessionStartedAt || null,
       duration_sec: sessionDuration || null,
@@ -541,6 +572,10 @@ let tickHandle = null;
 
 el('startBtn').onclick = () => {
   const msg = el('setupMsg');
+  if(!selectedClass){
+    msg.textContent = '반을 선택해야 연습을 시작할 수 있어요.';
+    return;
+  }
   const nameNow = el('nameInput').value.trim();
   if(!nameNow){
     msg.textContent = '이름을 입력해야 연습을 시작할 수 있어요.';
@@ -560,6 +595,7 @@ el('startBtn').onclick = () => {
 
   // 이번 세션 정보 기록용으로 저장 (종료 시 선생님 화면으로 보냄)
   localStorage.setItem(STORAGE_NAME_KEY, nameNow);
+  sessionClass = selectedClass;
   sessionStartedAt = serverNow();
   sessionUnits = units;
   sessionDuration = duration_sec;
