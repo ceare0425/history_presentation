@@ -279,6 +279,12 @@ let selectedUnits = new Set();
 
 let roundState = null; // { duration_sec, end_time, order, qids }
 let queue = [];
+let retryList = [];         // 오답 재출제 대기열: [{qid, wait}] — 다른 문제를 wait개 낸 뒤 다시 출제
+let retryMiss = {};         // qid별 오답 횟수 (재출제 간격·횟수 제한에 사용)
+let currentIsRetry = false; // 지금 화면의 문제가 오답 복습으로 다시 낸 것인지
+const RETRY_GAP = 3;        // 오답 후 다른 문제를 이만큼 낸 뒤 다시 출제 (틀릴수록 간격이 늘어남)
+const RETRY_MAX = 12;       // 대기열 상한 (초과하면 오래된 것부터 버림)
+const RETRY_TRIES = 4;      // 한 문제를 강제로 다시 내는 최대 횟수 (이후엔 일반 출제에만 맡김)
 let currentQid = null;
 let currentQuestion = null;
 let currentStartedAt = null;
@@ -429,6 +435,23 @@ function assignNextQuestion(){
     renderQuestion(null);
     return;
   }
+
+  // 오답 복습: 다시 낼 때가 된 문제가 있으면 그 문제를 먼저 출제한다
+  retryList.forEach(r=>r.wait--);
+  const dueIdx = retryList.findIndex(r=> r.wait<=0 && questionsObj[r.qid] && r.qid!==lastQid);
+  if(dueIdx !== -1){
+    const [due] = retryList.splice(dueIdx, 1);
+    currentQid = due.qid;
+    currentQuestion = questionsObj[due.qid];
+    currentStartedAt = serverNow();
+    currentIsRetry = true;
+    lastQid = due.qid;
+    renderQuestion({ id: due.qid, text: currentQuestion.question, unit: currentQuestion.unit });
+    el('unitTag').textContent = '🔁 복습 · ' + currentQuestion.unit;
+    return;
+  }
+  currentIsRetry = false;
+
   if(queue.length===0){
     if(roundState.order === 'sequential'){
       queue = pool.map(([qid])=>qid);
@@ -463,17 +486,19 @@ function playCharacterReaction(correct){
   }, correct ? 750 : 950);
 }
 
-function flashFeedback(correct, correctAnswer, gain){
+let feedbackTimer = null;
+function flashFeedback(correct, correctAnswer, gain, wasRetry){
   const f = el('feedback');
   f.classList.add('show');
   if(correct){
     f.classList.remove('wrong'); f.classList.add('correct');
-    f.textContent = `정답! +${gain}층 올라갑니다 🎉`;
+    f.textContent = wasRetry ? `🔁 복습 문제 정답! +${gain}층 🎉` : `정답! +${gain}층 올라갑니다 🎉`;
   } else {
     f.classList.remove('correct'); f.classList.add('wrong');
-    f.textContent = `아쉬워요. 정답: ${correctAnswer}`;
+    f.textContent = `아쉬워요! 정답: ${correctAnswer} · 곧 다시 나옵니다`;
   }
-  setTimeout(()=>{ f.classList.remove('show'); }, 1400);
+  clearTimeout(feedbackTimer);
+  feedbackTimer = setTimeout(()=>{ f.classList.remove('show'); }, correct ? 1400 : 2000);
 }
 
 function submitAnswer(){
@@ -483,6 +508,8 @@ function submitAnswer(){
   el('answerInput').disabled = true;
 
   const q = currentQuestion;
+  const answeredQid = currentQid;
+  const wasRetry = currentIsRetry;
   const elapsed = (serverNow() - currentStartedAt) / 1000;
   const correct = isCorrect(text, q.answers);
   let gain = 0;
@@ -492,9 +519,16 @@ function submitAnswer(){
     floor += gain;
     correctCount += 1;
     streak += 1;
+    retryMiss[answeredQid] = 0;
   } else {
     wrongCount += 1;
     streak = 0;
+    // 틀린 문제는 잠시 후 다시 출제. 틀릴수록 간격을 늘리고 RETRY_TRIES번까지만 강제로 다시 낸다
+    const misses = (retryMiss[answeredQid] = (retryMiss[answeredQid]||0) + 1);
+    if(misses < RETRY_TRIES && !retryList.some(r=>r.qid===answeredQid)){
+      retryList.push({ qid: answeredQid, wait: RETRY_GAP + Math.min(6, (misses-1)*2) });
+      if(retryList.length > RETRY_MAX) retryList.shift();
+    }
   }
 
   el('floorVal').textContent = floor;
@@ -502,14 +536,14 @@ function submitAnswer(){
   if(floor > lastFloor) popFloorBadge();
   lastFloor = floor;
   renderTowerMini(floor);
-  flashFeedback(correct, q.answers[0], gain);
+  flashFeedback(correct, q.answers[0], gain, wasRetry);
   playCharacterReaction(correct);
 
   setTimeout(()=>{
     if(ended) return;
     el('submitBtn').disabled = false; el('answerInput').disabled = false;
     assignNextQuestion();
-  }, correct ? 700 : 1100);
+  }, correct ? 700 : 2000);
 }
 
 el('submitBtn').onclick = submitAnswer;
@@ -591,7 +625,7 @@ el('startBtn').onclick = () => {
   msg.textContent = '';
 
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
-  queue = []; currentQid = null; currentQuestion = null; lastQid = null;
+  queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
 
   // 이번 세션 정보 기록용으로 저장 (종료 시 선생님 화면으로 보냄)
   localStorage.setItem(STORAGE_NAME_KEY, nameNow);
