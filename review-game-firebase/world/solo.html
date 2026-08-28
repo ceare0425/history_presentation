@@ -185,6 +185,9 @@
   <div id="setupView" class="view center">
     <div class="inner">
       <p class="sub">원하는 범위를 골라서 언제든 혼자 연습할 수 있어요. 문제는 선생님만 추가/수정할 수 있습니다.</p>
+      <label>이름</label>
+      <input type="text" id="nameInput" placeholder="이름 (예: 2반 홍길동)" maxlength="20" autocomplete="off">
+      <div class="muted" style="margin:-6px 0 6px; font-size:.78rem;">이름을 적으면 연습 기록(범위·층수)이 선생님 화면에 표시돼요. 비워도 연습은 됩니다.</div>
       <label>연습 범위</label>
       <div class="units" id="unitList">불러오는 중...</div>
       <div class="pool-count" id="poolCountInfo"></div>
@@ -239,13 +242,17 @@
 
 <script type="module">
 import {
-  roomRef, onValue, serverNow,
+  roomRef, onValue, push, serverNow,
   isCorrect, computeGain, fmtTime, escapeHtml, shuffle,
   unitsFromQuestions, poolFromQuestions
 } from '../shared/lib.js';
 
 const ROOM = 'world';
 const STORAGE_BEST_KEY = 'rg_fb_' + ROOM + '_solo_best_floor';
+const STORAGE_NAME_KEY = 'rg_fb_' + ROOM + '_name'; // play.html과 공용 — 참여했던 기기면 이름 자동 입력
+
+let sessionStartedAt = null, sessionUnits = [], sessionDuration = null, sessionOrder = 'random';
+let soloLogged = false;
 
 let questionsObj = {};
 let allUnits = [];
@@ -295,6 +302,9 @@ function buildBackground(){
   layer.appendChild(frag);
 }
 buildBackground();
+
+// 이 기기로 수업(play.html) 또는 이전 연습에 이름을 넣은 적이 있으면 자동으로 채워줌
+el('nameInput').value = localStorage.getItem(STORAGE_NAME_KEY) || '';
 
 function updatePoolCountInfo(){
   const totalCount = Object.keys(questionsObj).length;
@@ -475,8 +485,29 @@ function submitAnswer(){
 el('submitBtn').onclick = submitAnswer;
 el('answerInput').addEventListener('keydown', e=>{ if(e.key==='Enter') submitAnswer(); });
 
+function logSoloSession(){
+  if(soloLogged) return;
+  soloLogged = true;
+  if(correctCount + wrongCount === 0) return; // 문제를 하나도 안 푼 세션은 기록하지 않음
+  const name = (el('nameInput').value.trim() || '(이름 없음)').slice(0, 20);
+  try{
+    push(roomRef(ROOM, 'solo_log'), {
+      name,
+      ts: serverNow(),
+      started_ts: sessionStartedAt || null,
+      duration_sec: sessionDuration || null,
+      order: sessionOrder || null,
+      units: (sessionUnits && sessionUnits.length) ? sessionUnits : 'all',
+      floor: floor,
+      correct: correctCount,
+      wrong: wrongCount
+    });
+  }catch(_e){ /* 기록 실패해도 연습에는 지장 없음 */ }
+}
+
 function showEndedView(){
   ended = true;
+  logSoloSession();
   el('finalFloor').textContent = floor;
   const total = correctCount + wrongCount;
   const acc = total ? Math.round(100*correctCount/total) : null;
@@ -520,6 +551,16 @@ el('startBtn').onclick = () => {
 
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
   queue = []; currentQid = null; currentQuestion = null; lastQid = null;
+
+  // 이번 세션 정보 기록용으로 저장 (종료 시 선생님 화면으로 보냄)
+  const nameNow = el('nameInput').value.trim();
+  if(nameNow) localStorage.setItem(STORAGE_NAME_KEY, nameNow);
+  sessionStartedAt = serverNow();
+  sessionUnits = units;
+  sessionDuration = duration_sec;
+  sessionOrder = questionOrder;
+  soloLogged = false;
+
   roundState = {
     duration_sec,
     end_time: serverNow() + duration_sec*1000,
