@@ -221,7 +221,11 @@
       <div class="toggle-row" id="orderToggle">
         <button type="button" class="active" data-order="random">🔀 랜덤</button>
         <button type="button" data-order="sequential">➡ 순서대로</button>
-        <button type="button" data-order="recent" title="주제 번호가 큰(최근) 주제일수록 더 자주 출제">🆕 최근 우선</button>
+      </div>
+      <label>주제 비중</label>
+      <div class="toggle-row" id="weightToggle">
+        <button type="button" class="active" data-weight="even">⚖️ 동률</button>
+        <button type="button" data-weight="recent" title="주제 번호가 큰(최근) 주제일수록 더 자주 출제 (순서대로에서는 무시됨)">🆕 최근 우선</button>
       </div>
       <div class="setup-msg" id="setupMsg"></div>
       <button id="startBtn">▶ 연습 시작</button>
@@ -278,7 +282,7 @@ const STORAGE_NAME_KEY = 'rg_fb_' + ROOM + '_name'; // play.html과 공용 — �
 const STORAGE_CLASS_KEY = 'rg_fb_class';            // 세계사/한국사 공용 — 한 번 고르면 다음에도 유지
 
 let selectedClass = localStorage.getItem(STORAGE_CLASS_KEY) || null;
-let sessionStartedAt = null, sessionUnits = [], sessionDuration = null, sessionOrder = 'random';
+let sessionStartedAt = null, sessionUnits = [], sessionDuration = null, sessionOrder = 'random', sessionWeight = 'even';
 let sessionClass = null;
 let soloLogged = false;
 
@@ -384,10 +388,25 @@ el('selectAllBtn').onclick = () => { selectedUnits = new Set(allUnits.map(u=>u.u
 el('selectNoneBtn').onclick = () => { selectedUnits = new Set(); renderUnits(); };
 
 let questionOrder = 'random';
+let questionWeight = 'even'; // 'even' | 'recent' — 주제별 출제 비중
+
+function syncWeightToggleEnabled(){
+  const off = questionOrder === 'sequential'; // 순서대로일 때는 주제 비중이 의미 없음
+  el('weightToggle').querySelectorAll('button').forEach(b=>{ b.disabled = off; });
+}
+
 el('orderToggle').querySelectorAll('button').forEach(btn=>{
   btn.onclick = () => {
     questionOrder = btn.dataset.order;
     el('orderToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+    syncWeightToggleEnabled();
+  };
+});
+
+el('weightToggle').querySelectorAll('button').forEach(btn=>{
+  btn.onclick = () => {
+    questionWeight = btn.dataset.weight;
+    el('weightToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
   };
 });
 
@@ -468,13 +487,10 @@ function assignNextQuestion(){
   if(queue.length===0){
     if(roundState.order === 'sequential'){
       queue = pool.map(([qid])=>qid);
-    } else if(roundState.order === 'recent'){
-      queue = weightedQueue(pool, recencyWeightFn(pool.map(([,q])=>q.unit)));
-      if(queue.length>1 && queue[0]===lastQid){
-        [queue[0],queue[1]] = [queue[1],queue[0]];
-      }
     } else {
-      queue = shuffle(pool.map(([qid])=>qid));
+      queue = roundState.weight === 'recent'
+        ? weightedQueue(pool, recencyWeightFn(pool.map(([,q])=>q.unit)))
+        : shuffle(pool.map(([qid])=>qid));
       if(queue.length>1 && queue[0]===lastQid){
         [queue[0],queue[1]] = [queue[1],queue[0]];
       }
@@ -591,6 +607,7 @@ function logSoloSession(){
       started_ts: sessionStartedAt || null,
       duration_sec: sessionDuration || null,
       order: sessionOrder || null,
+      weight: sessionWeight || null,
       units: (sessionUnits && sessionUnits.length) ? sessionUnits : 'all',
       floor: floor,
       correct: correctCount,
@@ -663,12 +680,14 @@ el('startBtn').onclick = () => {
   sessionUnits = units;
   sessionDuration = duration_sec;
   sessionOrder = questionOrder;
+  sessionWeight = questionWeight;
   soloLogged = false;
 
   roundState = {
     duration_sec,
     end_time: serverNow() + duration_sec*1000,
     order: questionOrder,
+    weight: questionWeight,
     qids: pool.map(([qid])=>qid)
   };
 

@@ -268,7 +268,7 @@ let playerName = localStorage.getItem(STORAGE_NAME_KEY) || '';
 let selectedTeam = localStorage.getItem(STORAGE_TEAM_KEY) || null;
 
 let questionsObj = {};
-let roundState = { status: 'idle', units: [], duration_sec: 300, end_time: null, token: 0, order: 'random', qids: [], team_mode:false, team_count:4, bonus:[] };
+let roundState = { status: 'idle', units: [], duration_sec: 300, end_time: null, token: 0, order: 'random', weight: 'even', qids: [], team_mode:false, team_count:4, bonus:[] };
 let lastSeenToken = null;
 let prevEffective = null;
 
@@ -396,13 +396,10 @@ function assignNextQuestion(){
   if(queue.length===0){
     if(roundState.order === 'sequential'){
       queue = pool.map(([qid])=>qid);
-    } else if(roundState.order === 'recent'){
-      queue = weightedQueue(pool, recencyWeightFn(pool.map(([,q])=>q.unit)));
-      if(queue.length>1 && queue[0]===lastQid){
-        [queue[0],queue[1]] = [queue[1],queue[0]];
-      }
     } else {
-      queue = shuffle(pool.map(([qid])=>qid));
+      queue = roundState.weight === 'recent'
+        ? weightedQueue(pool, recencyWeightFn(pool.map(([,q])=>q.unit)))
+        : shuffle(pool.map(([qid])=>qid));
       if(queue.length>1 && queue[0]===lastQid){
         [queue[0],queue[1]] = [queue[1],queue[0]];
       }
@@ -589,9 +586,12 @@ function startListening(){
     roundState = r ? {
       status: r.status || 'idle', units: r.units || [],
       duration_sec: r.duration_sec || 300, end_time: r.end_time ?? null, token: r.token || 0,
-      order: r.order || 'random', qids: r.qids || [],
+      // 예전 버전은 order='recent' 하나로 저장했음 → order='random' + weight='recent'로 해석
+      order: r.order === 'recent' ? 'random' : (r.order || 'random'),
+      weight: r.order === 'recent' ? 'recent' : (r.weight || 'even'),
+      qids: r.qids || [],
       team_mode: !!r.team_mode, team_count: r.team_count || 4, bonus: r.bonus || []
-    } : { status:'idle', units:[], duration_sec:300, end_time:null, token:0, order:'random', qids:[], team_mode:false, team_count:4, bonus:[] };
+    } : { status:'idle', units:[], duration_sec:300, end_time:null, token:0, order:'random', weight:'even', qids:[], team_mode:false, team_count:4, bonus:[] };
   });
 
   onValue(roomRef(ROOM, 'players', playerId), (snap)=>{
