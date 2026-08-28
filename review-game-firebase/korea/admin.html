@@ -144,13 +144,10 @@
 
     <div class="card">
       <h2>② 문제 추가</h2>
-      <label>한 줄에 하나씩: <code>주제 | 문제(____포함) | 정답</code></label>
-      <textarea id="bulkInput" placeholder="주제 01. 문명의 형성 | 현생 인류인 ____은/는 약 20~30만 년 전 아프리카에서 등장하였다. | 호모 사피엔스"></textarea>
-      <label>또는 엑셀(xlsx) 파일 선택 (양식 다운로드 후 표에 입력해서 작성하는 게 가장 편합니다)</label>
+      <label>엑셀(xlsx) 파일로 문제 추가 (양식 다운로드 후 표에 입력해서 작성하는 게 가장 편합니다)</label>
       <input type="file" id="xlsxFileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
       <div class="btnrow">
         <button class="secondary" id="xlsxTemplateBtn" type="button">엑셀 양식 다운로드</button>
-        <button class="secondary" id="bulkAddBtn">일괄 추가</button>
       </div>
       <div class="msg" id="bulkMsg"></div>
     </div>
@@ -418,7 +415,7 @@ const XLSX_GUIDE_ROWS = [
   ['4. 주제 태그는 자유롭게 정하면 됩니다. 관리자 화면에서 이 태그 기준으로 출제 범위를 고릅니다.'],
   ['5. 첫 줄(머리글)은 그대로 두고, 예시 행은 지운 뒤 문제를 입력하세요.'],
   [''],
-  ["작성이 끝나면 관리자 화면에서 이 파일을 업로드하고 '일괄 추가'를 누르세요."],
+  ['작성이 끝나면 관리자 화면 ② 문제 추가에서 이 파일을 업로드하면 문제가 바로 추가됩니다.'],
 ];
 
 el('xlsxTemplateBtn').onclick = () => {
@@ -451,34 +448,23 @@ el('xlsxFileInput').onchange = async () => {
       msg.className='msg err'; msg.textContent = '엑셀 파일에서 문제를 찾지 못했습니다. "문제" 시트에 주제/문제/정답 순서로 입력했는지 확인하세요.';
       return;
     }
-    el('bulkInput').value = lines.join('\n');
-    msg.className='msg ok'; msg.textContent = `"${file.name}"에서 ${lines.length}개 줄을 불러왔습니다. 내용을 확인하고 "일괄 추가"를 누르세요.`;
+    const updates = {};
+    let n = 0;
+    for(const line of lines){
+      const parsed = parseQuestionLine(line);
+      if(!parsed) continue;
+      const key = push(roomRef(ROOM,'questions')).key;
+      updates[`rooms/${ROOM}/questions/${key}`] = parsed;
+      n++;
+    }
+    if(n===0){ msg.className='msg err'; msg.textContent = '추가할 수 있는 문제가 없습니다. 양식(주제/문제/정답)을 확인하세요.'; return; }
+    if(!confirm(`"${file.name}"에서 문제 ${n}개를 추가할까요?`)) { msg.className='msg'; msg.textContent = ''; return; }
+    await update(ref(db), updates);
+    msg.className='msg ok'; msg.textContent = `${n}개 문제를 추가했습니다.`;
   } catch(err){
     msg.className='msg err'; msg.textContent = '엑셀 파일을 읽지 못했습니다: ' + err.message;
   } finally {
     el('xlsxFileInput').value = '';
-  }
-};
-
-el('bulkAddBtn').onclick = async () => {
-  const msg = el('bulkMsg');
-  const lines = el('bulkInput').value.split('\n');
-  const updates = {};
-  let n = 0;
-  for(const line of lines){
-    const parsed = parseQuestionLine(line);
-    if(!parsed) continue;
-    const key = push(roomRef(ROOM,'questions')).key;
-    updates[`rooms/${ROOM}/questions/${key}`] = parsed;
-    n++;
-  }
-  if(n===0){ msg.className='msg err'; msg.textContent='추가할 수 있는 줄이 없습니다. 형식을 확인하세요 (주제 | 문제 | 정답).'; return; }
-  try{
-    await update(ref(db), updates);
-    msg.className='msg ok'; msg.textContent = `${n}개 문제를 추가했습니다.`;
-    el('bulkInput').value = '';
-  } catch(err){
-    msg.className='msg err'; msg.textContent = '일괄 추가 실패: ' + err.message;
   }
 };
 
