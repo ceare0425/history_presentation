@@ -84,6 +84,9 @@
     .quiz-row.col { flex-direction:column; gap:.3rem; }
     .quiz-row.col .inner { display:flex; gap:.65rem; align-items:flex-start; }
     .quiz-row.col .opts { padding-left:2.15rem; font-size:.96rem; line-height:1.7; }
+    .choice-list { list-style:none; counter-reset:ch; display:flex; flex-direction:column; gap:.4rem; margin:.5rem 0 0; padding-left:.3rem; }
+    .choice-list li { counter-increment:ch; position:relative; padding-left:1.9rem; font-size:.98rem; line-height:1.6; }
+    .choice-list li::before { content:counter(ch); position:absolute; left:0; top:.05em; width:1.4rem; height:1.4rem; border:1.5px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.82rem; font-weight:700; color:var(--main); background:var(--card-bg); }
     .q-num { background:var(--main); color:var(--accent-light); font-family:'Nanum Myeongjo',serif; font-weight:700; font-size:.8rem; min-width:1.5rem; height:1.5rem; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.12em; }
     .q-text { flex:1; font-size:1rem; line-height:1.75; }
     .bogi { border:1px solid var(--border); border-radius:2px; padding:.25rem .6rem; margin:.25rem 0; font-size:.96rem; line-height:1.7; background:var(--light); }
@@ -149,7 +152,7 @@
   </div>
 </div>
 
-<!-- 4. 메로베우스 왕조 -->
+<!-- 4-1. 메로베우스 왕조 — 클로비스 -->
 <div class="slide" data-slide="2">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">🏰</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
@@ -159,12 +162,52 @@
       <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 메로베우스 왕조</p>
       <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
       <div class="ruler-card">
-        <div class="ruler-card-header">👑 메로베우스 왕조</div>
+        <div class="ruler-card-header">👑 메로베우스 왕조 — 클로비스</div>
         <div class="ruler-card-body">
           <ul class="info-list">
             <li><strong>클로비스</strong>: 메로베우스 왕조 건립, <strong>로마 가톨릭</strong>으로 개종</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4-2. 메로베우스 왕조 — 카롤루스 마르텔 -->
+<div class="slide" data-slide="3">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏰</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">1. 프랑크 왕국의 성립과 발전</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 메로베우스 왕조</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 메로베우스 왕조 — 카롤루스 마르텔</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
             <li><span class="blank">카롤루스 마르텔</span>: 궁재(宮宰)로서 실권 장악
               → <strong>투르·푸아티에 전투</strong> <span class="era-badge">732년</span> 승리 — 이슬람 세력 격퇴</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4-3. 메로베우스 왕조 — 피핀 -->
+<div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🏰</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">1. 프랑크 왕국의 성립과 발전</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 메로베우스 왕조</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">👑 메로베우스 왕조 — 피핀</div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
             <li><strong>피핀</strong>: 카롤루스 마르텔의 아들, 새 왕조 건립
               → 이탈리아 중부 지역을 교황에게 헌납 → <strong>교황령의 시초</strong></li>
           </ul>
@@ -175,7 +218,7 @@
 </div>
 
 <!-- 5. 카롤루스 대제 -->
-<div class="slide" data-slide="3">
+<div class="slide" data-slide="5">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">🏰</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
     <div class="browser-content">
@@ -197,8 +240,8 @@
   </div>
 </div>
 
-<!-- 6. 3국 분열 + 역사적 의미 -->
-<div class="slide" data-slide="4">
+<!-- 6. 3국 분열 -->
+<div class="slide" data-slide="6">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">🏰</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
     <div class="browser-content">
@@ -216,13 +259,12 @@
           </div>
         </div>
       </div>
-      <div class="highlight-box">📜 <strong>역사적 의미</strong>: 게르만 문화 + 로마 문화 + 크리스트교 → <strong>중세 서유럽 문화의 기틀</strong> 마련</div>
     </div>
   </div>
 </div>
 
 <!-- 7. 봉건 사회 — 배경 -->
-<div class="slide" data-slide="5">
+<div class="slide" data-slide="7">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">⚔️</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
     <div class="browser-content">
@@ -245,7 +287,7 @@
 </div>
 
 <!-- 8. 봉건 사회 — 성립 -->
-<div class="slide" data-slide="6">
+<div class="slide" data-slide="8">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">⚔️</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
     <div class="browser-content">
@@ -263,13 +305,12 @@
           </ul>
         </div>
       </div>
-      <div class="highlight-box">⚖️ <strong>봉건제의 구조</strong> — 정치: <strong>주종 관계</strong> (쌍무적 계약) &nbsp;|&nbsp; 경제: <strong>장원제</strong> (자급자족적 농업 경제)</div>
     </div>
   </div>
 </div>
 
 <!-- 9. 크리스트교 — 로마 교회 + 성상 숭배 금지령 -->
-<div class="slide" data-slide="7">
+<div class="slide" data-slide="9">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">✝️</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
     <div class="browser-content">
@@ -292,7 +333,7 @@
 </div>
 
 <!-- 10. 크리스트교 — 교회 분열 -->
-<div class="slide" data-slide="8">
+<div class="slide" data-slide="10">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">✝️</span><span class="browser-title">학습 내용 정리 (1) — 교과서 56~57쪽</span></div>
     <div class="browser-content">
@@ -315,7 +356,7 @@
 </div>
 
 <!-- 11. 교황과 황제 — 세속화 + 클뤼니 개혁 -->
-<div class="slide" data-slide="9">
+<div class="slide" data-slide="11">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">⚖️</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
     <div class="browser-content">
@@ -337,8 +378,8 @@
   </div>
 </div>
 
-<!-- 12. 교황과 황제 — 카노사의 굴욕 -->
-<div class="slide" data-slide="10">
+<!-- 12-1. 카노사의 굴욕 — 배경 -->
+<div class="slide" data-slide="12">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">⚖️</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
     <div class="browser-content">
@@ -347,19 +388,51 @@
       <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 카노사의 굴욕</p>
       <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
       <div class="ruler-card">
-        <div class="ruler-card-header">🏔️ 카노사의 굴욕 <span class="era-badge" style="font-size:.75rem;">1077년</span></div>
+        <div class="ruler-card-header">🏔️ 카노사의 굴욕 — 배경 <span class="era-badge" style="font-size:.75rem;">1077년</span></div>
         <div class="ruler-card-body">
           <ul class="info-list">
             <li><strong>배경</strong>&nbsp;: 교황 그레고리우스 7세 — 세속 권력의 성직자 임명 금지</li>
-            <li>
-              <div style="flex:1;">
-                <strong>전개</strong>&nbsp;:
-                <div class="flow-list" style="margin-top:.38rem;padding-left:.65rem;border-left:2px solid var(--border);">
-                  <div class="flow-item">신성 로마 제국 황제 하인리히 4세 무시 <span class="flow-arrow">→</span>&nbsp;교황이 황제 <strong>파문</strong></div>
-                  <div class="flow-item"><span class="flow-arrow">→</span>&nbsp;제후·주교 지지 약화 <span class="flow-arrow">→</span>&nbsp;<strong>하인리히 4세</strong>, 카노사에서 사죄</div>
-                </div>
-              </div>
-            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 12-2. 카노사의 굴욕 — 전개 -->
+<div class="slide" data-slide="13">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">⚖️</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">4. 교황과 황제의 대립</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 카노사의 굴욕</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏔️ 카노사의 굴욕 — 전개 <span class="era-badge" style="font-size:.75rem;">1077년</span></div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
+            <li><strong>전개</strong>&nbsp;: 신성 로마 제국 황제 하인리히 4세 무시 → 교황이 황제 <strong>파문</strong><br>→ 제후·주교 지지 약화 → <strong>하인리히 4세</strong>, 카노사에서 사죄</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 12-3. 카노사의 굴욕 — 결과 -->
+<div class="slide" data-slide="14">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">⚖️</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">4. 교황과 황제의 대립</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 카노사의 굴욕</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏔️ 카노사의 굴욕 — 결과 <span class="era-badge" style="font-size:.75rem;">1077년</span></div>
+        <div class="ruler-card-body">
+          <ul class="info-list">
             <li><strong>결과</strong>&nbsp;: <span class="era-badge">1122년</span> <span class="blank">보름스 협약</span> → 교황의 <strong>서임권</strong> 확정</li>
           </ul>
         </div>
@@ -369,7 +442,7 @@
 </div>
 
 <!-- 13. 중세 문화 — 학문 -->
-<div class="slide" data-slide="11">
+<div class="slide" data-slide="15">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">🎨</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
     <div class="browser-content">
@@ -396,8 +469,8 @@
   </div>
 </div>
 
-<!-- 14. 중세 문화 — 건축 양식 -->
-<div class="slide" data-slide="12">
+<!-- 14-1. 중세 문화 — 건축 양식: 로마네스크 -->
+<div class="slide" data-slide="16">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">🎨</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
     <div class="browser-content">
@@ -406,17 +479,33 @@
       <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 건축 양식의 변화</p>
       <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
       <div class="ruler-card">
-        <div class="ruler-card-header">🏛️ 건축 양식의 변화</div>
+        <div class="ruler-card-header">🏛️ 건축 양식의 변화 — 로마네스크 양식</div>
         <div class="ruler-card-body">
-          <div class="grid-2">
-            <div class="mini-card" style="background:var(--card-bg);">
-              <h3>🏟️ 로마네스크 양식 <span class="era-badge">11세기경</span></h3>
-              <p style="font-size:.88rem;">두꺼운 벽 · 돔 · 아치 중심<br>묵직하고 어두운 내부<br>대표: <strong>피사 대성당</strong></p>
-            </div>
-            <div class="mini-card" style="background:var(--card-bg);">
-              <h3>🗼 고딕 양식 <span class="era-badge">12세기경~</span></h3>
-              <p style="font-size:.88rem;"><strong>첨탑</strong> · <strong>스테인드글라스</strong><br>높고 밝은 내부 공간<br>대표: <strong>샤르트르 대성당</strong></p>
-            </div>
+          <div class="mini-card" style="background:var(--card-bg);">
+            <h3>🏟️ 로마네스크 양식 <span class="era-badge">11세기경</span></h3>
+            <p style="font-size:.88rem;">두꺼운 벽 · 돔 · 아치 중심<br>묵직하고 어두운 내부<br>대표: <strong>피사 대성당</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 14-2. 중세 문화 — 건축 양식: 고딕 -->
+<div class="slide" data-slide="17">
+  <div class="browser-card">
+    <div class="browser-topbar"><span class="topbar-icon">🎨</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
+    <div class="browser-content">
+      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
+      <h2 style="text-align:center;margin-bottom:.15rem;">5. 중세 서유럽의 문화</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--text-sec);margin-bottom:.1rem;">(2) 건축 양식의 변화</p>
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <div class="ruler-card">
+        <div class="ruler-card-header">🏛️ 건축 양식의 변화 — 고딕 양식</div>
+        <div class="ruler-card-body">
+          <div class="mini-card" style="background:var(--card-bg);">
+            <h3>🗼 고딕 양식 <span class="era-badge">12세기경~</span></h3>
+            <p style="font-size:.88rem;"><strong>첨탑</strong> · <strong>스테인드글라스</strong><br>높고 밝은 내부 공간<br>대표: <strong>샤르트르 대성당</strong></p>
           </div>
         </div>
       </div>
@@ -425,7 +514,7 @@
 </div>
 
 <!-- 15. 비잔티움 — 성립 -->
-<div class="slide" data-slide="13">
+<div class="slide" data-slide="18">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">🏛️</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
     <div class="browser-content">
@@ -448,7 +537,7 @@
 </div>
 
 <!-- 16. 비잔티움 — 유스티니아누스 황제 -->
-<div class="slide" data-slide="14">
+<div class="slide" data-slide="19">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">🏛️</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
     <div class="browser-content">
@@ -462,7 +551,7 @@
           <ul class="info-list">
             <li>로마 제국 영토 대부분 회복</li>
             <li>로마법 집대성 → <strong>유스티니아누스 법전</strong> 편찬</li>
-            <li>제도: <strong>군관구제</strong>와 <strong>둔전병제</strong></li>
+            <li>제도: 유스티니아누스 사후 <strong>군관구제</strong>와 <strong>둔전병제</strong></li>
           </ul>
         </div>
       </div>
@@ -471,7 +560,7 @@
 </div>
 
 <!-- 17. 비잔티움 — 쇠퇴와 멸망 -->
-<div class="slide" data-slide="15">
+<div class="slide" data-slide="20">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">🏛️</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
     <div class="browser-content">
@@ -494,7 +583,7 @@
 </div>
 
 <!-- 18. 비잔티움 — 문화 -->
-<div class="slide" data-slide="16">
+<div class="slide" data-slide="21">
   <div class="browser-card">
     <div class="browser-topbar"><span class="topbar-icon">🎨</span><span class="browser-title">학습 내용 정리 (2) — 교과서 58~60쪽</span></div>
     <div class="browser-content">
@@ -516,47 +605,25 @@
   </div>
 </div>
 
-<!-- 19. 핵심 정리 -->
-<div class="slide" data-slide="17">
-  <div class="browser-card">
-    <div class="browser-topbar"><span class="topbar-icon">📋</span><span class="browser-title">핵심 정리</span></div>
-    <div class="browser-content">
-      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
-      <h2 style="text-align:center;margin-bottom:.25rem;">학습 내용 정리</h2>
-      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
-      <table class="sum-table">
-        <thead><tr><th style="width:18%;">주제</th><th>핵심 내용</th></tr></thead>
-        <tbody>
-          <tr><td><strong>프랑크 왕국</strong></td><td>클로비스(메로베우스) → 카롤루스 마르텔(투르·푸아티에 732) → 피핀 → <strong>카롤루스 대제</strong>(서로마 황제 800) → 3국 분열</td></tr>
-          <tr><td><strong>봉건 사회</strong></td><td>노르만족·마자르족·이슬람 침입 → 기사 계급 → <strong>주종 관계</strong>(정치) + <strong>장원제</strong>(경제)</td></tr>
-          <tr><td><strong>교회 분열</strong></td><td>레오 3세 성상 금지령 → <strong>로마 가톨릭</strong>(서) vs <strong>그리스 정교회</strong>(동) — 1054년</td></tr>
-          <tr><td><strong>교황·황제</strong></td><td><strong>클뤼니</strong> 개혁 → <strong>카노사의 굴욕</strong>(1077) → <strong>보름스 협약</strong>(1122)</td></tr>
-          <tr><td><strong>중세 문화</strong></td><td>아우구스티누스(교부 철학) → 토마스 아퀴나스(스콜라 철학) / 로마네스크(피사) → 고딕(샤르트르)</td></tr>
-          <tr><td><strong>비잔티움</strong></td><td>동로마 1,000년 · 유스티니아누스(영토·법전·군관구제) · 1453 오스만 멸망 / 그리스 정교 · 비잔티움 양식</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
 <!-- ===== 개념 확인 문제 — 26쪽 ===== -->
 
 <!-- 20. 26쪽 1번 OX -->
-<div class="slide" data-slide="18">
+<div class="slide" data-slide="22">
   <div class="browser-card">
-    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 26쪽</span></div>
+    <div class="browser-topbar"><span class="topbar-icon">📝</span><span class="browser-title">교과서 26쪽 — 개념 확인 문제 1번 (OX)</span></div>
     <div class="browser-content">
-      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
-      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 26쪽</span></h2>
-      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
-      <div class="quiz-wrap plain">
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 — 1번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.45rem;">다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</p>
+      <div class="quiz-wrap">
         <div class="quiz-row">
-          <div class="q-num">1</div>
-          <div class="q-text">
-            다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.<br>
-            ⑴ 클로비스는 메로베우스 왕조를 세우고 로마 가톨릭으로 개종하였다. &nbsp;<span class="ans-btn">○</span><br>
-            ⑵ 비잔티움 제국 레오 3세의 성상 숭배 금지령을 계기로 동서 교회의 대립이 격화되었고, 로마 가톨릭과 그리스 정교회로 분열되었다. &nbsp;<span class="ans-btn">○</span>
-          </div>
+          <span class="q-num">⑴</span>
+          <div class="q-text">클로비스는 메로베우스 왕조를 세우고 로마 가톨릭으로 개종하였다.</div>
+          <span class="ans-btn" data-reveal>○</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <div class="q-text">비잔티움 제국 레오 3세의 성상 숭배 금지령을 계기로 동서 교회의 대립이 격화되었고, 로마 가톨릭과 그리스 정교회로 분열되었다.</div>
+          <span class="ans-btn" data-reveal>○</span>
         </div>
       </div>
     </div>
@@ -564,20 +631,23 @@
 </div>
 
 <!-- 21. 26쪽 2번 빈칸 -->
-<div class="slide" data-slide="19">
+<div class="slide" data-slide="23">
   <div class="browser-card">
-    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 26쪽</span></div>
+    <div class="browser-topbar"><span class="topbar-icon">📝</span><span class="browser-title">교과서 26쪽 — 개념 확인 문제 2번 (빈칸 채우기)</span></div>
     <div class="browser-content">
-      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
-      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 26쪽</span></h2>
-      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
-      <div class="quiz-wrap plain">
-        <div class="quiz-row">
-          <div class="q-num">2</div>
-          <div class="q-text">
-            빈칸에 들어갈 알맞은 말을 쓰시오.<br>
-            ⑴ 궁재인 카롤루스 마르텔은 메로베우스 왕조의 실권을 장악하고 ( <span class="ans-btn">투르·푸아티에</span> ) 전투에서 승리하여 이슬람 세력의 침략을 물리쳤다.<br>
-            ⑵ 카롤루스 대제는 궁정 학교를 세우고 고전을 연구하는 등 ( <span class="ans-btn">카롤루스 르네상스</span> )을/를 일으켰다.
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 — 2번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.45rem;">빈칸에 들어갈 알맞은 말을 쓰시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner"><span class="q-num">⑴</span>
+            <div class="q-text">궁재인 카롤루스 마르텔은 메로베우스 왕조의 실권을 장악하고
+              ( <span class="ans-btn" data-reveal>투르·푸아티에</span> ) 전투에서 승리하여 이슬람 세력의 침략을 물리쳤다.</div>
+          </div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner"><span class="q-num">⑵</span>
+            <div class="q-text">카롤루스 대제는 궁정 학교를 세우고 고전을 연구하는 등
+              ( <span class="ans-btn" data-reveal>카롤루스 르네상스</span> )을/를 일으켰다.</div>
           </div>
         </div>
       </div>
@@ -586,20 +656,23 @@
 </div>
 
 <!-- 22. 26쪽 3번 (가)(나) -->
-<div class="slide" data-slide="20">
+<div class="slide" data-slide="24">
   <div class="browser-card">
-    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 26쪽</span></div>
+    <div class="browser-topbar"><span class="topbar-icon">📜</span><span class="browser-title">교과서 26쪽 — 개념 확인 문제 3번 (자료 분석)</span></div>
     <div class="browser-content">
-      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
-      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 26쪽</span></h2>
-      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
-      <div class="quiz-wrap plain">
-        <div class="quiz-row">
-          <div class="q-num">3</div>
-          <div class="q-text">
-            (가), (나)에 들어갈 알맞은 말을 쓰시오.<br>
-            9세기 무렵 노르만족의 남하, 마자르족, 이슬람 세력의 침입을 배경으로 서유럽 지역에서는 봉건 사회의 질서가 성립하였다. 이 시기 봉건제는 정치적으로는 기사 계급 사이의 (가), 경제적으로는 자급자족적 성격의 (나)을/를 바탕으로 운영되었다.<br>
-            (가): <span class="ans-btn">주종 관계</span> &emsp; (나): <span class="ans-btn">장원제</span>
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 — 3번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.45rem;">(가), (나)에 들어갈 알맞은 말을 쓰시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="bogi" style="margin:0 0 .15rem;">
+            9세기 무렵 노르만족의 남하, 마자르족, 이슬람 세력의 침입을 배경으로 서유럽 지역에서는
+            봉건 사회의 질서가 성립하였다. 이 시기 봉건제는 정치적으로는 기사 계급 사이의 <strong>(가)</strong>,
+            경제적으로는 자급자족적 성격의 <strong>(나)</strong>을/를 바탕으로 운영되었다.
+          </div>
+          <div style="font-size:.95rem;line-height:2.2;">
+            (가) : <span class="ans-btn" data-reveal>주종 관계</span>
+            &nbsp;&nbsp;&nbsp;
+            (나) : <span class="ans-btn" data-reveal>장원제</span>
           </div>
         </div>
       </div>
@@ -608,23 +681,16 @@
 </div>
 
 <!-- 23. 26쪽 4번 선다형 -->
-<div class="slide" data-slide="21">
+<div class="slide" data-slide="25">
   <div class="browser-card">
-    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 26쪽</span></div>
+    <div class="browser-topbar"><span class="topbar-icon">📝</span><span class="browser-title">교과서 26쪽 — 개념 확인 문제 4번 (선택형)</span></div>
     <div class="browser-content">
-      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
-      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 26쪽</span></h2>
-      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
-      <div class="quiz-wrap plain">
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 — 4번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.45rem;">프랑크 왕국의 각 인물과 설명이 옳게 짝지어진 것을 &lt;보기&gt;에서 있는 대로 고른 것은? <span class="ans-btn" data-reveal>⑤ ㄷ, ㄹ</span></p>
+      <div class="quiz-wrap">
         <div class="quiz-row col">
-          <div class="inner">
-            <div class="q-num">4</div>
-            <div class="q-text">
-              프랑크 왕국의 각 인물과 설명이 옳게 짝지어진 것을 &lt;보기&gt;에서 있는 대로 고른 것은? <span class="ans-btn">⑤ ㄷ, ㄹ</span>
-            </div>
-          </div>
           <div class="bogi">
-            ㄱ. 클로비스 — '밀라노 칙령'을 반포하였다.<br>
+            ㄱ. 클로비스 — &lsquo;밀라노 칙령&rsquo;을 반포하였다.<br>
             ㄴ. 카롤루스 마르텔 — 악티움 해전에서 승리하였다.<br>
             ㄷ. 피핀 — 교황에게 이탈리아 중부 지역을 기증하였다.<br>
             ㄹ. 카롤루스 대제 — 교황에게 서로마 황제로 대관을 받았다.
@@ -639,22 +705,27 @@
 <!-- ===== 개념 확인 문제 — 28쪽 ===== -->
 
 <!-- 24. 28쪽 1번 OX -->
-<div class="slide" data-slide="22">
+<div class="slide" data-slide="26">
   <div class="browser-card">
-    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 28쪽</span></div>
+    <div class="browser-topbar"><span class="topbar-icon">📝</span><span class="browser-title">교과서 28쪽 — 개념 확인 문제 1번 (OX)</span></div>
     <div class="browser-content">
-      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
-      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 28쪽</span></h2>
-      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
-      <div class="quiz-wrap plain">
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 — 1번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.45rem;">다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.</p>
+      <div class="quiz-wrap">
         <div class="quiz-row">
-          <div class="q-num">1</div>
-          <div class="q-text">
-            다음 내용이 옳으면 ○표, 틀리면 ×표 하시오.<br>
-            ⑴ 클뤼니 수도원 출신의 교황 그레고리우스 7세는 세속 군주의 성직자 서임을 금지하였다. &nbsp;<span class="ans-btn">○</span><br>
-            ⑵ 중세 학문은 신학을 중심으로 발달하였으며, 중세 초기에는 아우구스티누스의 교부 철학이 발전하였다. &nbsp;<span class="ans-btn">○</span><br>
-            ⑶ 비잔티움 제국은 그리스 정교를 바탕으로 그리스·로마 문화와 헬레니즘 문화를 융합하여 독자적인 문화를 발전시켰다. &nbsp;<span class="ans-btn">○</span>
-          </div>
+          <span class="q-num">⑴</span>
+          <div class="q-text">클뤼니 수도원 출신의 교황 그레고리우스 7세는 세속 군주의 성직자 서임을 금지하였다.</div>
+          <span class="ans-btn" data-reveal>○</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑵</span>
+          <div class="q-text">중세 학문은 신학을 중심으로 발달하였으며, 중세 초기에는 아우구스티누스의 교부 철학이 발전하였다.</div>
+          <span class="ans-btn" data-reveal>○</span>
+        </div>
+        <div class="quiz-row">
+          <span class="q-num">⑶</span>
+          <div class="q-text">비잔티움 제국은 그리스 정교를 바탕으로 그리스·로마 문화와 헬레니즘 문화를 융합하여 독자적인 문화를 발전시켰다.</div>
+          <span class="ans-btn" data-reveal>○</span>
         </div>
       </div>
     </div>
@@ -662,21 +733,30 @@
 </div>
 
 <!-- 25. 28쪽 2번 빈칸 -->
-<div class="slide" data-slide="23">
+<div class="slide" data-slide="27">
   <div class="browser-card">
-    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 28쪽</span></div>
+    <div class="browser-topbar"><span class="topbar-icon">📝</span><span class="browser-title">교과서 28쪽 — 개념 확인 문제 2번 (빈칸 채우기)</span></div>
     <div class="browser-content">
-      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
-      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 28쪽</span></h2>
-      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
-      <div class="quiz-wrap plain">
-        <div class="quiz-row">
-          <div class="q-num">2</div>
-          <div class="q-text">
-            빈칸에 들어갈 알맞은 말을 쓰시오.<br>
-            ⑴ 교황과 세속 군주가 성직자 서임권을 두고 대립하였으며, ( <span class="ans-btn">보름스</span> ) 협약을 통해 교황이 성직자 서임권을 차지하게 되었다.<br>
-            ⑵ 십자군 전쟁 이후 이슬람 세계를 통해 아리스토텔레스의 철학이 유럽으로 전해졌으며, 이러한 배경 속에서 토마스 아퀴나스는 신앙과 이성의 조화를 꾀하는 ( <span class="ans-btn">스콜라 철학</span> )을/를 집대성하였다.<br>
-            ⑶ 비잔티움 제국은 영역을 ( <span class="ans-btn">군관구</span> )로/으로 나누고, 황제가 임명한 군사령관에게 군사권, 행정권, 사법권을 부여한 제도를 실시하였다.
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 — 2번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.45rem;">빈칸에 들어갈 알맞은 말을 쓰시오.</p>
+      <div class="quiz-wrap">
+        <div class="quiz-row col">
+          <div class="inner"><span class="q-num">⑴</span>
+            <div class="q-text">교황과 세속 군주가 성직자 서임권을 두고 대립하였으며,
+              ( <span class="ans-btn" data-reveal>보름스</span> ) 협약을 통해 교황이 성직자 서임권을 차지하게 되었다.</div>
+          </div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner"><span class="q-num">⑵</span>
+            <div class="q-text">십자군 전쟁 이후 이슬람 세계를 통해 아리스토텔레스의 철학이 유럽으로 전해졌으며,
+              이러한 배경 속에서 토마스 아퀴나스는 신앙과 이성의 조화를 꾀하는
+              ( <span class="ans-btn" data-reveal>스콜라 철학</span> )을/를 집대성하였다.</div>
+          </div>
+        </div>
+        <div class="quiz-row col">
+          <div class="inner"><span class="q-num">⑶</span>
+            <div class="q-text">비잔티움 제국은 영역을 ( <span class="ans-btn" data-reveal>군관구</span> )로/으로 나누고,
+              황제가 임명한 군사령관에게 군사권, 행정권, 사법권을 부여한 제도를 실시하였다.</div>
           </div>
         </div>
       </div>
@@ -685,24 +765,25 @@
 </div>
 
 <!-- 26. 28쪽 3번 선다형 -->
-<div class="slide" data-slide="24">
+<div class="slide" data-slide="28">
   <div class="browser-card">
-    <div class="browser-topbar"><span class="topbar-icon">✅</span><span class="browser-title">개념 확인 문제 — 교과서 28쪽</span></div>
+    <div class="browser-topbar"><span class="topbar-icon">📜</span><span class="browser-title">교과서 28쪽 — 개념 확인 문제 3번 (자료 분석)</span></div>
     <div class="browser-content">
-      <div class="section-ornament">✦ &nbsp; ✦ &nbsp; ✦</div>
-      <h2 style="margin-bottom:.22rem;">개념 확인 문제 <span style="font-size:.9rem;font-weight:400;color:var(--text-sec);">— 28쪽</span></h2>
-      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
-      <div class="quiz-wrap plain">
+      <h2 style="margin-bottom:.4rem;">개념 확인 문제 — 3번</h2>
+      <p style="font-size:.88rem;color:var(--text-sec);margin-bottom:.45rem;">(가), (나)에 해당하는 내용끼리 옳게 짝지어진 것은? <span class="ans-btn" data-reveal>② 고딕 양식 — 비잔티움 양식</span></p>
+      <div class="quiz-wrap">
         <div class="quiz-row col">
-          <div class="inner">
-            <div class="q-num">3</div>
-            <div class="q-text">
-              (가), (나)에 해당하는 내용끼리 옳게 짝지어진 것은? <span class="ans-btn">② 고딕 양식 / 비잔티움 양식</span><br>
-              (가) 첨탑과 스테인드글라스를 특징으로 하며, 12세기경부터 중세 서유럽에서 유행하였다.<br>
-              (나) 외부의 웅장한 돔과 내부를 장식한 모자이크 벽화를 특징으로 하며, 성 소피아 대성당이 대표적이다.
-            </div>
+          <div class="bogi">
+            <strong>(가)</strong> 첨탑과 스테인드글라스를 특징으로 하며, 12세기경부터 중세 서유럽에서 유행하였다.<br>
+            <strong>(나)</strong> 외부의 웅장한 돔과 내부를 장식한 모자이크 벽화를 특징으로 하며, 성 소피아 대성당이 대표적이다.
           </div>
-          <div class="opts">① 고딕 양식 — 간다라 양식 &ensp; ② 고딕 양식 — 비잔티움 양식 &ensp; ③ 로마네스크 양식 — 고딕 양식 &ensp; ④ 로마네스크 양식 — 헬레니즘 양식 &ensp; ⑤ 비잔티움 양식 — 고딕 양식</div>
+          <ol class="choice-list">
+            <li>고딕 양식 — 간다라 양식</li>
+            <li>고딕 양식 — 비잔티움 양식</li>
+            <li>로마네스크 양식 — 고딕 양식</li>
+            <li>로마네스크 양식 — 헬레니즘 양식</li>
+            <li>비잔티움 양식 — 고딕 양식</li>
+          </ol>
         </div>
       </div>
     </div>
@@ -716,7 +797,7 @@
     <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
   </button>
   <span class="nav-counter">
-    <input type="text" class="slide-input" id="slideInput" value="1"> / <span id="totalEl">26</span>
+    <input type="text" class="slide-input" id="slideInput" value="1"> / <span id="totalEl">29</span>
   </span>
   <button class="nav-btn" id="nextBtn" onclick="nextSlide()" aria-label="다음">
     <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
@@ -729,7 +810,7 @@
   const TOTAL  = slides.length;
   document.getElementById('totalEl').textContent = TOTAL;
 
-  const QUIZ_START = 19; /* 퀴즈 슬라이드 시작 인덱스 (0-based) */
+  const QUIZ_START = 22; /* 퀴즈 슬라이드 시작 인덱스 (0-based) */
 
   function hasUnrevealed() {
     return slides[cur].querySelectorAll('.blank:not(.on), .ans-btn:not(.on)').length > 0;
