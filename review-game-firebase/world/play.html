@@ -252,7 +252,7 @@
 
 <script type="module">
 import {
-  roomRef, ref, onValue, get, set, update, serverNow, db, onDisconnect,
+  roomRef, onValue, get, set, update, serverNow,
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   TEAM_OPTIONS, teamInfo, activeBonus
 } from '../shared/lib.js';
@@ -581,13 +581,10 @@ function startListening(){
     }
   });
 
-  // 연결이 끊기면(탭을 닫거나 네트워크가 끊기면) 서버가 자동으로 이 학생을 명단에서 지우도록 예약.
-  // 재연결될 때마다(.info/connected가 true가 될 때마다) 다시 걸어줘야 안전하다 (Firebase 권장 방식)
-  onValue(ref(db, '.info/connected'), (snap)=>{
-    if(snap.val() === true){
-      onDisconnect(roomRef(ROOM, 'players', playerId)).remove();
-    }
-  });
+  // 연결이 끊겨도(스마트폰 화면 잠금·앱 전환·와이파이↔LTE 전환 등) 학생을 명단에서 자동으로
+  // 지우지 않는다. 예전에는 onDisconnect().remove()로 지웠는데, 폰에서 잠깐 끊길 때마다
+  // 학생 노드가 사라져 "내보내졌어요" 알림과 함께 점수까지 날아가는 문제가 있었다.
+  // 학생을 뺄 때는 관리자 화면의 "내보내기" / "전체 초기화" 버튼을 쓴다.
 
   setInterval(tick, 250);
 }
