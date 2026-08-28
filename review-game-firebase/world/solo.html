@@ -187,7 +187,7 @@
       <p class="sub">원하는 범위를 골라서 언제든 혼자 연습할 수 있어요. 문제는 선생님만 추가/수정할 수 있습니다.</p>
       <label>이름</label>
       <input type="text" id="nameInput" placeholder="이름 (예: 2반 홍길동)" maxlength="20" autocomplete="off">
-      <div class="muted" style="margin:-6px 0 6px; font-size:.78rem;">이름을 적으면 연습 기록(범위·층수)이 선생님 화면에 표시돼요. 비워도 연습은 됩니다.</div>
+      <div class="muted" style="margin:-6px 0 6px; font-size:.78rem;">이름을 입력해야 연습을 시작할 수 있어요. 연습 기록(범위·층수)이 선생님 화면에 표시됩니다.</div>
       <label>연습 범위</label>
       <div class="units" id="unitList">불러오는 중...</div>
       <div class="pool-count" id="poolCountInfo"></div>
@@ -541,6 +541,12 @@ let tickHandle = null;
 
 el('startBtn').onclick = () => {
   const msg = el('setupMsg');
+  const nameNow = el('nameInput').value.trim();
+  if(!nameNow){
+    msg.textContent = '이름을 입력해야 연습을 시작할 수 있어요.';
+    el('nameInput').focus();
+    return;
+  }
   const units = Array.from(selectedUnits);
   const pool = poolFromQuestions(questionsObj, units);
   if(pool.length===0){ msg.textContent = '선택한 범위에 문제가 없습니다.'; return; }
@@ -553,8 +559,7 @@ el('startBtn').onclick = () => {
   queue = []; currentQid = null; currentQuestion = null; lastQid = null;
 
   // 이번 세션 정보 기록용으로 저장 (종료 시 선생님 화면으로 보냄)
-  const nameNow = el('nameInput').value.trim();
-  if(nameNow) localStorage.setItem(STORAGE_NAME_KEY, nameNow);
+  localStorage.setItem(STORAGE_NAME_KEY, nameNow);
   sessionStartedAt = serverNow();
   sessionUnits = units;
   sessionDuration = duration_sec;
