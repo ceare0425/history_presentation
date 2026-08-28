@@ -203,6 +203,32 @@
       <tbody id="roster"><tr><td colspan="9" class="muted">학생이 아직 없습니다.</td></tr></tbody>
     </table>
   </div>
+
+  <div class="card" style="grid-column:1 / -1">
+    <h2>⑤ 혼자 연습 현황</h2>
+    <div class="sub" style="margin-top:-6px;">학생이 <code>solo.html</code>(혼자 연습하기)에서 이름을 넣고 연습을 끝내면 여기 쌓입니다. 수업 게임 점수와는 별개입니다.</div>
+    <div class="status-line">
+      <span class="muted" id="soloSummary">불러오는 중...</span>
+      <button type="button" class="secondary" id="soloClearBtn" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;">기록 비우기</button>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; align-items:start;">
+      <div>
+        <div class="pool-count"><b>학생별</b> (연습 많이 한 순)</div>
+        <table>
+          <thead><tr><th>이름</th><th>횟수</th><th>평균 층수</th><th>최고</th><th>최근 연습</th></tr></thead>
+          <tbody id="soloByStudent"><tr><td colspan="5" class="muted">아직 기록이 없습니다.</td></tr></tbody>
+        </table>
+      </div>
+      <div>
+        <div class="pool-count"><b>최근 세션</b> (최대 40개)</div>
+        <table>
+          <thead><tr><th>시각</th><th>이름</th><th>범위</th><th>층수</th><th>정답/오답</th></tr></thead>
+          <tbody id="soloRecent"><tr><td colspan="5" class="muted">아직 기록이 없습니다.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="msg" id="soloMsg"></div>
+  </div>
 </div>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -681,6 +707,83 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
 onValue(roomRef(ROOM,'players'), (snap)=>{
   playersObj = snap.val() || {};
 });
+
+// ── ⑤ 혼자 연습 현황 ──────────────────────────────
+let soloLogObj = {};
+
+function fmtSoloTime(ts){
+  if(!ts) return '-';
+  const d = new Date(ts), now = new Date();
+  const hh = String(d.getHours()).padStart(2,'0'), mm = String(d.getMinutes()).padStart(2,'0');
+  if(d.toDateString() === now.toDateString()) return `오늘 ${hh}:${mm}`;
+  const y = new Date(now); y.setDate(now.getDate()-1);
+  if(d.toDateString() === y.toDateString()) return `어제 ${hh}:${mm}`;
+  return `${d.getMonth()+1}/${d.getDate()} ${hh}:${mm}`;
+}
+
+function soloRangeLabel(units){
+  if(!units || units === 'all') return '전체';
+  if(Array.isArray(units)) return units.length > 1 ? `${units.length}개 범위` : (units[0] || '전체');
+  return String(units);
+}
+
+function renderSoloStats(){
+  const entries = Object.values(soloLogObj).filter(e => e && e.ts);
+  entries.sort((a,b)=>(b.ts||0)-(a.ts||0));
+
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const weekAgo = Date.now() - 7*24*3600*1000;
+  const todayCount = entries.filter(e=>e.ts >= todayStart.getTime()).length;
+  const weekCount = entries.filter(e=>e.ts >= weekAgo).length;
+  const students = new Set(entries.map(e=>e.name || '(이름 없음)'));
+  el('soloSummary').innerHTML = entries.length
+    ? `총 <b>${entries.length}</b>회 · 오늘 <b>${todayCount}</b>회 · 최근 7일 <b>${weekCount}</b>회 · 연습한 학생 <b>${students.size}</b>명`
+    : '아직 혼자 연습 기록이 없습니다.';
+
+  const byName = {};
+  entries.forEach(e=>{
+    const n = e.name || '(이름 없음)';
+    const b = byName[n] || (byName[n] = { count:0, floorSum:0, best:0, last:0 });
+    b.count++; b.floorSum += (e.floor||0);
+    b.best = Math.max(b.best, e.floor||0);
+    b.last = Math.max(b.last, e.ts||0);
+  });
+  const nameRows = Object.entries(byName).sort((a,b)=> b[1].count-a[1].count || b[1].last-a[1].last);
+  el('soloByStudent').innerHTML = nameRows.length ? nameRows.map(([n,b])=>
+    `<tr><td>${escapeHtml(n)}</td><td>${b.count}</td><td>${Math.round(b.floorSum/b.count)}층</td><td>${b.best}층</td><td class="muted">${fmtSoloTime(b.last)}</td></tr>`
+  ).join('') : '<tr><td colspan="5" class="muted">아직 기록이 없습니다.</td></tr>';
+
+  el('soloRecent').innerHTML = entries.length ? entries.slice(0,40).map(e=>{
+    const total = (e.correct||0)+(e.wrong||0);
+    const acc = total ? Math.round(100*(e.correct||0)/total) : null;
+    const accClass = acc===null ? 'muted' : (acc>=70 ? 'acc-ok' : 'acc-bad');
+    return `<tr>
+      <td class="muted">${fmtSoloTime(e.ts)}</td>
+      <td>${escapeHtml(e.name || '(이름 없음)')}</td>
+      <td>${escapeHtml(soloRangeLabel(e.units))}</td>
+      <td>${e.floor||0}층</td>
+      <td class="${accClass}">${e.correct||0}/${e.wrong||0}${acc===null?'':` (${acc}%)`}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="5" class="muted">아직 기록이 없습니다.</td></tr>';
+}
+
+onValue(roomRef(ROOM,'solo_log'), (snap)=>{
+  soloLogObj = snap.val() || {};
+  renderSoloStats();
+});
+
+el('soloClearBtn').onclick = async () => {
+  if(!confirm('혼자 연습 기록을 모두 삭제할까요?\n(학생 점수·참여 목록과는 무관합니다.)')) return;
+  el('soloClearBtn').disabled = true;
+  try{
+    await remove(roomRef(ROOM,'solo_log'));
+    el('soloMsg').className = 'msg ok'; el('soloMsg').textContent = '혼자 연습 기록을 모두 비웠습니다.';
+  }catch(err){
+    el('soloMsg').className = 'msg err'; el('soloMsg').textContent = '삭제 실패: ' + err.message;
+  }finally{
+    el('soloClearBtn').disabled = false;
+  }
+};
 
 setInterval(renderRoster, 500);
 </script>

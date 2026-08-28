@@ -16,6 +16,13 @@
             ".write": true,
             ".validate": "newData.hasChild('name') && newData.child('name').isString() && newData.child('name').val().length <= 20"
           }
+        },
+        "solo_log": {
+          ".read": true,
+          ".write": true,
+          "$entry": {
+            ".validate": "!newData.exists() || (newData.hasChild('name') && newData.hasChild('ts') && newData.child('name').val().length <= 20)"
+          }
         }
       }
     }
