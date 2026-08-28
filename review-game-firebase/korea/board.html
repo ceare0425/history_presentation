@@ -311,9 +311,16 @@ const BGM_CHORDS = [
   { pad: [87.31, 110.00, 130.81], arp: [174.61, 220.00, 261.63, 349.23] },
   { pad: [98.00, 123.47, 146.83], arp: [196.00, 246.94, 293.66, 392.00] },
 ];
-const BGM_BEAT_SEC = 0.55;
+const BGM_BEAT_SEC = 0.55;       // 남은 시간이 충분할 때의 기본 박자(초/박)
+const BGM_BEAT_SEC_FAST = 0.30;  // 시간이 임박했을 때 최고 속도
 const BGM_BEATS_PER_CHORD = 4;
 let bgmChordIndex = 0, bgmBeatIndex = 0, bgmNextTime = 0, bgmSchedulerId = null;
+
+// 남은 시간이 줄수록 1에 가까워진다 (render()에서 매번 갱신). 0이면 기본 속도.
+let bgmIntensity = 0;
+function currentBeatSec(){
+  return BGM_BEAT_SEC - (BGM_BEAT_SEC - BGM_BEAT_SEC_FAST) * bgmIntensity;
+}
 
 function ensureAudioCtx(){
   if(audioCtx) return;
@@ -345,19 +352,20 @@ function playTone(freq, startTime, duration, peak, type){
 }
 
 function scheduleBgmNote(){
+  const beatSec = currentBeatSec();
   const chord = BGM_CHORDS[bgmChordIndex];
   if(bgmBeatIndex === 0){
-    chord.pad.forEach(f => playTone(f, bgmNextTime, BGM_BEAT_SEC*BGM_BEATS_PER_CHORD*0.95, 0.16, 'sine'));
+    chord.pad.forEach(f => playTone(f, bgmNextTime, beatSec*BGM_BEATS_PER_CHORD*0.95, 0.16, 'sine'));
   }
   const note = chord.arp[bgmBeatIndex % chord.arp.length];
-  playTone(note, bgmNextTime, BGM_BEAT_SEC*0.9, 0.14, 'triangle');
+  playTone(note, bgmNextTime, beatSec*0.9, 0.14, 'triangle');
 
   bgmBeatIndex++;
   if(bgmBeatIndex >= BGM_BEATS_PER_CHORD){
     bgmBeatIndex = 0;
     bgmChordIndex = (bgmChordIndex+1) % BGM_CHORDS.length;
   }
-  bgmNextTime += BGM_BEAT_SEC;
+  bgmNextTime += beatSec;
 }
 
 function bgmSchedulerTick(){
@@ -620,6 +628,16 @@ function render(){
   const remaining = roundState.end_time!=null ? Math.max(0, Math.round((roundState.end_time - serverNow())/1000)) : null;
   let effective = roundState.status;
   if(roundState.status==='running' && remaining!==null && remaining<=0) effective='ended';
+
+  // 후반부로 갈수록 배경음 템포를 서서히 올린다 (마지막 30초는 최고 속도)
+  if(effective === 'running' && remaining !== null && roundState.duration_sec){
+    const frac = remaining / roundState.duration_sec;   // 1 → 0
+    let t = (0.55 - frac) / 0.55;                       // 남은 55% 지점부터 가속 시작
+    if(remaining <= 30) t = 1;
+    bgmIntensity = Math.min(1, Math.max(0, t));
+  } else {
+    bgmIntensity = 0;
+  }
 
   const pill = el('statusPill');
   pill.className = 'pill ' + effective;
