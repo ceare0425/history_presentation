@@ -209,6 +209,13 @@ export function teamStandings(players) {
   return Array.from(map.values()).sort((a, b) => b.floor - a.floor || b.correct - a.correct);
 }
 
+// 팀전 아이템: '선두권 견제' 공격 아이템이 노릴 상대 팀 하나를 고른다.
+// 내 팀을 뺀 팀 중 층수 합이 가장 높은 팀(= 견제 대상). 상대 팀이 없으면 null → 호출부에서 자기 강화로 전환.
+export function pickTargetTeam(players, myTeam) {
+  const rivals = teamStandings(players).filter((s) => s.team !== myTeam && s.members > 0);
+  return rivals.length ? rivals[0].team : null;
+}
+
 // ── 역전 이벤트(2배 찬스) ──
 // 관리자가 버튼으로 수동 발동만 함 (admin.html의 bonusNowBtn)
 
@@ -226,7 +233,8 @@ export function activeBonus(round, nowMs) {
 // round.items_mode: 'off' | 'mild'(순한맛) | 'spicy'(매운맛)
 //   mild  : 자기 강화 + 전체 이벤트만 (저격 없음)
 //   spicy : 위 + '선두권 견제' 방해 아이템 포함
-// 아이템은 3연속 정답마다 1개 획득(보유 1개 한도), 개인전에서만 동작.
+// 아이템은 3연속 정답마다 1개 획득(보유 1개 한도).
+// 팀전에서도 동작하며, '선두권 견제' 아이템은 내 팀이 아닌 '선두 상대 팀 전원'에게 적용된다.
 export const ITEMS = {
   boost:    { emoji: '⚡',  name: '부스터',    kind: 'self',    desc: '다음 정답 3개 2배' },
   ladder:   { emoji: '🪜',  name: '사다리',    kind: 'self',    desc: '즉시 +2층' },

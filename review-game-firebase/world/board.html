@@ -173,6 +173,9 @@
   }
   @keyframes fxBadge{ 0%,100%{ transform:translateX(-50%) translateY(0); } 50%{ transform:translateX(-50%) translateY(-6px); } }
   .climber.fx-fog .avatar{ filter:blur(3px); }
+  .team-fx{ position:relative; animation:teamFxShake .5s ease-in-out 0s 4; }
+  @keyframes teamFxShake{ 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-7px); } 75%{ transform:translateX(7px); } }
+  .team-fx-badge{ position:absolute; top:8px; left:50%; transform:translateX(-50%); font-size:2.2rem; z-index:6; pointer-events:none; animation:fxBadge 1s ease-in-out infinite; }
 
   .team-scorebar{
     display:none; gap:14px; padding:8px 32px; position:relative; z-index:2; flex-wrap:wrap;
@@ -921,6 +924,27 @@ function flashClimberFx(pid, type){
   setTimeout(()=>{ if(badge) badge.remove(); node.classList.remove('fx-fog'); }, dur);
 }
 
+// 팀전: 팀 아레나에서 피격 팀 구역을 잠깐 흔든다 (영역전 terr-seg / 줄다리기 tug-end)
+function flashTeamFx(teamKey, type){
+  const emoji = type==='fog' ? '🌫️' : type==='ice' ? '🧊' : type==='snail' ? '🐌' : '⬇️';
+  const keys = TEAM_OPTIONS.slice(0, roundState.team_count || 4).map(t=>t.key);
+  const ti = keys.indexOf(teamKey);
+  const nodes = [];
+  const seg = document.querySelector(`.terr-seg[data-key="${teamKey}"]`);
+  if(seg) nodes.push(seg);
+  if((roundState.team_count || 4) <= 2 && (ti === 0 || ti === 1)){
+    const end = document.querySelector(ti === 0 ? '.tug-end.left' : '.tug-end.right');
+    if(end) nodes.push(end);
+  }
+  nodes.forEach(n=>{
+    n.classList.add('team-fx');
+    let b = n.querySelector('.team-fx-badge');
+    if(!b){ b = document.createElement('div'); b.className = 'team-fx-badge'; n.appendChild(b); }
+    b.textContent = emoji;
+    setTimeout(()=>{ n.classList.remove('team-fx'); if(b) b.remove(); }, 2600);
+  });
+}
+
 function showItemEvent(e){
   const it = ITEMS[e.type];
   if(!it) return;
@@ -931,8 +955,14 @@ function showItemEvent(e){
     return;
   }
   if(it.kind === 'attack'){
-    itemToast(`${it.emoji} ${who} → 선두권에게 ${it.name}!`);
-    flashClimberFx(e.target, e.type);
+    if(e.targetTeam){
+      const tgt = teamInfo(e.targetTeam);
+      itemToast(`${it.emoji} ${who} → ${tgt ? tgt.label : '상대 팀'}에 ${it.name}!`);
+      flashTeamFx(e.targetTeam, e.type);
+    } else {
+      itemToast(`${it.emoji} ${who} → 선두권에게 ${it.name}!`);
+      flashClimberFx(e.target, e.type);
+    }
     return;
   }
   itemToast(`${it.emoji} ${who} → ${it.name}`);
@@ -1005,7 +1035,7 @@ function render(){
 
   const imb = el('itemsModeBadge');
   const im = roundState.items_mode;
-  imb.classList.toggle('hidden', !im || im === 'off' || roundState.team_mode);
+  imb.classList.toggle('hidden', !im || im === 'off');
   imb.textContent = im === 'spicy' ? '⚔️ 아이템전 · 매운맛' : im === 'mild' ? '🎁 아이템전 · 순한맛' : '';
 
   if(effective === 'ended' && prevEffective !== 'ended'){

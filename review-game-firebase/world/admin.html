@@ -139,7 +139,7 @@
         <button type="button" class="secondary" id="teamShuffleBtn">🎲 참여자 랜덤 배정</button>
       </div>
       <div class="msg" id="teamShuffleMsg"></div>
-      <label>아이템전 (3연속 정답마다 아이템 획득 · 개인전에서만 동작)</label>
+      <label>아이템전 (3연속 정답마다 아이템 획득 · 팀전에서도 동작)</label>
       <div class="toggle-row" id="itemsModeToggle">
         <button type="button" class="active" data-im="off">끄기</button>
         <button type="button" data-im="mild">순한맛</button>
@@ -252,7 +252,7 @@ let teamStateHydrated = false; // round 리스너에서 한 번이라도 값을 
 const ITEMS_MODE_HINT = {
   off: '',
   mild: '순한맛: 자기 강화(부스터·사다리 등) + 전체 이벤트(산타·축제)만. 저격 없음.',
-  spicy: '매운맛: 위 + 선두권 견제(안개·얼음·느림보·미끄럼틀). 1·2·3위에 50/30/20 가중치, 접전이면 견제 대신 자기 강화로 전환.'
+  spicy: '매운맛: 위 + 선두권 견제(안개·얼음·느림보·미끄럼틀). 개인전은 1·2·3위에 50/30/20 가중치·접전이면 자기 강화로 전환. 팀전은 견제가 선두 상대 팀 전원에게 적용.'
 };
 function syncItemsModeUI(){
   el('itemsModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.im === itemsModeState));
