@@ -202,14 +202,25 @@
   .item-discard-btn:disabled{ opacity:.55; }
   @keyframes itemPop{ 0%{ transform:scale(.6); opacity:0; } 100%{ transform:scale(1); opacity:1; } }
 
-  /* 스마트폰(세로 화면)에서는 16:9 카드 대신 화면 전체를 채우는 세로형 레이아웃으로 자동 전환 */
+  /* 스마트폰(세로 화면)에서는 16:9 카드 대신 화면 전체를 채우는 세로형 레이아웃으로 자동 전환.
+     내용이 화면보다 길거나(배너 여러 개) 키보드가 올라오면 페이지가 세로로 스크롤되도록 한다. */
   @media (max-width:700px), (orientation:portrait){
-    body{ padding:0; }
-    .card{
-      width:100vw; height:100vh; max-height:100vh;
-      aspect-ratio:auto; border-radius:0; box-shadow:none;
-      padding:3vh 5vw;
+    html, body{ height:auto; }
+    body{
+      padding:0; overflow:visible; display:block;   /* flex 중앙정렬 해제 → 위에서부터 정상 스크롤 */
+      min-height:100vh; min-height:100dvh;
     }
+    .sky-layer{ position:fixed; }                   /* 배경 별·구름이 스크롤 길이를 늘리지 않도록 고정 */
+    .card{
+      width:100vw; height:auto; max-height:none;
+      min-height:100vh; min-height:100dvh;
+      aspect-ratio:auto; border-radius:0; box-shadow:none;
+      padding:3vh 5vw calc(4vh + env(safe-area-inset-bottom));
+      overflow:visible;
+    }
+    .view{ flex:0 0 auto; }                         /* 뷰가 화면에 억지로 안 맞춰지고 내용만큼 늘어남 */
+    .view.center{ min-height:80vh; min-height:80dvh; justify-content:center; }
+    .qbox{ flex:0 0 auto; overflow:visible; min-height:20vh; }  /* 문제 박스 내부 스크롤 대신 페이지가 스크롤 */
   }
 </style>
 </head>
