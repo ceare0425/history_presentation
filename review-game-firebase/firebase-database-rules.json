@@ -10,6 +10,13 @@
           ".read": true,
           ".write": true
         },
+        "item_events": {
+          ".read": true,
+          ".write": true,
+          "$evt": {
+            ".validate": "!newData.exists() || (newData.hasChild('type') && newData.hasChild('at'))"
+          }
+        },
         "players": {
           ".read": true,
           "$playerId": {
