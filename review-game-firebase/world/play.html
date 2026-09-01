@@ -146,17 +146,6 @@
   .answer-row input[type=text]{ flex:1; margin-bottom:0; }
   .answer-row button{ width:auto; padding:14px 28px; flex:0 0 auto; }
 
-  .tower-mini{
-    height:6vh; min-height:36px; display:flex; align-items:flex-end; justify-content:center;
-    margin-top:1vh; gap:3px; flex:0 0 auto;
-  }
-  .tower-mini .bar{
-    width:10px; border-radius:3px 3px 0 0; transition:height .35s cubic-bezier(.34,1.56,.64,1);
-    background:
-      repeating-linear-gradient(180deg, rgba(255,255,255,.4) 0px, rgba(255,255,255,.4) 2px, transparent 2px, transparent 9px),
-      linear-gradient(180deg,var(--gold),var(--gold-dark));
-  }
-
   .floor-badge{ transition:transform .15s ease; }
   .floor-badge.pop{ animation:floorPop .5s ease; }
   @keyframes floorPop{
@@ -275,7 +264,6 @@
       <button id="submitBtn">제출</button>
     </div>
 
-    <div class="tower-mini" id="towerMini"></div>
     <div class="item-hint-line" id="itemHintLine"></div>
     <div class="item-bar" id="itemBar"></div>
   </div>
@@ -393,20 +381,6 @@ buildBackground();
 function popFloorBadge(){
   const badge = document.querySelector('.floor-badge');
   badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop');
-}
-
-function renderTowerMini(floor){
-  const box = el('towerMini');
-  box.innerHTML = '';
-  const n = Math.min(24, Math.max(4, floor));
-  for(let i=0;i<n;i++){
-    const bar = document.createElement('div');
-    bar.className = 'bar';
-    const active = i < Math.min(floor, n);
-    bar.style.height = active ? (14 + (i%6)*6)+'px' : '4px';
-    bar.style.opacity = active ? '1' : '.25';
-    box.appendChild(bar);
-  }
 }
 
 function renderQuestion(q){
@@ -578,7 +552,6 @@ async function submitAnswer(){
   el('streakVal').textContent = p.streak >= 2 ? `🔥 ${p.streak}연속 정답!` : '';
   if(p.floor > lastFloor) popFloorBadge();
   lastFloor = p.floor;
-  renderTowerMini(p.floor);
   flashFeedback(correct, q.answers[0], gain, bonusApplied, wasRetry);
   playCharacterReaction(correct);
   if(heldItem && heldItem !== heldAtStart && ITEMS[heldItem]){
@@ -711,7 +684,6 @@ function startListening(){
     heldItem = p.item || null;
     renderItemBar();
     el('floorVal').textContent = p.floor||0;
-    renderTowerMini(p.floor||0);
     if(p.avatar && AVATAR_IDLE !== p.avatar){
       AVATAR_IDLE = p.avatar;
       const av = el('avatarChar');
@@ -818,7 +790,6 @@ async function bumpFloor(n){
   el('floorVal').textContent = nf;
   if(nf > lastFloor) popFloorBadge();
   lastFloor = nf;
-  renderTowerMini(nf);
 }
 
 function rerollQuestion(){
@@ -972,7 +943,6 @@ async function slideDown(){
   await update(pRef, { floor: nf, name: cur.name || playerName, lastActive: serverNow() });
   el('floorVal').textContent = nf;
   lastFloor = nf;
-  renderTowerMini(nf);
 }
 
 let teamModeActive = false;
