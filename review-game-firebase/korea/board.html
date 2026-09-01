@@ -285,7 +285,7 @@
 </header>
 
 <div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! 남은 시간 <span id="bonusRemain"></span>초</div>
-<div class="bonus-banner" id="festivalBanner">🌈 축제! 남은 시간 <span id="festivalRemain"></span>초 · 모두 2배</div>
+<div class="bonus-banner" id="festivalBanner">🌈 <span id="festivalWho"></span>축제! 남은 시간 <span id="festivalRemain"></span>초 · 모두 2배</div>
 <div class="item-toasts" id="itemToasts"></div>
 <div class="team-scorebar" id="teamScoreBar"></div>
 
@@ -326,6 +326,7 @@ let playersObj = {};
 let prevEffective = null;
 let prevBonusActive = false;
 let festivalUntil = 0;
+let festivalBy = '';
 const seenItemEvents = new Set();
 
 // ── 배경음악: 외부 파일 없이 Web Audio로 만든 '신나는' 루프. 라운드마다 여러 곡 중 랜덤 ──
@@ -789,7 +790,7 @@ function showItemEvent(e){
   const who = escapeHtml(e.byName || '누군가');
   if(it.kind === 'global'){
     if(e.type === 'santa'){ itemToast(`🎁 ${who} → 모두 +1층!`); spawnConfettiBatch(20); }
-    else { itemToast(`🌈 ${who} → 20초간 모두 2배!`); festivalUntil = e.at + ITEM_FX_MS.festival; spawnConfettiBatch(16); }
+    else { itemToast(`🌈 ${who} → 20초간 모두 2배!`); festivalUntil = e.at + ITEM_FX_MS.festival; festivalBy = e.byName || ''; spawnConfettiBatch(16); }
     return;
   }
   if(it.kind === 'attack'){
@@ -851,9 +852,11 @@ function render(){
   const fb = el('festivalBanner');
   if(serverNow() < festivalUntil){
     fb.classList.add('show');
+    el('festivalWho').textContent = festivalBy ? festivalBy + ' 님의 ' : '';
     el('festivalRemain').textContent = Math.ceil((festivalUntil - serverNow())/1000);
   } else {
     fb.classList.remove('show');
+    festivalBy = '';
   }
 
   const imb = el('itemsModeBadge');
