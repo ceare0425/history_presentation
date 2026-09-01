@@ -77,6 +77,8 @@
   .team-bar-row .tval{ width:52px; text-align:right; flex-shrink:0; color:var(--sub); }
 
   .kick-btn{ padding:5px 10px; font-size:.76rem; background:var(--bad); }
+  .team-sel{ padding:4px 6px; font-size:.76rem; border:1px solid #ccd2e0; border-radius:6px; background:#fff; margin-right:6px; }
+  .manage-cell{ white-space:nowrap; }
   .msg{ font-size:.82rem; margin-top:8px; min-height:1.2em; }
   .msg.err{ color:var(--bad); }
   .msg.ok{ color:var(--good); }
@@ -669,6 +671,12 @@ function renderRoster(){
     const nameAttr = escapeHtml(p.name||'').replace(/"/g,'&quot;');
     const tInfo = p.team ? teamInfo(p.team) : null;
     const teamCell = r.team_mode ? `<td>${tInfo ? tInfo.label : '-'}</td>` : '';
+    const teamSel = r.team_mode
+      ? `<select class="team-sel" data-id="${p.id}" title="팀 변경"><option value="" disabled${p.team ? '' : ' selected'}>팀?</option>` +
+        TEAM_OPTIONS.slice(0, r.team_count || 4).map(t=>
+          `<option value="${t.key}"${p.team===t.key ? ' selected' : ''}>${t.label}</option>`).join('') +
+        `</select>`
+      : '';
     return `<tr>
       <td class="rank">${i+1}</td>
       <td>${p.avatar||''} ${escapeHtml(p.name||'')}</td>
@@ -678,7 +686,7 @@ function renderRoster(){
       <td class="${accClass}">${accuracy===null?'-':accuracy+'%'}</td>
       <td>${(p.streak||0)>=2 ? '🔥'+p.streak : (p.streak||0)}</td>
       <td>${status}</td>
-      <td><button class="kick-btn" data-id="${p.id}" data-name="${nameAttr}">내보내기</button></td>
+      <td class="manage-cell">${teamSel}<button class="kick-btn" data-id="${p.id}" data-name="${nameAttr}">내보내기</button></td>
     </tr>`;
   }).join('');
 }
@@ -691,6 +699,22 @@ el('roster').addEventListener('click', async (e)=>{
   if(!confirm(`${name} 학생을 내보낼까요? 학생 화면은 다시 이름을 입력하는 화면으로 돌아갑니다.`)) return;
   btn.disabled = true;
   await remove(roomRef(ROOM, 'players', pid));
+});
+
+// 팀전: '팀 변경' 드롭다운으로 학생을 다른 팀으로 즉시 이동 (학생 화면에 실시간 반영)
+el('roster').addEventListener('change', async (e)=>{
+  const sel = e.target.closest('.team-sel');
+  if(!sel) return;
+  const pid = sel.dataset.id;
+  const newTeam = sel.value;
+  if(!newTeam) return;
+  sel.disabled = true;
+  try{
+    await update(roomRef(ROOM, 'players', pid), { team: newTeam });
+  }catch(err){
+    alert('팀 변경 실패: ' + err.message);
+  }
+  sel.disabled = false;
 });
 
 onValue(roomRef(ROOM,'questions'), (snap)=>{
