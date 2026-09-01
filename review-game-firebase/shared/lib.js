@@ -222,6 +222,80 @@ export function activeBonus(round, nowMs) {
   return win ? { ...win, remaining: Math.max(0, Math.ceil(win.end - elapsed)) } : null;
 }
 
+// ── 아이템전 ──────────────────────────────────────
+// round.items_mode: 'off' | 'mild'(순한맛) | 'spicy'(매운맛)
+//   mild  : 자기 강화 + 전체 이벤트만 (저격 없음)
+//   spicy : 위 + '선두권 견제' 방해 아이템 포함
+// 아이템은 3연속 정답마다 1개 획득(보유 1개 한도), 개인전에서만 동작.
+export const ITEMS = {
+  boost:    { emoji: '⚡',  name: '부스터',    kind: 'self',    desc: '다음 정답 3개 2배' },
+  ladder:   { emoji: '🪜',  name: '사다리',    kind: 'self',    desc: '즉시 +2층' },
+  rocket:   { emoji: '🚀',  name: '로켓 점프',  kind: 'self',    desc: '즉시 +5층 (다음 정답 1번은 층수 없음)' },
+  reroll:   { emoji: '🔁',  name: '리롤',      kind: 'self',    desc: '지금 문제를 다른 문제로 교체' },
+  hint:     { emoji: '💡',  name: '힌트',      kind: 'self',    desc: '지금 문제 정답 초성 공개 (이 문제는 +1층)' },
+  shield:   { emoji: '🛡️',  name: '콤보 방패',  kind: 'self',    desc: '다음 오답에도 연속이 안 끊김' },
+  cure:     { emoji: '🍵',  name: '해독',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
+  santa:    { emoji: '🎁',  name: '산타',      kind: 'global',  desc: '모두 +1층 (나 포함)' },
+  festival: { emoji: '🌈',  name: '축제',      kind: 'global',  desc: '20초간 모두 2배' },
+  fog:      { emoji: '🌫️',  name: '안개',      kind: 'attack',  desc: '선두권 문제 화면이 8초간 흐려짐' },
+  ice:      { emoji: '🧊',  name: '얼음',      kind: 'attack',  desc: '선두권이 5초간 제출 불가' },
+  snail:    { emoji: '🐌',  name: '느림보',    kind: 'attack',  desc: '선두권 다음 정답이 +1층만' },
+  slide:    { emoji: '⬇️',  name: '미끄럼틀',  kind: 'attack',  desc: '선두권 -3층 (2등 층수 아래로는 안 내려감)' },
+};
+
+export const ITEM_FX_MS = { fog: 8000, ice: 5000, festival: 20000, immunity: 8000 };
+
+// 이번 판에서 뽑을 수 있는 아이템 key 목록. 방해(attack)는 매운맛 + 뽑는 사람이 상위권이 아닐 때만.
+export function itemPool(mode, canAttack) {
+  return Object.entries(ITEMS)
+    .filter(([, it]) => (it.kind === 'attack' ? mode === 'spicy' && canAttack : true))
+    .map(([k]) => k);
+}
+
+export function rollItem(mode, canAttack) {
+  const pool = itemPool(mode, canAttack);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// 상위 그룹 크기: 15명 이하면 3명, 그보다 많으면 인원의 20%(최소 3).
+export function topGroupSize(count) {
+  return count <= 15 ? 3 : Math.max(3, Math.round(count * 0.2));
+}
+
+// players: [{id, name, floor, ...}] (id 포함). id가 상위 그룹 안에 있는지.
+export function inTopGroup(players, id) {
+  const ranked = rankedPlayers(players);
+  const n = topGroupSize(ranked.length);
+  return ranked.slice(0, n).some((p) => p.id === id);
+}
+
+// 방해 대상 후보: 상위 그룹 중 '중위권보다 4층 이상 앞선' 사람(자신 제외). 랭킹 순으로 반환.
+// 후보가 없으면 [] → 호출부에서 자기 강화로 전환한다(접전이면 견제 안 들어감).
+export function attackCandidates(players, byId) {
+  const ranked = rankedPlayers(players);
+  if (ranked.length < 2) return [];
+  const n = topGroupSize(ranked.length);
+  const medianFloor = ranked[Math.floor(ranked.length / 2)]?.floor || 0;
+  return ranked
+    .slice(0, n)
+    .map((p, i) => ({ ...p, rank: i + 1 }))
+    .filter((p) => p.id !== byId && (p.floor || 0) - medianFloor >= 4);
+}
+
+// 후보(랭킹 순) 중 하나를 가중치로 고른다. 1·2·3위에 50/30/20, 그 아래는 완만히 감소.
+export function pickAttackTarget(candidates) {
+  if (!candidates.length) return null;
+  const W = [50, 30, 20, 12, 8, 5, 3, 2, 1];
+  const weights = candidates.map((_, i) => W[i] ?? 1);
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < candidates.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return candidates[i];
+  }
+  return candidates[candidates.length - 1];
+}
+
 // ── 학생별 랜덤 캐릭터 배정 ──
 export const ANIMAL_EMOJIS = [
   "🐰", "🐱", "🐯", "🐻", "🐼", "🐨", "🦁", "🐵", "🐶", "🦊",

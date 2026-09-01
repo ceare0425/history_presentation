@@ -139,6 +139,13 @@
         <button type="button" class="secondary" id="teamShuffleBtn">🎲 참여자 랜덤 배정</button>
       </div>
       <div class="msg" id="teamShuffleMsg"></div>
+      <label>아이템전 (3연속 정답마다 아이템 획득 · 개인전에서만 동작)</label>
+      <div class="toggle-row" id="itemsModeToggle">
+        <button type="button" class="active" data-im="off">끄기</button>
+        <button type="button" data-im="mild">순한맛</button>
+        <button type="button" data-im="spicy">매운맛</button>
+      </div>
+      <div class="sub" id="itemsModeHint" style="margin:4px 0 0; font-size:.76rem;"></div>
       <div class="btnrow">
         <button id="startBtn">▶ 게임 시작</button>
         <button class="bad" id="endBtn">■ 종료</button>
@@ -239,7 +246,18 @@ let questionOrder = 'random';
 let questionWeight = 'even'; // 'even' | 'recent' — 주제별 출제 비중
 let teamModeState = false;
 let teamCountState = 4;
+let itemsModeState = 'off'; // 'off' | 'mild' | 'spicy'
 let teamStateHydrated = false; // round 리스너에서 한 번이라도 값을 읽어왔는지 (버튼 초기 상태 복원용)
+
+const ITEMS_MODE_HINT = {
+  off: '',
+  mild: '순한맛: 자기 강화(부스터·사다리 등) + 전체 이벤트(산타·축제)만. 저격 없음.',
+  spicy: '매운맛: 위 + 선두권 견제(안개·얼음·느림보·미끄럼틀). 1·2·3위에 50/30/20 가중치, 접전이면 견제 대신 자기 강화로 전환.'
+};
+function syncItemsModeUI(){
+  el('itemsModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.im === itemsModeState));
+  el('itemsModeHint').textContent = ITEMS_MODE_HINT[itemsModeState] || '';
+}
 
 function syncWeightToggleEnabled(){
   // 순서대로일 때는 주제 비중이 의미가 없으므로 비활성화
@@ -276,6 +294,14 @@ el('teamCountRow').querySelectorAll('button').forEach(btn=>{
     teamCountState = parseInt(btn.dataset.count, 10);
     el('teamCountRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
     await update(roomRef(ROOM,'round'), { team_mode: teamModeState, team_count: teamCountState });
+  };
+});
+
+el('itemsModeToggle').querySelectorAll('button').forEach(btn=>{
+  btn.onclick = async () => {
+    itemsModeState = btn.dataset.im;
+    syncItemsModeUI();
+    await update(roomRef(ROOM,'round'), { items_mode: itemsModeState });
   };
 });
 
@@ -367,14 +393,17 @@ el('startBtn').onclick = async () => {
       qids,
       team_mode: teamModeState,
       team_count: teamCountState,
-      bonus
+      bonus,
+      items_mode: itemsModeState
     };
+    updates[`rooms/${ROOM}/item_events`] = null;
     Object.keys(playersObj).forEach(pid=>{
       updates[`rooms/${ROOM}/players/${pid}/floor`] = 0;
       updates[`rooms/${ROOM}/players/${pid}/correct`] = 0;
       updates[`rooms/${ROOM}/players/${pid}/wrong`] = 0;
       updates[`rooms/${ROOM}/players/${pid}/streak`] = 0;
       updates[`rooms/${ROOM}/players/${pid}/bestStreak`] = 0;
+      updates[`rooms/${ROOM}/players/${pid}/item`] = null;
     });
     await update(ref(db), updates);
     const bonusNote = bonus.length ? ` · 🔥 2배 찬스 ${bonus.length}회 예정` : '';
@@ -397,7 +426,8 @@ el('resetBtn').onclick = async () => {
   Object.keys(playersObj).forEach(pid=>{
     updates[`rooms/${ROOM}/players/${pid}`] = null;
   });
-  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null, team_mode: teamModeState, team_count: teamCountState };
+  updates[`rooms/${ROOM}/item_events`] = null;
+  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null, team_mode: teamModeState, team_count: teamCountState, items_mode: itemsModeState };
   try{
     await update(ref(db), updates);
     msg.className='msg ok'; msg.textContent = '전체 초기화 완료! 접속해 있던 학생은 모두 내보내졌습니다.';
@@ -679,13 +709,16 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
     status: r.status||'idle', units: r.units||[],
     duration_sec: r.duration_sec||420, end_time: r.end_time ?? null, token: r.token||0,
     order: r.order||'random', qids: r.qids||[],
-    team_mode: !!r.team_mode, team_count: r.team_count||4, bonus: r.bonus||[]
-  } : { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random', qids:[], team_mode:false, team_count:4, bonus:[] };
+    team_mode: !!r.team_mode, team_count: r.team_count||4, bonus: r.bonus||[],
+    items_mode: r.items_mode||'off'
+  } : { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random', qids:[], team_mode:false, team_count:4, bonus:[], items_mode:'off' };
 
   if(!teamStateHydrated){
     teamStateHydrated = true;
     teamModeState = roundState.team_mode;
     teamCountState = roundState.team_count;
+    itemsModeState = roundState.items_mode;
+    syncItemsModeUI();
     el('teamModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', (b.dataset.mode==='on')===teamModeState));
     el('teamCountRow').classList.toggle('hidden', !teamModeState);
     el('teamShuffleRow').classList.toggle('hidden', !teamModeState);

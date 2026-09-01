@@ -147,6 +147,33 @@
   .bonus-banner.show{ display:block; }
   @keyframes bonusPulseBoard{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.015); } }
 
+  #festivalBanner{ background:linear-gradient(90deg,#ffe08a,#a6e8ff,#ffd0f0); }
+  .items-mode-badge{
+    padding:5px 14px; border-radius:999px; font-weight:800; font-size:.85rem;
+    background:rgba(255,255,255,.14); border:1px solid var(--line);
+  }
+  .item-toasts{
+    position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:40;
+    display:flex; flex-direction:column; gap:6px; align-items:center; pointer-events:none;
+  }
+  .item-toast{
+    background:rgba(8,16,38,.86); border:1px solid rgba(255,255,255,.28); color:#fff;
+    padding:9px 20px; border-radius:999px; font-weight:800; font-size:1.1rem;
+    box-shadow:0 8px 24px rgba(0,0,0,.45); animation:itemToast 3s ease forwards; white-space:nowrap;
+  }
+  @keyframes itemToast{
+    0%{ opacity:0; transform:translateY(-12px) scale(.9); }
+    12%{ opacity:1; transform:translateY(0) scale(1); }
+    78%{ opacity:1; }
+    100%{ opacity:0; transform:translateY(-6px); }
+  }
+  .climber .fx-badge{
+    position:absolute; top:-28px; left:50%; transform:translateX(-50%);
+    font-size:1.4rem; z-index:4; animation:fxBadge 1s ease-in-out infinite;
+  }
+  @keyframes fxBadge{ 0%,100%{ transform:translateX(-50%) translateY(0); } 50%{ transform:translateX(-50%) translateY(-6px); } }
+  .climber.fx-fog .avatar{ filter:blur(3px); }
+
   .team-scorebar{
     display:none; gap:14px; padding:8px 32px; position:relative; z-index:2; flex-wrap:wrap;
     border-bottom:1px solid var(--line); background:rgba(10,20,45,.2);
@@ -250,6 +277,7 @@
 <header>
   <h1>🏯 한국사 탑 오르기</h1>
   <div class="status">
+    <span class="items-mode-badge hidden" id="itemsModeBadge"></span>
     <button class="bgm-btn" id="bgmToggle" type="button">🔊 배경음</button>
     <span class="pill idle" id="statusPill">대기중</span>
     <span class="timer" id="timerVal">--:--</span>
@@ -257,6 +285,8 @@
 </header>
 
 <div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! 남은 시간 <span id="bonusRemain"></span>초</div>
+<div class="bonus-banner" id="festivalBanner">🌈 축제! 남은 시간 <span id="festivalRemain"></span>초 · 모두 2배</div>
+<div class="item-toasts" id="itemToasts"></div>
 <div class="team-scorebar" id="teamScoreBar"></div>
 
 <main>
@@ -282,7 +312,7 @@
 </div>
 
 <script type="module">
-import { roomRef, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers, teamInfo, teamStandings, activeBonus } from '../shared/lib.js';
+import { roomRef, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers, teamInfo, teamStandings, activeBonus, ITEMS, ITEM_FX_MS } from '../shared/lib.js';
 
 const ROOM = 'korea';
 const el = (id) => document.getElementById(id);
@@ -291,10 +321,12 @@ const lastFloor = {};
 const lastWrong = {};
 const climberEls = {};
 
-let roundState = { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4 };
+let roundState = { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off' };
 let playersObj = {};
 let prevEffective = null;
 let prevBonusActive = false;
+let festivalUntil = 0;
+const seenItemEvents = new Set();
 
 // ── 배경음악: 외부 파일 없이 Web Audio로 만든 '신나는' 루프. 라운드마다 여러 곡 중 랜덤 ──
 const BGM_MUTE_KEY = 'rg_fb_bgm_muted';
@@ -728,6 +760,46 @@ function hideEndCelebration(){
   if(confettiTimer){ clearInterval(confettiTimer); confettiTimer = null; }
 }
 
+// ── 아이템전 연출 ──────────────────────────────────
+function itemToast(text){
+  const box = el('itemToasts');
+  if(!box) return;
+  const d = document.createElement('div');
+  d.className = 'item-toast';
+  d.textContent = text;
+  box.appendChild(d);
+  setTimeout(()=> d.remove(), 3000);
+}
+
+function flashClimberFx(pid, type){
+  const node = climberEls[pid];
+  if(!node) return;
+  const emoji = type==='fog' ? '🌫️' : type==='ice' ? '🧊' : type==='snail' ? '🐌' : '⬇️';
+  let badge = node.querySelector('.fx-badge');
+  if(!badge){ badge = document.createElement('div'); badge.className = 'fx-badge'; node.appendChild(badge); }
+  badge.textContent = emoji;
+  if(type==='fog') node.classList.add('fx-fog');
+  const dur = type==='fog' ? ITEM_FX_MS.fog : type==='ice' ? ITEM_FX_MS.ice : 2600;
+  setTimeout(()=>{ if(badge) badge.remove(); node.classList.remove('fx-fog'); }, dur);
+}
+
+function showItemEvent(e){
+  const it = ITEMS[e.type];
+  if(!it) return;
+  const who = escapeHtml(e.byName || '누군가');
+  if(it.kind === 'global'){
+    if(e.type === 'santa'){ itemToast(`🎁 ${who} → 모두 +1층!`); spawnConfettiBatch(20); }
+    else { itemToast(`🌈 ${who} → 20초간 모두 2배!`); festivalUntil = e.at + ITEM_FX_MS.festival; spawnConfettiBatch(16); }
+    return;
+  }
+  if(it.kind === 'attack'){
+    itemToast(`${it.emoji} ${who} → 선두권에게 ${it.name}!`);
+    flashClimberFx(e.target, e.type);
+    return;
+  }
+  itemToast(`${it.emoji} ${who} → ${it.name}`);
+}
+
 function render(){
   const remaining = roundState.end_time!=null ? Math.max(0, Math.round((roundState.end_time - serverNow())/1000)) : null;
   let effective = roundState.status;
@@ -776,6 +848,19 @@ function render(){
   }
   prevBonusActive = !!bonus;
 
+  const fb = el('festivalBanner');
+  if(serverNow() < festivalUntil){
+    fb.classList.add('show');
+    el('festivalRemain').textContent = Math.ceil((festivalUntil - serverNow())/1000);
+  } else {
+    fb.classList.remove('show');
+  }
+
+  const imb = el('itemsModeBadge');
+  const im = roundState.items_mode;
+  imb.classList.toggle('hidden', !im || im === 'off' || roundState.team_mode);
+  imb.textContent = im === 'spicy' ? '⚔️ 아이템전 · 매운맛' : im === 'mild' ? '🎁 아이템전 · 순한맛' : '';
+
   if(effective === 'ended' && prevEffective !== 'ended'){
     showEndCelebration(players, ranked);
   } else if(effective !== 'ended' && prevEffective === 'ended'){
@@ -793,8 +878,19 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
   const r = snap.val();
   roundState = r ? {
     status: r.status||'idle', end_time: r.end_time ?? null, duration_sec: r.duration_sec||420,
-    bonus: r.bonus||[], team_mode: !!r.team_mode, team_count: r.team_count||4
-  } : { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4 };
+    bonus: r.bonus||[], team_mode: !!r.team_mode, team_count: r.team_count||4,
+    items_mode: r.items_mode||'off'
+  } : { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off' };
+});
+onValue(roomRef(ROOM,'item_events'), (snap)=>{
+  const obj = snap.val() || {};
+  const now = serverNow();
+  Object.entries(obj).forEach(([k,e])=>{
+    if(seenItemEvents.has(k)) return;
+    seenItemEvents.add(k);
+    if(!e || !e.at || now - e.at > 12000) return;
+    showItemEvent(e);
+  });
 });
 onValue(roomRef(ROOM,'players'), (snap)=>{
   playersObj = snap.val() || {};
