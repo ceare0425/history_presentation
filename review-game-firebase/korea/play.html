@@ -761,13 +761,13 @@ function renderItemBar(){
   }
 }
 
-function showItemAlert(msg){
+function showItemAlert(msg, ms){
   const a = el('itemAlert');
   if(!a) return;
   a.textContent = msg;
   a.classList.add('show');
   clearTimeout(itemAlertTimer);
-  itemAlertTimer = setTimeout(()=> a.classList.remove('show'), 2800);
+  itemAlertTimer = setTimeout(()=> a.classList.remove('show'), ms || 2800);
 }
 
 async function discardItem(){
@@ -876,8 +876,21 @@ function handleItemEvents(obj){
     if(seenItemEvents.has(k)) return;
     seenItemEvents.add(k);
     if(!e || !e.at || now - e.at > 12000) return;  // 오래된 이벤트(재접속 등)는 무시
-    if(e.type === 'santa'){ bumpFloor(1); return; }
-    if(e.type === 'festival'){ festivalUntil = e.at + ITEM_FX_MS.festival; return; }
+    // 전체에 영향을 주는 아이템 → 모든 학생에게 "누가 무엇을 써서 어떤 효과" 안내
+    const evItem = ITEMS[e.type];
+    if(evItem && evItem.kind === 'global'){
+      const who = e.byName || '누군가';
+      if(e.type === 'santa'){
+        bumpFloor(1);
+        showItemAlert(`🎁 ${who} 님이 '산타' 사용 → 모두 +1층!`, 3800);
+      } else if(e.type === 'festival'){
+        festivalUntil = e.at + ITEM_FX_MS.festival;
+        showItemAlert(`🌈 ${who} 님이 '축제' 사용 → 20초간 모두 2배!`, 3800);
+      } else {
+        showItemAlert(`${evItem.emoji} ${who} 님이 '${evItem.name}' 사용!`, 3800);
+      }
+      return;
+    }
     if(e.target !== playerId) return;              // 방해는 나를 노린 것만
     if(now < myImmuneUntil){ showItemAlert('🛡️ 방해를 흘려보냈다!'); return; }
     myImmuneUntil = now + ITEM_FX_MS.immunity;
