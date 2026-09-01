@@ -66,7 +66,7 @@
   .lb-name{ flex:1; font-weight:700; font-size:1.02rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .lb-floor{ font-weight:900; color:var(--gold); }
 
-  .tower-area{ position:relative; overflow-x:auto; overflow-y:hidden; padding:0 20px; display:flex; align-items:flex-end; }
+  .tower-area{ position:relative; overflow-x:auto; overflow-y:hidden; padding:0 20px; display:flex; align-items:flex-end; grid-column:2; grid-row:1; }
   .tower-track{ position:relative; display:flex; align-items:flex-end; gap:26px; height:100%; padding-bottom:56px; padding-top:20px; }
 
   .climber{
@@ -187,6 +187,59 @@
   .team-chip.leading{ box-shadow:0 0 0 2px var(--gold); }
 
   .team-winner{ font-size:1.4rem; font-weight:800; color:#fff; margin:-1.4rem 0 1.8rem; text-shadow:0 2px 8px rgba(0,0,0,.5); z-index:1; }
+
+  /* ── 팀전 대형화면 아레나 (개인 탑 대신 표시) ── */
+  .team-arena{
+    grid-column:2; grid-row:1; position:relative; z-index:2; overflow:hidden;
+    padding:28px 40px 60px; display:flex; flex-direction:column; justify-content:center; gap:26px;
+  }
+  /* 줄다리기 (2팀) */
+  .tug{ display:flex; flex-direction:column; gap:20px; }
+  .tug-ends{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+  .tug-end{ display:flex; flex-direction:column; gap:10px; max-width:46%; }
+  .tug-end.right{ align-items:flex-end; text-align:right; }
+  .tug-team{ font-size:1.9rem; font-weight:900; text-shadow:0 2px 10px rgba(0,0,0,.5); white-space:nowrap; }
+  .tug-team .tug-floor{ color:var(--gold); }
+  .tug-avatars{ display:flex; flex-wrap:wrap; gap:5px; font-size:1.7rem; line-height:1.1; }
+  .tug-end.right .tug-avatars{ justify-content:flex-end; }
+  .tug-bar{
+    position:relative; height:104px; border-radius:16px; overflow:hidden;
+    background:rgba(255,255,255,.07); box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
+    transition:box-shadow .4s ease;
+  }
+  .tug-fill{ position:absolute; top:0; bottom:0; transition:width .6s cubic-bezier(.34,1.4,.64,1); }
+  .tug-fill.left{ left:0; background:linear-gradient(90deg, var(--cl,#888) 0%, rgba(255,255,255,0) 100%); }
+  .tug-fill.right{ right:0; background:linear-gradient(270deg, var(--cr,#888) 0%, rgba(255,255,255,0) 100%); }
+  .tug-rope{
+    position:absolute; left:2%; right:2%; top:50%; height:8px; transform:translateY(-50%); border-radius:4px;
+    background:repeating-linear-gradient(90deg,#e2caa0 0 16px,#b7995f 16px 24px);
+  }
+  .tug-knot{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:3rem; line-height:1;
+    filter:drop-shadow(0 4px 8px rgba(0,0,0,.55)); transition:left .6s cubic-bezier(.34,1.4,.64,1);
+  }
+  .tug-bar.lead-left{ box-shadow:inset 0 0 0 3px var(--cl,#888), 0 0 30px rgba(255,255,255,.15); }
+  .tug-bar.lead-right{ box-shadow:inset 0 0 0 3px var(--cr,#888), 0 0 30px rgba(255,255,255,.15); }
+  /* 영역 넓히기 (3팀 이상) */
+  .terr{
+    display:flex; height:72%; min-height:280px; border-radius:18px; overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
+  }
+  .terr-seg{
+    position:relative; flex-basis:0; flex-grow:1; min-width:70px; overflow:hidden;
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 10px; color:#fff;
+    border-right:2px solid rgba(0,0,0,.28); transition:flex-grow .6s cubic-bezier(.34,1.3,.64,1);
+  }
+  .terr-seg:last-child{ border-right:none; }
+  .terr-seg.leader{ box-shadow:inset 0 0 0 4px #fff, inset 0 0 60px rgba(255,255,255,.28); }
+  .terr-flag{ font-size:1.8rem; line-height:1; }
+  .terr-name{ font-size:1.35rem; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.55); white-space:nowrap; }
+  .terr-score{ font-size:2.1rem; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.55); margin-bottom:6px; }
+  .terr-members{
+    display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-content:flex-start;
+    font-size:1.8rem; line-height:1.1; overflow:hidden;
+  }
+
   .hidden{ display:none !important; }
   @keyframes rungs{ from{ background-position:0 0, 0 0; } to{ background-position:0 26px, 0 0; } }
   .climber .base{
@@ -294,11 +347,12 @@
     <h2>🏆 순위</h2>
     <div id="lbList"></div>
   </div>
-  <div class="tower-area">
+  <div class="tower-area" id="towerArea">
     <div class="ground"></div>
     <div class="tower-track" id="towerTrack"></div>
     <div class="empty-msg" id="emptyMsg">학생들이 접속하면 여기에 나타납니다</div>
   </div>
+  <div class="team-arena hidden" id="teamArena"></div>
 </main>
 
 <footer>play.html 주소로 학생들이 접속합니다 (어느 네트워크에서든 가능)</footer>
@@ -312,7 +366,7 @@
 </div>
 
 <script type="module">
-import { roomRef, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers, teamInfo, teamStandings, activeBonus, ITEMS, ITEM_FX_MS } from '../shared/lib.js';
+import { roomRef, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers, teamInfo, teamStandings, activeBonus, ITEMS, ITEM_FX_MS, TEAM_OPTIONS } from '../shared/lib.js';
 
 const ROOM = 'korea';
 const el = (id) => document.getElementById(id);
@@ -677,21 +731,104 @@ function renderTower(players, leaderId){
   });
 }
 
-function renderTeamBar(players){
-  const box = el('teamScoreBar');
-  if(!roundState.team_mode){
-    box.classList.remove('show');
-    return;
+// ── 팀전 아레나: 2팀=줄다리기 / 3팀 이상=영역 넓히기 ──────────
+let arenaMode = '';   // 'tug' | 'territory'
+let arenaKeys = '';    // 스켈레톤을 다시 만들지 판단 (팀 구성이 바뀌면 재생성)
+
+function teamRows(players){
+  const keys = TEAM_OPTIONS.slice(0, roundState.team_count || 4).map(t=>t.key);
+  const st = {}; teamStandings(players).forEach(s=> st[s.team] = s);
+  const rows = keys.map(k=>{
+    const s = st[k] || { floor:0, members:0 };
+    return { key:k, info:teamInfo(k), floor:s.floor||0, members:s.members||0 };
+  });
+  const membersBy = {};
+  players.forEach(p=>{ if(p.team){ (membersBy[p.team] = membersBy[p.team] || []).push(p); } });
+  Object.values(membersBy).forEach(a=> a.sort((x,y)=> (y.floor||0) - (x.floor||0)));
+  return { keys, rows, membersBy };
+}
+
+function avatarStrip(members, cap){
+  const list = members || [];
+  const shown = list.slice(0, cap).map(m=> m.avatar || '🐱').join(' ');
+  return shown + (list.length > cap ? `  +${list.length - cap}` : '');
+}
+
+function renderTeamArena(players){
+  const arena = el('teamArena');
+  const { keys, rows, membersBy } = teamRows(players);
+  const wantMode = (roundState.team_count || 4) <= 2 ? 'tug' : 'territory';
+  if(arenaMode !== wantMode || arenaKeys !== keys.join(',')){
+    arenaMode = wantMode; arenaKeys = keys.join(',');
+    arena.innerHTML = wantMode === 'tug' ? tugSkeleton() : territorySkeleton(keys);
   }
-  const standings = teamStandings(players);
-  box.classList.toggle('show', standings.length>0);
-  box.innerHTML = standings.map((s,i)=>{
-    const info = teamInfo(s.team);
-    return `<div class="team-chip ${i===0?'leading':''}">
-      <span>${info ? info.label : s.team}</span>
-      <span class="tfloor">${s.floor}층</span>
+  if(wantMode === 'tug') updateTug(rows, membersBy);
+  else updateTerritory(rows, membersBy);
+}
+
+function tugSkeleton(){
+  return `
+    <div class="tug">
+      <div class="tug-ends">
+        <div class="tug-end left"><div class="tug-team" id="tugTeamL"></div><div class="tug-avatars" id="tugAvaL"></div></div>
+        <div class="tug-end right"><div class="tug-team" id="tugTeamR"></div><div class="tug-avatars" id="tugAvaR"></div></div>
+      </div>
+      <div class="tug-bar" id="tugBar">
+        <div class="tug-fill left" id="tugFillL"></div>
+        <div class="tug-fill right" id="tugFillR"></div>
+        <div class="tug-rope"></div>
+        <div class="tug-knot" id="tugKnot">🚩</div>
+      </div>
     </div>`;
-  }).join('');
+}
+
+function updateTug(rows, membersBy){
+  const L = rows[0] || { key:'', info:null, floor:0 };
+  const R = rows[1] || { key:'', info:null, floor:0 };
+  const bar = el('tugBar');
+  bar.style.setProperty('--cl', L.info ? L.info.color : '#888');
+  bar.style.setProperty('--cr', R.info ? R.info.color : '#888');
+  const total = L.floor + R.floor;
+  const share = total > 0 ? L.floor / total : 0.5;       // 왼쪽 팀 점유율
+  const knotPct = Math.max(14, Math.min(86, (1 - share) * 100)); // 앞선 팀 쪽으로 매듭 이동
+  el('tugFillL').style.width = knotPct + '%';
+  el('tugFillR').style.width = (100 - knotPct) + '%';
+  el('tugKnot').style.left = knotPct + '%';
+  bar.classList.toggle('lead-left', total > 0 && share > 0.5);
+  bar.classList.toggle('lead-right', total > 0 && share < 0.5);
+  el('tugTeamL').innerHTML = `${L.info ? L.info.label : '-'} · <span class="tug-floor">${L.floor}층</span>`;
+  el('tugTeamR').innerHTML = `${R.info ? R.info.label : '-'} · <span class="tug-floor">${R.floor}층</span>`;
+  el('tugAvaL').textContent = avatarStrip(membersBy[L.key], 16);
+  el('tugAvaR').textContent = avatarStrip(membersBy[R.key], 16);
+}
+
+function territorySkeleton(keys){
+  return `<div class="terr" id="terr">` + keys.map(k=>
+    `<div class="terr-seg" data-key="${k}">
+       <div class="terr-flag">🚩</div>
+       <div class="terr-name"></div>
+       <div class="terr-score"></div>
+       <div class="terr-members"></div>
+     </div>`).join('') + `</div>`;
+}
+
+function updateTerritory(rows, membersBy){
+  const byKey = {}; rows.forEach(r=> byKey[r.key] = r);
+  const totalFloor = rows.reduce((s,r)=> s + r.floor, 0);
+  const base = Math.max(2, totalFloor * 0.14);            // 0점 팀도 최소 영역 유지
+  const maxFloor = Math.max(0, ...rows.map(r=>r.floor));
+  const terr = el('terr');
+  if(!terr) return;
+  Array.from(terr.children).forEach(seg=>{
+    const r = byKey[seg.dataset.key];
+    if(!r) return;
+    seg.style.flexGrow = (r.floor + base).toFixed(2);
+    seg.style.background = `linear-gradient(180deg, ${r.info.color}, ${r.info.color} 55%, rgba(0,0,0,.34))`;
+    seg.classList.toggle('leader', totalFloor > 0 && r.floor === maxFloor);
+    seg.querySelector('.terr-name').textContent = r.info.label;
+    seg.querySelector('.terr-score').textContent = r.floor + '층';
+    seg.querySelector('.terr-members').textContent = avatarStrip(membersBy[r.key], 24);
+  });
 }
 
 const CONFETTI_COLORS = ['#f2d27a','#e85d75','#5aa9e6','#7bd389','#c792ea','#ffffff'];
@@ -835,8 +972,15 @@ function render(){
     </div>
   `).join('') : '<div style="opacity:.6; font-size:.85rem; padding:6px 4px;">아직 참가한 학생이 없습니다</div>';
 
-  renderTower(players, ranked[0]?.id);
-  renderTeamBar(players);
+  const teamOn = !!roundState.team_mode;
+  el('towerArea').classList.toggle('hidden', teamOn);
+  el('teamArena').classList.toggle('hidden', !teamOn);
+  el('teamScoreBar').classList.remove('show');
+  if(teamOn){
+    renderTeamArena(players);
+  } else {
+    renderTower(players, ranked[0]?.id);
+  }
 
   const bonus = activeBonus(roundState, serverNow());
   const banner = el('bonusBanner');
