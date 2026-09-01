@@ -45,6 +45,9 @@
 
   .view{ flex:1; min-height:0; display:flex; flex-direction:column; }
   .view.center{ justify-content:center; align-items:center; }
+  /* 데스크톱에서는 투명한 flex 래퍼(레이아웃 변화 없음), 모바일에서 상단 고정에 사용 */
+  .play-top{ display:flex; flex-direction:column; flex:0 0 auto; }
+  .play-scroll{ display:flex; flex-direction:column; flex:1 1 auto; min-height:0; }
 
   input[type=text]{
     width:100%; padding:14px 16px; font-size:1.15rem; border:2px solid #dfe3ec; border-radius:12px;
@@ -221,6 +224,13 @@
     .view{ flex:0 0 auto; }                         /* 뷰가 화면에 억지로 안 맞춰지고 내용만큼 늘어남 */
     .view.center{ min-height:80vh; min-height:80dvh; justify-content:center; }
     .qbox{ flex:0 0 auto; overflow:visible; min-height:20vh; }  /* 문제 박스 내부 스크롤 대신 페이지가 스크롤 */
+    .play-scroll{ flex:0 0 auto; }
+    /* 엑셀 틀고정처럼: 층수·타이머·아이템 알림 줄은 화면 상단에 고정, 그 아래만 스크롤 */
+    .play-top{
+      position:-webkit-sticky; position:sticky; top:0; z-index:6; background:var(--card);
+      margin:0 -5vw; padding:2px 5vw 6px;
+      box-shadow:0 6px 12px -6px rgba(0,0,0,.28);
+    }
   }
 </style>
 </head>
@@ -252,31 +262,35 @@
   </div>
 
   <div id="playView" class="view hidden">
-    <div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! <span id="bonusRemain"></span>초 남음</div>
-    <div class="festival-banner" id="festivalBanner">🌈 <span id="festivalWho"></span>축제! 모두 2배 · <span id="festivalRemain"></span>초 남음</div>
-    <div class="item-alert" id="itemAlert"></div>
-    <div class="hud">
-      <div class="floor-badge">🏢 <span id="floorVal">0</span>층</div>
-      <span class="team-badge hidden" id="teamBadge"></span>
-      <div class="timer">⏱ <span id="timerVal">--:--</span></div>
-    </div>
-    <div class="streak" id="streakVal"></div>
-
-    <div class="avatar-char" id="avatarChar">🧗</div>
-
-    <div id="feedback" class="feedback"></div>
-
-    <div class="unit-tag" id="unitTag"></div>
-    <div class="qbox" id="qbox"><div class="qtext-inner" id="qText">문제를 불러오는 중...</div></div>
-    <div class="choseong-hint hidden" id="choseongHint"></div>
-
-    <div class="answer-row">
-      <input type="text" id="answerInput" placeholder="정답 입력 후 Enter" autocomplete="off">
-      <button id="submitBtn">제출</button>
+    <div class="play-top">
+      <div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! <span id="bonusRemain"></span>초 남음</div>
+      <div class="festival-banner" id="festivalBanner">🌈 <span id="festivalWho"></span>축제! 모두 2배 · <span id="festivalRemain"></span>초 남음</div>
+      <div class="item-alert" id="itemAlert"></div>
+      <div class="hud">
+        <div class="floor-badge">🏢 <span id="floorVal">0</span>층</div>
+        <span class="team-badge hidden" id="teamBadge"></span>
+        <div class="timer">⏱ <span id="timerVal">--:--</span></div>
+      </div>
+      <div class="streak" id="streakVal"></div>
     </div>
 
-    <div class="item-hint-line" id="itemHintLine"></div>
-    <div class="item-bar" id="itemBar"></div>
+    <div class="play-scroll">
+      <div class="avatar-char" id="avatarChar">🧗</div>
+
+      <div id="feedback" class="feedback"></div>
+
+      <div class="unit-tag" id="unitTag"></div>
+      <div class="qbox" id="qbox"><div class="qtext-inner" id="qText">문제를 불러오는 중...</div></div>
+      <div class="choseong-hint hidden" id="choseongHint"></div>
+
+      <div class="answer-row">
+        <input type="text" id="answerInput" placeholder="정답 입력 후 Enter" autocomplete="off">
+        <button id="submitBtn">제출</button>
+      </div>
+
+      <div class="item-hint-line" id="itemHintLine"></div>
+      <div class="item-bar" id="itemBar"></div>
+    </div>
   </div>
 
   <div id="endedView" class="view center hidden">
