@@ -267,7 +267,7 @@
       <div class="festival-banner" id="festivalBanner">🌈 <span id="festivalWho"></span>축제! 모두 2배 · <span id="festivalRemain"></span>초 남음</div>
       <div class="item-alert" id="itemAlert"></div>
       <div class="hud">
-        <div class="floor-badge">🏢 <span id="floorVal">0</span>층</div>
+        <div class="floor-badge">🏢 <span id="floorVal">0</span><span class="u-unit">층</span></div>
         <span class="team-badge hidden" id="teamBadge"></span>
         <div class="timer">⏱ <span id="timerVal">--:--</span></div>
       </div>
@@ -297,7 +297,7 @@
     <div class="ended">
       <div id="finalRank" class="final-rank"></div>
       <div>🏁 게임 종료!</div>
-      <div class="big"><span id="finalFloor">0</span>층</div>
+      <div class="big"><span id="finalFloor">0</span><span class="u-unit">층</span></div>
       <div class="sub" id="finalStat"></div>
     </div>
   </div>
@@ -325,6 +325,20 @@ let selectedTeam = localStorage.getItem(STORAGE_TEAM_KEY) || null;
 
 let questionsObj = {};
 let roundState = { status: 'idle', units: [], duration_sec: 300, end_time: null, token: 0, order: 'random', weight: 'even', qids: [], team_mode:false, team_count:4, bonus:[], items_mode:'off' };
+
+// 진행 단위: 개인전=탑 오르기(층), 2팀=줄다리기(cm), 3팀 이상=땅따먹기(평)
+function unitLabel(){
+  if(roundState && roundState.team_mode) return Number(roundState.team_count) === 2 ? 'cm' : '평';
+  return '층';
+}
+function gainVerb(){
+  if(roundState && roundState.team_mode) return Number(roundState.team_count) === 2 ? '당겼어요' : '넓혔어요';
+  return '올라갑니다';
+}
+function refreshUnitLabels(){
+  const u = unitLabel();
+  document.querySelectorAll('.u-unit').forEach(node=> node.textContent = u);
+}
 let lastSeenToken = null;
 let prevEffective = null;
 
@@ -501,7 +515,7 @@ function flashFeedback(correct, correctAnswer, gain, bonusApplied, wasRetry){
   f.classList.add('show');
   if(correct){
     f.classList.remove('wrong'); f.classList.add('correct');
-    const base = bonusApplied ? `정답! 🔥 2배 찬스로 +${gain}층!` : `정답! +${gain}층 올라갑니다 🎉`;
+    const base = bonusApplied ? `정답! 🔥 2배 찬스로 +${gain}${unitLabel()}!` : `정답! +${gain}${unitLabel()} ${gainVerb()} 🎉`;
     f.textContent = wasRetry ? `🔁 복습 문제 정답! ${base}` : base;
   } else {
     f.classList.remove('correct'); f.classList.add('wrong');
@@ -697,6 +711,7 @@ function startListening(){
       items_mode: r.items_mode || 'off'
     } : { status:'idle', units:[], duration_sec:300, end_time:null, token:0, order:'random', weight:'even', qids:[], team_mode:false, team_count:4, bonus:[], items_mode:'off' };
     itemsMode = roundState.items_mode;
+    refreshUnitLabels();
     renderItemBar();
   });
 
@@ -837,14 +852,14 @@ function clearIncomingFx(){
 
 async function applySelfItem(key){
   if(key === 'boost'){ myBoost = 3; showItemAlert('⚡ 부스터! 다음 정답 3개 2배'); }
-  else if(key === 'ladder'){ showItemAlert('🪜 사다리 +2층!'); await bumpFloor(2); }
-  else if(key === 'rocket'){ showItemAlert('🚀 로켓 +5층! (다음 정답 1번은 층수 없음)'); mySkipFloor = true; await bumpFloor(5); }
+  else if(key === 'ladder'){ showItemAlert(`🪜 사다리 +2${unitLabel()}!`); await bumpFloor(2); }
+  else if(key === 'rocket'){ showItemAlert(`🚀 로켓 +5${unitLabel()}! (다음 정답 1번은 추가 없음)`); mySkipFloor = true; await bumpFloor(5); }
   else if(key === 'reroll'){ rerollQuestion(); showItemAlert('🔁 새 문제로 교체!'); }
   else if(key === 'hint'){
     if(currentQuestion && currentQid){
       myHintQid = currentQid;
       showChoseongHint(choseongHint(currentQuestion.answers[0]));
-      showItemAlert('💡 초성 힌트 표시! (이 문제는 +1층)');
+      showItemAlert(`💡 초성 힌트 표시! (이 문제는 +1${unitLabel()})`);
     }
   }
   else if(key === 'shield'){ myShield = true; showItemAlert('🛡️ 콤보 방패 장착 — 다음 오답에도 연속 유지'); }
@@ -939,7 +954,7 @@ function handleItemEvents(obj){
       const who = e.byName || '누군가';
       if(e.type === 'santa'){
         bumpFloor(1);
-        showItemAlert(`🎁 ${who} 님이 '산타' 사용 → 모두 +1층!`);
+        showItemAlert(`🎁 ${who} 님이 '산타' 사용 → 모두 +1${unitLabel()}!`);
       } else if(e.type === 'festival'){
         festivalUntil = e.at + ITEM_FX_MS.festival;
         festivalBy = who;   // 축제는 itemAlert 대신 festivalBanner가 남은 시간과 함께 계속 표시
@@ -976,9 +991,9 @@ function applyIncomingFx(type){
     }, ITEM_FX_MS.ice);
   } else if(type === 'snail'){
     mySnailNext = true;
-    showItemAlert('🐌 느림보! 다음 정답은 +1층만');
+    showItemAlert(`🐌 느림보! 다음 정답은 +1${unitLabel()}만`);
   } else if(type === 'slide'){
-    showItemAlert('⬇️ 미끄럼틀! 층수가 내려갔어요');
+    showItemAlert('⬇️ 미끄럼틀! 조금 뒤로 밀렸어요');
     slideDown();
   }
 }

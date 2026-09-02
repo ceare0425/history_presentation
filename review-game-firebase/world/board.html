@@ -379,6 +379,12 @@ const lastWrong = {};
 const climberEls = {};
 
 let roundState = { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off' };
+
+// 진행 단위: 개인전=탑 오르기(층), 2팀=줄다리기(cm), 3팀 이상=땅따먹기(평)
+function unitLabel(){
+  if(roundState && roundState.team_mode) return Number(roundState.team_count) === 2 ? 'cm' : '평';
+  return '층';
+}
 let playersObj = {};
 let prevEffective = null;
 let prevBonusActive = false;
@@ -799,8 +805,8 @@ function updateTug(rows, membersBy){
   el('tugKnot').style.left = knotPct + '%';
   bar.classList.toggle('lead-left', total > 0 && share > 0.5);
   bar.classList.toggle('lead-right', total > 0 && share < 0.5);
-  el('tugTeamL').innerHTML = `${L.info ? L.info.label : '-'} · <span class="tug-floor">${L.floor}층</span>`;
-  el('tugTeamR').innerHTML = `${R.info ? R.info.label : '-'} · <span class="tug-floor">${R.floor}층</span>`;
+  el('tugTeamL').innerHTML = `${L.info ? L.info.label : '-'} · <span class="tug-floor">${L.floor}${unitLabel()}</span>`;
+  el('tugTeamR').innerHTML = `${R.info ? R.info.label : '-'} · <span class="tug-floor">${R.floor}${unitLabel()}</span>`;
   el('tugAvaL').textContent = avatarStrip(membersBy[L.key], 16);
   el('tugAvaR').textContent = avatarStrip(membersBy[R.key], 16);
 }
@@ -829,7 +835,7 @@ function updateTerritory(rows, membersBy){
     seg.style.background = `linear-gradient(180deg, ${r.info.color}, ${r.info.color} 55%, rgba(0,0,0,.34))`;
     seg.classList.toggle('leader', totalFloor > 0 && r.floor === maxFloor);
     seg.querySelector('.terr-name').textContent = r.info.label;
-    seg.querySelector('.terr-score').textContent = r.floor + '층';
+    seg.querySelector('.terr-score').textContent = r.floor + unitLabel();
     seg.querySelector('.terr-members').textContent = avatarStrip(membersBy[r.key], 24);
   });
 }
@@ -866,7 +872,7 @@ function buildPodium(ranked){
     <div class="place ${classes[i]}">
       <div class="crown">${crowns[i]}</div>
       <div class="pname">${escapeHtml(p.name)}</div>
-      <div class="pfloor">${p.floor||0}층</div>
+      <div class="pfloor">${p.floor||0}${unitLabel()}</div>
       <div class="stand">${i+1}</div>
     </div>
   `).join('');
@@ -880,7 +886,7 @@ function showEndCelebration(players, ranked){
     const standings = teamStandings(players);
     if(standings.length){
       const info = teamInfo(standings[0].team);
-      teamWinnerEl.textContent = `🏆 우승팀: ${info ? info.label : standings[0].team} (${standings[0].floor}층)`;
+      teamWinnerEl.textContent = `🏆 우승팀: ${info ? info.label : standings[0].team} (${standings[0].floor}${unitLabel()})`;
       teamWinnerEl.classList.remove('hidden');
     } else {
       teamWinnerEl.classList.add('hidden');
@@ -950,7 +956,7 @@ function showItemEvent(e){
   if(!it) return;
   const who = escapeHtml(e.byName || '누군가');
   if(it.kind === 'global'){
-    if(e.type === 'santa'){ itemToast(`🎁 ${who} → 모두 +1층!`); spawnConfettiBatch(20); }
+    if(e.type === 'santa'){ itemToast(`🎁 ${who} → 모두 +1${unitLabel()}!`); spawnConfettiBatch(20); }
     else { itemToast(`🌈 ${who} → 20초간 모두 2배!`); festivalUntil = e.at + ITEM_FX_MS.festival; festivalBy = e.byName || ''; spawnConfettiBatch(16); }
     return;
   }
@@ -998,7 +1004,7 @@ function render(){
     <div class="lb-row ${i===0?'rank1':''}">
       <div class="lb-medal">${MEDALS[i] || (i+1)}</div>
       <div class="lb-name">${escapeHtml(p.name||'')}</div>
-      <div class="lb-floor">${p.floor||0}층</div>
+      <div class="lb-floor">${p.floor||0}${unitLabel()}</div>
     </div>
   `).join('') : '<div style="opacity:.6; font-size:.85rem; padding:6px 4px;">아직 참가한 학생이 없습니다</div>';
 
