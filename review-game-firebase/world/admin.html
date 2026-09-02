@@ -194,7 +194,7 @@
     <div class="team-standings hidden" id="teamStandingsBox"></div>
     <table>
       <thead>
-        <tr><th class="rank">#</th><th>이름</th><th id="teamTh" class="hidden">팀</th><th>층수</th><th>정답/오답</th><th>정답률</th><th>연속</th><th>상태</th><th>관리</th></tr>
+        <tr><th class="rank">#</th><th>이름</th><th id="teamTh" class="hidden">팀</th><th id="floorTh">층수</th><th>정답/오답</th><th>정답률</th><th>연속</th><th>상태</th><th>관리</th></tr>
       </thead>
       <tbody id="roster"><tr><td colspan="9" class="muted">학생이 아직 없습니다.</td></tr></tbody>
     </table>
@@ -243,6 +243,16 @@ let questionsObj = {};
 let allUnits = [];
 let selectedUnits = new Set();
 let roundState = { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random', qids:[], team_mode:false, team_count:4, bonus:[] };
+
+// 진행 단위: 개인전=탑 오르기(층), 2팀=줄다리기(cm), 3팀 이상=땅따먹기(평)
+function unitLabel(){
+  if(roundState && roundState.team_mode) return Number(roundState.team_count) === 2 ? 'cm' : '평';
+  return '층';
+}
+function unitColLabel(){
+  const u = unitLabel();
+  return u === '층' ? '층수' : u;
+}
 let playersObj = {};
 let questionOrder = 'random';
 let questionWeight = 'even'; // 'even' | 'recent' — 주제별 출제 비중
@@ -636,6 +646,9 @@ function renderRoster(){
   const players = Object.entries(playersObj).map(([id,p])=>({id,...p}));
   players.sort((a,b)=> (b.floor||0)-(a.floor||0) || (b.correct||0)-(a.correct||0));
 
+  const floorTh = el('floorTh');
+  if(floorTh) floorTh.textContent = unitColLabel();
+
   const teamBox = el('teamStandingsBox');
   const teamTh = el('teamTh');
   if(r.team_mode){
@@ -649,7 +662,7 @@ function renderRoster(){
       return `<div class="team-bar-row">
         <span class="tlabel">${info ? info.label : s.team}</span>
         <span class="team-bar-track"><span class="team-bar-fill" style="width:${pct}%; background:${info ? info.color : '#999'};"></span></span>
-        <span class="tval">${s.floor}층</span>
+        <span class="tval">${s.floor}${unitLabel()}</span>
       </div>`;
     }).join('');
   } else {
@@ -686,7 +699,7 @@ function renderRoster(){
       <td class="rank">${i+1}</td>
       <td>${p.avatar||''} ${escapeHtml(p.name||'')}</td>
       ${teamCell}
-      <td>${p.floor||0}층</td>
+      <td>${p.floor||0}${unitLabel()}</td>
       <td>${p.correct||0}/${p.wrong||0}</td>
       <td class="${accClass}">${accuracy===null?'-':accuracy+'%'}</td>
       <td>${(p.streak||0)>=2 ? '🔥'+p.streak : (p.streak||0)}</td>
