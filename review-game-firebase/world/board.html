@@ -223,25 +223,27 @@
   }
   .tug-bar.lead-left{ box-shadow:inset 0 0 0 3px var(--cl,#888), 0 0 30px rgba(255,255,255,.15); }
   .tug-bar.lead-right{ box-shadow:inset 0 0 0 3px var(--cr,#888), 0 0 30px rgba(255,255,255,.15); }
-  /* 땅따먹기 (3팀 이상) — 원그래프 */
-  .terr-pie{ display:flex; align-items:center; justify-content:center; gap:44px; height:82%; min-height:300px; }
-  .terr-chart{ flex:0 0 auto; height:100%; aspect-ratio:1/1; max-width:52%; }
-  .terr-chart svg{ width:100%; height:100%; overflow:visible; filter:drop-shadow(0 12px 30px rgba(0,0,0,.5)); }
-  .terr-slice path{ stroke:#0b1024; stroke-width:1.3; stroke-linejoin:round; }
-  .terr-slice.leader path{ stroke:#fff; stroke-width:2; }
-  .terr-slabel{ fill:#fff; font-weight:900; text-anchor:middle; dominant-baseline:middle;
-    paint-order:stroke; stroke:rgba(0,0,0,.55); stroke-width:3px; }
-  .terr-sname{ font-size:7px; }
-  .terr-sval{ font-size:9.5px; }
-  .terr-legend{ display:flex; flex-direction:column; gap:14px; min-width:220px; max-width:36%; }
-  .terr-leg-row{ display:flex; align-items:center; gap:12px; padding:9px 14px; border-radius:14px;
-    background:rgba(255,255,255,.06); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1); transition:box-shadow .3s ease; }
-  .terr-leg-row.leader{ box-shadow:inset 0 0 0 2px var(--gold), 0 0 22px rgba(242,210,122,.28); }
-  .terr-leg-dot{ width:22px; height:22px; border-radius:7px; flex:0 0 auto; box-shadow:0 0 0 1px rgba(0,0,0,.35); }
-  .terr-leg-main{ flex:1; min-width:0; }
-  .terr-leg-name{ font-size:1.2rem; font-weight:900; white-space:nowrap; text-shadow:0 2px 6px rgba(0,0,0,.5); }
-  .terr-leg-mem{ font-size:1.35rem; line-height:1.25; margin-top:2px; overflow:hidden; max-height:2.7em; }
-  .terr-leg-val{ font-size:2rem; font-weight:900; color:var(--gold); text-shadow:0 2px 8px rgba(0,0,0,.5); flex:0 0 auto; }
+  /* 땅따먹기 (3팀 이상) — 색깔 네모 */
+  .terr{
+    display:flex; height:72%; min-height:280px; border-radius:18px; overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
+  }
+  .terr-seg{
+    position:relative; flex-basis:0; flex-grow:1; min-width:70px; overflow:hidden;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    padding:46px 10px 62px; color:#fff;
+    border-right:2px solid rgba(0,0,0,.28); transition:flex-grow .6s cubic-bezier(.34,1.3,.64,1);
+  }
+  .terr-seg:last-child{ border-right:none; }
+  .terr-seg.leader{ box-shadow:inset 0 0 0 4px #fff, inset 0 0 60px rgba(255,255,255,.28); }
+  .terr-flag{ position:absolute; top:14px; left:0; right:0; text-align:center; font-size:1.6rem; line-height:1; }
+  .terr-name{ font-size:1.5rem; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.55); white-space:nowrap; }
+  .terr-score{ font-size:2.5rem; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.55); }
+  .terr-members{
+    position:absolute; left:0; right:0; bottom:14px; padding:0 8px;
+    display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-content:flex-start;
+    font-size:1.6rem; line-height:1.1; max-height:3.2em; overflow:hidden;
+  }
 
   .hidden{ display:none !important; }
   @keyframes rungs{ from{ background-position:0 0, 0 0; } to{ background-position:0 26px, 0 0; } }
@@ -812,93 +814,32 @@ function updateTug(rows, membersBy){
 }
 
 function territorySkeleton(keys){
-  return `<div class="terr-pie">
-    <div class="terr-chart">
-      <svg viewBox="-60 -60 120 120" preserveAspectRatio="xMidYMid meet">
-        <g id="terrSlices"></g>
-      </svg>
-    </div>
-    <div class="terr-legend" id="terrLegend">${keys.map(k=>
-      `<div class="terr-leg-row" data-key="${k}">
-         <span class="terr-leg-dot"></span>
-         <div class="terr-leg-main"><div class="terr-leg-name"></div><div class="terr-leg-mem"></div></div>
-         <div class="terr-leg-val"></div>
-       </div>`).join('')}</div>
-  </div>`;
-}
-
-let terrFrac = {};          // 화면에 그려지고 있는 팀별 점유율 (목표치로 부드럽게 이동)
-let terrRaf = null;
-
-function terrPolar(r, ang){ return [r * Math.cos(ang), r * Math.sin(ang)]; }
-function terrArc(r, a0, a1){
-  if(a1 - a0 >= Math.PI * 2 - 1e-6){                       // 한 팀만 있을 때: 꽉 찬 원
-    return `M ${-r} 0 A ${r} ${r} 0 1 1 ${r} 0 A ${r} ${r} 0 1 1 ${-r} 0 Z`;
-  }
-  const [x0, y0] = terrPolar(r, a0), [x1, y1] = terrPolar(r, a1);
-  const large = (a1 - a0) > Math.PI ? 1 : 0;
-  return `M 0 0 L ${x0.toFixed(2)} ${y0.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} Z`;
-}
-
-function drawTerritory(rows){
-  const g = el('terrSlices');
-  if(!g) return;
-  const R = 52;
-  const maxFloor = Math.max(0, ...rows.map(r=>r.floor));
-  let ang = -Math.PI / 2;                                  // 12시 방향에서 시작
-  g.innerHTML = rows.map(r=>{
-    const f = terrFrac[r.key] || 0;
-    const a0 = ang, a1 = ang + f * Math.PI * 2; ang = a1;
-    const mid = (a0 + a1) / 2;
-    const isLeader = maxFloor > 0 && r.floor === maxFloor;
-    const [ox, oy] = terrPolar(isLeader ? 4 : 0, mid);     // 선두 팀 조각만 살짝 튀어나옴
-    const [lx, ly] = terrPolar(R * 0.56, mid);
-    let label = '';
-    if(f >= 0.11){                                         // 조각이 크면: 팀 이름 + 점수 두 줄
-      label = `<text class="terr-slabel terr-sname" x="${lx.toFixed(2)}" y="${(ly - 4).toFixed(2)}">${escapeHtml(r.info.label)}</text>` +
-              `<text class="terr-slabel terr-sval" x="${lx.toFixed(2)}" y="${(ly + 5.5).toFixed(2)}">${r.floor}${unitLabel()}</text>`;
-    } else if(f >= 0.055){                                 // 좁으면 점수만
-      label = `<text class="terr-slabel terr-sval" x="${lx.toFixed(2)}" y="${ly.toFixed(2)}">${r.floor}${unitLabel()}</text>`;
-    }
-    return `<g class="terr-slice${isLeader ? ' leader' : ''}" data-key="${r.key}" transform="translate(${ox.toFixed(2)} ${oy.toFixed(2)})">
-      <path d="${terrArc(R, a0, a1)}" fill="${r.info.color}"></path>${label}
-    </g>`;
-  }).join('');
+  return `<div class="terr" id="terr">` + keys.map(k=>
+    `<div class="terr-seg" data-key="${k}">
+       <div class="terr-flag">🚩</div>
+       <div class="terr-name"></div>
+       <div class="terr-score"></div>
+       <div class="terr-members"></div>
+     </div>`).join('') + `</div>`;
 }
 
 function updateTerritory(rows, membersBy){
-  const total = rows.reduce((s, r)=> s + r.floor, 0);
+  const byKey = {}; rows.forEach(r=> byKey[r.key] = r);
+  const totalFloor = rows.reduce((s,r)=> s + r.floor, 0);
+  const base = Math.max(2, totalFloor * 0.14);            // 0점 팀도 최소 영역 유지
   const maxFloor = Math.max(0, ...rows.map(r=>r.floor));
-  const target = {};
-  rows.forEach(r=> target[r.key] = total > 0 ? r.floor / total : 1 / rows.length);
-  rows.forEach(r=>{ if(terrFrac[r.key] == null) terrFrac[r.key] = 1 / rows.length; });
-  Object.keys(terrFrac).forEach(k=>{ if(!(k in target)) delete terrFrac[k]; });
-
-  const legend = el('terrLegend');
-  if(legend){
-    Array.from(legend.children).forEach(row=>{
-      const r = rows.find(x=> x.key === row.dataset.key);
-      if(!r) return;
-      row.querySelector('.terr-leg-dot').style.background = r.info.color;
-      row.querySelector('.terr-leg-name').textContent = r.info.label;
-      row.querySelector('.terr-leg-val').textContent = r.floor + unitLabel();
-      row.querySelector('.terr-leg-mem').textContent = avatarStrip(membersBy[r.key], 20);
-      row.classList.toggle('leader', maxFloor > 0 && r.floor === maxFloor);
-    });
-  }
-
-  cancelAnimationFrame(terrRaf);
-  const step = ()=>{
-    let moving = false;
-    rows.forEach(r=>{
-      const d = target[r.key] - terrFrac[r.key];
-      if(Math.abs(d) > 0.0015){ terrFrac[r.key] += d * 0.18; moving = true; }
-      else terrFrac[r.key] = target[r.key];
-    });
-    drawTerritory(rows);
-    if(moving) terrRaf = requestAnimationFrame(step);
-  };
-  step();
+  const terr = el('terr');
+  if(!terr) return;
+  Array.from(terr.children).forEach(seg=>{
+    const r = byKey[seg.dataset.key];
+    if(!r) return;
+    seg.style.flexGrow = (r.floor + base).toFixed(2);
+    seg.style.background = `linear-gradient(180deg, ${r.info.color}, ${r.info.color} 55%, rgba(0,0,0,.34))`;
+    seg.classList.toggle('leader', totalFloor > 0 && r.floor === maxFloor);
+    seg.querySelector('.terr-name').textContent = r.info.label;
+    seg.querySelector('.terr-score').textContent = r.floor + unitLabel();
+    seg.querySelector('.terr-members').textContent = avatarStrip(membersBy[r.key], 24);
+  });
 }
 
 const CONFETTI_COLORS = ['#f2d27a','#e85d75','#5aa9e6','#7bd389','#c792ea','#ffffff'];
@@ -991,29 +932,24 @@ function flashClimberFx(pid, type){
   setTimeout(()=>{ if(badge) badge.remove(); node.classList.remove('fx-fog'); }, dur);
 }
 
-// 팀전: 팀 아레나에서 피격 팀 구역을 잠깐 흔든다 (땅따먹기 범례·조각 / 줄다리기 tug-end)
+// 팀전: 팀 아레나에서 피격 팀 구역을 잠깐 흔든다 (땅따먹기 terr-seg / 줄다리기 tug-end)
 function flashTeamFx(teamKey, type){
   const emoji = type==='fog' ? '🌫️' : type==='ice' ? '🧊' : type==='snail' ? '🐌' : '⬇️';
   const keys = TEAM_OPTIONS.slice(0, roundState.team_count || 4).map(t=>t.key);
   const ti = keys.indexOf(teamKey);
   const nodes = [];
-  // 땅따먹기(원그래프): 범례 줄 + 해당 조각을 함께 흔든다
-  document.querySelectorAll(`.terr-leg-row[data-key="${teamKey}"], .terr-slice[data-key="${teamKey}"]`)
-    .forEach(n=> nodes.push(n));
+  const seg = document.querySelector(`.terr-seg[data-key="${teamKey}"]`);
+  if(seg) nodes.push(seg);
   if((roundState.team_count || 4) <= 2 && (ti === 0 || ti === 1)){
     const end = document.querySelector(ti === 0 ? '.tug-end.left' : '.tug-end.right');
     if(end) nodes.push(end);
   }
   nodes.forEach(n=>{
     n.classList.add('team-fx');
-    if(n instanceof HTMLElement){
-      let b = n.querySelector('.team-fx-badge');
-      if(!b){ b = document.createElement('div'); b.className = 'team-fx-badge'; n.appendChild(b); }
-      b.textContent = emoji;
-      setTimeout(()=>{ n.classList.remove('team-fx'); if(b) b.remove(); }, 2600);
-    } else {
-      setTimeout(()=> n.classList.remove('team-fx'), 2600);
-    }
+    let b = n.querySelector('.team-fx-badge');
+    if(!b){ b = document.createElement('div'); b.className = 'team-fx-badge'; n.appendChild(b); }
+    b.textContent = emoji;
+    setTimeout(()=>{ n.classList.remove('team-fx'); if(b) b.remove(); }, 2600);
   });
 }
 
