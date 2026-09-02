@@ -712,6 +712,7 @@ function startListening(){
     } : { status:'idle', units:[], duration_sec:300, end_time:null, token:0, order:'random', weight:'even', qids:[], team_mode:false, team_count:4, bonus:[], items_mode:'off' };
     itemsMode = roundState.items_mode;
     refreshUnitLabels();
+    el('avatarChar').hidden = roundState.team_mode;   // 팀전에서는 개인 캐릭터 숨김
     renderItemBar();
   });
 
