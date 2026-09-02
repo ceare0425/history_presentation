@@ -77,8 +77,8 @@
   .team-bar-row .tval{ width:52px; text-align:right; flex-shrink:0; color:var(--sub); }
 
   .kick-btn{ padding:5px 10px; font-size:.76rem; background:var(--bad); }
-  .team-sel{ padding:4px 6px; font-size:.76rem; border:1px solid #ccd2e0; border-radius:6px; background:#fff; margin-right:6px; }
-  .manage-cell{ white-space:nowrap; }
+  .team-sel{ width:auto; max-width:130px; padding:4px 6px; font-size:.76rem; border:1px solid #ccd2e0; border-radius:6px; background:#fff; margin-right:6px; vertical-align:middle; }
+  .manage-cell{ white-space:nowrap; width:1%; }
   .msg{ font-size:.82rem; margin-top:8px; min-height:1.2em; }
   .msg.err{ color:var(--bad); }
   .msg.ok{ color:var(--good); }
@@ -663,6 +663,10 @@ function renderRoster(){
     tbody.innerHTML = `<tr><td colspan="${r.team_mode?9:8}" class="muted">학생이 아직 없습니다.</td></tr>`;
     return;
   }
+  // 관리자가 '팀 변경' 드롭다운을 여는 중이면 목록을 새로 그리지 않는다
+  // (renderRoster가 500ms마다 실행되어 열려 있던 select가 사라지며 저절로 닫히는 문제 방지)
+  const activeEl = document.activeElement;
+  if(activeEl && activeEl.classList.contains('team-sel') && tbody.contains(activeEl)) return;
   tbody.innerHTML = players.map((p,i)=>{
     const total = (p.correct||0)+(p.wrong||0);
     const accuracy = total ? Math.round(100*(p.correct||0)/total) : null;
