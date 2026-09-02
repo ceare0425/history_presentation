@@ -783,8 +783,13 @@ function renderItemBar(){
   if(heldItem && ITEMS[heldItem]){
     const it = ITEMS[heldItem];
     let desc = it.desc;
-    if(roundState.team_mode && heldItem === 'santa') desc = `우리 팀 모두 +1${unitLabel()}`;
-    else if(roundState.team_mode && heldItem === 'festival') desc = '20초간 우리 팀 2배';
+    if(roundState.team_mode){
+      const u = unitLabel();
+      if(heldItem === 'santa') desc = `우리 팀 모두 +1${u}`;
+      else if(heldItem === 'festival') desc = '20초간 우리 팀 2배';
+      else if(heldItem === 'ladder') desc = `즉시 +2${u}`;
+      else if(heldItem === 'rocket') desc = `즉시 +5${u} (다음 정답 1번은 추가 없음)`;
+    }
     bar.innerHTML =
       `<button type="button" class="item-btn" id="useItemBtn">${it.emoji} ${it.name} 사용<small>${desc}</small></button>` +
       `<button type="button" class="item-discard-btn" id="discardItemBtn">버리기</button>`;
