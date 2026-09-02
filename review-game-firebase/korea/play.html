@@ -782,8 +782,11 @@ function renderItemBar(){
   if(!itemsOn()){ bar.innerHTML = ''; hint.textContent = ''; return; }
   if(heldItem && ITEMS[heldItem]){
     const it = ITEMS[heldItem];
+    let desc = it.desc;
+    if(roundState.team_mode && heldItem === 'santa') desc = `우리 팀 모두 +1${unitLabel()}`;
+    else if(roundState.team_mode && heldItem === 'festival') desc = '20초간 우리 팀 2배';
     bar.innerHTML =
-      `<button type="button" class="item-btn" id="useItemBtn">${it.emoji} ${it.name} 사용<small>${it.desc}</small></button>` +
+      `<button type="button" class="item-btn" id="useItemBtn">${it.emoji} ${it.name} 사용<small>${desc}</small></button>` +
       `<button type="button" class="item-discard-btn" id="discardItemBtn">버리기</button>`;
     el('useItemBtn').onclick = () => {
       el('useItemBtn').disabled = true;
@@ -966,8 +969,12 @@ function handleItemEvents(obj){
     if(evItem && evItem.kind === 'global'){
       const who = e.byName || '누군가';
       if(e.type === 'santa'){
+        // 팀전에서는 산타를 쓴 학생과 같은 팀에게만 +1
+        if(roundState.team_mode && (!e.byTeam || e.byTeam !== myTeam)) return;
         bumpFloor(1);
-        showItemAlert(`🎁 ${who} 님이 '산타' 사용 → 모두 +1${unitLabel()}!`);
+        showItemAlert(roundState.team_mode
+          ? `🎁 ${who} 님이 '산타' 사용 → 우리 팀 모두 +1${unitLabel()}!`
+          : `🎁 ${who} 님이 '산타' 사용 → 모두 +1${unitLabel()}!`);
       } else if(e.type === 'festival'){
         // 팀전에서는 축제를 쓴 학생과 같은 팀에게만 2배 적용
         if(roundState.team_mode && (!e.byTeam || e.byTeam !== myTeam)) return;
