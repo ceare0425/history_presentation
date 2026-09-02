@@ -362,6 +362,9 @@ let itemsMode = 'off';       // 'off' | 'mild' | 'spicy' (round.items_mode)
 let heldItem = null;         // 보유 중인 아이템 key (players/<id>/item 과 동기화)
 let allPlayers = [];         // [{id, ...}] — 방해 대상 계산용
 let myTeam = null;           // 팀전에서 내 팀 key (players/<id>/team 과 동기화)
+let myPrevRankMap = null;    // 지난 스냅샷의 { id: 등수 } — 개인전 추월 알림용
+let myLastOvertakeAt = 0;    // 마지막 개인 추월 알림 시각
+const MY_OVERTAKE_CD = 4000; // 개인 추월 알림 최소 간격(ms)
 let myBoost = 0;             // 남은 '부스터' 2배 횟수
 let mySkipFloor = false;     // '로켓 점프' 반동 — 다음 정답 1회 층수 0
 let myHintQid = null;        // '힌트' 쓴 문제 — 그 문제 정답은 +1층으로 제한
@@ -765,6 +768,7 @@ function startListening(){
   // 아이템전: 전체 명단(방해 대상 계산) + 아이템 이벤트 수신
   onValue(roomRef(ROOM, 'players'), (snap)=>{
     allPlayers = Object.entries(snap.val() || {}).map(([id,p])=>({ id, ...p }));
+    checkMyOvertake();
   });
   onValue(roomRef(ROOM, 'item_events'), (snap)=>{
     handleItemEvents(snap.val() || {});
@@ -823,6 +827,40 @@ function showItemAlert(msg){
 function clearItemAlert(){
   const a = el('itemAlert');
   if(a){ a.textContent = ''; a.classList.remove('show'); }
+}
+
+// 개인전 7위 이하는 전광판 추월 알림에서 빠지므로, 내가 누군가를 제치면 내 화면에라도 띄운다
+function checkMyOvertake(){
+  if(!playerId || roundState.team_mode) return;
+  if(roundState.status !== 'running' || roundEnded()){ myPrevRankMap = null; return; }
+  const ranked = rankedPlayers(allPlayers).filter(p=> p.name);
+  const cur = {};
+  ranked.forEach((p,i)=> cur[p.id] = i + 1);
+  const myRank = cur[playerId];
+  const prev = myPrevRankMap;
+  myPrevRankMap = cur;
+  if(myRank == null || !prev) return;
+
+  const myOld = prev[playerId];
+  if(myOld == null || myRank >= myOld) return;      // 순위 상승이 아님
+  if(myRank < 7) return;                            // 상위 6위는 전광판이 담당
+  const me = allPlayers.find(p=> p.id === playerId);
+  if(!me || (me.floor || 0) <= 0) return;
+
+  // 방금 제친 상대: 예전엔 나보다 앞, 지금은 나보다 뒤 → 그중 현재 가장 가까운 사람
+  let passed = null, passedRank = Infinity;
+  for(const p of ranked){
+    if(p.id === playerId) continue;
+    const po = prev[p.id], pn = cur[p.id];
+    if(po != null && pn != null && po < myOld && pn > myRank && pn < passedRank){
+      passed = p; passedRank = pn;
+    }
+  }
+  if(!passed) return;
+  const now = serverNow();
+  if(now - myLastOvertakeAt < MY_OVERTAKE_CD) return;
+  myLastOvertakeAt = now;
+  showItemAlert(`🔥 ${passed.name} 님을 제치고 ${myRank}위!`);
 }
 
 async function discardItem(){
