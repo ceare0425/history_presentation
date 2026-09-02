@@ -231,7 +231,8 @@
   .terr-slice.leader path{ stroke:#fff; stroke-width:2; }
   .terr-slabel{ fill:#fff; font-weight:900; text-anchor:middle; dominant-baseline:middle;
     paint-order:stroke; stroke:rgba(0,0,0,.55); stroke-width:3px; }
-  .terr-sval{ font-size:9px; }
+  .terr-sname{ font-size:7px; }
+  .terr-sval{ font-size:9.5px; }
   .terr-legend{ display:flex; flex-direction:column; gap:14px; min-width:220px; max-width:36%; }
   .terr-leg-row{ display:flex; align-items:center; gap:12px; padding:9px 14px; border-radius:14px;
     background:rgba(255,255,255,.06); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1); transition:box-shadow .3s ease; }
@@ -851,8 +852,14 @@ function drawTerritory(rows){
     const mid = (a0 + a1) / 2;
     const isLeader = maxFloor > 0 && r.floor === maxFloor;
     const [ox, oy] = terrPolar(isLeader ? 4 : 0, mid);     // 선두 팀 조각만 살짝 튀어나옴
-    const [lx, ly] = terrPolar(R * 0.62, mid);
-    const label = (r.floor > 0 && f >= 0.06) ? `<text class="terr-slabel terr-sval" x="${lx.toFixed(2)}" y="${ly.toFixed(2)}">${r.floor}${unitLabel()}</text>` : '';
+    const [lx, ly] = terrPolar(R * 0.56, mid);
+    let label = '';
+    if(f >= 0.11){                                         // 조각이 크면: 팀 이름 + 점수 두 줄
+      label = `<text class="terr-slabel terr-sname" x="${lx.toFixed(2)}" y="${(ly - 4).toFixed(2)}">${escapeHtml(r.info.label)}</text>` +
+              `<text class="terr-slabel terr-sval" x="${lx.toFixed(2)}" y="${(ly + 5.5).toFixed(2)}">${r.floor}${unitLabel()}</text>`;
+    } else if(f >= 0.055){                                 // 좁으면 점수만
+      label = `<text class="terr-slabel terr-sval" x="${lx.toFixed(2)}" y="${ly.toFixed(2)}">${r.floor}${unitLabel()}</text>`;
+    }
     return `<g class="terr-slice${isLeader ? ' leader' : ''}" data-key="${r.key}" transform="translate(${ox.toFixed(2)} ${oy.toFixed(2)})">
       <path d="${terrArc(R, a0, a1)}" fill="${r.info.color}"></path>${label}
     </g>`;
