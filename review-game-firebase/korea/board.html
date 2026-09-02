@@ -161,6 +161,10 @@
     padding:9px 20px; border-radius:999px; font-weight:800; font-size:1.1rem;
     box-shadow:0 8px 24px rgba(0,0,0,.45); animation:itemToast 3s ease forwards; white-space:nowrap;
   }
+  .item-toast.overtake{
+    background:linear-gradient(90deg,#b3421f,#e8632b); border-color:rgba(255,214,150,.75);
+    font-size:1.3rem; box-shadow:0 8px 28px rgba(232,99,43,.5);
+  }
   @keyframes itemToast{
     0%{ opacity:0; transform:translateY(-12px) scale(.9); }
     12%{ opacity:1; transform:translateY(0) scale(1); }
@@ -385,6 +389,14 @@ let prevBonusActive = false;
 let festivalUntil = 0;
 let festivalBy = '';
 let festivalScopeLabel = '모두';   // 팀전 축제면 해당 팀 이름
+
+// ── 추월 알림 상태 ──────────────────────────────
+let prevRank = {};            // 지난 렌더 순위: 개인전 playerId→등수 / 팀전 teamKey→등수
+let prevRankMode = '';        // 'solo' | 'team' — 모드 바뀌면 비교 초기화
+let lastOvertakeAt = 0;
+const overtakePairAt = new Map();   // 정렬한 'a|b' → 마지막 알림 시각 (같은 쌍 반복 억제)
+const OVERTAKE_GLOBAL_CD = 3000;    // 전체 알림 최소 간격
+const OVERTAKE_PAIR_CD = 12000;     // 같은 두 대상 재알림 최소 간격
 const seenItemEvents = new Set();
 
 // ── 배경음악: 외부 파일 없이 Web Audio로 만든 '신나는' 루프. 라운드마다 여러 곡 중 랜덤 ──
@@ -618,6 +630,76 @@ function playBonusChime(){
   [880, 1318.51].forEach((f,i)=>{ // A5, E6
     playTone(f, t0 + i*0.11, 0.3, 0.45, 'triangle');
   });
+}
+
+// 추월 알림음 (빠른 3음 상승)
+function playOvertakeChime(){
+  ensureAudioCtx();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  const t0 = audioCtx.currentTime + 0.02;
+  [659.25, 880, 1174.66].forEach((f,i)=>{ // E5 A5 D6
+    playTone(f, t0 + i*0.07, 0.2, 0.4, 'triangle');
+  });
+}
+
+function overtakeToast(text){
+  const box = el('itemToasts');
+  if(!box) return;
+  const d = document.createElement('div');
+  d.className = 'item-toast overtake';
+  d.textContent = text;
+  box.appendChild(d);
+  setTimeout(()=> d.remove(), 3000);
+}
+
+// 지난 렌더 대비 순위가 바뀌었으면 "A, B 제쳤다!" 알림. 개인전은 상위 6위 안에서만.
+function detectOvertakes(players, ranked, effective){
+  if(effective !== 'running'){ prevRank = {}; prevRankMode = ''; return; }
+  const teamOn = !!roundState.team_mode;
+  const mode = teamOn ? 'team' : 'solo';
+
+  const order = teamOn
+    ? teamStandings(players).filter(s=> s.members > 0)
+        .map(s=> ({ key:s.team, name:(teamInfo(s.team)?.label || s.team), score:s.floor }))
+    : ranked.filter(p=> p.name)
+        .map(p=> ({ key:p.id, name:p.name, score:p.floor || 0 }));
+  const cur = {};
+  order.forEach((o,i)=> cur[o.key] = i + 1);
+
+  if(prevRankMode !== mode || Object.keys(prevRank).length === 0){
+    prevRank = cur; prevRankMode = mode; return;
+  }
+
+  const now = serverNow();
+  if(now - lastOvertakeAt >= OVERTAKE_GLOBAL_CD){
+    const topLimit = teamOn ? 99 : 6;
+    let best = null;   // { mover, passed, passedRank, moverRank }
+    for(const o of order){
+      const nr = cur[o.key], orr = prevRank[o.key];
+      if(orr == null || nr >= orr) continue;      // 위로 안 올라갔으면 skip
+      if(nr > topLimit) continue;                 // 상위권 밖은 알림 안 함
+      if((o.score || 0) <= 0) continue;           // 0점끼리 스왑 무시
+      for(const q of order){
+        if(q.key === o.key) continue;
+        const pOld = prevRank[q.key], pNew = cur[q.key];
+        if(pOld == null || pNew == null) continue;
+        if(pOld < orr && pNew > nr && (!best || pNew < best.passedRank)){
+          best = { mover:o, passed:q, passedRank:pNew, moverRank:nr };
+        }
+      }
+    }
+    if(best){
+      const pk = [best.mover.key, best.passed.key].sort().join('|');
+      if(now - (overtakePairAt.get(pk) || 0) >= OVERTAKE_PAIR_CD){
+        overtakePairAt.set(pk, now);
+        lastOvertakeAt = now;
+        const note = best.moverRank === 1 ? ' 선두 등극! 👑' : '';
+        overtakeToast(`🔥 ${best.mover.name}, ${best.passed.name} 제쳤다!${note}`);
+        playOvertakeChime();
+      }
+    }
+  }
+  prevRank = cur; prevRankMode = mode;
 }
 
 el('bgmToggle').onclick = () => {
@@ -1010,6 +1092,8 @@ function render(){
   } else {
     renderTower(players, ranked[0]?.id);
   }
+
+  detectOvertakes(players, ranked, effective);
 
   const bonus = activeBonus(roundState, serverNow());
   const banner = el('bonusBanner');
