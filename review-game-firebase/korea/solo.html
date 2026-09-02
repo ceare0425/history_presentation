@@ -146,17 +146,6 @@
   .hint-row button{ width:auto; flex:0 0 auto; padding:8px 14px; font-size:.9rem; }
   .hint-text{ font-size:1.2rem; font-weight:800; letter-spacing:.18em; color:var(--sky1); }
 
-  .tower-mini{
-    height:6vh; min-height:36px; display:flex; align-items:flex-end; justify-content:center;
-    margin-top:1vh; gap:3px; flex:0 0 auto;
-  }
-  .tower-mini .bar{
-    width:10px; border-radius:3px 3px 0 0; transition:height .35s cubic-bezier(.34,1.56,.64,1);
-    background:
-      repeating-linear-gradient(180deg, rgba(255,255,255,.4) 0px, rgba(255,255,255,.4) 2px, transparent 2px, transparent 9px),
-      linear-gradient(180deg,var(--gold),var(--gold-dark));
-  }
-
   .floor-badge{ transition:transform .15s ease; }
   .floor-badge.pop{ animation:floorPop .5s ease; }
   @keyframes floorPop{
@@ -254,8 +243,6 @@
       <button type="button" id="hintBtn" class="secondary">💡 힌트 (초성)</button>
       <span class="hint-text" id="hintText"></span>
     </div>
-
-    <div class="tower-mini" id="towerMini"></div>
   </div>
 
   <div id="endedView" class="view center hidden">
@@ -422,20 +409,6 @@ function popFloorBadge(){
   badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop');
 }
 
-function renderTowerMini(f){
-  const box = el('towerMini');
-  box.innerHTML = '';
-  const n = Math.min(24, Math.max(4, f));
-  for(let i=0;i<n;i++){
-    const bar = document.createElement('div');
-    bar.className = 'bar';
-    const active = i < Math.min(f, n);
-    bar.style.height = active ? (14 + (i%6)*6)+'px' : '4px';
-    bar.style.opacity = active ? '1' : '.25';
-    box.appendChild(bar);
-  }
-}
-
 function renderQuestion(q){
   hintUsed = false;
   el('hintText').textContent = '';
@@ -572,7 +545,6 @@ function submitAnswer(){
   el('streakVal').textContent = streak >= 2 ? `🔥 ${streak}연속 정답!` : '';
   if(floor > lastFloor) popFloorBadge();
   lastFloor = floor;
-  renderTowerMini(floor);
   flashFeedback(correct, q.answers[0], gain, wasRetry, usedHint);
   playCharacterReaction(correct);
 
@@ -693,7 +665,6 @@ el('startBtn').onclick = () => {
 
   el('floorVal').textContent = 0;
   el('streakVal').textContent = '';
-  renderTowerMini(0);
   el('feedback').classList.remove('show');
   showView('playView');
   assignNextQuestion();
