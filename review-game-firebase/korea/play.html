@@ -264,7 +264,7 @@
   <div id="playView" class="view hidden">
     <div class="play-top">
       <div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! <span id="bonusRemain"></span>초 남음</div>
-      <div class="festival-banner" id="festivalBanner">🌈 <span id="festivalWho"></span>축제! 모두 2배 · <span id="festivalRemain"></span>초 남음</div>
+      <div class="festival-banner" id="festivalBanner">🌈 <span id="festivalWho"></span>축제! <span id="festivalScope">모두</span> 2배 · <span id="festivalRemain"></span>초 남음</div>
       <div class="item-alert" id="itemAlert"></div>
       <div class="hud">
         <div class="floor-badge">🏢 <span id="floorVal">0</span><span class="u-unit">층</span></div>
@@ -310,7 +310,7 @@ import {
   roomRef, onValue, get, set, update, push, serverNow,
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
-  TEAM_OPTIONS, teamInfo, activeBonus,
+  TEAM_OPTIONS, teamInfo, teamStandings, activeBonus,
   ITEMS, ITEM_FX_MS, rollItem, inTopGroup, attackCandidates, pickAttackTarget, pickTargetTeam, choseongHint
 } from '../shared/lib.js';
 
@@ -619,12 +619,22 @@ async function showEndedView(){
   const acc = total ? Math.round(100*(me.correct||0)/total) : null;
   el('finalStat').textContent = acc!==null ? `정답 ${me.correct}개 · 정답률 ${acc}%` : '아직 문제를 풀지 않았어요';
 
-  const ranked = rankedPlayers(players);
   const rankEl = el('finalRank');
-  const idx = ranked.findIndex(p=>p.id===playerId);
-  const rank = idx>=0 ? idx+1 : null;
+  let rank = null, denom = 0, unitWord = '명';
+  if(roundState.team_mode && me.team){
+    const standings = teamStandings(players);
+    const tIdx = standings.findIndex(s=> s.team === me.team);
+    rank = tIdx >= 0 ? tIdx + 1 : null;
+    denom = standings.length;
+    unitWord = '팀';
+  } else {
+    const ranked = rankedPlayers(players);
+    const idx = ranked.findIndex(p=>p.id===playerId);
+    rank = idx >= 0 ? idx + 1 : null;
+    denom = ranked.length;
+  }
   if(rank){
-    rankEl.textContent = rank===1 ? '🏆 1등입니다!' : `${rank}등 / ${ranked.length}명 중`;
+    rankEl.textContent = rank===1 ? '🏆 1등입니다!' : `${rank}등 / ${denom}${unitWord} 중`;
     rankEl.classList.toggle('rank1', rank===1);
   } else {
     rankEl.textContent = '';
@@ -713,6 +723,7 @@ function startListening(){
     itemsMode = roundState.items_mode;
     refreshUnitLabels();
     el('avatarChar').hidden = roundState.team_mode;   // 팀전에서는 개인 캐릭터 숨김
+    el('festivalScope').textContent = roundState.team_mode ? '우리 팀' : '모두';
     renderItemBar();
   });
 
@@ -927,10 +938,11 @@ async function useItem(){
   }
 
   // 전체 이벤트: 효과는 item_events 핸들러가 모두(나 포함)에게 적용
+  // (팀전에서 '축제'는 handleItemEvents에서 byTeam으로 걸러 같은 팀에게만 적용)
   if(it.kind === 'global'){
     heldItem = null;
     await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
-    await push(roomRef(ROOM, 'item_events'), { type: key, by: playerId, byName: playerName, at: serverNow() });
+    await push(roomRef(ROOM, 'item_events'), { type: key, by: playerId, byName: playerName, byTeam: myTeam || null, at: serverNow() });
     renderItemBar();
     return;
   }
@@ -957,6 +969,8 @@ function handleItemEvents(obj){
         bumpFloor(1);
         showItemAlert(`🎁 ${who} 님이 '산타' 사용 → 모두 +1${unitLabel()}!`);
       } else if(e.type === 'festival'){
+        // 팀전에서는 축제를 쓴 학생과 같은 팀에게만 2배 적용
+        if(roundState.team_mode && (!e.byTeam || e.byTeam !== myTeam)) return;
         festivalUntil = e.at + ITEM_FX_MS.festival;
         festivalBy = who;   // 축제는 itemAlert 대신 festivalBanner가 남은 시간과 함께 계속 표시
       } else {
