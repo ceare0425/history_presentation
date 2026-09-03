@@ -216,6 +216,21 @@ export function pickTargetTeam(players, myTeam) {
   return rivals.length ? rivals[0].team : null;
 }
 
+// 팀전(매운맛): 내 팀이 선두 팀에 뒤처진 정도로 '견제 아이템 가중치' 0~1을 돌려준다.
+// 선두 팀이거나 1인당 평균 격차가 4층 이내면 0, 격차가 벌어질수록 1에 근접 → rollItem이 방해 아이템을 더 자주 뽑음.
+export function teamAttackBias(players, myTeam) {
+  if (!myTeam) return 0;
+  const st = teamStandings(players).filter((s) => s.members > 0);
+  if (st.length < 2) return 0;
+  const avg = (s) => (s.members ? (s.floor || 0) / s.members : 0);
+  const lead = st.slice().sort((a, b) => avg(b) - avg(a))[0];
+  const mine = st.find((s) => s.team === myTeam);
+  if (!mine || mine.team === lead.team) return 0;
+  const gap = avg(lead) - avg(mine);       // 1인당 평균 층수 차이
+  if (gap <= 4) return 0;
+  return Math.min(1, (gap - 4) / 12);      // 4층 차이=0, 16층 차이 이상=1
+}
+
 // ── 역전 이벤트(2배 찬스) ──
 // 관리자가 버튼으로 수동 발동만 함 (admin.html의 bonusNowBtn)
 
@@ -265,9 +280,18 @@ export function itemPool(mode, canAttack) {
     .map(([k]) => k);
 }
 
-export function rollItem(mode, canAttack) {
+// attackBias(0~1): 클수록 방해(attack) 아이템이 뽑힐 확률이 올라간다. 0이면 기존과 동일한 균등 추첨.
+export function rollItem(mode, canAttack, attackBias = 0) {
   const pool = itemPool(mode, canAttack);
-  return pool[Math.floor(Math.random() * pool.length)];
+  if (!pool.length) return null;
+  const w = attackBias > 0 ? 1 + 6 * Math.min(1, attackBias) : 1;   // 견제 아이템 가중치 최대 7배
+  const weights = pool.map((k) => (ITEMS[k] && ITEMS[k].kind === 'attack' ? w : 1));
+  let r = Math.random() * weights.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < pool.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return pool[i];
+  }
+  return pool[pool.length - 1];
 }
 
 // 상위 그룹 크기: 15명 이하면 3명, 그보다 많으면 인원의 20%(최소 3).

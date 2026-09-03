@@ -332,7 +332,7 @@ import {
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   TEAM_OPTIONS, teamInfo, teamStandings, activeBonus,
-  ITEMS, ITEM_FX_MS, rollItem, inTopGroup, attackCandidates, pickAttackTarget, pickTargetTeam, choseongHint
+  ITEMS, ITEM_FX_MS, rollItem, inTopGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, choseongHint
 } from '../shared/lib.js';
 
 const ROOM = 'korea';
@@ -589,7 +589,9 @@ async function submitAnswer(){
     if(itemsOn() && !heldItem && p.streak > 0 && p.streak % 3 === 0){
       // 팀전에서는 공격 아이템이 상대 팀을 노리므로 상위권도 뽑을 수 있다
       const canAttack = itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId));
-      heldItem = rollItem(itemsMode, canAttack);
+      // 팀전 매운맛: 우리 팀이 선두 팀에 크게 뒤처졌으면 견제 아이템이 더 자주 나오게 가중
+      const atkBias = (roundState.team_mode && itemsMode === 'spicy') ? teamAttackBias(allPlayers, myTeam) : 0;
+      heldItem = rollItem(itemsMode, canAttack, atkBias);
     }
   } else {
     p.wrong = (p.wrong||0) + 1;
