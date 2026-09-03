@@ -249,7 +249,7 @@ export const ITEMS = {
   ice:      { emoji: '🧊',  name: '얼음',      kind: 'attack',  desc: '선두권이 5초간 제출 불가' },
   snail:    { emoji: '🐌',  name: '느림보',    kind: 'attack',  desc: '선두권 다음 정답이 +1층만' },
   slide:    { emoji: '⬇️',  name: '미끄럼틀',  kind: 'attack',  desc: '선두권 -3층 (2등 층수 아래로는 안 내려감)' },
-  steal:    { emoji: '🥷',  name: '강탈',      kind: 'attack',  desc: '선두권 -2층, 나 +2층' },
+  steal:    { emoji: '🥷',  name: '강탈',      kind: 'attack',  desc: '선두권 -4층, 나 +4층 (팀전은 상대 팀 전원 -2)' },
 };
 
 // 매운맛(spicy)에서는 방해 효과가 더 오래/세게 간다.
