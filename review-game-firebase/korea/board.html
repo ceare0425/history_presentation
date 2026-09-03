@@ -1024,17 +1024,10 @@ function showItemEvent(e){
   if(!it) return;
   const who = escapeHtml(e.byName || '누군가');
   if(it.kind === 'global'){
-    if(e.type === 'santa'){
-      const st = (roundState.team_mode && e.byTeam) ? teamInfo(e.byTeam) : null;
-      itemToast(st ? `🎁 ${who} → ${st.label} 모두 +1${unitLabel()}!` : `🎁 ${who} → 모두 +1${unitLabel()}!`);
-      spawnConfettiBatch(20);
-    }
-    else {
-      const ft = (roundState.team_mode && e.byTeam) ? teamInfo(e.byTeam) : null;
-      festivalScopeLabel = ft ? ft.label : '모두';
-      itemToast(ft ? `🌈 ${who} → 20초간 ${ft.label} 2배!` : `🌈 ${who} → 20초간 모두 2배!`);
-      festivalUntil = e.at + ITEM_FX_MS.festival; festivalBy = e.byName || ''; spawnConfettiBatch(16);
-    }
+    const ft = (roundState.team_mode && e.byTeam) ? teamInfo(e.byTeam) : null;
+    festivalScopeLabel = ft ? ft.label : '모두';
+    itemToast(ft ? `🌈 ${who} → 20초간 ${ft.label} 2배!` : `🌈 ${who} → 20초간 모두 2배!`);
+    festivalUntil = e.at + ITEM_FX_MS.festival; festivalBy = e.byName || ''; spawnConfettiBatch(16);
     return;
   }
   if(it.kind === 'attack'){
