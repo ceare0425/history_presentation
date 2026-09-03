@@ -390,7 +390,7 @@ let myBoost = 0;             // 남은 '부스터' 2배 횟수
 let mySkipFloor = false;     // '로켓 점프' 반동 — 다음 정답 1회 층수 0
 let myHintQid = null;        // '힌트' 쓴 문제 — 그 문제 정답은 +1층으로 제한
 let myShield = false;        // '콤보 방패' 활성 — 다음 오답에 연속 유지
-let mySnailNext = false;     // '느림보' 피격 — 다음 정답 +1층으로 제한
+let mySnailNext = 0;         // '느림보' 피격 — 남은 제한 정답 수(각 +1층). 매운맛은 2회
 let festivalUntil = 0;       // '축제' 종료 시각(ms)
 let festivalBy = '';         // '축제'를 쓴 학생 이름 (배너 표시용)
 let myImmuneUntil = 0;       // 방해 피격 후 무적 종료 시각(ms)
@@ -575,7 +575,7 @@ async function submitAnswer(){
     const bonus = activeBonus(roundState, serverNow());
     if(bonus){ gain *= bonus.mult; bonusApplied = true; }
     // ── 아이템 효과 ──
-    if(mySnailNext){ gain = 1; mySnailNext = false; }         // '느림보' 피격
+    if(mySnailNext > 0){ gain = 1; mySnailNext--; }           // '느림보' 피격
     if(myHintQid === answeredQid){ gain = Math.min(gain, 1); myHintQid = null; } // '힌트' 쓴 문제
     if(serverNow() < festivalUntil) gain *= 2;                // '축제'
     if(myBoost > 0){ gain *= 2; myBoost--; }                  // '부스터'
@@ -682,7 +682,7 @@ function tick(){
       queue = []; retryList = []; retryMiss = {}; lastQid = null; currentQid = null; currentQuestion = null; currentStartedAt = null;
       // 아이템 로컬 상태 초기화
       heldItem = null; myBoost = 0; mySkipFloor = false; myHintQid = null; myShield = false;
-      mySnailNext = false; festivalUntil = 0; festivalBy = ''; myImmuneUntil = 0; frozen = false;
+      mySnailNext = 0; festivalUntil = 0; festivalBy = ''; myImmuneUntil = 0; frozen = false;
       clearTimeout(iceTimer); clearTimeout(fogTimer);
       el('qbox').classList.remove('fogged');
       clearChoseongHint();
@@ -815,6 +815,7 @@ function renderItemBar(){
       else if(heldItem === 'ladder') desc = `즉시 +2${u}`;
       else if(heldItem === 'rocket') desc = `즉시 +5${u} (다음 정답 1번은 추가 없음)`;
       else if(heldItem === 'hint') desc = `지금 문제 정답 초성 공개 (이 문제는 +1${u})`;
+      else if(heldItem === 'steal') desc = `상대 팀 전원 -2${u}, 나 +2${u}`;
     }
     bar.innerHTML =
       `<button type="button" class="item-btn" id="useItemBtn">${it.emoji} ${it.name} 사용<small>${desc}</small></button>` +
@@ -926,7 +927,7 @@ function rerollQuestion(){
 function clearIncomingFx(){
   el('qbox').classList.remove('fogged');
   clearTimeout(fogTimer); clearTimeout(iceTimer);
-  frozen = false; mySnailNext = false;
+  frozen = false; mySnailNext = 0;
   if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; }
 }
 
@@ -978,7 +979,12 @@ async function useItem(){
       });
       renderItemBar();
       const tgtInfo = teamInfo(targetTeam);
-      showItemAlert(`${it.emoji} ${it.name} → ${tgtInfo ? tgtInfo.label : '상대 팀'} 전원에게 발사!`);
+      if(key === 'steal'){
+        await bumpFloor(2);
+        showItemAlert(`🥷 강탈! ${tgtInfo ? tgtInfo.label : '상대 팀'} 전원 -2${unitLabel()}, 나 +2${unitLabel()}`);
+      } else {
+        showItemAlert(`${it.emoji} ${it.name} → ${tgtInfo ? tgtInfo.label : '상대 팀'} 전원에게 발사!`);
+      }
       return;
     }
     if(inTopGroup(allPlayers, playerId)){
@@ -987,7 +993,7 @@ async function useItem(){
       showItemAlert('선두라서 방해 대신 🪜 사다리!');
       return applySelfItem('ladder');
     }
-    const target = pickAttackTarget(attackCandidates(allPlayers, playerId));
+    const target = pickAttackTarget(attackCandidates(allPlayers, playerId, itemsMode === 'spicy'));
     if(!target){
       heldItem = null; await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
       renderItemBar();
@@ -1001,7 +1007,12 @@ async function useItem(){
       target: target.id, targetRank: target.rank, at: serverNow()
     });
     renderItemBar();
-    showItemAlert(`${it.emoji} ${it.name} → 선두권에게 발사!`);
+    if(key === 'steal'){
+      await bumpFloor(2);
+      showItemAlert(`🥷 강탈! 선두권 -2${unitLabel()}, 나 +2${unitLabel()}`);
+    } else {
+      showItemAlert(`${it.emoji} ${it.name} → 선두권에게 발사!`);
+    }
     return;
   }
 
@@ -1054,18 +1065,19 @@ function handleItemEvents(obj){
     if(roundState.team_mode){ if(!e.targetTeam || e.targetTeam !== myTeam) return; }
     else if(e.target !== playerId) return;
     if(now < myImmuneUntil){ showItemAlert('🛡️ 방해를 흘려보냈다!'); return; }
-    myImmuneUntil = now + ITEM_FX_MS.immunity;
+    myImmuneUntil = now + (itemsMode === 'spicy' ? ITEM_FX_MS.immunitySpicy : ITEM_FX_MS.immunity);
     applyIncomingFx(e.type);
   });
 }
 
 function applyIncomingFx(type){
+  const spicy = itemsMode === 'spicy';
   if(type === 'fog'){
     const box = el('qbox');
     box.classList.add('fogged');
     showItemAlert('🌫️ 안개에 맞았다! 문제가 흐려요 (알면 그냥 풀 수 있어요)');
     clearTimeout(fogTimer);
-    fogTimer = setTimeout(()=> box.classList.remove('fogged'), ITEM_FX_MS.fog);
+    fogTimer = setTimeout(()=> box.classList.remove('fogged'), spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog);
   } else if(type === 'ice'){
     frozen = true;
     el('answerInput').disabled = true;
@@ -1075,13 +1087,16 @@ function applyIncomingFx(type){
     iceTimer = setTimeout(()=>{
       frozen = false;
       if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; el('answerInput').focus(); }
-    }, ITEM_FX_MS.ice);
+    }, spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice);
   } else if(type === 'snail'){
-    mySnailNext = true;
-    showItemAlert(`🐌 느림보! 다음 정답은 +1${unitLabel()}만`);
+    mySnailNext = spicy ? 2 : 1;
+    showItemAlert(spicy ? `🐌 느림보! 다음 정답 2번은 +1${unitLabel()}만` : `🐌 느림보! 다음 정답은 +1${unitLabel()}만`);
   } else if(type === 'slide'){
     showItemAlert('⬇️ 미끄럼틀! 조금 뒤로 밀렸어요');
     slideDown();
+  } else if(type === 'steal'){
+    showItemAlert(`🥷 강탈당했다! -2${unitLabel()}`);
+    bumpFloor(-2);
   }
 }
 
@@ -1089,13 +1104,16 @@ async function slideDown(){
   const pRef = roomRef(ROOM, 'players', playerId);
   const snap = await get(pRef);
   const cur = snap.val() || {};
-  // 개인전은 '2등 층수 아래로는 안 내려감' 가드를 두고, 팀전은 팀원 각자 -3층(0층 하한)
+  const spicy = itemsMode === 'spicy';
+  const drop = spicy ? 4 : 3;   // 매운맛은 -4층
+  // 개인전은 '2등 층수 아래로는 안 내려감' 가드(매운맛은 2등보다 1층 아래까지 허용), 팀전은 팀원 각자 하락(0층 하한)
   let floorGuard = 0;
   if(!roundState.team_mode){
     const ranked = rankedPlayers(allPlayers);
-    floorGuard = ranked[1] ? (ranked[1].floor || 0) : 0;
+    const second = ranked[1] ? (ranked[1].floor || 0) : 0;
+    floorGuard = spicy ? Math.max(0, second - 1) : second;
   }
-  const nf = Math.max((cur.floor || 0) - 3, floorGuard, 0);
+  const nf = Math.max((cur.floor || 0) - drop, floorGuard, 0);
   await update(pRef, { floor: nf, name: cur.name || playerName, lastActive: serverNow() });
   el('floorVal').textContent = nf;
   lastFloor = nf;

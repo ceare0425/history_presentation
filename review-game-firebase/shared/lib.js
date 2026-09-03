@@ -249,9 +249,14 @@ export const ITEMS = {
   ice:      { emoji: '🧊',  name: '얼음',      kind: 'attack',  desc: '선두권이 5초간 제출 불가' },
   snail:    { emoji: '🐌',  name: '느림보',    kind: 'attack',  desc: '선두권 다음 정답이 +1층만' },
   slide:    { emoji: '⬇️',  name: '미끄럼틀',  kind: 'attack',  desc: '선두권 -3층 (2등 층수 아래로는 안 내려감)' },
+  steal:    { emoji: '🥷',  name: '강탈',      kind: 'attack',  desc: '선두권 -2층, 나 +2층' },
 };
 
-export const ITEM_FX_MS = { fog: 8000, ice: 5000, festival: 20000, immunity: 8000 };
+// 매운맛(spicy)에서는 방해 효과가 더 오래/세게 간다.
+export const ITEM_FX_MS = {
+  fog: 8000, ice: 5000, festival: 20000, immunity: 8000,
+  fogSpicy: 10000, iceSpicy: 7000, immunitySpicy: 4000,
+};
 
 // 이번 판에서 뽑을 수 있는 아이템 key 목록. 방해(attack)는 매운맛 + 뽑는 사람이 상위권이 아닐 때만.
 export function itemPool(mode, canAttack) {
@@ -277,17 +282,19 @@ export function inTopGroup(players, id) {
   return ranked.slice(0, n).some((p) => p.id === id);
 }
 
-// 방해 대상 후보: 상위 그룹 중 '중위권보다 4층 이상 앞선' 사람(자신 제외). 랭킹 순으로 반환.
-// 후보가 없으면 [] → 호출부에서 자기 강화로 전환한다(접전이면 견제 안 들어감).
-export function attackCandidates(players, byId) {
+// 방해 대상 후보: 상위 그룹 중 '중위권보다 일정 층 이상 앞선' 사람(자신 제외). 랭킹 순으로 반환.
+// 후보가 없으면 [] → 호출부에서 자기 강화로 전환한다.
+// spicy(매운맛): 상위 그룹을 1명 넓히고 필요 격차를 4→2층으로 낮춰 접전에서도 견제가 들어간다.
+export function attackCandidates(players, byId, spicy = false) {
   const ranked = rankedPlayers(players);
   if (ranked.length < 2) return [];
-  const n = topGroupSize(ranked.length);
+  const n = topGroupSize(ranked.length) + (spicy ? 1 : 0);
   const medianFloor = ranked[Math.floor(ranked.length / 2)]?.floor || 0;
+  const gap = spicy ? 2 : 4;
   return ranked
     .slice(0, n)
     .map((p, i) => ({ ...p, rank: i + 1 }))
-    .filter((p) => p.id !== byId && (p.floor || 0) - medianFloor >= 4);
+    .filter((p) => p.id !== byId && (p.floor || 0) - medianFloor >= gap);
 }
 
 // 후보(랭킹 순) 중 하나를 가중치로 고른다. 1·2·3위에 50/30/20, 그 아래는 완만히 감소.

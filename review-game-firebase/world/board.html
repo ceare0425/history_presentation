@@ -987,18 +987,20 @@ function itemToast(text){
 function flashClimberFx(pid, type){
   const node = climberEls[pid];
   if(!node) return;
-  const emoji = type==='fog' ? '🌫️' : type==='ice' ? '🧊' : type==='snail' ? '🐌' : '⬇️';
+  const emoji = type==='fog' ? '🌫️' : type==='ice' ? '🧊' : type==='snail' ? '🐌' : type==='steal' ? '🥷' : '⬇️';
   let badge = node.querySelector('.fx-badge');
   if(!badge){ badge = document.createElement('div'); badge.className = 'fx-badge'; node.appendChild(badge); }
   badge.textContent = emoji;
   if(type==='fog') node.classList.add('fx-fog');
-  const dur = type==='fog' ? ITEM_FX_MS.fog : type==='ice' ? ITEM_FX_MS.ice : 2600;
+  const spicy = roundState.items_mode === 'spicy';
+  const dur = type==='fog' ? (spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog)
+            : type==='ice' ? (spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) : 2600;
   setTimeout(()=>{ if(badge) badge.remove(); node.classList.remove('fx-fog'); }, dur);
 }
 
 // 팀전: 팀 아레나에서 피격 팀 구역을 잠깐 흔든다 (땅따먹기 terr-seg / 줄다리기 tug-end)
 function flashTeamFx(teamKey, type){
-  const emoji = type==='fog' ? '🌫️' : type==='ice' ? '🧊' : type==='snail' ? '🐌' : '⬇️';
+  const emoji = type==='fog' ? '🌫️' : type==='ice' ? '🧊' : type==='snail' ? '🐌' : type==='steal' ? '🥷' : '⬇️';
   const keys = TEAM_OPTIONS.slice(0, roundState.team_count || 4).map(t=>t.key);
   const ti = keys.indexOf(teamKey);
   const nodes = [];

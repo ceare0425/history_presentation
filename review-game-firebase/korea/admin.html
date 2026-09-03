@@ -264,7 +264,7 @@ let teamStateHydrated = false; // round 리스너에서 한 번이라도 값을 
 const ITEMS_MODE_HINT = {
   off: '',
   mild: '순한맛: 자기 강화(부스터·사다리 등) + 전체 이벤트(산타·축제)만. 저격 없음.',
-  spicy: '매운맛: 위 + 선두권 견제(안개·얼음·느림보·미끄럼틀). 개인전은 1·2·3위에 50/30/20 가중치·접전이면 자기 강화로 전환. 팀전은 견제가 선두 상대 팀 전원에게 적용.'
+  spicy: '매운맛: 위 + 선두권 견제(안개·얼음·느림보·미끄럼틀·🥷강탈). 접전에서도 견제가 들어가고 효과가 더 셈(안개 10초·얼음 7초·느림보 2문제·미끄럼틀 -4층·피격 후 무적 4초). 개인전은 1·2·3위에 50/30/20 가중치. 팀전은 견제가 선두 상대 팀 전원에게 적용.'
 };
 function syncItemsModeUI(){
   el('itemsModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.im === itemsModeState));
