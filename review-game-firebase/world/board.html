@@ -776,7 +776,7 @@ function renderTower(players, leaderId){
     const h = Math.round((floor / maxFloor) * usable);
     const avatar = p.avatar || '🐱'; // 입장 시 배정된 개인 캐릭터 (예전 데이터엔 없을 수 있어 기본값)
 
-    const tInfo = p.team ? teamInfo(p.team) : null;
+    const tInfo = (roundState.team_mode && p.team) ? teamInfo(p.team) : null;
     node.querySelector('.floorno').textContent = floor;
     node.querySelector('.avatar').textContent = avatar;
     const colEl = node.querySelector('.col');

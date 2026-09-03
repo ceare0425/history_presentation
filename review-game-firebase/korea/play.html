@@ -232,6 +232,27 @@
       box-shadow:0 6px 12px -6px rgba(0,0,0,.28);
     }
   }
+
+  /* 노트북에서 창을 좌우로 분할(반쪽 화면)하면 가로 화면이지만 16:9보다 세로로 길어져,
+     고정 16:9 카드가 세로 공간을 못 써 문제 박스만 안쪽 스크롤되는 문제가 생긴다.
+     이 경우 카드의 고정 비율을 풀고 내용 높이에 맞춰 늘어나게(+ 필요하면 페이지 스크롤) 한다. */
+  @media (min-width:701px) and (orientation:landscape) and (max-aspect-ratio:16/9){
+    html, body{ height:auto; }
+    body{
+      display:block; overflow-x:hidden; overflow-y:auto;
+      padding:20px 16px 28px; min-height:100vh;
+    }
+    .sky-layer{ position:fixed; }
+    .card{
+      width:min(1100px, 94vw); margin:0 auto;
+      aspect-ratio:auto; height:auto; max-height:none;
+      min-height:calc(100vh - 48px);
+    }
+    .view{ flex:0 0 auto; }
+    .view.center{ min-height:calc(100vh - 120px); justify-content:center; }
+    .play-scroll{ flex:0 0 auto; }
+    .qbox{ flex:0 0 auto; overflow:visible; min-height:26vh; }
+  }
 </style>
 </head>
 <body>
@@ -748,9 +769,9 @@ function startListening(){
         av.textContent = AVATAR_IDLE;
       }
     }
-    myTeam = p.team || null;
+    myTeam = roundState.team_mode ? (p.team || null) : null;
     const badge = el('teamBadge');
-    const tInfo = p.team ? teamInfo(p.team) : null;
+    const tInfo = (roundState.team_mode && p.team) ? teamInfo(p.team) : null;
     if(tInfo){
       badge.textContent = tInfo.label;
       badge.style.setProperty('--tcolor', tInfo.color);
