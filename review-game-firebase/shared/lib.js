@@ -257,7 +257,6 @@ export const ITEMS = {
   reroll:   { emoji: '🔁',  name: '리롤',      kind: 'self',    desc: '지금 문제를 다른 문제로 교체' },
   hint:     { emoji: '💡',  name: '힌트',      kind: 'self',    desc: '지금 문제 정답 초성 공개 (이 문제는 +1층)' },
   shield:   { emoji: '🛡️',  name: '콤보 방패',  kind: 'self',    desc: '다음 오답에도 연속이 안 끊김' },
-  think:    { emoji: '⏱️',  name: '사색의 시간', kind: 'self',    desc: '10초간 타이머 멈춤 (천천히 찾아도 +3층)' },
   goldenbell:{ emoji: '🎯', name: '골든벨',     kind: 'self',    desc: '다음 정답은 ×3! 틀리면 연속 끊김 -2층' },
   clover:   { emoji: '🍀',  name: '네잎클로버', kind: 'self',    desc: '30초간 정답마다 50%로 +1층 더' },
   magnet:   { emoji: '🧲',  name: '추격',       kind: 'self',    desc: '바로 위 등수와의 층 차이를 절반으로' },
@@ -277,7 +276,7 @@ export const ITEMS = {
 export const ITEM_FX_MS = {
   fog: 8000, ice: 5000, festival: 20000, immunity: 8000,
   fogSpicy: 10000, iceSpicy: 7000, immunitySpicy: 4000,
-  soloFest: 30000, clover: 30000, mirror: 15000, think: 10000,
+  soloFest: 30000, clover: 30000, mirror: 15000,
 };
 
 // 이번 판에서 뽑을 수 있는 아이템 key 목록. opts:
