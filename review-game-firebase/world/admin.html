@@ -138,7 +138,7 @@
         <button type="button" class="active" data-count="4">4팀</button>
       </div>
       <div class="btnrow hidden" id="teamShuffleRow">
-        <button type="button" class="secondary" id="teamShuffleBtn">🎲 참여자 랜덤 배정</button>
+        <button type="button" class="secondary" id="teamShuffleBtn">🎲 팀 자동 배정 (실력 균형)</button>
       </div>
       <div class="msg" id="teamShuffleMsg"></div>
       <label>아이템전 (3연속 정답마다 아이템 획득 · 팀전에서도 동작)</label>
@@ -328,16 +328,32 @@ el('teamShuffleBtn').onclick = async () => {
   if(!teamModeState){ msg.className='msg err'; msg.textContent='먼저 팀전 모드를 켜주세요.'; return; }
   const pids = Object.keys(playersObj);
   if(!pids.length){ msg.className='msg err'; msg.textContent='참여한 학생이 없습니다.'; return; }
-  const teamKeys = TEAM_OPTIONS.slice(0, teamCountState).map(t=>t.key);
-  const shuffled = shuffle(pids);
+  const teamKeys = shuffle(TEAM_OPTIONS.slice(0, teamCountState).map(t=>t.key));
+  const T = teamKeys.length;
+
+  // 직전 라운드 성적(층수 > 정답 수 > 최고 연속) 순으로 줄을 세운 뒤,
+  // 스네이크(뱀) 방식으로 팀에 번갈아 담는다 → 1·2·3등이 한 팀에 몰리지 않고
+  // 각 팀이 상위권 한 명씩 골고루 갖도록 균형이 맞춰진다. 동점·성적 없음은 랜덤.
+  const score = (p)=> (p.floor||0)*1000 + (p.correct||0)*10 + (p.bestStreak||0);
+  const hasScore = pids.some(pid=> score(playersObj[pid]) > 0);
+  const ordered = hasScore
+    ? shuffle(pids).sort((a,b)=> score(playersObj[b]) - score(playersObj[a]))
+    : shuffle(pids);
+
   const updates = {};
-  shuffled.forEach((pid, i)=>{
-    updates[`rooms/${ROOM}/players/${pid}/team`] = teamKeys[i % teamKeys.length];
+  ordered.forEach((pid, i)=>{
+    const row = Math.floor(i / T);
+    const col = i % T;
+    const idx = (row % 2 === 0) ? col : (T - 1 - col);  // 짝수 줄 정방향 / 홀수 줄 역방향
+    updates[`rooms/${ROOM}/players/${pid}/team`] = teamKeys[idx];
   });
   el('teamShuffleBtn').disabled = true;
   try{
     await update(ref(db), updates);
-    msg.className='msg ok'; msg.textContent = `${pids.length}명을 ${teamKeys.length}개 팀에 랜덤 배정했습니다.`;
+    msg.className='msg ok';
+    msg.textContent = hasScore
+      ? `${pids.length}명을 ${T}개 팀에 실력 균형 배정했습니다 (직전 성적 기준).`
+      : `${pids.length}명을 ${T}개 팀에 랜덤 배정했습니다.`;
   } catch(err){
     msg.className='msg err'; msg.textContent = '배정 실패: ' + err.message;
   } finally {
