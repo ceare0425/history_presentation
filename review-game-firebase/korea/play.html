@@ -1008,8 +1008,8 @@ async function useItem(){
     });
     renderItemBar();
     if(key === 'steal'){
-      await bumpFloor(2);
-      showItemAlert(`🥷 강탈! 선두권 -2${unitLabel()}, 나 +2${unitLabel()}`);
+      await bumpFloor(4);
+      showItemAlert(`🥷 강탈! 선두권 -4${unitLabel()}, 나 +4${unitLabel()}`);
     } else {
       showItemAlert(`${it.emoji} ${it.name} → 선두권에게 발사!`);
     }
@@ -1095,8 +1095,9 @@ function applyIncomingFx(type){
     showItemAlert('⬇️ 미끄럼틀! 조금 뒤로 밀렸어요');
     slideDown();
   } else if(type === 'steal'){
-    showItemAlert(`🥷 강탈당했다! -2${unitLabel()}`);
-    bumpFloor(-2);
+    const amt = roundState.team_mode ? 2 : 4;   // 개인전은 -4층, 팀전은 팀원 각자 -2층
+    showItemAlert(`🥷 강탈당했다! -${amt}${unitLabel()}`);
+    bumpFloor(-amt);
   }
 }
 
