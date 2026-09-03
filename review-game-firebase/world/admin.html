@@ -299,6 +299,12 @@ el('teamModeToggle').querySelectorAll('button').forEach(btn=>{
     el('teamCountRow').classList.toggle('hidden', !teamModeState);
     el('teamShuffleRow').classList.toggle('hidden', !teamModeState);
     await update(roomRef(ROOM,'round'), { team_mode: teamModeState, team_count: teamCountState });
+    // 팀전을 끄면 남아있던 팀 배정을 즉시 지운다 (전광판·학생 화면에 이전 팀이 남는 문제 방지)
+    if(!teamModeState){
+      const clr = {};
+      Object.keys(playersObj).forEach(pid=>{ clr[`rooms/${ROOM}/players/${pid}/team`] = null; });
+      if(Object.keys(clr).length) await update(ref(db), clr);
+    }
   };
 });
 el('teamCountRow').querySelectorAll('button').forEach(btn=>{
@@ -416,6 +422,7 @@ el('startBtn').onclick = async () => {
       updates[`rooms/${ROOM}/players/${pid}/streak`] = 0;
       updates[`rooms/${ROOM}/players/${pid}/bestStreak`] = 0;
       updates[`rooms/${ROOM}/players/${pid}/item`] = null;
+      if(!teamModeState) updates[`rooms/${ROOM}/players/${pid}/team`] = null;
     });
     await update(ref(db), updates);
     const bonusNote = bonus.length ? ` · 🔥 2배 찬스 ${bonus.length}회 예정` : '';
