@@ -287,6 +287,9 @@
       <div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! <span id="bonusRemain"></span>초 남음</div>
       <div class="festival-banner" id="festivalBanner">🌈 <span id="festivalWho"></span>축제! <span id="festivalScope">모두</span> 2배 · <span id="festivalRemain"></span>초 남음</div>
       <div class="festival-banner" id="soloFestBanner">🛋️ 방구석 축제! 나만 2배 · <span id="soloFestRemain"></span>초 남음</div>
+      <div class="festival-banner" id="goldenbellBanner">🎯 골든벨 문제! 맞히면 ×3 · 틀리면 -2</div>
+      <div class="festival-banner" id="cloverBanner">🍀 네잎클로버! 정답마다 행운 · <span id="cloverRemain"></span>초 남음</div>
+      <div class="festival-banner" id="mirrorBanner">🪞 반사경 대기 중 · <span id="mirrorRemain"></span>초 남음</div>
       <div class="item-alert" id="itemAlert"></div>
       <div class="hud">
         <div class="floor-badge">🏢 <span id="floorVal">0</span><span class="u-unit">층</span></div>
@@ -394,6 +397,10 @@ let myShield = false;        // '콤보 방패' 활성 — 다음 오답에 연�
 let mySnailNext = 0;         // '느림보' 피격 — 남은 제한 정답 수(각 +1층). 매운맛은 2회
 let festivalUntil = 0;       // '축제' 종료 시각(ms)
 let mySoloFestUntil = 0;     // '방구석 축제' — 나만 2배 종료 시각(ms)
+let myGoldenbellArmed = false; // '골든벨' — 다음 정답 ×3 / 오답 -2
+let myCloverUntil = 0;       // '네잎클로버' — 30초간 정답마다 50% +1층
+let myAnthemNext = 0;        // '팀 응원가' — 남은 2배 정답 수(팀 전체 각자)
+let myMirrorUntil = 0;       // '반사경' — 15초간 첫 견제 반사
 let festivalBy = '';         // '축제'를 쓴 학생 이름 (배너 표시용)
 let myImmuneUntil = 0;       // 방해 피격 후 무적 종료 시각(ms)
 let frozen = false;          // '얼음' 피격 중 입력 잠금
@@ -581,7 +588,10 @@ async function submitAnswer(){
     if(myHintQid === answeredQid){ gain = Math.min(gain, 1); myHintQid = null; } // '힌트' 쓴 문제
     if(serverNow() < festivalUntil) gain *= 2;                // '축제'
     if(serverNow() < mySoloFestUntil) gain *= 2;              // '방구석 축제' (나만 2배)
+    if(myAnthemNext > 0){ gain *= 2; myAnthemNext--; }        // '팀 응원가'
     if(myBoost > 0){ gain *= 2; myBoost--; }                  // '부스터'
+    if(myGoldenbellArmed){ gain *= 3; myGoldenbellArmed = false; showItemAlert(`🎯 골든벨 성공! ×3 → +${gain}${unitLabel()}!`); } // '골든벨'
+    if(serverNow() < myCloverUntil && Math.random() < 0.5){ gain += 1; showItemAlert(`🍀 행운! +1${unitLabel()} 더!`); } // '네잎클로버'
     if(mySkipFloor){ gain = 0; mySkipFloor = false; }         // '로켓 점프' 반동
     p.floor = (p.floor||0) + gain;
     p.correct = (p.correct||0) + 1;
@@ -596,10 +606,15 @@ async function submitAnswer(){
       const atkBias = (roundState.team_mode && itemsMode === 'spicy') ? teamAttackBias(allPlayers, myTeam) : 0;
       // 개인전 하위권: '방구석 축제'(혼자 30초 2배)를 뽑을 수 있게
       const canComeback = !roundState.team_mode && inBottomGroup(allPlayers, playerId);
-      heldItem = rollItem(itemsMode, canAttack, atkBias, canComeback);
+      heldItem = rollItem({ mode: itemsMode, canAttack, attackBias: atkBias, canComeback, teamMode: roundState.team_mode });
     }
   } else {
     p.wrong = (p.wrong||0) + 1;
+    if(myGoldenbellArmed){
+      myGoldenbellArmed = false;
+      p.floor = Math.max(0, (p.floor||0) - 2);
+      showItemAlert(`🎯 골든벨 실패… -2${unitLabel()}`);
+    }
     if(myShield){ myShield = false; showItemAlert('🛡️ 콤보 방패로 연속을 지켰어요!'); }
     else p.streak = 0;
     // 틀린 문제는 잠시 후 다시 출제. 틀릴수록 간격을 늘리고 RETRY_TRIES번까지만 강제로 다시 낸다
@@ -690,6 +705,7 @@ function tick(){
       // 아이템 로컬 상태 초기화
       heldItem = null; myBoost = 0; mySkipFloor = false; myHintQid = null; myShield = false;
       mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myImmuneUntil = 0; frozen = false;
+      myGoldenbellArmed = false; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
       clearTimeout(iceTimer); clearTimeout(fogTimer);
       el('qbox').classList.remove('fogged');
       clearChoseongHint();
@@ -724,6 +740,21 @@ function tick(){
       el('soloFestRemain').textContent = Math.ceil((mySoloFestUntil - serverNow()) / 1000);
     } else {
       sfb.classList.remove('show');
+    }
+    el('goldenbellBanner').classList.toggle('show', myGoldenbellArmed);
+    const cvb = el('cloverBanner');
+    if(serverNow() < myCloverUntil){
+      cvb.classList.add('show');
+      el('cloverRemain').textContent = Math.ceil((myCloverUntil - serverNow()) / 1000);
+    } else {
+      cvb.classList.remove('show');
+    }
+    const mrb = el('mirrorBanner');
+    if(serverNow() < myMirrorUntil){
+      mrb.classList.add('show');
+      el('mirrorRemain').textContent = Math.ceil((myMirrorUntil - serverNow()) / 1000);
+    } else {
+      mrb.classList.remove('show');
     }
     showView('playView');
   } else if(effective === 'ended'){
@@ -829,6 +860,9 @@ function renderItemBar(){
       else if(heldItem === 'rocket') desc = `즉시 +5${u} (다음 정답 1번은 추가 없음)`;
       else if(heldItem === 'hint') desc = `지금 문제 정답 초성 공개 (이 문제는 +1${u})`;
       else if(heldItem === 'steal') desc = `상대 팀 전원 -2${u}, 나 +2${u}`;
+      else if(heldItem === 'think') desc = '10초간 타이머 멈춤 (천천히 찾아도 최고 배점)';
+      else if(heldItem === 'goldenbell') desc = `다음 정답 ×3! 틀리면 연속 끊김 -2${u}`;
+      else if(heldItem === 'clover') desc = `30초간 정답마다 50%로 +1${u} 더`;
     }
     bar.innerHTML =
       `<button type="button" class="item-btn" id="useItemBtn">${it.emoji} ${it.name} 사용<small>${desc}</small></button>` +
@@ -959,6 +993,22 @@ async function applySelfItem(key){
   else if(key === 'shield'){ myShield = true; showItemAlert('🛡️ 콤보 방패 장착 — 다음 오답에도 연속 유지'); }
   else if(key === 'cure'){ clearIncomingFx(); showItemAlert('🍵 해독! 걸려 있던 방해를 풀었어요'); }
   else if(key === 'soloFest'){ mySoloFestUntil = serverNow() + ITEM_FX_MS.soloFest; showItemAlert('🛋️ 방구석 축제 발동! 30초간 나만 2배 🎉'); }
+  else if(key === 'think'){ if(currentStartedAt != null) currentStartedAt += ITEM_FX_MS.think; showItemAlert('⏱️ 사색의 시간! 10초간 타이머가 멈춰요 (책 찾아봐도 +3층)'); }
+  else if(key === 'goldenbell'){ myGoldenbellArmed = true; showItemAlert('🎯 골든벨! 다음 정답은 ×3, 틀리면 -2층'); }
+  else if(key === 'clover'){ myCloverUntil = serverNow() + ITEM_FX_MS.clover; showItemAlert('🍀 네잎클로버! 30초간 정답마다 행운 +1층 찬스'); }
+  else if(key === 'mirror'){ myMirrorUntil = serverNow() + ITEM_FX_MS.mirror; showItemAlert('🪞 반사경! 15초 안에 날아오는 첫 견제를 되돌려요'); }
+  else if(key === 'magnet'){ await applyMagnet(); }
+}
+
+async function applyMagnet(){
+  if(roundState.team_mode){ showItemAlert(`🧲 팀전에선 추격 대신 🪜 +2${unitLabel()}!`); return bumpFloor(2); }
+  const ranked = rankedPlayers(allPlayers);
+  const myIdx = ranked.findIndex(p=> p.id === playerId);
+  if(myIdx <= 0){ showItemAlert(`🧲 이미 선두! 추격 대신 🪜 +2${unitLabel()}`); return bumpFloor(2); }
+  const gap = (ranked[myIdx-1].floor || 0) - (ranked[myIdx].floor || 0);
+  const jump = Math.max(1, Math.floor(gap / 2));
+  showItemAlert(`🧲 추격! +${jump}${unitLabel()} 따라붙었어요`);
+  await bumpFloor(jump);
 }
 
 async function useItem(){
@@ -966,8 +1016,8 @@ async function useItem(){
   const key = heldItem;
   const it = ITEMS[key];
   if(!it){ heldItem = null; renderItemBar(); return; }
-  // 문제가 화면에 없을 때 힌트/리롤을 쓰면 낭비되므로 소모하지 않고 되돌린다
-  if((key === 'hint' || key === 'reroll') && !(currentQuestion && currentQid)){
+  // 문제가 화면에 없을 때 힌트/리롤/골든벨/사색을 쓰면 낭비되므로 소모하지 않고 되돌린다
+  if((key === 'hint' || key === 'reroll' || key === 'goldenbell' || key === 'think') && !(currentQuestion && currentQid)){
     renderItemBar();
     showItemAlert('문제가 나온 뒤에 사용하세요');
     return;
@@ -1066,14 +1116,29 @@ function handleItemEvents(obj){
         if(roundState.team_mode && (!e.byTeam || e.byTeam !== myTeam)) return;
         festivalUntil = e.at + ITEM_FX_MS.festival;
         festivalBy = who;   // 축제는 itemAlert 대신 festivalBanner가 남은 시간과 함께 계속 표시
+      } else if(e.type === 'anthem'){
+        // 팀 응원가: 쓴 학생과 같은 팀에게만 '다음 정답 1개 2배'
+        if(!e.byTeam || e.byTeam !== myTeam) return;
+        myAnthemNext = 1;
+        showItemAlert(`📣 ${who} 님의 응원가! 다음 정답 2배 🔥`);
       } else {
         showItemAlert(`${evItem.emoji} ${who} 님이 '${evItem.name}' 사용!`);
       }
       return;
     }
     // 방해: 개인전은 나를 노린 것만, 팀전은 우리 팀을 노린 것만
-    if(roundState.team_mode){ if(!e.targetTeam || e.targetTeam !== myTeam) return; }
-    else if(e.target !== playerId) return;
+    // (반사경으로 되돌아온 공격 e.reflected는 개인 대상이므로 팀전에서도 target으로 판정)
+    if(roundState.team_mode){
+      if(e.reflected && e.target){ if(e.target !== playerId) return; }
+      else if(!e.targetTeam || e.targetTeam !== myTeam) return;
+    } else if(e.target !== playerId) return;
+    // '반사경' 활성 중이면 아직 반사 안 된 공격을 쏜 사람에게 그대로 되돌린다
+    if(now < myMirrorUntil && !e.reflected){
+      myMirrorUntil = 0;
+      push(roomRef(ROOM, 'item_events'), { type: e.type, by: playerId, byName: playerName, target: e.by, reflected: true, at: now });
+      showItemAlert('🪞 반사! 공격을 쏜 사람에게 되돌려보냈다');
+      return;
+    }
     if(now < myImmuneUntil){ showItemAlert('🛡️ 방해를 흘려보냈다!'); return; }
     myImmuneUntil = now + (itemsMode === 'spicy' ? ITEM_FX_MS.immunitySpicy : ITEM_FX_MS.immunity);
     applyIncomingFx(e.type);

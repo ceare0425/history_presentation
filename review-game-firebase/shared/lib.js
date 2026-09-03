@@ -257,8 +257,14 @@ export const ITEMS = {
   reroll:   { emoji: '🔁',  name: '리롤',      kind: 'self',    desc: '지금 문제를 다른 문제로 교체' },
   hint:     { emoji: '💡',  name: '힌트',      kind: 'self',    desc: '지금 문제 정답 초성 공개 (이 문제는 +1층)' },
   shield:   { emoji: '🛡️',  name: '콤보 방패',  kind: 'self',    desc: '다음 오답에도 연속이 안 끊김' },
+  think:    { emoji: '⏱️',  name: '사색의 시간', kind: 'self',    desc: '10초간 타이머 멈춤 (천천히 찾아도 +3층)' },
+  goldenbell:{ emoji: '🎯', name: '골든벨',     kind: 'self',    desc: '다음 정답은 ×3! 틀리면 연속 끊김 -2층' },
+  clover:   { emoji: '🍀',  name: '네잎클로버', kind: 'self',    desc: '30초간 정답마다 50%로 +1층 더' },
+  magnet:   { emoji: '🧲',  name: '추격',       kind: 'self',    desc: '바로 위 등수와의 층 차이를 절반으로' },
   cure:     { emoji: '🍵',  name: '해독',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
+  mirror:   { emoji: '🪞',  name: '반사경',     kind: 'defense', desc: '15초간 날아오는 첫 견제를 쏜 사람에게 반사' },
   festival: { emoji: '🌈',  name: '축제',      kind: 'global',  desc: '20초간 모두 2배' },
+  anthem:   { emoji: '📣',  name: '팀 응원가',  kind: 'global',  desc: '우리 팀 전원 다음 정답 1개 2배' },
   soloFest: { emoji: '🛋️',  name: '방구석 축제', kind: 'comeback', desc: '30초간 나만 2배' },
   fog:      { emoji: '🌫️',  name: '안개',      kind: 'attack',  desc: '선두권 문제 화면이 8초간 흐려짐' },
   ice:      { emoji: '🧊',  name: '얼음',      kind: 'attack',  desc: '선두권이 5초간 제출 불가' },
@@ -271,28 +277,36 @@ export const ITEMS = {
 export const ITEM_FX_MS = {
   fog: 8000, ice: 5000, festival: 20000, immunity: 8000,
   fogSpicy: 10000, iceSpicy: 7000, immunitySpicy: 4000,
-  soloFest: 30000,
+  soloFest: 30000, clover: 30000, mirror: 15000, think: 10000,
 };
 
-// 이번 판에서 뽑을 수 있는 아이템 key 목록.
-//   attack(방해)   : 매운맛 + 뽑는 사람이 상위권이 아닐 때만
-//   comeback(방구석 축제): 개인전 하위권일 때만 (canComeback)
-export function itemPool(mode, canAttack, canComeback = false) {
+// 이번 판에서 뽑을 수 있는 아이템 key 목록. opts:
+//   mode        : 'mild' | 'spicy'
+//   canAttack   : 방해(attack) 아이템 후보 포함 (매운맛 + 뽑는 사람이 상위권이 아닐 때)
+//   canComeback : '방구석 축제' 포함 (개인전 하위권)
+//   teamMode    : 팀전 여부 — '추격'은 개인전만, '팀 응원가'는 팀전만
+// 그리고 '반사경'은 견제가 있는 매운맛에서만 나온다.
+export function itemPool(opts = {}) {
+  const { mode = 'mild', canAttack = false, canComeback = false, teamMode = false } = opts;
   return Object.entries(ITEMS)
-    .filter(([, it]) => {
+    .filter(([k, it]) => {
       if (it.kind === 'attack') return mode === 'spicy' && canAttack;
       if (it.kind === 'comeback') return canComeback;
+      if (k === 'mirror') return mode === 'spicy';
+      if (k === 'magnet') return !teamMode;
+      if (k === 'anthem') return teamMode;
       return true;
     })
     .map(([k]) => k);
 }
 
-// attackBias(0~1): 클수록 방해(attack) 아이템이 뽑힐 확률이 올라간다. 0이면 기존과 동일한 균등 추첨.
-// canComeback: true면 '방구석 축제'가 후보에 들어가고 가중치 3배로 잘 뜬다.
-export function rollItem(mode, canAttack, attackBias = 0, canComeback = false) {
-  const pool = itemPool(mode, canAttack, canComeback);
+// opts.attackBias(0~1): 클수록 방해(attack) 아이템이 뽑힐 확률이 올라간다. 0이면 균등 추첨.
+// comeback 아이템은 가중치 3배로 잘 뜬다.
+export function rollItem(opts = {}) {
+  const pool = itemPool(opts);
   if (!pool.length) return null;
-  const aw = attackBias > 0 ? 1 + 6 * Math.min(1, attackBias) : 1;   // 견제 아이템 가중치 최대 7배
+  const bias = opts.attackBias || 0;
+  const aw = bias > 0 ? 1 + 6 * Math.min(1, bias) : 1;   // 견제 아이템 가중치 최대 7배
   const weights = pool.map((k) => {
     const kind = ITEMS[k] && ITEMS[k].kind;
     if (kind === 'attack') return aw;

@@ -1024,6 +1024,12 @@ function showItemEvent(e){
   if(!it) return;
   const who = escapeHtml(e.byName || '누군가');
   if(it.kind === 'global'){
+    if(e.type === 'anthem'){
+      const at = e.byTeam ? teamInfo(e.byTeam) : null;
+      itemToast(at ? `📣 ${who} → ${at.label} 다음 정답 2배!` : `📣 ${who} → 응원가!`);
+      spawnConfettiBatch(10);
+      return;
+    }
     const ft = (roundState.team_mode && e.byTeam) ? teamInfo(e.byTeam) : null;
     festivalScopeLabel = ft ? ft.label : '모두';
     itemToast(ft ? `🌈 ${who} → 20초간 ${ft.label} 2배!` : `🌈 ${who} → 20초간 모두 2배!`);
@@ -1031,6 +1037,11 @@ function showItemEvent(e){
     return;
   }
   if(it.kind === 'attack'){
+    if(e.reflected){
+      itemToast(`🪞 반사된 ${it.name}!`);
+      if(e.target) flashClimberFx(e.target, e.type);
+      return;
+    }
     if(e.targetTeam){
       const tgt = teamInfo(e.targetTeam);
       itemToast(`${it.emoji} ${who} → ${tgt ? tgt.label : '상대 팀'}에 ${it.name}!`);
