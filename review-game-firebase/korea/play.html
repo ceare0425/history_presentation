@@ -860,7 +860,6 @@ function renderItemBar(){
       else if(heldItem === 'rocket') desc = `즉시 +5${u} (다음 정답 1번은 추가 없음)`;
       else if(heldItem === 'hint') desc = `지금 문제 정답 초성 공개 (이 문제는 +1${u})`;
       else if(heldItem === 'steal') desc = `상대 팀 전원 -2${u}, 나 +2${u}`;
-      else if(heldItem === 'think') desc = '10초간 타이머 멈춤 (천천히 찾아도 최고 배점)';
       else if(heldItem === 'goldenbell') desc = `다음 정답 ×3! 틀리면 연속 끊김 -2${u}`;
       else if(heldItem === 'clover') desc = `30초간 정답마다 50%로 +1${u} 더`;
     }
@@ -993,7 +992,6 @@ async function applySelfItem(key){
   else if(key === 'shield'){ myShield = true; showItemAlert('🛡️ 콤보 방패 장착 — 다음 오답에도 연속 유지'); }
   else if(key === 'cure'){ clearIncomingFx(); showItemAlert('🍵 해독! 걸려 있던 방해를 풀었어요'); }
   else if(key === 'soloFest'){ mySoloFestUntil = serverNow() + ITEM_FX_MS.soloFest; showItemAlert('🛋️ 방구석 축제 발동! 30초간 나만 2배 🎉'); }
-  else if(key === 'think'){ if(currentStartedAt != null) currentStartedAt += ITEM_FX_MS.think; showItemAlert('⏱️ 사색의 시간! 10초간 타이머가 멈춰요 (책 찾아봐도 +3층)'); }
   else if(key === 'goldenbell'){ myGoldenbellArmed = true; showItemAlert('🎯 골든벨! 다음 정답은 ×3, 틀리면 -2층'); }
   else if(key === 'clover'){ myCloverUntil = serverNow() + ITEM_FX_MS.clover; showItemAlert('🍀 네잎클로버! 30초간 정답마다 행운 +1층 찬스'); }
   else if(key === 'mirror'){ myMirrorUntil = serverNow() + ITEM_FX_MS.mirror; showItemAlert('🪞 반사경! 15초 안에 날아오는 첫 견제를 되돌려요'); }
@@ -1016,8 +1014,8 @@ async function useItem(){
   const key = heldItem;
   const it = ITEMS[key];
   if(!it){ heldItem = null; renderItemBar(); return; }
-  // 문제가 화면에 없을 때 힌트/리롤/골든벨/사색을 쓰면 낭비되므로 소모하지 않고 되돌린다
-  if((key === 'hint' || key === 'reroll' || key === 'goldenbell' || key === 'think') && !(currentQuestion && currentQid)){
+  // 문제가 화면에 없을 때 힌트/리롤/골든벨을 쓰면 낭비되므로 소모하지 않고 되돌린다
+  if((key === 'hint' || key === 'reroll' || key === 'goldenbell') && !(currentQuestion && currentQid)){
     renderItemBar();
     showItemAlert('문제가 나온 뒤에 사용하세요');
     return;
