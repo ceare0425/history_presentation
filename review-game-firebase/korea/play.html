@@ -812,8 +812,7 @@ function renderItemBar(){
     let desc = it.desc;
     if(roundState.team_mode){
       const u = unitLabel();
-      if(heldItem === 'santa') desc = `우리 팀 모두 +1${u}`;
-      else if(heldItem === 'festival') desc = '20초간 우리 팀 2배';
+      if(heldItem === 'festival') desc = '20초간 우리 팀 2배';
       else if(heldItem === 'ladder') desc = `즉시 +2${u}`;
       else if(heldItem === 'rocket') desc = `즉시 +5${u} (다음 정답 1번은 추가 없음)`;
       else if(heldItem === 'hint') desc = `지금 문제 정답 초성 공개 (이 문제는 +1${u})`;
@@ -1046,14 +1045,7 @@ function handleItemEvents(obj){
     const evItem = ITEMS[e.type];
     if(evItem && evItem.kind === 'global'){
       const who = e.byName || '누군가';
-      if(e.type === 'santa'){
-        // 팀전에서는 산타를 쓴 학생과 같은 팀에게만 +1
-        if(roundState.team_mode && (!e.byTeam || e.byTeam !== myTeam)) return;
-        bumpFloor(1);
-        showItemAlert(roundState.team_mode
-          ? `🎁 ${who} 님이 '산타' 사용 → 우리 팀 모두 +1${unitLabel()}!`
-          : `🎁 ${who} 님이 '산타' 사용 → 모두 +1${unitLabel()}!`);
-      } else if(e.type === 'festival'){
+      if(e.type === 'festival'){
         // 팀전에서는 축제를 쓴 학생과 같은 팀에게만 2배 적용
         if(roundState.team_mode && (!e.byTeam || e.byTeam !== myTeam)) return;
         festivalUntil = e.at + ITEM_FX_MS.festival;

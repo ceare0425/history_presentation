@@ -258,7 +258,6 @@ export const ITEMS = {
   hint:     { emoji: '💡',  name: '힌트',      kind: 'self',    desc: '지금 문제 정답 초성 공개 (이 문제는 +1층)' },
   shield:   { emoji: '🛡️',  name: '콤보 방패',  kind: 'self',    desc: '다음 오답에도 연속이 안 끊김' },
   cure:     { emoji: '🍵',  name: '해독',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
-  santa:    { emoji: '🎁',  name: '산타',      kind: 'global',  desc: '모두 +1층 (나 포함)' },
   festival: { emoji: '🌈',  name: '축제',      kind: 'global',  desc: '20초간 모두 2배' },
   fog:      { emoji: '🌫️',  name: '안개',      kind: 'attack',  desc: '선두권 문제 화면이 8초간 흐려짐' },
   ice:      { emoji: '🧊',  name: '얼음',      kind: 'attack',  desc: '선두권이 5초간 제출 불가' },
