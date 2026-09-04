@@ -303,14 +303,17 @@ export function itemPool(opts = {}) {
 }
 
 // opts.attackBias(0~1): 클수록 방해(attack) 아이템이 뽑힐 확률이 올라간다. 0이면 균등 추첨.
+// opts.jackpotTier(0|1|2): '인생 한방' 가중치 — 1=중하위권(4배), 2=하위권(6배).
 // comeback 아이템은 가중치 3배로 잘 뜬다.
 export function rollItem(opts = {}) {
   const pool = itemPool(opts);
   if (!pool.length) return null;
   const bias = opts.attackBias || 0;
   const aw = bias > 0 ? 1 + 6 * Math.min(1, bias) : 1;   // 견제 아이템 가중치 최대 7배
+  const jw = opts.jackpotTier === 2 ? 6 : opts.jackpotTier === 1 ? 4 : 1;   // '인생 한방'
   const weights = pool.map((k) => {
     const kind = ITEMS[k] && ITEMS[k].kind;
+    if (k === 'jackpot') return jw;
     if (kind === 'attack') return aw;
     if (kind === 'comeback') return 3;
     return 1;
@@ -346,6 +349,17 @@ export function inBottomGroup(players, id) {
   if (!ranked.slice(-n).some((p) => p.id === id)) return false;
   const medianFloor = ranked[Math.floor(ranked.length / 2)]?.floor || 0;
   return medianFloor - (me.floor || 0) >= 2;
+}
+
+// 중하위권: 참가 4명 이상일 때 현재 층수가 중앙값 이하인 학생(하위 ~50%).
+// '인생 한방' 아이템 가중치를 올려 역전 기회를 더 준다.
+export function inLowerHalf(players, id) {
+  const ranked = rankedPlayers(players);
+  if (ranked.length < 4) return false;
+  const me = ranked.find((p) => p.id === id);
+  if (!me) return false;
+  const medianFloor = ranked[Math.floor(ranked.length / 2)]?.floor || 0;
+  return (me.floor || 0) <= medianFloor;
 }
 
 // 방해 대상 후보: 상위 그룹 중 '중위권보다 일정 층 이상 앞선' 사람(자신 제외). 랭킹 순으로 반환.

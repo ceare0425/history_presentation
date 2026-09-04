@@ -337,7 +337,7 @@ import {
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   TEAM_OPTIONS, teamInfo, teamStandings, activeBonus,
-  ITEMS, ITEM_FX_MS, rollItem, inTopGroup, inBottomGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, choseongHint
+  ITEMS, ITEM_FX_MS, rollItem, inTopGroup, inBottomGroup, inLowerHalf, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, choseongHint
 } from '../shared/lib.js';
 
 const ROOM = 'world';
@@ -613,7 +613,9 @@ async function submitAnswer(){
       const atkBias = (roundState.team_mode && itemsMode === 'spicy') ? teamAttackBias(allPlayers, myTeam) : 0;
       // 개인전 하위권: '방구석 축제'(혼자 30초 2배)를 뽑을 수 있게
       const canComeback = !roundState.team_mode && inBottomGroup(allPlayers, playerId);
-      heldItem = rollItem({ mode: itemsMode, canAttack, attackBias: atkBias, canComeback, teamMode: roundState.team_mode });
+      // '인생 한방'은 중하위권일수록 더 자주 (하위권이면 더더욱)
+      const jackpotTier = inBottomGroup(allPlayers, playerId) ? 2 : inLowerHalf(allPlayers, playerId) ? 1 : 0;
+      heldItem = rollItem({ mode: itemsMode, canAttack, attackBias: atkBias, canComeback, jackpotTier, teamMode: roundState.team_mode });
     }
   } else {
     p.wrong = (p.wrong||0) + 1;
