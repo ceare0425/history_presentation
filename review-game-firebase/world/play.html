@@ -881,6 +881,7 @@ function renderItemBar(){
       else if(heldItem === 'rocket') desc = `즉시 +5${u} (다음 정답 1번은 추가 없음)`;
       else if(heldItem === 'hint') desc = `지금 문제 정답 초성 공개 (이 문제는 +1${u})`;
       else if(heldItem === 'steal') desc = `상대 팀 전원 -2${u}, 나 +2${u}`;
+      else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u} (그 팀 2등 층수 아래로는 안 내려감)`;
       else if(heldItem === 'goldenbell') desc = `다음 정답 ×3! 틀리면 연속 끊김 -2${u}`;
       else if(heldItem === 'clover') desc = `30초간 정답마다 50%로 +1${u} 더`;
       else if(heldItem === 'roulette') desc = `즉시 -3 ~ +8${u} 랜덤!`;
@@ -1092,15 +1093,23 @@ async function useItem(){
       }
       heldItem = null;
       await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
-      await push(roomRef(ROOM, 'item_events'), {
+      const evt = {
         type: key, by: playerId, byName: playerName,
         targetTeam, byTeam: myTeam || null, at: serverNow()
-      });
+      };
+      // 미끄럼틀은 상대 팀 전원이 아니라 그 팀 1등에게만 적용
+      if(key === 'slide'){
+        const topMember = rankedPlayers(allPlayers.filter(p=> p.team === targetTeam))[0];
+        if(topMember) evt.target = topMember.id;
+      }
+      await push(roomRef(ROOM, 'item_events'), evt);
       renderItemBar();
       const tgtInfo = teamInfo(targetTeam);
       if(key === 'steal'){
         await bumpFloor(2);
         showItemAlert(`🥷 강탈! ${tgtInfo ? tgtInfo.label : '상대 팀'} 전원 -2${unitLabel()}, 나 +2${unitLabel()}`);
+      } else if(key === 'slide'){
+        showItemAlert(`⬇️ 미끄럼틀 → ${tgtInfo ? tgtInfo.label : '상대 팀'} 1등에게 발사!`);
       } else {
         showItemAlert(`${it.emoji} ${it.name} → ${tgtInfo ? tgtInfo.label : '상대 팀'} 전원에게 발사!`);
       }
@@ -1199,6 +1208,8 @@ function handleItemEvents(obj){
     // (반사경으로 되돌아온 공격 e.reflected는 개인 대상이므로 팀전에서도 target으로 판정)
     if(roundState.team_mode){
       if(e.reflected && e.target){ if(e.target !== playerId) return; }
+      // 미끄럼틀은 상대 팀 1등만 대상 (e.target 지정)
+      else if(e.type === 'slide' && e.target){ if(e.target !== playerId) return; }
       else if(!e.targetTeam || e.targetTeam !== myTeam) return;
     } else if(e.target !== playerId) return;
     // '반사경' 활성 중이면 아직 반사 안 된 공격을 쏜 사람에게 그대로 되돌린다
@@ -1251,14 +1262,17 @@ async function slideDown(){
   const cur = snap.val() || {};
   const spicy = itemsMode === 'spicy';
   const drop = spicy ? 4 : 3;   // 매운맛은 -4층
-  // 개인전은 '2등 층수 아래로는 안 내려감' 가드(매운맛은 2등보다 1층 아래까지 허용), 팀전은 팀원 각자 하락(0층 하한)
+  // '2등 층수 아래로는 안 내려감' 가드(매운맛은 2등보다 1층 아래까지 허용).
+  // 개인전=전체 2등, 팀전=미끄럼틀 맞은 팀의 2등(1등만 맞으므로) 기준.
   let floorGuard = 0;
-  if(!roundState.team_mode){
-    const ranked = rankedPlayers(allPlayers);
-    const second = ranked[1] ? (ranked[1].floor || 0) : 0;
-    floorGuard = spicy ? Math.max(0, second - 1) : second;
-  }
-  const nf = Math.max((cur.floor || 0) - drop, floorGuard, 0);
+  const guardPool = roundState.team_mode
+    ? rankedPlayers(allPlayers.filter(p=> p.team && p.team === cur.team))
+    : rankedPlayers(allPlayers);
+  const second = guardPool[1] ? (guardPool[1].floor || 0) : 0;
+  floorGuard = spicy ? Math.max(0, second - 1) : second;
+  // 가드가 현재 층수보다 높으면(반사 등 예외) 올라가 버리지 않도록 clamp
+  const guard = Math.min(floorGuard, cur.floor || 0);
+  const nf = Math.max((cur.floor || 0) - drop, guard, 0);
   await update(pRef, { floor: nf, name: cur.name || playerName, lastActive: serverNow() });
   el('floorVal').textContent = nf;
   lastFloor = nf;
