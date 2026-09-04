@@ -490,7 +490,7 @@ function detectOvertakes(players, ranked, effective){
   const order = teamOn
     ? teamStandings(players).filter(s=> s.members > 0)
         .map(s=> ({ key:s.team, name:(teamInfo(s.team)?.label || s.team), score:s.floor }))
-    : ranked.filter(p=> p.name && !isStealthed(p))
+    : ranked.filter(p=> p.name)
         .map(p=> ({ key:p.id, name:p.name, score:p.floor || 0 }));
   const cur = {};
   order.forEach((o,i)=> cur[o.key] = i + 1);
@@ -663,11 +663,9 @@ function ensureClimberEl(track, id){
   return div;
 }
 
-function isStealthed(p){ return !!(p && p.stealthUntil && serverNow() < p.stealthUntil); }
-
 function renderTower(players, leaderId){
   const track = el('towerTrack');
-  const maxFloor = Math.max(10, ...players.filter(p=>!isStealthed(p)).map(p=>p.floor||0));
+  const maxFloor = Math.max(10, ...players.map(p=>p.floor||0));
   const trackHeight = track.clientHeight || 500;
   const usable = trackHeight - 20;
   const seen = new Set();
@@ -676,24 +674,23 @@ function renderTower(players, leaderId){
     seen.add(p.id);
     const node = ensureClimberEl(track, p.id);
     track.appendChild(node);
-    const hidden = isStealthed(p);
     const floor = p.floor||0;
-    const h = hidden ? 8 : Math.round((floor / maxFloor) * usable);
+    const h = Math.round((floor / maxFloor) * usable);
     const avatar = p.avatar || '🐱'; // 입장 시 배정된 개인 캐릭터 (예전 데이터엔 없을 수 있어 기본값)
 
     const tInfo = (roundState.team_mode && p.team) ? teamInfo(p.team) : null;
-    node.querySelector('.floorno').textContent = hidden ? '???' : floor;
-    node.querySelector('.avatar').textContent = hidden ? '🤿' : avatar;
+    node.querySelector('.floorno').textContent = floor;
+    node.querySelector('.avatar').textContent = avatar;
     const colEl = node.querySelector('.col');
     colEl.style.height = Math.max(6,h)+'px';
-    if(tInfo && !hidden) colEl.style.setProperty('--team-color', tInfo.color);
+    if(tInfo) colEl.style.setProperty('--team-color', tInfo.color);
     else colEl.style.removeProperty('--team-color');
-    node.querySelector('.base').textContent = hidden ? '???' : (p.name || '');
-    node.classList.toggle('leader', !hidden && leaderId != null && p.id === leaderId);
-    node.classList.toggle('onfire', !hidden && (p.streak||0) >= 3);
+    node.querySelector('.base').textContent = p.name || '';
+    node.classList.toggle('leader', leaderId != null && p.id === leaderId);
+    node.classList.toggle('onfire', (p.streak||0) >= 3);
 
     const prev = lastFloor[p.id];
-    if(!hidden && prev !== undefined && floor > prev){
+    if(prev !== undefined && floor > prev){
       node.classList.remove('leveling'); void node.offsetWidth; node.classList.add('leveling');
       const gain = floor - prev;
       const popup = document.createElement('div');
@@ -706,7 +703,7 @@ function renderTower(players, leaderId){
 
     const wrong = p.wrong||0;
     const prevWrong = lastWrong[p.id];
-    if(!hidden && prevWrong !== undefined && wrong > prevWrong){
+    if(prevWrong !== undefined && wrong > prevWrong){
       node.classList.remove('sad'); void node.offsetWidth; node.classList.add('sad');
     }
     lastWrong[p.id] = wrong;
@@ -935,12 +932,6 @@ function showItemEvent(e){
       spawnConfettiBatch(10);
       return;
     }
-    if(e.type === 'share'){
-      const st = e.byTeam ? teamInfo(e.byTeam) : null;
-      itemToast(st ? `🤲 ${who} → ${st.label} 뒤처진 팀원 끌어올리기!` : `🤲 ${who} → 십시일반!`);
-      spawnConfettiBatch(12);
-      return;
-    }
     const ft = (roundState.team_mode && e.byTeam) ? teamInfo(e.byTeam) : null;
     festivalScopeLabel = ft ? ft.label : '모두';
     itemToast(ft ? `🌈 ${who} → 20초간 ${ft.label} 2배!` : `🌈 ${who} → 20초간 모두 2배!`);
@@ -983,12 +974,11 @@ function render(){
   el('emptyMsg').style.display = players.length ? 'none' : 'flex';
 
   el('lbList').innerHTML = ranked.length ? ranked.slice(0,10).map((p,i)=>{
-    const hid = !roundState.team_mode && isStealthed(p);   // 개인전 잠수함: 이름·층수 가림
     return `
     <div class="lb-row ${i===0?'rank1':''}">
       <div class="lb-medal">${MEDALS[i] || (i+1)}</div>
-      <div class="lb-name">${hid ? '🤿 ???' : escapeHtml(p.name||'')}</div>
-      <div class="lb-floor">${hid ? '?' : (p.floor||0)+unitLabel()}</div>
+      <div class="lb-name">${escapeHtml(p.name||'')}</div>
+      <div class="lb-floor">${(p.floor||0)+unitLabel()}</div>
     </div>`;
   }).join('') : '<div style="opacity:.6; font-size:.85rem; padding:6px 4px;">아직 참가한 학생이 없습니다</div>';
 
