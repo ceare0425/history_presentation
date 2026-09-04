@@ -505,17 +505,15 @@ el('giveRandomboxBtn').onclick = async () => {
     setTimeout(()=>{ rbMsg.textContent=''; }, 3000);
     return;
   }
-  if(!confirm(`학생 ${pids.length}명에게 🎁 랜덤박스를 나눠줄까요?\n(들고 있던 아이템은 랜덤박스로 교체됩니다)`)) return;
+  if(!confirm(`학생 ${pids.length}명에게 🎁 랜덤박스를 뿌릴까요?\n(아이템이 없는 학생은 바로 받고, 이미 든 학생은 바꿀지 물어봅니다)`)) return;
   const btn = el('giveRandomboxBtn');
   btn.disabled = true;
-  const updates = {};
-  pids.forEach(pid => { updates[`rooms/${ROOM}/players/${pid}/item`] = 'randombox'; });
   try{
-    await update(ref(db), updates);
-    rbMsg.textContent = `🎁 ${pids.length}명에게 지급 완료!`;
+    await push(roomRef(ROOM, 'item_events'), { type: 'randombox_offer', byName: '선생님', at: serverNow() });
+    rbMsg.textContent = '🎁 랜덤박스를 뿌렸어요!';
     setTimeout(()=>{ rbMsg.textContent=''; }, 4000);
   } catch(err){
-    rbMsg.textContent = '지급 실패: ' + err.message;
+    rbMsg.textContent = '실패: ' + err.message;
   } finally {
     btn.disabled = roundState.status !== 'running' || itemsModeState === 'off';
   }
