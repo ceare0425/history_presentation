@@ -404,6 +404,7 @@ let myGoldenbellArmed = false; // '골든벨' — 다음 정답 ×3 / 오답 -2
 let myJackpotArmed = false;  // '인생 한방' — 다음 정답 +20 / 오답 -10
 let mySnowballArmed = false; // '눈덩이' — 다음 정답에 연속 수만큼 층수 추가
 let myVestUntil = 0;         // '구명조끼' — 20초간 오답 페널티(층수·연속) 무효
+let randomboxOfferPending = false; // 교사가 뿌린 '랜덤박스' 제안 — 이미 아이템이 있어 교체 여부를 물어보는 중
 let myCloverUntil = 0;       // '네잎클로버' — 30초간 정답마다 50% +1층
 let myAnthemNext = 0;        // '팀 응원가' — 남은 2배 정답 수(팀 전체 각자)
 let myMirrorUntil = 0;       // '반사경' — 15초간 첫 견제 반사
@@ -741,7 +742,7 @@ function tick(){
       heldItem = null; myBoost = 0; mySkipFloor = false; myHintQid = null; myShield = false;
       mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myImmuneUntil = 0; frozen = false;
       myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
-      myUndoAvailable = false; myUndoFloorDelta = 0;
+      myUndoAvailable = false; myUndoFloorDelta = 0; randomboxOfferPending = false;
       clearTimeout(iceTimer); clearTimeout(fogTimer);
       el('qbox').classList.remove('fogged');
       clearChoseongHint();
@@ -895,6 +896,24 @@ function renderItemBar(){
   const hint = el('itemHintLine');
   if(!bar || !hint) return;
   if(!itemsOn()){ bar.innerHTML = ''; hint.textContent = ''; return; }
+  // 교사가 뿌린 랜덤박스 — 이미 든 아이템이 있어 교체 여부를 고르는 중
+  if(randomboxOfferPending && heldItem && heldItem !== 'randombox' && ITEMS[heldItem]){
+    bar.innerHTML =
+      `<button type="button" class="item-btn" id="rbAcceptBtn">🎁 랜덤박스로 바꾸기<small>지금 든 ${ITEMS[heldItem].name}은 사라져요</small></button>` +
+      `<button type="button" class="item-discard-btn" id="rbDeclineBtn">유지</button>`;
+    el('rbAcceptBtn').onclick = () => {
+      el('rbAcceptBtn').disabled = true; el('rbDeclineBtn').disabled = true;
+      randomboxOfferPending = false;
+      acceptRandombox().catch(err => console.warn('acceptRandombox', err));
+    };
+    el('rbDeclineBtn').onclick = () => {
+      randomboxOfferPending = false;
+      showItemAlert('🎁 랜덤박스를 거절했어요 (기존 아이템 유지)');
+      renderItemBar();
+    };
+    hint.textContent = '선생님이 준 랜덤박스 — 바꾸거나 유지하세요';
+    return;
+  }
   if(heldItem && ITEMS[heldItem]){
     const it = ITEMS[heldItem];
     let desc = it.desc;
@@ -979,6 +998,13 @@ function checkMyOvertake(){
   if(now - myLastOvertakeAt < MY_OVERTAKE_CD) return;
   myLastOvertakeAt = now;
   showItemAlert(`🔥 ${passed.name} 님을 제치고 ${myRank}위!`);
+}
+
+async function acceptRandombox(){
+  heldItem = 'randombox';
+  await update(roomRef(ROOM, 'players', playerId), { item: 'randombox', name: playerName, lastActive: serverNow() });
+  showItemAlert('🎁 랜덤박스로 교체! 사용 버튼을 눌러요');
+  renderItemBar();
 }
 
 async function discardItem(){
@@ -1207,6 +1233,21 @@ function handleItemEvents(obj){
     if(seenItemEvents.has(k)) return;
     seenItemEvents.add(k);
     if(!e || !e.at || now - e.at > 12000) return;  // 오래된 이벤트(재접속 등)는 무시
+    // 교사가 뿌린 '랜덤박스': 아이템이 없으면 바로 지급, 이미 있으면 교체 여부를 물어본다
+    if(e.type === 'randombox_offer'){
+      if(!itemsOn() || roundState.status !== 'running' || roundEnded()) return;
+      if(!heldItem){
+        heldItem = 'randombox';
+        update(roomRef(ROOM, 'players', playerId), { item: 'randombox', name: playerName, lastActive: serverNow() });
+        showItemAlert('🎁 선생님이 랜덤박스를 줬어요! 사용 버튼을 눌러요');
+        renderItemBar();
+      } else if(heldItem !== 'randombox'){
+        randomboxOfferPending = true;
+        showItemAlert('🎁 선생님이 랜덤박스를 나눠줬어요 — 바꿀지 골라요');
+        renderItemBar();
+      }
+      return;
+    }
     // 전체에 영향을 주는 아이템 → 모든 학생에게 "누가 무엇을 써서 어떤 효과" 안내
     const evItem = ITEMS[e.type];
     if(evItem && evItem.kind === 'global'){

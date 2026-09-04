@@ -922,6 +922,11 @@ function flashTeamFx(teamKey, type){
 }
 
 function showItemEvent(e){
+  if(e.type === 'randombox_offer'){
+    itemToast('🎁 선생님이 랜덤박스를 뿌렸다!');
+    spawnConfettiBatch(14);
+    return;
+  }
   const it = ITEMS[e.type];
   if(!it) return;
   const who = escapeHtml(e.byName || '누군가');
