@@ -289,6 +289,8 @@
       <div class="festival-banner" id="soloFestBanner">🛋️ 방구석 축제! 나만 2배 · <span id="soloFestRemain"></span>초 남음</div>
       <div class="festival-banner" id="goldenbellBanner">🎯 골든벨 문제! 맞히면 ×3 · 틀리면 -2</div>
       <div class="festival-banner" id="jackpotBanner">🎲 인생 한방! 맞히면 +20 · 틀리면 -10</div>
+      <div class="festival-banner" id="snowballBanner">🌀 눈덩이! 다음 정답에 연속 수만큼 추가</div>
+      <div class="festival-banner" id="vestBanner">🛟 구명조끼! 틀려도 안전 · <span id="vestRemain"></span>초 남음</div>
       <div class="festival-banner" id="cloverBanner">🍀 네잎클로버! 정답마다 행운 · <span id="cloverRemain"></span>초 남음</div>
       <div class="festival-banner" id="mirrorBanner">🪞 반사경 대기 중 · <span id="mirrorRemain"></span>초 남음</div>
       <div class="item-alert" id="itemAlert"></div>
@@ -400,6 +402,8 @@ let festivalUntil = 0;       // '축제' 종료 시각(ms)
 let mySoloFestUntil = 0;     // '방구석 축제' — 나만 2배 종료 시각(ms)
 let myGoldenbellArmed = false; // '골든벨' — 다음 정답 ×3 / 오답 -2
 let myJackpotArmed = false;  // '인생 한방' — 다음 정답 +20 / 오답 -10
+let mySnowballArmed = false; // '눈덩이' — 다음 정답에 연속 수만큼 층수 추가
+let myVestUntil = 0;         // '구명조끼' — 20초간 오답 페널티(층수·연속) 무효
 let myCloverUntil = 0;       // '네잎클로버' — 30초간 정답마다 50% +1층
 let myAnthemNext = 0;        // '팀 응원가' — 남은 2배 정답 수(팀 전체 각자)
 let myMirrorUntil = 0;       // '반사경' — 15초간 첫 견제 반사
@@ -598,6 +602,7 @@ async function submitAnswer(){
     if(myBoost > 0){ gain *= 2; myBoost--; }                  // '부스터'
     if(myGoldenbellArmed){ gain *= 3; myGoldenbellArmed = false; showItemAlert(`🎯 골든벨 성공! ×3 → +${gain}${unitLabel()}!`); } // '골든벨'
     if(serverNow() < myCloverUntil && Math.random() < 0.5){ gain += 1; showItemAlert(`🍀 행운! +1${unitLabel()} 더!`); } // '네잎클로버'
+    if(mySnowballArmed){ const add = Math.max(1, p.streak || 0); gain += add; mySnowballArmed = false; showItemAlert(`🌀 눈덩이! 연속 ${add} → +${add}${unitLabel()} 추가!`); } // '눈덩이'
     if(mySkipFloor){ gain = 0; mySkipFloor = false; }         // '로켓 점프' 반동
     if(myJackpotArmed){ gain = 20; myJackpotArmed = false; showItemAlert(`🎲 인생 한방 대성공! +20${unitLabel()} 🎉`); } // '인생 한방' (다른 배수 무시, 고정 +20)
     p.floor = (p.floor||0) + gain;
@@ -620,26 +625,33 @@ async function submitAnswer(){
   } else {
     p.wrong = (p.wrong||0) + 1;
     let undoFloorDelta = 0;
-    if(myGoldenbellArmed){
-      myGoldenbellArmed = false;
-      const beforeF = p.floor||0;
-      p.floor = Math.max(0, beforeF - 2);
-      undoFloorDelta = beforeF - p.floor;
-      showItemAlert(`🎯 골든벨 실패… -${undoFloorDelta || 2}${unitLabel()}`);
-    }
-    if(myJackpotArmed){
-      myJackpotArmed = false;
-      const beforeF = p.floor||0;
-      p.floor = Math.max(0, beforeF - 10);
-      undoFloorDelta += beforeF - p.floor;
-      showItemAlert(`🎲 인생 한방 실패… -${beforeF - p.floor || 10}${unitLabel()}`);
+    const vested = serverNow() < myVestUntil;   // '구명조끼' 발동 중
+    if(mySnowballArmed){ mySnowballArmed = false; showItemAlert('🌀 눈덩이가 녹았어요…'); }
+    if(vested){
+      myGoldenbellArmed = false; myJackpotArmed = false;
+      showItemAlert('🛟 구명조끼! 틀려도 층수·연속 그대로');
+    } else {
+      if(myGoldenbellArmed){
+        myGoldenbellArmed = false;
+        const beforeF = p.floor||0;
+        p.floor = Math.max(0, beforeF - 2);
+        undoFloorDelta = beforeF - p.floor;
+        showItemAlert(`🎯 골든벨 실패… -${undoFloorDelta || 2}${unitLabel()}`);
+      }
+      if(myJackpotArmed){
+        myJackpotArmed = false;
+        const beforeF = p.floor||0;
+        p.floor = Math.max(0, beforeF - 10);
+        undoFloorDelta += beforeF - p.floor;
+        showItemAlert(`🎲 인생 한방 실패… -${beforeF - p.floor || 10}${unitLabel()}`);
+      }
     }
     // '되돌리기'용 백업 (오답 전 연속 수 + 이번에 깎인 층수)
     myUndoAvailable = true;
     myUndoStreak = p.streak || 0;
     myUndoFloorDelta = undoFloorDelta;
     if(myShield){ myShield = false; showItemAlert('🛡️ 콤보 방패로 연속을 지켰어요!'); }
-    else p.streak = 0;
+    else if(!vested) p.streak = 0;
     // 틀린 문제는 잠시 후 다시 출제. 틀릴수록 간격을 늘리고 RETRY_TRIES번까지만 강제로 다시 낸다
     const misses = (retryMiss[answeredQid] = (retryMiss[answeredQid]||0) + 1);
     if(misses < RETRY_TRIES && !retryList.some(r=>r.qid===answeredQid)){
@@ -728,7 +740,7 @@ function tick(){
       // 아이템 로컬 상태 초기화
       heldItem = null; myBoost = 0; mySkipFloor = false; myHintQid = null; myShield = false;
       mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myImmuneUntil = 0; frozen = false;
-      myGoldenbellArmed = false; myJackpotArmed = false; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
+      myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
       myUndoAvailable = false; myUndoFloorDelta = 0;
       clearTimeout(iceTimer); clearTimeout(fogTimer);
       el('qbox').classList.remove('fogged');
@@ -767,6 +779,14 @@ function tick(){
     }
     el('goldenbellBanner').classList.toggle('show', myGoldenbellArmed);
     el('jackpotBanner').classList.toggle('show', myJackpotArmed);
+    el('snowballBanner').classList.toggle('show', mySnowballArmed);
+    const vsb = el('vestBanner');
+    if(serverNow() < myVestUntil){
+      vsb.classList.add('show');
+      el('vestRemain').textContent = Math.ceil((myVestUntil - serverNow()) / 1000);
+    } else {
+      vsb.classList.remove('show');
+    }
     const cvb = el('cloverBanner');
     if(serverNow() < myCloverUntil){
       cvb.classList.add('show');
@@ -888,6 +908,8 @@ function renderItemBar(){
       else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u} (그 팀 2등 층수 아래로는 안 내려감)`;
       else if(heldItem === 'goldenbell') desc = `다음 정답 ×3! 틀리면 연속 끊김 -2${u}`;
       else if(heldItem === 'jackpot') desc = `다음 정답 +20${u} / 오답 -10${u}`;
+      else if(heldItem === 'snowball') desc = `다음 정답에 지금 연속 수만큼 ${u} 추가`;
+      else if(heldItem === 'vest') desc = `20초간 틀려도 ${u}·연속 유지 (미끄럼틀·강탈 막음)`;
       else if(heldItem === 'clover') desc = `30초간 정답마다 50%로 +1${u} 더`;
       else if(heldItem === 'roulette') desc = `즉시 -3 ~ +8${u} 랜덤!`;
     }
@@ -1022,6 +1044,8 @@ async function applySelfItem(key){
   else if(key === 'soloFest'){ mySoloFestUntil = serverNow() + ITEM_FX_MS.soloFest; showItemAlert('🛋️ 방구석 축제 발동! 30초간 나만 2배 🎉'); }
   else if(key === 'goldenbell'){ myGoldenbellArmed = true; showItemAlert('🎯 골든벨! 다음 정답은 ×3, 틀리면 -2층'); }
   else if(key === 'jackpot'){ myJackpotArmed = true; showItemAlert(`🎲 인생 한방! 다음 정답 +20${unitLabel()}, 틀리면 -10${unitLabel()}`); }
+  else if(key === 'snowball'){ mySnowballArmed = true; showItemAlert('🌀 눈덩이! 다음 정답에 지금 연속 수만큼 층수 추가'); }
+  else if(key === 'vest'){ myVestUntil = serverNow() + ITEM_FX_MS.vest; showItemAlert('🛟 구명조끼! 20초간 틀려도 층수·연속 안전'); }
   else if(key === 'clover'){ myCloverUntil = serverNow() + ITEM_FX_MS.clover; showItemAlert('🍀 네잎클로버! 30초간 정답마다 행운 +1층 찬스'); }
   else if(key === 'mirror'){ myMirrorUntil = serverNow() + ITEM_FX_MS.mirror; showItemAlert('🪞 반사경! 15초 안에 날아오는 첫 견제를 되돌려요'); }
   else if(key === 'magnet'){ await applyMagnet(); }
@@ -1064,7 +1088,7 @@ async function useItem(){
   const it = ITEMS[key];
   if(!it){ heldItem = null; renderItemBar(); return; }
   // 문제가 화면에 없을 때 힌트/리롤/골든벨을 쓰면 낭비되므로 소모하지 않고 되돌린다
-  if((key === 'hint' || key === 'reroll' || key === 'goldenbell' || key === 'jackpot') && !(currentQuestion && currentQid)){
+  if((key === 'hint' || key === 'reroll' || key === 'goldenbell' || key === 'jackpot' || key === 'snowball') && !(currentQuestion && currentQid)){
     renderItemBar();
     showItemAlert('문제가 나온 뒤에 사용하세요');
     return;
@@ -1074,6 +1098,21 @@ async function useItem(){
     renderItemBar();
     showItemAlert('🪃 되돌릴 오답이 없어요 (문제를 틀린 직후에 쓰세요)');
     return;
+  }
+  // '랜덤박스': 다른 아이템 하나를 즉석에서 뽑아 바로 발동
+  if(key === 'randombox'){
+    heldItem = null;
+    await update(roomRef(ROOM, 'players', playerId), { item: null, name: playerName, lastActive: serverNow() });
+    const canAttack = itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId));
+    const atkBias = (roundState.team_mode && itemsMode === 'spicy') ? teamAttackBias(allPlayers, myTeam) : 0;
+    const canComeback = !roundState.team_mode && inBottomGroup(allPlayers, playerId);
+    const jackpotTier = inBottomGroup(allPlayers, playerId) ? 2 : inLowerHalf(allPlayers, playerId) ? 1 : 0;
+    const rolled = rollItem({ mode: itemsMode, canAttack, attackBias: atkBias, canComeback, jackpotTier, teamMode: roundState.team_mode, noRandombox: true });
+    if(!rolled){ renderItemBar(); showItemAlert('🎁 랜덤박스가 비었어요…'); return; }
+    heldItem = rolled;
+    renderItemBar();
+    showItemAlert(`🎁 랜덤박스 → ${ITEMS[rolled].emoji} ${ITEMS[rolled].name}!`);
+    return useItem();
   }
   const pRef = roomRef(ROOM, 'players', playerId);
 

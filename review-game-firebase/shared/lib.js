@@ -263,6 +263,9 @@ export const ITEMS = {
   roulette: { emoji: '🎰',  name: '행운의 룰렛', kind: 'self',    desc: '즉시 -3 ~ +8층 랜덤!' },
   undo:     { emoji: '🪃',  name: '되돌리기',   kind: 'self',    desc: '방금 틀린 문제를 없던 일로 (오답 -1·연속 복구)' },
   jackpot:  { emoji: '🎲',  name: '인생 한방',  kind: 'self',    desc: '다음 정답 +20층 / 오답 -10층 (개인전·팀전 공통)' },
+  snowball: { emoji: '🌀',  name: '눈덩이',    kind: 'self',    desc: '다음 정답에 지금 연속 수만큼 층수 추가' },
+  vest:     { emoji: '🛟',  name: '구명조끼',  kind: 'self',    desc: '20초간 틀려도 층수·연속이 안 깎임 (미끄럼틀·강탈도 막음)' },
+  randombox:{ emoji: '🎁',  name: '랜덤박스',  kind: 'self',    desc: '즉시 다른 아이템 하나를 뽑아 바로 발동' },
   cure:     { emoji: '🍵',  name: '해독',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
   mirror:   { emoji: '🪞',  name: '반사경',     kind: 'defense', desc: '15초간 날아오는 첫 견제를 쏜 사람에게 반사' },
   festival: { emoji: '🌈',  name: '축제',      kind: 'global',  desc: '20초간 모두 2배' },
@@ -279,7 +282,7 @@ export const ITEMS = {
 export const ITEM_FX_MS = {
   fog: 8000, ice: 5000, festival: 20000, immunity: 8000,
   fogSpicy: 10000, iceSpicy: 7000, immunitySpicy: 4000,
-  soloFest: 30000, clover: 30000, mirror: 15000,
+  soloFest: 30000, clover: 30000, mirror: 15000, vest: 20000,
 };
 
 // 이번 판에서 뽑을 수 있는 아이템 key 목록. opts:
@@ -297,6 +300,7 @@ export function itemPool(opts = {}) {
       if (k === 'mirror') return mode === 'spicy';
       if (k === 'magnet') return !teamMode;
       if (k === 'anthem') return teamMode;
+      if (k === 'randombox') return !opts.noRandombox;   // '랜덤박스' 재추첨 땐 제외
       return true;
     })
     .map(([k]) => k);
