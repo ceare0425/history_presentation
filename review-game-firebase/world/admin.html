@@ -190,6 +190,8 @@
       <button type="button" id="bonusNowBtn" class="secondary" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;" disabled>🔥 지금 2배 찬스 발동</button>
       <input type="number" id="bonusDurationInput" value="20" min="5" max="300" step="5" style="width:60px; flex:0 0 auto;" title="2배 찬스 지속 시간(초)">초
       <span class="muted" id="bonusNowMsg"></span>
+      <button type="button" id="giveRandomboxBtn" class="secondary" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;" disabled>🎁 랜덤박스 뿌리기</button>
+      <span class="muted" id="giveRandomboxMsg"></span>
     </div>
     <div class="team-standings hidden" id="teamStandingsBox"></div>
     <table>
@@ -489,6 +491,36 @@ el('bonusNowBtn').onclick = async () => {
   }
 };
 
+el('giveRandomboxBtn').onclick = async () => {
+  if(roundState.status !== 'running') return;
+  const rbMsg = el('giveRandomboxMsg');
+  if(itemsModeState === 'off'){
+    rbMsg.textContent = '아이템전이 꺼져 있어요';
+    setTimeout(()=>{ rbMsg.textContent=''; }, 3000);
+    return;
+  }
+  const pids = Object.keys(playersObj).filter(pid => playersObj[pid] && playersObj[pid].name);
+  if(!pids.length){
+    rbMsg.textContent = '접속 중인 학생이 없어요';
+    setTimeout(()=>{ rbMsg.textContent=''; }, 3000);
+    return;
+  }
+  if(!confirm(`학생 ${pids.length}명에게 🎁 랜덤박스를 나눠줄까요?\n(들고 있던 아이템은 랜덤박스로 교체됩니다)`)) return;
+  const btn = el('giveRandomboxBtn');
+  btn.disabled = true;
+  const updates = {};
+  pids.forEach(pid => { updates[`rooms/${ROOM}/players/${pid}/item`] = 'randombox'; });
+  try{
+    await update(ref(db), updates);
+    rbMsg.textContent = `🎁 ${pids.length}명에게 지급 완료!`;
+    setTimeout(()=>{ rbMsg.textContent=''; }, 4000);
+  } catch(err){
+    rbMsg.textContent = '지급 실패: ' + err.message;
+  } finally {
+    btn.disabled = roundState.status !== 'running' || itemsModeState === 'off';
+  }
+};
+
 const XLSX_TEMPLATE_ROWS = [
   ['주제', '문제 (빈칸은 ____ 로 표시)', '정답 (여러 정답은 / 로 구분)'],
   ['주제 01. 문명의 형성', '현생 인류인 ____은/는 약 20~30만 년 전 아프리카에서 등장하였다.', '호모 사피엔스'],
@@ -659,6 +691,7 @@ function renderRoster(){
   el('poolInfo').textContent = effective!=='idle' ? `출제 문항 ${poolCount}개 · ${orderLabel} 출제` : '';
 
   el('bonusNowBtn').disabled = effective !== 'running';
+  el('giveRandomboxBtn').disabled = effective !== 'running' || itemsModeState === 'off';
   const bonus = activeBonus(r, serverNow());
   if(bonus && !el('bonusNowMsg').textContent){
     el('bonusNowMsg').textContent = `🔥 2배 찬스 진행 중 (${bonus.remaining}초)`;
