@@ -262,12 +262,10 @@ export const ITEMS = {
   magnet:   { emoji: '🧲',  name: '추격',       kind: 'self',    desc: '바로 위 등수와의 층 차이를 절반으로' },
   roulette: { emoji: '🎰',  name: '행운의 룰렛', kind: 'self',    desc: '즉시 -3 ~ +8층 랜덤!' },
   undo:     { emoji: '🪃',  name: '되돌리기',   kind: 'self',    desc: '방금 틀린 문제를 없던 일로 (오답 -1·연속 복구)' },
-  submarine:{ emoji: '🤿',  name: '잠수함',     kind: 'self',    desc: '20초간 전광판에서 내 층수가 숨겨짐 (매운맛 저격 대상 제외)' },
   cure:     { emoji: '🍵',  name: '해독',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
   mirror:   { emoji: '🪞',  name: '반사경',     kind: 'defense', desc: '15초간 날아오는 첫 견제를 쏜 사람에게 반사' },
   festival: { emoji: '🌈',  name: '축제',      kind: 'global',  desc: '20초간 모두 2배' },
   anthem:   { emoji: '📣',  name: '팀 응원가',  kind: 'global',  desc: '우리 팀 전원 다음 정답 1개 2배' },
-  share:    { emoji: '🤲',  name: '십시일반',   kind: 'global',  desc: '우리 팀 꼴찌 팀원을 팀 평균 층수까지' },
   soloFest: { emoji: '🛋️',  name: '방구석 축제', kind: 'comeback', desc: '30초간 나만 2배' },
   fog:      { emoji: '🌫️',  name: '안개',      kind: 'attack',  desc: '선두권 문제 화면이 8초간 흐려짐' },
   ice:      { emoji: '🧊',  name: '얼음',      kind: 'attack',  desc: '선두권이 5초간 제출 불가' },
@@ -280,7 +278,7 @@ export const ITEMS = {
 export const ITEM_FX_MS = {
   fog: 8000, ice: 5000, festival: 20000, immunity: 8000,
   fogSpicy: 10000, iceSpicy: 7000, immunitySpicy: 4000,
-  soloFest: 30000, clover: 30000, mirror: 15000, submarine: 20000,
+  soloFest: 30000, clover: 30000, mirror: 15000,
 };
 
 // 이번 판에서 뽑을 수 있는 아이템 key 목록. opts:
@@ -296,8 +294,8 @@ export function itemPool(opts = {}) {
       if (it.kind === 'attack') return mode === 'spicy' && canAttack;
       if (it.kind === 'comeback') return canComeback;
       if (k === 'mirror') return mode === 'spicy';
-      if (k === 'magnet' || k === 'submarine') return !teamMode;
-      if (k === 'anthem' || k === 'share') return teamMode;
+      if (k === 'magnet') return !teamMode;
+      if (k === 'anthem') return teamMode;
       return true;
     })
     .map(([k]) => k);
@@ -358,13 +356,11 @@ export function attackCandidates(players, byId, spicy = false) {
   const n = topGroupSize(ranked.length) + (spicy ? 1 : 0);
   const medianFloor = ranked[Math.floor(ranked.length / 2)]?.floor || 0;
   const gap = spicy ? 2 : 4;
-  const now = serverNow();
   return ranked
     .slice(0, n)
     .map((p, i) => ({ ...p, rank: i + 1 }))
     .filter((p) => p.id !== byId
-      && (p.floor || 0) - medianFloor >= gap
-      && !(p.stealthUntil && now < p.stealthUntil));   // '잠수함' 중인 학생은 저격 대상에서 제외
+      && (p.floor || 0) - medianFloor >= gap);
 }
 
 // 후보(랭킹 순) 중 하나를 가중치로 고른다. 1·2·3위에 50/30/20, 그 아래는 완만히 감소.

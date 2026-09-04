@@ -290,7 +290,6 @@
       <div class="festival-banner" id="goldenbellBanner">🎯 골든벨 문제! 맞히면 ×3 · 틀리면 -2</div>
       <div class="festival-banner" id="cloverBanner">🍀 네잎클로버! 정답마다 행운 · <span id="cloverRemain"></span>초 남음</div>
       <div class="festival-banner" id="mirrorBanner">🪞 반사경 대기 중 · <span id="mirrorRemain"></span>초 남음</div>
-      <div class="festival-banner" id="submarineBanner">🤿 잠수함! 전광판에서 숨는 중 · <span id="submarineRemain"></span>초 남음</div>
       <div class="item-alert" id="itemAlert"></div>
       <div class="hud">
         <div class="floor-badge">🏢 <span id="floorVal">0</span><span class="u-unit">층</span></div>
@@ -402,7 +401,6 @@ let myGoldenbellArmed = false; // '골든벨' — 다음 정답 ×3 / 오답 -2
 let myCloverUntil = 0;       // '네잎클로버' — 30초간 정답마다 50% +1층
 let myAnthemNext = 0;        // '팀 응원가' — 남은 2배 정답 수(팀 전체 각자)
 let myMirrorUntil = 0;       // '반사경' — 15초간 첫 견제 반사
-let myStealthUntil = 0;      // '잠수함' — 전광판에서 내 층수 숨김 종료 시각(ms)
 let myUndoAvailable = false; // '되돌리기' 가능 (방금 오답 직후, 다음 제출 전까지)
 let myUndoStreak = 0;        // 되돌리면 복구할 연속 수
 let myUndoFloorDelta = 0;    // 되돌리면 복구할 층수(골든벨 실패 -2 등)
@@ -719,7 +717,7 @@ function tick(){
       heldItem = null; myBoost = 0; mySkipFloor = false; myHintQid = null; myShield = false;
       mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myImmuneUntil = 0; frozen = false;
       myGoldenbellArmed = false; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
-      myStealthUntil = 0; myUndoAvailable = false; myUndoFloorDelta = 0;
+      myUndoAvailable = false; myUndoFloorDelta = 0;
       clearTimeout(iceTimer); clearTimeout(fogTimer);
       el('qbox').classList.remove('fogged');
       clearChoseongHint();
@@ -769,13 +767,6 @@ function tick(){
       el('mirrorRemain').textContent = Math.ceil((myMirrorUntil - serverNow()) / 1000);
     } else {
       mrb.classList.remove('show');
-    }
-    const smb = el('submarineBanner');
-    if(serverNow() < myStealthUntil){
-      smb.classList.add('show');
-      el('submarineRemain').textContent = Math.ceil((myStealthUntil - serverNow()) / 1000);
-    } else {
-      smb.classList.remove('show');
     }
     showView('playView');
   } else if(effective === 'ended'){
@@ -948,7 +939,6 @@ function checkMyOvertake(){
     }
   }
   if(!passed) return;
-  if(passed.stealthUntil && serverNow() < passed.stealthUntil) return;   // 잠수함 중인 상대는 언급 안 함
   const now = serverNow();
   if(now - myLastOvertakeAt < MY_OVERTAKE_CD) return;
   myLastOvertakeAt = now;
@@ -1026,7 +1016,6 @@ async function applySelfItem(key){
     await bumpFloor(d);
   }
   else if(key === 'undo'){ await applyUndo(); }
-  else if(key === 'submarine'){ await goStealth(); }
 }
 
 async function applyUndo(){
@@ -1041,13 +1030,6 @@ async function applyUndo(){
   el('streakVal').textContent = myUndoStreak >= 2 ? `🔥 ${myUndoStreak}연속 정답!` : '';
   myUndoAvailable = false; myUndoFloorDelta = 0;
   showItemAlert('🪃 방금 오답을 없던 일로! 연속 복구 ✨');
-}
-
-async function goStealth(){
-  const until = serverNow() + ITEM_FX_MS.submarine;
-  myStealthUntil = until;
-  await update(roomRef(ROOM, 'players', playerId), { stealthUntil: until, name: playerName, lastActive: serverNow() });
-  showItemAlert('🤿 잠수함! 20초간 전광판에서 내 층수가 숨겨져요');
 }
 
 async function applyMagnet(){
@@ -1157,8 +1139,8 @@ async function useItem(){
   // 자기 강화 / 방어 / 방구석 축제
   heldItem = null;
   await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
-  // '방구석 축제'·'잠수함'은 몰래 쓰는 게 핵심이라 전광판에 알리지 않는다
-  if(key !== 'soloFest' && key !== 'submarine'){
+  // '방구석 축제'는 몰래 쓰는 게 핵심이라 전광판에 알리지 않는다
+  if(key !== 'soloFest'){
     await push(roomRef(ROOM, 'item_events'), { type: key, by: playerId, byName: playerName, at: serverNow() });
   }
   renderItemBar();
@@ -1185,20 +1167,6 @@ function handleItemEvents(obj){
         if(!e.byTeam || e.byTeam !== myTeam) return;
         myAnthemNext = 1;
         showItemAlert(`📣 ${who} 님의 응원가! 다음 정답 2배 🔥`);
-      } else if(e.type === 'share'){
-        // 십시일반: 우리 팀 꼴찌(들)를 팀 평균 층수까지 끌어올림 (각자 자기 화면에서 판정)
-        if(!e.byTeam || e.byTeam !== myTeam) return;
-        const mates = allPlayers.filter(p=> p.team === myTeam);
-        if(mates.length < 2) return;
-        const avg = Math.round(mates.reduce((s,p)=> s + (p.floor||0), 0) / mates.length);
-        const minFloor = Math.min(...mates.map(p=> p.floor||0));
-        const myFloor = (allPlayers.find(p=> p.id === playerId)?.floor) || 0;
-        if(myFloor <= minFloor && myFloor < avg){
-          bumpFloor(avg - myFloor);
-          showItemAlert(`🤲 십시일반! 팀 평균 ${avg}${unitLabel()}까지 올라왔어요`);
-        } else if(e.by === playerId){
-          showItemAlert('🤲 십시일반 발동! 뒤처진 팀원을 끌어올렸어요');
-        }
       } else {
         showItemAlert(`${evItem.emoji} ${who} 님이 '${evItem.name}' 사용!`);
       }
