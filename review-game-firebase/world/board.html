@@ -42,6 +42,13 @@
   }
   header h1{ margin:0; font-size:2rem; text-shadow:0 2px 8px rgba(0,0,0,.4); }
   .status{ display:flex; align-items:center; gap:20px; }
+  .bgm-btn{
+    padding:6px 14px; border-radius:999px; font-weight:800; font-size:.85rem;
+    border:1px solid var(--line); background:rgba(255,255,255,.12); color:#fff; cursor:pointer;
+  }
+  .bgm-btn.muted{ opacity:.55; }
+  /* 유튜브 BGM 플레이어: 화면 밖에 두고 소리만 재생 */
+  #ytBgmHost{ position:fixed; left:-9999px; top:0; width:320px; height:180px; pointer-events:none; }
   .pill{ padding:6px 16px; border-radius:999px; font-weight:800; font-size:1rem; }
   .pill.idle{ background:#4a5a7a; }
   .pill.running{ background:#2e9e5b; }
@@ -327,10 +334,13 @@
   <h1>🏯 세계사 탑 오르기</h1>
   <div class="status">
     <span class="items-mode-badge hidden" id="itemsModeBadge"></span>
+    <button class="bgm-btn muted" id="bgmToggle" type="button">🔊 배경음</button>
     <span class="pill idle" id="statusPill">대기중</span>
     <span class="timer" id="timerVal">--:--</span>
   </div>
 </header>
+
+<div id="ytBgmHost" aria-hidden="true"></div>
 
 <div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! 남은 시간 <span id="bonusRemain"></span>초</div>
 <div class="bonus-banner" id="festivalBanner">🌈 <span id="festivalWho"></span>축제! 남은 시간 <span id="festivalRemain"></span>초 · <span id="festivalScope">모두</span> 2배</div>
@@ -520,6 +530,93 @@ function detectOvertakes(players, ranked, effective){
   }
   prevRank = cur; prevRankMode = mode;
 }
+
+// ── 배경음악(BGM): 유튜브 무저작권 브금을 화면 밖 플레이어로 반복 재생 ──
+// 영상: "[중간광고X] 귀여운 소통방송용 브금BGM 3시간" (포아티스트)
+const BGM_VIDEO_ID = 'c4U5kBGrfNc';
+const BGM_MUTE_KEY = 'rg_fb_bgm_muted';
+const BGM_VOLUME = 30;                 // 0~100, 교실 스피커 기준 낮게
+let ytPlayer = null, ytReady = false;
+let bgmStarted = false;
+let bgmMuted = localStorage.getItem(BGM_MUTE_KEY) === '1';
+let userGestured = false;
+
+function loadYouTubeApi(){
+  if(window.YT && window.YT.Player){ onYouTubeIframeAPIReady(); return; }
+  window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+  const s = document.createElement('script');
+  s.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+}
+
+function onYouTubeIframeAPIReady(){
+  ytPlayer = new YT.Player('ytBgmHost', {
+    width: '320', height: '180', videoId: BGM_VIDEO_ID,
+    playerVars: {
+      autoplay: 0, controls: 0, disablekb: 1, fs: 0, modestbranding: 1,
+      playsinline: 1, rel: 0, loop: 1, playlist: BGM_VIDEO_ID,
+    },
+    events: {
+      onReady: () => {
+        ytReady = true;
+        ytPlayer.setVolume(BGM_VOLUME);
+        if(bgmMuted) ytPlayer.mute();
+        updateBgmBtn();
+        if(userGestured) startBgm();
+      },
+      onStateChange: (e) => {
+        // 3시간이라 사실상 안 끝나지만 혹시 끝나면 처음부터 다시
+        if(e.data === YT.PlayerState.ENDED){ ytPlayer.seekTo(0); ytPlayer.playVideo(); }
+      },
+    },
+  });
+}
+
+function updateBgmBtn(){
+  const btn = el('bgmToggle');
+  if(!btn) return;
+  if(!bgmStarted){ btn.textContent = '🔊 배경음'; btn.classList.add('muted'); return; }
+  btn.textContent = bgmMuted ? '🔇 배경음 꺼짐' : '🔊 배경음 켜짐';
+  btn.classList.toggle('muted', bgmMuted);
+}
+
+function startBgm(){
+  if(bgmStarted || !ytReady) return;
+  bgmStarted = true;
+  window.removeEventListener('pointerdown', markGesture);
+  window.removeEventListener('keydown', markGesture);
+  bgmMuted = localStorage.getItem(BGM_MUTE_KEY) === '1';
+  if(bgmMuted) ytPlayer.mute(); else ytPlayer.unMute();
+  ytPlayer.setVolume(BGM_VOLUME);
+  ytPlayer.playVideo();
+  updateBgmBtn();
+}
+
+function setBgmMuted(muted){
+  bgmMuted = muted;
+  localStorage.setItem(BGM_MUTE_KEY, muted ? '1' : '0');
+  if(ytReady){
+    if(muted) ytPlayer.mute();
+    else { ytPlayer.unMute(); ytPlayer.setVolume(BGM_VOLUME); }
+  }
+  updateBgmBtn();
+}
+
+function markGesture(){ userGestured = true; startBgm(); }
+
+{
+  const btn = el('bgmToggle');
+  if(btn) btn.onclick = () => {
+    userGestured = true;
+    if(!bgmStarted) startBgm();
+    else setBgmMuted(!bgmMuted);
+  };
+}
+// 브라우저 자동재생 정책: 화면을 처음 클릭/키 입력하면 자동 시작
+window.addEventListener('pointerdown', markGesture);
+window.addEventListener('keydown', markGesture);
+loadYouTubeApi();
+updateBgmBtn();
 
 function buildBackground(){
   const layer = el('skyLayer');
