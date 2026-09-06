@@ -333,7 +333,7 @@ export function rollItem(opts = {}) {
 
 // '복권' 아이템: 즉시 +3 ~ +10층. +10은 4%, 나머지는 층수가 낮을수록 잘 나온다.
 export function rollLottery() {
-  const table = [[3, 26], [4, 22], [5, 18], [6, 14], [7, 9], [8, 5], [9, 2], [10, 4]];
+  const table = [[3, 24], [4, 21], [5, 17], [6, 13], [7, 9], [8, 7], [9, 5], [10, 4]];
   const total = table.reduce((a, [, w]) => a + w, 0);
   let r = Math.random() * total;
   for (const [v, w] of table) {
