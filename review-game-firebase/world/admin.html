@@ -838,10 +838,17 @@ function fmtSoloTime(ts){
   return `${d.getMonth()+1}/${d.getDate()} ${hh}:${mm}`;
 }
 
+function soloTopicNo(unit){
+  const m = String(unit || '').match(/\d+/);
+  return m ? '주제' + m[0].padStart(2,'0') : String(unit || '').trim();
+}
 function soloRangeLabel(units){
   if(!units || units === 'all') return '전체';
-  if(Array.isArray(units)) return units.length ? units.join(', ') : '전체';
-  return String(units);
+  const arr = Array.isArray(units) ? units : [units];
+  if(!arr.length) return '전체';
+  const labels = [...new Set(arr.map(soloTopicNo))];
+  labels.sort((a,b)=>a.localeCompare(b,'ko',{numeric:true}));
+  return labels.join(', ');
 }
 
 function soloDurLabel(sec){
