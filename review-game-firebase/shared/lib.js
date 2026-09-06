@@ -261,6 +261,7 @@ export const ITEMS = {
   clover:   { emoji: '🍀',  name: '네잎클로버', kind: 'self',    desc: '30초간 정답마다 50%로 +1층 더' },
   magnet:   { emoji: '🧲',  name: '추격',       kind: 'self',    desc: '바로 위 등수와의 층 차이를 절반으로' },
   roulette: { emoji: '🎰',  name: '행운의 룰렛', kind: 'self',    desc: '즉시 -3 ~ +8층 랜덤!' },
+  lottery:  { emoji: '🎫',  name: '복권',      kind: 'self',    desc: '즉시 +3 ~ +10층 랜덤! (+10은 4%)' },
   undo:     { emoji: '🪃',  name: '되돌리기',   kind: 'self',    desc: '방금 틀린 문제를 없던 일로 (오답 -1·연속 복구)' },
   jackpot:  { emoji: '🎲',  name: '인생 한방',  kind: 'self',    desc: '다음 정답 +20층 / 오답 -10층 (개인전·팀전 공통)' },
   snowball: { emoji: '🌀',  name: '눈덩이',    kind: 'self',    desc: '다음 정답에 지금 연속 수만큼 층수 추가' },
@@ -328,6 +329,18 @@ export function rollItem(opts = {}) {
     if (r <= 0) return pool[i];
   }
   return pool[pool.length - 1];
+}
+
+// '복권' 아이템: 즉시 +3 ~ +10층. +10은 4%, 나머지는 층수가 낮을수록 잘 나온다.
+export function rollLottery() {
+  const table = [[3, 26], [4, 22], [5, 18], [6, 14], [7, 9], [8, 5], [9, 2], [10, 4]];
+  const total = table.reduce((a, [, w]) => a + w, 0);
+  let r = Math.random() * total;
+  for (const [v, w] of table) {
+    r -= w;
+    if (r <= 0) return v;
+  }
+  return 3;
 }
 
 // 상위 그룹 크기: 15명 이하면 3명, 그보다 많으면 인원의 20%(최소 3).
