@@ -343,7 +343,7 @@ import {
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   TEAM_OPTIONS, teamInfo, teamStandings, activeBonus,
-  ITEMS, ITEM_FX_MS, rollItem, inTopGroup, inBottomGroup, inLowerHalf, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, choseongHint
+  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inBottomGroup, inLowerHalf, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, choseongHint
 } from '../shared/lib.js';
 
 const ROOM = 'korea';
@@ -944,6 +944,7 @@ function renderItemBar(){
       else if(heldItem === 'vest') desc = `20초간 틀려도 ${u}·연속 유지 (미끄럼틀·강탈 막음)`;
       else if(heldItem === 'clover') desc = `30초간 정답마다 50%로 +1${u} 더`;
       else if(heldItem === 'roulette') desc = `즉시 -3 ~ +8${u} 랜덤!`;
+      else if(heldItem === 'lottery') desc = `즉시 +3 ~ +10${u} 랜덤! (+10은 4%)`;
     }
     bar.innerHTML =
       `<button type="button" class="item-btn" id="useItemBtn">${it.emoji} ${it.name} 사용<small>${desc}</small></button>` +
@@ -1091,6 +1092,11 @@ async function applySelfItem(key){
   else if(key === 'roulette'){
     const d = Math.floor(Math.random() * 12) - 3;   // -3 ~ +8
     showItemAlert(d > 0 ? `🎰 룰렛! +${d}${unitLabel()} 잭팟?! 🎉` : d === 0 ? '🎰 룰렛! 이번엔 꽝…' : `🎰 룰렛! ${d}${unitLabel()}… 아이고`);
+    await bumpFloor(d);
+  }
+  else if(key === 'lottery'){
+    const d = rollLottery();   // +3 ~ +10 (+10은 4%)
+    showItemAlert(d >= 10 ? `🎫 복권 1등 당첨!! +${d}${unitLabel()} 🎉🎉` : d >= 8 ? `🎫 복권 대박! +${d}${unitLabel()} 🎉` : `🎫 복권 당첨! +${d}${unitLabel()}`);
     await bumpFloor(d);
   }
   else if(key === 'undo'){ await applyUndo(); }
