@@ -262,7 +262,7 @@
 
 <script type="module">
 import {
-  roomRef, onValue, push, serverNow,
+  roomRef, onValue, push, update, serverNow,
   isCorrect, computeGain, fmtTime, escapeHtml, shuffle, choseongHint,
   unitsFromQuestions, poolFromQuestions, recencyWeightFn, weightedQueue
 } from '../shared/lib.js';
@@ -276,6 +276,8 @@ let selectedClass = localStorage.getItem(STORAGE_CLASS_KEY) || null;
 let sessionStartedAt = null, sessionUnits = [], sessionDuration = null, sessionOrder = 'random', sessionWeight = 'even';
 let sessionClass = null;
 let soloLogged = false;
+let hintCount = 0;      // 이번 세션에서 초성 힌트를 쓴 문제 수
+let soloLogRef = null;  // 이번 세션의 solo_log 항목 ref (첫 정답/오답 때 생성 후 계속 갱신)
 
 let questionsObj = {};
 let allUnits = [];
@@ -558,6 +560,7 @@ function submitAnswer(){
   el('streakVal').textContent = streak >= 2 ? `🔥 ${streak}연속 정답!` : '';
   if(floor > lastFloor) popFloorBadge();
   lastFloor = floor;
+  syncSoloLog(false);
   flashFeedback(correct, q.answers[0], gain, wasRetry, usedHint);
   playCharacterReaction(correct);
 
@@ -574,32 +577,49 @@ el('answerInput').addEventListener('keydown', e=>{ if(e.key==='Enter') submitAns
 el('hintBtn').onclick = () => {
   if(ended || !currentQuestion || !(currentQuestion.answers||[]).length) return;
   hintUsed = true;
+  hintCount += 1;
   el('hintText').textContent = choseongHint(currentQuestion.answers[0]);
   el('hintBtn').disabled = true;
   el('answerInput').focus();
 };
 
+// 연습 기록을 solo_log에 남긴다.
+// 첫 호출 때 항목을 만들고 그 뒤로는 같은 항목을 갱신하므로,
+// 학생이 제한시간 전에 창을 닫거나 나가도 마지막으로 갱신된 상태가 남는다.
+// final=true 는 정상 종료(제한시간 끝) 또는 확정 이탈을 뜻한다.
+function syncSoloLog(final){
+  if(correctCount + wrongCount === 0) return; // 문제를 하나도 안 푼 세션은 기록하지 않음
+  const name = (el('nameInput').value.trim() || '(이름 없음)').slice(0, 20);
+  const data = {
+    name,
+    cls: sessionClass || null,
+    ts: serverNow(),
+    started_ts: sessionStartedAt || null,
+    end_ts: final ? serverNow() : null,
+    ended: !!final,
+    duration_sec: sessionDuration || null,
+    order: sessionOrder || null,
+    weight: sessionWeight || null,
+    units: (sessionUnits && sessionUnits.length) ? sessionUnits : 'all',
+    floor: floor,
+    correct: correctCount,
+    wrong: wrongCount,
+    hints: hintCount
+  };
+  try{
+    if(soloLogRef) update(soloLogRef, data);
+    else soloLogRef = push(roomRef(ROOM, 'solo_log'), data);
+  }catch(_e){ /* 기록 실패해도 연습에는 지장 없음 */ }
+}
+
 function logSoloSession(){
   if(soloLogged) return;
   soloLogged = true;
-  if(correctCount + wrongCount === 0) return; // 문제를 하나도 안 푼 세션은 기록하지 않음
-  const name = (el('nameInput').value.trim() || '(이름 없음)').slice(0, 20);
-  try{
-    push(roomRef(ROOM, 'solo_log'), {
-      name,
-      cls: sessionClass || null,
-      ts: serverNow(),
-      started_ts: sessionStartedAt || null,
-      duration_sec: sessionDuration || null,
-      order: sessionOrder || null,
-      weight: sessionWeight || null,
-      units: (sessionUnits && sessionUnits.length) ? sessionUnits : 'all',
-      floor: floor,
-      correct: correctCount,
-      wrong: wrongCount
-    });
-  }catch(_e){ /* 기록 실패해도 연습에는 지장 없음 */ }
+  syncSoloLog(true);
 }
+
+// 창을 닫거나 다른 페이지로 이동해도 지금까지의 기록을 남긴다 (best-effort)
+window.addEventListener('pagehide', ()=>{ if(soloLogRef && !soloLogged){ try{ syncSoloLog(true); }catch(_e){} } });
 
 function showEndedView(){
   ended = true;
@@ -656,6 +676,7 @@ el('startBtn').onclick = () => {
   msg.textContent = '';
 
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
+  hintCount = 0; soloLogRef = null;
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
 
   // 이번 세션 정보 기록용으로 저장 (종료 시 선생님 화면으로 보냄)
