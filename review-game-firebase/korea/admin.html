@@ -196,7 +196,7 @@
     <div class="team-standings hidden" id="teamStandingsBox"></div>
     <table>
       <thead>
-        <tr><th class="rank">#</th><th>이름</th><th id="teamTh" class="hidden">팀</th><th id="floorTh">층수</th><th>정답/오답</th><th>정답률</th><th>연속</th><th id="itemTh" class="hidden">아이템</th><th>상태</th><th>관리</th></tr>
+        <tr><th class="rank">#</th><th>이름</th><th id="teamTh" class="hidden">팀</th><th id="floorTh">층수</th><th>정답/오답</th><th>정답률</th><th>연속</th><th id="itemTh" class="hidden">아이템</th><th>관리</th></tr>
       </thead>
       <tbody id="roster"><tr><td colspan="9" class="muted">학생이 아직 없습니다.</td></tr></tbody>
     </table>
@@ -731,7 +731,7 @@ function renderRoster(){
 
   const tbody = el('roster');
   if(!players.length){
-    tbody.innerHTML = `<tr><td colspan="${8 + extraCols}" class="muted">학생이 아직 없습니다.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${7 + extraCols}" class="muted">학생이 아직 없습니다.</td></tr>`;
     return;
   }
   // 관리자가 '팀 변경' 드롭다운을 여는 중이면 목록을 새로 그리지 않는다
@@ -742,8 +742,6 @@ function renderRoster(){
     const total = (p.correct||0)+(p.wrong||0);
     const accuracy = total ? Math.round(100*(p.correct||0)/total) : null;
     const accClass = accuracy===null ? 'muted' : (accuracy>=70 ? 'acc-ok' : 'acc-bad');
-    const idleSec = p.lastActive ? Math.round((serverNow()-p.lastActive)/1000) : null;
-    const status = idleSec!==null && idleSec>20 ? `<span class="muted">${idleSec}초 유휴</span>` : '';
     const nameAttr = escapeHtml(p.name||'').replace(/"/g,'&quot;');
     const tInfo = p.team ? teamInfo(p.team) : null;
     const teamCell = r.team_mode ? `<td>${tInfo ? tInfo.label : '-'}</td>` : '';
@@ -766,7 +764,6 @@ function renderRoster(){
       <td class="${accClass}">${accuracy===null?'-':accuracy+'%'}</td>
       <td>${(p.streak||0)>=2 ? '🔥'+p.streak : (p.streak||0)}</td>
       ${itemCell}
-      <td>${status}</td>
       <td class="manage-cell">${teamSel}<button class="kick-btn" data-id="${p.id}" data-name="${nameAttr}">내보내기</button></td>
     </tr>`;
   }).join('');
