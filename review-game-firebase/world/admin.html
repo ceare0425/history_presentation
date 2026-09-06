@@ -196,7 +196,7 @@
     <div class="team-standings hidden" id="teamStandingsBox"></div>
     <table>
       <thead>
-        <tr><th class="rank">#</th><th>이름</th><th id="teamTh" class="hidden">팀</th><th id="floorTh">층수</th><th>정답/오답</th><th>정답률</th><th>연속</th><th>상태</th><th>관리</th></tr>
+        <tr><th class="rank">#</th><th>이름</th><th id="teamTh" class="hidden">팀</th><th id="floorTh">층수</th><th>정답/오답</th><th>정답률</th><th>연속</th><th id="itemTh" class="hidden">아이템</th><th>상태</th><th>관리</th></tr>
       </thead>
       <tbody id="roster"><tr><td colspan="9" class="muted">학생이 아직 없습니다.</td></tr></tbody>
     </table>
@@ -235,7 +235,7 @@ import {
   roomRef, ref, onValue, get, update, remove, push, db, serverNow,
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, shuffle,
   recencyWeightFn, weightedSample,
-  teamInfo, teamStandings, activeBonus, TEAM_OPTIONS
+  teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS
 } from '../shared/lib.js';
 
 const ROOM = 'world';
@@ -703,6 +703,11 @@ function renderRoster(){
   const floorTh = el('floorTh');
   if(floorTh) floorTh.textContent = unitColLabel();
 
+  const itemsOn = (r.items_mode || itemsModeState) !== 'off';
+  const itemTh = el('itemTh');
+  if(itemTh) itemTh.classList.toggle('hidden', !itemsOn);
+  const extraCols = (r.team_mode ? 1 : 0) + (itemsOn ? 1 : 0);
+
   const teamBox = el('teamStandingsBox');
   const teamTh = el('teamTh');
   if(r.team_mode){
@@ -727,7 +732,7 @@ function renderRoster(){
 
   const tbody = el('roster');
   if(!players.length){
-    tbody.innerHTML = `<tr><td colspan="${r.team_mode?9:8}" class="muted">학생이 아직 없습니다.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${8 + extraCols}" class="muted">학생이 아직 없습니다.</td></tr>`;
     return;
   }
   // 관리자가 '팀 변경' 드롭다운을 여는 중이면 목록을 새로 그리지 않는다
@@ -743,6 +748,10 @@ function renderRoster(){
     const nameAttr = escapeHtml(p.name||'').replace(/"/g,'&quot;');
     const tInfo = p.team ? teamInfo(p.team) : null;
     const teamCell = r.team_mode ? `<td>${tInfo ? tInfo.label : '-'}</td>` : '';
+    const itInfo = (p.item && ITEMS[p.item]) ? ITEMS[p.item] : null;
+    const itemCell = itemsOn
+      ? `<td>${itInfo ? itInfo.emoji + ' ' + escapeHtml(itInfo.name) : '<span class="muted">-</span>'}</td>`
+      : '';
     const teamSel = r.team_mode
       ? `<select class="team-sel" data-id="${p.id}" title="팀 변경"><option value="" disabled${p.team ? '' : ' selected'}>팀?</option>` +
         TEAM_OPTIONS.slice(0, r.team_count || 4).map(t=>
@@ -757,6 +766,7 @@ function renderRoster(){
       <td>${p.correct||0}/${p.wrong||0}</td>
       <td class="${accClass}">${accuracy===null?'-':accuracy+'%'}</td>
       <td>${(p.streak||0)>=2 ? '🔥'+p.streak : (p.streak||0)}</td>
+      ${itemCell}
       <td>${status}</td>
       <td class="manage-cell">${teamSel}<button class="kick-btn" data-id="${p.id}" data-name="${nameAttr}">내보내기</button></td>
     </tr>`;
