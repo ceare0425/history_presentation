@@ -398,7 +398,7 @@ let festivalScopeLabel = '모두';   // 팀전 축제면 해당 팀 이름
 let prevRank = {};            // 지난 렌더 순위: 개인전 playerId→등수 / 팀전 teamKey→등수
 let prevRankMode = '';        // 'solo' | 'team' — 모드 바뀌면 비교 초기화
 let lastOvertakeAt = 0;
-const overtakePairAt = new Map();   // 정렬한 'a|b' → 마지막 알림 시각 (같은 쌍 반복 억제)
+const overtakePairAt = new Map();   // 정렬한 'a|b' → { at:마지막 알림 시각, mover:그때 앞선 쪽 key } (같은 쌍 반복 억제 + 방향 전환 감지)
 const OVERTAKE_GLOBAL_CD = 3000;    // 전체 알림 최소 간격
 const OVERTAKE_PAIR_CD = 12000;     // 같은 두 대상 재알림 최소 간격
 const seenItemEvents = new Set();
@@ -483,7 +483,7 @@ function overtakeToast(text){
 
 // 지난 렌더 대비 순위가 바뀌었으면 "A, B 제쳤다!" 알림. 개인전은 상위 6위 안에서만.
 function detectOvertakes(players, ranked, effective){
-  if(effective !== 'running'){ prevRank = {}; prevRankMode = ''; return; }
+  if(effective !== 'running'){ prevRank = {}; prevRankMode = ''; overtakePairAt.clear(); return; }
   const teamOn = !!roundState.team_mode;
   const mode = teamOn ? 'team' : 'solo';
 
@@ -519,8 +519,14 @@ function detectOvertakes(players, ranked, effective){
     }
     if(best){
       const pk = [best.mover.key, best.passed.key].sort().join('|');
-      if(now - (overtakePairAt.get(pk) || 0) >= OVERTAKE_PAIR_CD){
-        overtakePairAt.set(pk, now);
+      const last = overtakePairAt.get(pk);                        // { at, mover } — 이 쌍의 직전 알림
+      // 직전과 반대 방향으로 다시 앞섰다면(= 순위가 실제로 뒤바뀜) 12초 억제를 건너뛰고
+      // 3초 전체 간격만 두고 바로 알린다. 그래야 순위표는 바뀌었는데 화면엔
+      // 이전 추월 알림만 남아 있는 상황이 생기지 않는다.
+      const reversed = last && last.mover !== best.mover.key;
+      const pairCd = reversed ? OVERTAKE_GLOBAL_CD : OVERTAKE_PAIR_CD;
+      if(!last || now - last.at >= pairCd){
+        overtakePairAt.set(pk, { at: now, mover: best.mover.key });
         lastOvertakeAt = now;
         const note = best.moverRank === 1 ? ' 선두 등극! 👑' : '';
         overtakeToast(`🔥 ${best.mover.name}, ${best.passed.name} 제쳤다!${note}`);
