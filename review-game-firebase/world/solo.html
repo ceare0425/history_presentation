@@ -104,6 +104,10 @@
     display:inline-block; width:3em; height:0.9em; margin:0 .2em -0.15em;
     border-bottom:4px solid var(--sky1); border-radius:2px;
   }
+  .qbox .blank-mark.filled{
+    width:auto; height:auto; margin:0 .12em; padding:0 .12em; vertical-align:baseline;
+    border-bottom-color:var(--bad); color:var(--bad); font-weight:800;
+  }
   .unit-tag{
     display:inline-block; font-size:.8rem; color:#fff; background:var(--sky2); border-radius:6px;
     padding:3px 10px; margin-bottom:.8vh; flex:0 0 auto;
@@ -493,6 +497,14 @@ function playCharacterReaction(correct){
   }, correct ? 750 : 950);
 }
 
+// 오답 시: 문제의 빈칸을 정답으로 채우고 붉게 표시 (다음 문제로 넘어가면 renderQuestion이 초기화)
+function fillBlanksWithAnswer(correctAnswer){
+  el('qText').querySelectorAll('.blank-mark').forEach(bm=>{
+    bm.textContent = correctAnswer;
+    bm.classList.add('filled');
+  });
+}
+
 let feedbackTimer = null;
 function flashFeedback(correct, correctAnswer, gain, wasRetry, usedHint){
   const f = el('feedback');
@@ -503,7 +515,8 @@ function flashFeedback(correct, correctAnswer, gain, wasRetry, usedHint){
     f.textContent = wasRetry ? `🔁 복습 문제 정답! +${gain}층${tail} 🎉` : `정답! +${gain}층${tail} 올라갑니다 🎉`;
   } else {
     f.classList.remove('correct'); f.classList.add('wrong');
-    f.textContent = `아쉬워요! 정답: ${correctAnswer} · 곧 다시 나옵니다`;
+    f.textContent = `아쉬워요! 곧 다시 나옵니다`;
+    fillBlanksWithAnswer(correctAnswer);
   }
   clearTimeout(feedbackTimer);
   feedbackTimer = setTimeout(()=>{ f.classList.remove('show'); }, correct ? 1400 : 2000);
