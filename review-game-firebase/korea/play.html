@@ -945,6 +945,7 @@ function renderItemBar(){
       else if(heldItem === 'clover') desc = `30초간 정답마다 50%로 +1${u} 더`;
       else if(heldItem === 'roulette') desc = `즉시 -3 ~ +8${u} 랜덤!`;
       else if(heldItem === 'lottery') desc = `즉시 +3 ~ +10${u} 랜덤! (+10은 4%)`;
+      else if(heldItem === 'stock') desc = `즉시 -5 ~ +5${u} 랜덤 (등락 확률 균등)`;
     }
     bar.innerHTML =
       `<button type="button" class="item-btn" id="useItemBtn">${it.emoji} ${it.name} 사용<small>${desc}</small></button>` +
@@ -1097,6 +1098,11 @@ async function applySelfItem(key){
   else if(key === 'lottery'){
     const d = rollLottery();   // +3 ~ +10 (+10은 4%)
     showItemAlert(d >= 10 ? `🎫 복권 1등 당첨!! +${d}${unitLabel()} 🎉🎉` : d >= 8 ? `🎫 복권 대박! +${d}${unitLabel()} 🎉` : `🎫 복권 당첨! +${d}${unitLabel()}`);
+    await bumpFloor(d);
+  }
+  else if(key === 'stock'){
+    const d = Math.floor(Math.random() * 11) - 5;   // -5 ~ +5 균등
+    showItemAlert(d > 0 ? `📈 주식 상승! +${d}${unitLabel()} 🤑` : d === 0 ? '📊 주식 보합… 변동 없음' : `📉 주식 폭락… ${d}${unitLabel()} 😭`);
     await bumpFloor(d);
   }
   else if(key === 'undo'){ await applyUndo(); }

@@ -262,6 +262,7 @@ export const ITEMS = {
   magnet:   { emoji: '🧲',  name: '추격',       kind: 'self',    desc: '바로 위 등수와의 층 차이를 절반으로' },
   roulette: { emoji: '🎰',  name: '행운의 룰렛', kind: 'self',    desc: '즉시 -3 ~ +8층 랜덤!' },
   lottery:  { emoji: '🎫',  name: '복권',      kind: 'self',    desc: '즉시 +3 ~ +10층 랜덤! (+10은 4%)' },
+  stock:    { emoji: '📈',  name: '나의 주식',  kind: 'self',    desc: '즉시 -5 ~ +5층 랜덤 (등락 확률 균등)' },
   undo:     { emoji: '🪃',  name: '되돌리기',   kind: 'self',    desc: '방금 틀린 문제를 없던 일로 (오답 -1·연속 복구)' },
   jackpot:  { emoji: '🎲',  name: '인생 한방',  kind: 'self',    desc: '다음 정답 +20층 / 오답 -10층 (개인전·팀전 공통)' },
   snowball: { emoji: '🌀',  name: '눈덩이',    kind: 'self',    desc: '다음 정답에 지금 연속 수만큼 층수 추가' },
