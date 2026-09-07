@@ -632,9 +632,10 @@ async function submitAnswer(){
       const atkBias = (roundState.team_mode && itemsMode === 'spicy') ? teamAttackBias(allPlayers, myTeam) : 0;
       // 개인전 하위권: '방구석 축제'(혼자 30초 2배)를 뽑을 수 있게
       const canComeback = !roundState.team_mode && inBottomGroup(allPlayers, playerId);
-      // '인생 한방'은 중하위권일수록 더 자주 (하위권이면 더더욱)
-      const jackpotTier = inBottomGroup(allPlayers, playerId) ? 2 : inLowerHalf(allPlayers, playerId) ? 1 : 0;
-      heldItem = rollItem({ mode: itemsMode, canAttack, attackBias: atkBias, canComeback, jackpotTier, teamMode: roundState.team_mode });
+      // '인생 한방'은 하위 50%(중하위권)부터만 등장, 진짜 하위권일수록 더 자주
+      const canJackpot = inLowerHalf(allPlayers, playerId);
+      const jackpotTier = inBottomGroup(allPlayers, playerId) ? 2 : canJackpot ? 1 : 0;
+      heldItem = rollItem({ mode: itemsMode, canAttack, attackBias: atkBias, canComeback, canJackpot, jackpotTier, teamMode: roundState.team_mode });
     }
   } else {
     p.wrong = (p.wrong||0) + 1;
@@ -1166,8 +1167,9 @@ async function useItem(){
     const canAttack = itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId));
     const atkBias = (roundState.team_mode && itemsMode === 'spicy') ? teamAttackBias(allPlayers, myTeam) : 0;
     const canComeback = !roundState.team_mode && inBottomGroup(allPlayers, playerId);
-    const jackpotTier = inBottomGroup(allPlayers, playerId) ? 2 : inLowerHalf(allPlayers, playerId) ? 1 : 0;
-    const rolled = rollItem({ mode: itemsMode, canAttack, attackBias: atkBias, canComeback, jackpotTier, teamMode: roundState.team_mode, noRandombox: true });
+    const canJackpot = inLowerHalf(allPlayers, playerId);
+    const jackpotTier = inBottomGroup(allPlayers, playerId) ? 2 : canJackpot ? 1 : 0;
+    const rolled = rollItem({ mode: itemsMode, canAttack, attackBias: atkBias, canComeback, canJackpot, jackpotTier, teamMode: roundState.team_mode, noRandombox: true });
     if(!rolled){ renderItemBar(); showItemAlert('🎁 랜덤박스가 비었어요…'); return; }
     heldItem = rolled;
     renderItemBar();
