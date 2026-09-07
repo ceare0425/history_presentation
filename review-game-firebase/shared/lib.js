@@ -300,7 +300,7 @@ export const ITEM_FX_MS = {
 // 이번 판에서 뽑을 수 있는 아이템 key 목록. opts:
 //   mode        : 'mild' | 'spicy'
 //   canAttack   : 방해(attack) 아이템 후보 포함 (매운맛 + 뽑는 사람이 상위권이 아닐 때)
-//   canComeback : '방구석 축제' 포함 (개인전 하위권)
+//   canComeback : '방구석 축제' 포함 (개인전 하위권). 하위권은 방해를 안 받으므로 '해독'은 제외된다.
 //   canJackpot  : '인생 한방' 포함 (하위 50%=중하위권 이하일 때만)
 //   teamMode    : 팀전 여부 — '추격'은 개인전만, '팀 응원가'는 팀전만
 //   teamLeader  : 팀전 1등 팀 — 견제(attack)·전체(global: 축제·응원가) 아이템 제외, 개인 향상만
@@ -313,6 +313,7 @@ export function itemPool(opts = {}) {
       if (it.kind === 'global') return (k === 'anthem' ? teamMode : true) && !teamLeader;
       if (it.kind === 'comeback') return canComeback;
       if (k === 'jackpot') return !!opts.canJackpot;     // '인생 한방'은 중하위권 이하만
+      if (k === 'cure') return !canComeback;             // '해독'은 하위권에겐 안 뜸 (방해는 선두권만 걸리므로 쓸모없음)
       if (k === 'mirror') return mode === 'spicy';
       if (k === 'magnet') return !teamMode;
       if (k === 'randombox') return !opts.noRandombox;   // '랜덤박스' 재추첨 땐 제외
