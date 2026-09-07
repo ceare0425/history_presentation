@@ -628,8 +628,8 @@ async function submitAnswer(){
     if(itemsOn() && !heldItem && p.streak > 0 && p.streak % 3 === 0){
       // 팀전에서는 공격 아이템이 상대 팀을 노리므로 상위권도 뽑을 수 있다
       const canAttack = itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId));
-      // 팀전 매운맛: 우리 팀이 선두 팀에 크게 뒤처졌으면 견제 아이템이 더 자주 나오게 가중
-      const atkBias = (roundState.team_mode && itemsMode === 'spicy') ? teamAttackBias(allPlayers, myTeam) : 0;
+      // 팀전: 선두와 격차·순위로 '뒤처진 정도' 0~1 (매운맛이면 견제, 그리고 🌈축제 가중치에 쓰임)
+      const atkBias = roundState.team_mode ? teamAttackBias(allPlayers, myTeam) : 0;
       // 하위권(개인전·팀전 무관, 팀 순위와도 무관): '방구석 축제'(혼자 30초 2배)를 뽑을 수 있게
       const canComeback = inBottomGroup(allPlayers, playerId);
       // '인생 한방'은 하위 50%(중하위권)부터만 등장, 진짜 하위권일수록 더 자주
@@ -1167,7 +1167,7 @@ async function useItem(){
     heldItem = null;
     await update(roomRef(ROOM, 'players', playerId), { item: null, name: playerName, lastActive: serverNow() });
     const canAttack = itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId));
-    const atkBias = (roundState.team_mode && itemsMode === 'spicy') ? teamAttackBias(allPlayers, myTeam) : 0;
+    const atkBias = roundState.team_mode ? teamAttackBias(allPlayers, myTeam) : 0;   // 팀전 '뒤처진 정도' (견제 + 🌈축제 가중)
     const canComeback = inBottomGroup(allPlayers, playerId);   // 하위권이면 팀전에서도
     const canJackpot = inLowerHalf(allPlayers, playerId);
     const jackpotTier = inBottomGroup(allPlayers, playerId) ? 2 : canJackpot ? 1 : 0;

@@ -322,6 +322,7 @@ export function itemPool(opts = {}) {
 }
 
 // opts.attackBias(0~1): 클수록 방해(attack) 아이템이 뽑힐 확률이 올라간다. 0이면 균등 추첨.
+//   팀전에서는 이 값이 '뒤처진 정도'라, 팀전이면 '🌈축제' 가중치도 같이 올린다(하위권 팀일수록 축제 자주).
 // opts.jackpotTier(0|1|2): '인생 한방' 가중치 — 1=중하위권(4배), 2=하위권(6배).
 //   ('인생 한방'은 opts.canJackpot 일 때만 풀에 들어오므로 실제로는 tier 1·2에서만 쓰임)
 // comeback 아이템('방구석 축제')은 가중치 8배 — 하위권에게 자주 나오도록.
@@ -330,10 +331,12 @@ export function rollItem(opts = {}) {
   if (!pool.length) return null;
   const bias = opts.attackBias || 0;
   const aw = bias > 0 ? 1 + 8 * Math.min(1, bias) : 1;   // 견제 아이템 가중치 최대 9배
+  const fw = opts.teamMode && bias > 0 ? 1 + 5 * Math.min(1, bias) : 1;   // 팀전 '🌈축제' 최대 6배
   const jw = opts.jackpotTier === 2 ? 6 : opts.jackpotTier === 1 ? 4 : 1;   // '인생 한방'
   const weights = pool.map((k) => {
     const kind = ITEMS[k] && ITEMS[k].kind;
     if (k === 'jackpot') return jw;
+    if (k === 'festival') return fw;
     if (kind === 'attack') return aw;
     if (kind === 'comeback') return 8;
     return 1;
