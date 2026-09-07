@@ -324,7 +324,7 @@ export function itemPool(opts = {}) {
 // opts.attackBias(0~1): 클수록 방해(attack) 아이템이 뽑힐 확률이 올라간다. 0이면 균등 추첨.
 // opts.jackpotTier(0|1|2): '인생 한방' 가중치 — 1=중하위권(4배), 2=하위권(6배).
 //   ('인생 한방'은 opts.canJackpot 일 때만 풀에 들어오므로 실제로는 tier 1·2에서만 쓰임)
-// comeback 아이템은 가중치 3배로 잘 뜬다.
+// comeback 아이템('방구석 축제')은 가중치 8배 — 하위권에게 자주 나오도록.
 export function rollItem(opts = {}) {
   const pool = itemPool(opts);
   if (!pool.length) return null;
@@ -335,7 +335,7 @@ export function rollItem(opts = {}) {
     const kind = ITEMS[k] && ITEMS[k].kind;
     if (k === 'jackpot') return jw;
     if (kind === 'attack') return aw;
-    if (kind === 'comeback') return 3;
+    if (kind === 'comeback') return 8;
     return 1;
   });
   let r = Math.random() * weights.reduce((a, b) => a + b, 0);
