@@ -216,10 +216,15 @@ export function pickTargetTeam(players, myTeam) {
   return rivals.length ? rivals[0].team : null;
 }
 
-// 팀전(매운맛): 내 팀이 선두 팀에 뒤처진 정도로 '견제 아이템 가중치' 0~1을 돌려준다.
-// 선두 팀이거나 1인당 평균 격차가 4층 이내면 0, 격차가 벌어질수록 1에 근접 → rollItem이 방해 아이템을 더 자주 뽑음.
+// 내 팀이 현재 선두(1등) 팀인지 (팀이 2개 이상일 때만 의미 있음).
+export function isTeamLeader(players, myTeam) {
+  if (!myTeam) return false;
+  const st = teamStandings(players).filter((s) => s.members > 0);
+  return st.length >= 2 && st[0].team === myTeam;
+}
+
 // 팀전 매운맛에서 '선두 팀 견제' 아이템이 얼마나 자주 나올지(0~1).
-// 선두와의 1인당 평균 층수 격차가 클수록 ↑, 그리고 우리 팀 순위가 뒤(3·4등)일수록 ↑.
+// 선두와의 1인당 평균 층수 격차가 클수록 ↑, 그리고 우리 팀 순위가 뒤(3·4등)일수록 ↑. 선두 팀은 0.
 export function teamAttackBias(players, myTeam) {
   if (!myTeam) return 0;
   const st = teamStandings(players).filter((s) => s.members > 0);
@@ -298,17 +303,18 @@ export const ITEM_FX_MS = {
 //   canComeback : '방구석 축제' 포함 (개인전 하위권)
 //   canJackpot  : '인생 한방' 포함 (하위 50%=중하위권 이하일 때만)
 //   teamMode    : 팀전 여부 — '추격'은 개인전만, '팀 응원가'는 팀전만
+//   teamLeader  : 팀전 1등 팀 — 견제(attack)·전체(global: 축제·응원가) 아이템 제외, 개인 향상만
 // 그리고 '반사경'은 견제가 있는 매운맛에서만 나온다.
 export function itemPool(opts = {}) {
-  const { mode = 'mild', canAttack = false, canComeback = false, teamMode = false } = opts;
+  const { mode = 'mild', canAttack = false, canComeback = false, teamMode = false, teamLeader = false } = opts;
   return Object.entries(ITEMS)
     .filter(([k, it]) => {
-      if (it.kind === 'attack') return mode === 'spicy' && canAttack;
+      if (it.kind === 'attack') return mode === 'spicy' && canAttack && !teamLeader;
+      if (it.kind === 'global') return (k === 'anthem' ? teamMode : true) && !teamLeader;
       if (it.kind === 'comeback') return canComeback;
       if (k === 'jackpot') return !!opts.canJackpot;     // '인생 한방'은 중하위권 이하만
       if (k === 'mirror') return mode === 'spicy';
       if (k === 'magnet') return !teamMode;
-      if (k === 'anthem') return teamMode;
       if (k === 'randombox') return !opts.noRandombox;   // '랜덤박스' 재추첨 땐 제외
       return true;
     })
