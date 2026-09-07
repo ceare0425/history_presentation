@@ -148,6 +148,7 @@
 
   .hint-row{ display:flex; align-items:center; gap:10px; margin-top:8px; flex:0 0 auto; min-height:2.2em; }
   .hint-row button{ width:auto; flex:0 0 auto; padding:8px 14px; font-size:.9rem; }
+  .hint-row #endPracticeBtn{ margin-left:auto; background:#c96f5b; }
   .hint-text{ font-size:1.2rem; font-weight:800; letter-spacing:.18em; color:var(--sky1); }
 
   .floor-badge{ transition:transform .15s ease; }
@@ -246,6 +247,7 @@
     <div class="hint-row">
       <button type="button" id="hintBtn" class="secondary">💡 힌트 (초성)</button>
       <span class="hint-text" id="hintText"></span>
+      <button type="button" id="endPracticeBtn" class="secondary">■ 연습 종료</button>
     </div>
   </div>
 
@@ -581,6 +583,15 @@ el('hintBtn').onclick = () => {
   el('hintText').textContent = choseongHint(currentQuestion.answers[0]);
   el('hintBtn').disabled = true;
   el('answerInput').focus();
+};
+
+// 제한 시간이 남았어도 학생이 직접 연습을 끝낼 수 있다.
+// showEndedView() → syncSoloLog(true) 가 end_ts 를 지금 시각으로 남기므로
+// 선생님 화면에는 '중단'이 아니라 버튼을 누른 시각이 종료 시각으로 표시된다.
+el('endPracticeBtn').onclick = () => {
+  if(ended) return;
+  if(!confirm('연습을 종료할까요? 지금까지의 기록이 선생님 화면에 저장됩니다.')) return;
+  showEndedView();
 };
 
 // 연습 기록을 solo_log에 남긴다.
