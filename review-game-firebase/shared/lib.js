@@ -291,6 +291,7 @@ export const ITEM_FX_MS = {
 //   mode        : 'mild' | 'spicy'
 //   canAttack   : 방해(attack) 아이템 후보 포함 (매운맛 + 뽑는 사람이 상위권이 아닐 때)
 //   canComeback : '방구석 축제' 포함 (개인전 하위권)
+//   canJackpot  : '인생 한방' 포함 (하위 50%=중하위권 이하일 때만)
 //   teamMode    : 팀전 여부 — '추격'은 개인전만, '팀 응원가'는 팀전만
 // 그리고 '반사경'은 견제가 있는 매운맛에서만 나온다.
 export function itemPool(opts = {}) {
@@ -299,6 +300,7 @@ export function itemPool(opts = {}) {
     .filter(([k, it]) => {
       if (it.kind === 'attack') return mode === 'spicy' && canAttack;
       if (it.kind === 'comeback') return canComeback;
+      if (k === 'jackpot') return !!opts.canJackpot;     // '인생 한방'은 중하위권 이하만
       if (k === 'mirror') return mode === 'spicy';
       if (k === 'magnet') return !teamMode;
       if (k === 'anthem') return teamMode;
@@ -310,6 +312,7 @@ export function itemPool(opts = {}) {
 
 // opts.attackBias(0~1): 클수록 방해(attack) 아이템이 뽑힐 확률이 올라간다. 0이면 균등 추첨.
 // opts.jackpotTier(0|1|2): '인생 한방' 가중치 — 1=중하위권(4배), 2=하위권(6배).
+//   ('인생 한방'은 opts.canJackpot 일 때만 풀에 들어오므로 실제로는 tier 1·2에서만 쓰임)
 // comeback 아이템은 가중치 3배로 잘 뜬다.
 export function rollItem(opts = {}) {
   const pool = itemPool(opts);
