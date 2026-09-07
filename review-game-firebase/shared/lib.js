@@ -284,7 +284,7 @@ export const ITEMS = {
   anthem:   { emoji: '📣',  name: '팀 응원가',  kind: 'global',  desc: '우리 팀 전원 다음 정답 1개 2배' },
   soloFest: { emoji: '🛋️',  name: '방구석 축제', kind: 'comeback', desc: '30초간 나만 2배' },
   fog:      { emoji: '🌫️',  name: '안개',      kind: 'attack',  desc: '선두권 문제 화면이 8초간 흐려짐' },
-  ice:      { emoji: '🧊',  name: '얼음',      kind: 'attack',  desc: '선두권이 5초간 제출 불가' },
+  ice:      { emoji: '🧊',  name: '얼음',      kind: 'attack',  desc: '선두권이 8초간 제출 불가' },
   snail:    { emoji: '🐌',  name: '느림보',    kind: 'attack',  desc: '선두권 다음 정답이 +1층만' },
   slide:    { emoji: '⬇️',  name: '미끄럼틀',  kind: 'attack',  desc: '선두권 -3층 (2등 층수 아래로는 안 내려감)' },
   steal:    { emoji: '🥷',  name: '강탈',      kind: 'attack',  desc: '선두권 -4층, 나 +4층 (팀전은 상대 팀 전원 -2)' },
@@ -292,8 +292,8 @@ export const ITEMS = {
 
 // 매운맛(spicy)에서는 방해 효과가 더 오래/세게 간다.
 export const ITEM_FX_MS = {
-  fog: 8000, ice: 5000, festival: 20000, immunity: 8000,
-  fogSpicy: 10000, iceSpicy: 7000, immunitySpicy: 4000,
+  fog: 8000, ice: 8000, festival: 20000, immunity: 8000,
+  fogSpicy: 10000, iceSpicy: 10000, immunitySpicy: 4000,
   soloFest: 30000, clover: 30000, mirror: 15000, vest: 20000,
 };
 
