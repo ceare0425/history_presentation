@@ -969,11 +969,11 @@ function renderItemBar(){
 
 // 아이템 사용 알림은 '해당 문제가 끝날 때까지' 유지되고, 문제가 바뀌면(renderQuestion) 사라진다.
 // (축제는 예외 — 아래 tick()의 festivalBanner가 남은 시간과 함께 효과 지속 동안 계속 표시)
-function showItemAlert(msg){
+function showItemAlert(msg, isHtml){
   const a = el('itemAlert');
   if(!a) return;
   clearTimeout(itemAlertTimer);
-  a.textContent = msg;
+  if(isHtml) a.innerHTML = msg; else a.textContent = msg;  // isHtml은 고정 문자열에만 사용 (플레이어 이름 등 입력값 금지)
   a.classList.add('show');
 }
 function clearItemAlert(){
@@ -1102,8 +1102,16 @@ async function applySelfItem(key){
   }
   else if(key === 'stock'){
     const d = Math.floor(Math.random() * 11) - 5;   // -5 ~ +5 균등
-    // 그래프 이모지(📈/📉)는 플랫폼마다 색이 뒤집혀서, 색이 고정된 원을 앞에 붙여 한국식 상승=빨강·하락=파랑을 확실히 표시
-    showItemAlert(d > 0 ? `🔴📈 주식 상승! +${d}${unitLabel()} 🤑` : d === 0 ? '⚪ 주식 보합… 변동 없음' : `🔵📉 주식 폭락… ${d}${unitLabel()} 😭`);
+    // Windows·삼성에서 📈는 파란 상승선, 📉는 빨간 하락선으로 그려진다.
+    // 한국식(상승=빨강·하락=파랑)에 맞추려고 색이 반대인 아이콘을 좌우반전(scaleX(-1))해서 씀:
+    //   상승 → 빨간 📉를 뒤집어 위로 향하게, 폭락 → 파란 📈를 뒤집어 아래로 향하게.
+    const f = '<span style="display:inline-block;transform:scaleX(-1)">';
+    showItemAlert(
+      d > 0 ? `${f}📉</span> 주식 상승! +${d}${unitLabel()} 🤑`
+      : d === 0 ? '⚪ 주식 보합… 변동 없음'
+      : `${f}📈</span> 주식 폭락… ${d}${unitLabel()} 😭`,
+      true
+    );
     await bumpFloor(d);
   }
   else if(key === 'undo'){ await applyUndo(); }
