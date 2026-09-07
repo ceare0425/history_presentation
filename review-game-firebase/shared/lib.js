@@ -218,17 +218,22 @@ export function pickTargetTeam(players, myTeam) {
 
 // 팀전(매운맛): 내 팀이 선두 팀에 뒤처진 정도로 '견제 아이템 가중치' 0~1을 돌려준다.
 // 선두 팀이거나 1인당 평균 격차가 4층 이내면 0, 격차가 벌어질수록 1에 근접 → rollItem이 방해 아이템을 더 자주 뽑음.
+// 팀전 매운맛에서 '선두 팀 견제' 아이템이 얼마나 자주 나올지(0~1).
+// 선두와의 1인당 평균 층수 격차가 클수록 ↑, 그리고 우리 팀 순위가 뒤(3·4등)일수록 ↑.
 export function teamAttackBias(players, myTeam) {
   if (!myTeam) return 0;
   const st = teamStandings(players).filter((s) => s.members > 0);
   if (st.length < 2) return 0;
   const avg = (s) => (s.members ? (s.floor || 0) / s.members : 0);
-  const lead = st.slice().sort((a, b) => avg(b) - avg(a))[0];
-  const mine = st.find((s) => s.team === myTeam);
-  if (!mine || mine.team === lead.team) return 0;
-  const gap = avg(lead) - avg(mine);       // 1인당 평균 층수 차이
-  if (gap <= 4) return 0;
-  return Math.min(1, (gap - 4) / 12);      // 4층 차이=0, 16층 차이 이상=1
+  const ranked = st.slice().sort((a, b) => avg(b) - avg(a));
+  const myRank = ranked.findIndex((s) => s.team === myTeam);   // 0 = 선두
+  if (myRank <= 0) return 0;                                    // 선두 팀은 견제 가중 없음
+  const gap = avg(ranked[0]) - avg(ranked[myRank]);            // 선두와의 1인당 평균 층수 차이
+  if (gap <= 2) return 0;
+  const gapFactor = Math.min(1, (gap - 2) / 10);              // 2층=0, 12층 이상=1
+  // 순위가 뒤일수록 더 강하게: 2등=0.5, 최하위=1.0 (팀이 2개면 그냥 1.0)
+  const rankFactor = ranked.length > 2 ? 0.5 + 0.5 * (myRank - 1) / (ranked.length - 2) : 1;
+  return gapFactor * rankFactor;
 }
 
 // ── 역전 이벤트(2배 찬스) ──
@@ -318,7 +323,7 @@ export function rollItem(opts = {}) {
   const pool = itemPool(opts);
   if (!pool.length) return null;
   const bias = opts.attackBias || 0;
-  const aw = bias > 0 ? 1 + 6 * Math.min(1, bias) : 1;   // 견제 아이템 가중치 최대 7배
+  const aw = bias > 0 ? 1 + 8 * Math.min(1, bias) : 1;   // 견제 아이템 가중치 최대 9배
   const jw = opts.jackpotTier === 2 ? 6 : opts.jackpotTier === 1 ? 4 : 1;   // '인생 한방'
   const weights = pool.map((k) => {
     const kind = ITEMS[k] && ITEMS[k].kind;
