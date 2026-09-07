@@ -343,7 +343,7 @@ import {
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   TEAM_OPTIONS, teamInfo, teamStandings, activeBonus,
-  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inBottomGroup, inLowerHalf, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, choseongHint
+  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inBottomGroup, inLowerHalf, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader, choseongHint
 } from '../shared/lib.js';
 
 const ROOM = 'korea';
@@ -635,7 +635,9 @@ async function submitAnswer(){
       // '인생 한방'은 하위 50%(중하위권)부터만 등장, 진짜 하위권일수록 더 자주
       const canJackpot = inLowerHalf(allPlayers, playerId);
       const jackpotTier = inBottomGroup(allPlayers, playerId) ? 2 : canJackpot ? 1 : 0;
-      heldItem = rollItem({ mode: itemsMode, canAttack, attackBias: atkBias, canComeback, canJackpot, jackpotTier, teamMode: roundState.team_mode });
+      // 팀전 1등 팀: 견제·전체(축제·응원가) 아이템 제외, 개인 향상만
+      const teamLeader = roundState.team_mode && isTeamLeader(allPlayers, myTeam);
+      heldItem = rollItem({ mode: itemsMode, canAttack, attackBias: atkBias, canComeback, canJackpot, jackpotTier, teamMode: roundState.team_mode, teamLeader });
     }
   } else {
     p.wrong = (p.wrong||0) + 1;
@@ -1169,7 +1171,8 @@ async function useItem(){
     const canComeback = !roundState.team_mode && inBottomGroup(allPlayers, playerId);
     const canJackpot = inLowerHalf(allPlayers, playerId);
     const jackpotTier = inBottomGroup(allPlayers, playerId) ? 2 : canJackpot ? 1 : 0;
-    const rolled = rollItem({ mode: itemsMode, canAttack, attackBias: atkBias, canComeback, canJackpot, jackpotTier, teamMode: roundState.team_mode, noRandombox: true });
+    const teamLeader = roundState.team_mode && isTeamLeader(allPlayers, myTeam);
+    const rolled = rollItem({ mode: itemsMode, canAttack, attackBias: atkBias, canComeback, canJackpot, jackpotTier, teamMode: roundState.team_mode, teamLeader, noRandombox: true });
     if(!rolled){ renderItemBar(); showItemAlert('🎁 랜덤박스가 비었어요…'); return; }
     heldItem = rolled;
     renderItemBar();
