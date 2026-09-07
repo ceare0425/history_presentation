@@ -1102,7 +1102,8 @@ async function applySelfItem(key){
   }
   else if(key === 'stock'){
     const d = Math.floor(Math.random() * 11) - 5;   // -5 ~ +5 균등
-    showItemAlert(d > 0 ? `📈 주식 상승! +${d}${unitLabel()} 🤑` : d === 0 ? '📊 주식 보합… 변동 없음' : `📉 주식 폭락… ${d}${unitLabel()} 😭`);
+    // 한국식: 상승=빨강 🔴 / 하락=파랑 🔵 (이모지 차트 아이콘은 플랫폼마다 색이 뒤집혀서 색 확실한 원 사용)
+    showItemAlert(d > 0 ? `🔴 주식 상승! +${d}${unitLabel()} 🤑` : d === 0 ? '⚪ 주식 보합… 변동 없음' : `🔵 주식 폭락… ${d}${unitLabel()} 😭`);
     await bumpFloor(d);
   }
   else if(key === 'undo'){ await applyUndo(); }
