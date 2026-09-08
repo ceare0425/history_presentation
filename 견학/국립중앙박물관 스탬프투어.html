@@ -109,6 +109,15 @@
   .opt.wrong{border-color:var(--seal);background:#F8EAE9}
   .step .txt{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:.5rem .6rem;font-family:inherit;font-size:.9rem;background:#fff;resize:vertical;min-height:2.4em}
   .step .txt:focus{outline:none;border-color:var(--accent)}
+  .step.rejected{border-color:var(--seal);background:#FBECEA}
+  /* 반려 알림 모달 */
+  .rejmodal{position:fixed;inset:0;z-index:300;background:rgba(30,15,10,.55);display:flex;align-items:center;justify-content:center;padding:22px}
+  .rejmodal .box{background:#fff;border-radius:16px;max-width:360px;width:100%;padding:1.3rem 1.2rem;box-shadow:0 20px 50px rgba(0,0,0,.4);border-top:5px solid var(--seal)}
+  .rejmodal h3{font-family:'Nanum Myeongjo',serif;color:var(--seal);font-size:1.1rem;margin-bottom:.5rem}
+  .rejmodal p.sub{font-size:.83rem;color:var(--ink-sec);margin-bottom:.8rem}
+  .rejrow{border:1px solid var(--line);border-radius:9px;padding:.55rem .65rem;margin-bottom:.5rem;font-size:.9rem}
+  .rejwhy{margin-top:.25rem;font-size:.82rem;color:var(--seal)}
+  .rejmodal .ok{margin-top:.4rem;width:100%;border:none;border-radius:10px;padding:.75rem;background:var(--seal);color:#fff;font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1rem;cursor:pointer}
   .checkline{display:flex;align-items:center;gap:.55rem;font-size:.9rem;cursor:pointer}
   .checkline input{width:19px;height:19px;accent-color:var(--main);flex:none}
   .upl{display:flex;flex-direction:column;gap:.4rem}
@@ -160,6 +169,15 @@
 <body>
 
 <div id="errbox" style="display:none;position:fixed;inset:0;z-index:9999;background:#7A1F1A;color:#fff;padding:22px;font:13px/1.6 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow:auto"></div>
+
+<div class="rejmodal" id="rejModal" hidden>
+  <div class="box">
+    <h3>📸 사진을 다시 찍어야 해요</h3>
+    <p class="sub">선생님이 아래 유물 사진을 반려했어요. 실물 앞에서 다시 찍어 올려 주세요. (해당 유물 스탬프는 다시 잠겼어요)</p>
+    <div id="rejBody"></div>
+    <button class="ok" id="rejOk">확인 · 해당 유물로 이동</button>
+  </div>
+</div>
 <script>
 /* 모듈 스크립트가 에러로 멈추면 화면에 표시 (원인 파악용) */
 (function(){
@@ -250,11 +268,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v16</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v17</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v16");
+DBG("모듈 시작 v17");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -276,7 +294,7 @@ Promise.all([
     db: dbm.getDatabase(app), ref: dbm.ref, set: dbm.set, get: dbm.get, onValue: dbm.onValue,
     st: sm.getStorage(app), sRef: sm.ref, sPut: sm.uploadString, sUrl: sm.getDownloadURL,
   };
-  try { paintSync(); if (state.ident) { flushSync(); retryPhotos(); } } catch (e) {}
+  try { paintSync(); if (state.ident) { flushSync(); retryPhotos(); watchReviews(); } } catch (e) {}
 }).catch(() => { FB = null; });
 
 const TOUR = (new URLSearchParams(location.search).get("tour") || "default").replace(/[.#$\[\]\/]/g, "");
@@ -530,9 +548,9 @@ function downscale(file, maxPx, quality){
 async function handlePhoto(itemId, file, onState){
   onState("사진 처리 중…", "");
   let dataUrl;
-  try { dataUrl = await downscale(file, 1024, 0.72); }
+  try { dataUrl = await downscale(file, 900, 0.7); }
   catch (e) { onState("사진을 읽지 못했어요. 다시 시도.", "no"); return; }
-  state.photos[itemId] = { data: dataUrl, uploaded: false, at: Date.now() };
+  state.photos[itemId] = { data: dataUrl, uploaded: false, at: Date.now() };  // rejected 플래그 없이 새로 시작
   persist();
   onState("사진 확인됨 · 업로드 중…", "");
   refreshCardById(itemId);
@@ -563,6 +581,60 @@ function retryPhotos(){
   });
 }
 function refreshCardById(id){ try { refreshCard(id); } catch (e) {} }
+function rerenderCard(id){
+  const card = document.getElementById("card-" + id);
+  if (!card) return;
+  const sw = card.querySelector(".steps");
+  const it = ALL.find(x => x.id === id);
+  if (!sw || !it) return;
+  sw.innerHTML = "";
+  it.steps.forEach((st, i) => sw.appendChild(renderStep(it, st, i)));
+  refreshCard(id);
+}
+
+/* ══════════ 교사의 사진 반려/승인 반영 ══════════ */
+let reviewSub = null;
+function watchReviews(){
+  if (!FB || !FB.onValue || !state.ident || reviewSub) return;
+  try {
+    reviewSub = FB.onValue(FB.ref(FB.db, `museum/${TOUR}/reviews/${sid()}`), snap => {
+      try { handleReviews(snap.val() || {}); } catch (e) {}
+    });
+  } catch (e) {}
+}
+function handleReviews(map){
+  const changed = [], newlyRejected = [];
+  Object.keys(map).forEach(id => {
+    const rv = map[id], p = state.photos[id];
+    if (!p) return;
+    const active = rv && rv.status === "rejected" && Number(rv.photoAt || 0) === Number(p.at || 0);
+    if (active && !p.rejected){
+      p.rejected = true; p.rejectReason = rv.reason || "";
+      if (state.stamps[id]) delete state.stamps[id];
+      changed.push(id); newlyRejected.push(id);
+    } else if (!active && p.rejected){
+      p.rejected = false; delete p.rejectReason;
+      changed.push(id);
+    }
+  });
+  if (!changed.length) return;
+  persist();
+  changed.forEach(rerenderCard);
+  refreshProgress();
+  if (newlyRejected.length) showRejectModal(newlyRejected);
+}
+function showRejectModal(ids){
+  const m = document.getElementById("rejModal");
+  const body = document.getElementById("rejBody");
+  body.innerHTML = ids.map(id => {
+    const it = ALL.find(x => x.id === id);
+    const p = state.photos[id] || {};
+    return `<div class="rejrow"><b>${it ? it.emoji + " " + it.nm : id}</b>` +
+      (p.rejectReason ? `<div class="rejwhy">“${p.rejectReason}”</div>` : "") + `</div>`;
+  }).join("");
+  m.hidden = false;
+  m._first = ids[0];
+}
 
 /* ══════════ 동기화 (Firebase) ══════════ */
 let syncTimer = null, lastSyncOk = null;
@@ -577,15 +649,17 @@ async function flushSync(){
   const i = state.ident;
   const answers = {};
   for (const [k, v] of Object.entries(state.steps)) if (typeof v === "string") answers[k] = v.slice(0, 200);
-  const photos = {};
-  for (const [id, p] of Object.entries(state.photos || {})) if (p && p.uploaded && p.url) photos[id] = p.url;
+  const photos = {}, photoAt = {};
+  for (const [id, p] of Object.entries(state.photos || {})) {
+    if (p && p.uploaded && p.url) { photos[id] = p.url; photoAt[id] = p.at || 0; }
+  }
   const payload = {
     name: i.name, grade: i.grade, cls: `${i.grade}-${i.cls}`, num: i.num, avatar: i.avatar || "",
     startedAt: state.startedAt || Date.now(), updatedAt: Date.now(),
     stampCount: count(), stepDone: stepsDone(), stepTotal: STEP_TOTAL,
     done: count() >= TOTAL,
     stamps: state.stamps || {}, steps: state.steps || {}, answers,
-    photos, photoCount: Object.keys(photos).length,
+    photos, photoAt, photoCount: Object.keys(photos).length,
     mvp: state.mvp || "", review: (state.review || "").slice(0, 500),
   };
   try {
@@ -605,7 +679,7 @@ function paintSync(){
 /* ══════════ 진행 계산 ══════════ */
 function stepDone(it, idx){
   const k = it.steps[idx].k;
-  if (k === "upload"){ const p = state.photos[it.id]; return !!(p && (p.uploaded || p.data)); }
+  if (k === "upload"){ const p = state.photos[it.id]; return !!(p && (p.uploaded || p.data) && !p.rejected); }
   const v = state.steps[`${it.id}:${idx}`];
   if (k === "find" || k === "photo") return v === true;
   if (k === "quiz") return v === it.steps[idx].a;   // 정답을 맞혀야 완료
@@ -691,7 +765,16 @@ function renderStep(it, st, i){
       else { thumb.hidden = true; btn.textContent = "📸 사진 찍어 올리기"; }
     };
     const p0 = state.photos[it.id];
-    if (p0){ showThumb(); setState(p0.uploaded ? "✓ 업로드 완료" : (p0.data ? "업로드 대기 중…" : ""), p0.uploaded ? "ok" : "wait"); }
+    if (p0){
+      showThumb();
+      if (p0.rejected){
+        box.classList.add("rejected");
+        setState("❌ 선생님이 반려했어요: " + (p0.rejectReason || "사유 없음") + " — 다시 찍어 올려 주세요", "no");
+        btn.textContent = "📸 다시 찍기";
+      } else {
+        setState(p0.uploaded ? "✓ 업로드 완료" : (p0.data ? "업로드 대기 중…" : ""), p0.uploaded ? "ok" : "wait");
+      }
+    }
     btn.addEventListener("click", () => inp.click());
     inp.addEventListener("change", e => {
       const f = e.target.files && e.target.files[0];
@@ -847,6 +930,12 @@ function startFromGate(){
 [g.cls, g.num, g.name].forEach(el => el && el.addEventListener("input", () => { if (g.err) g.err.textContent = ""; }));
 [g.cls, g.num, g.name].forEach(el => el && el.addEventListener("keydown", e => { if (e.key === "Enter") startFromGate(); }));
 g.go.addEventListener("click", startFromGate);
+document.getElementById("rejOk").addEventListener("click", () => {
+  const m = document.getElementById("rejModal");
+  m.hidden = true;
+  const id = m._first;
+  if (id) { const c = document.getElementById("card-" + id); if (c) c.scrollIntoView({ behavior:"smooth", block:"center" }); }
+});
 DBG("준비완료 ✓ (시작 버튼 연결됨)");
 function startApp(){
   document.getElementById("gate").hidden = true;
@@ -858,6 +947,7 @@ function startApp(){
   refreshProgress();
   paintSync();
   flushSync();
+  watchReviews();
 }
 
 /* 이미 정보가 있으면 게이트 건너뛰기 */

@@ -82,6 +82,12 @@
   .dcard .dt .st.no{color:#B0A088}
   .dpic{display:block;width:100%;height:120px;object-fit:cover;border-radius:7px;border:1px solid var(--line);margin-bottom:.35rem;background:#F0E7D6}
   .dpic.nopic{display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#A8977B}
+  .rvb{display:inline-block;font-size:.7rem;font-weight:700;border-radius:5px;padding:.1rem .4rem;margin-bottom:.3rem}
+  .rvb.wait{background:#EEE4D2;color:#8A7659} .rvb.ok{background:#E7F5E7;color:var(--ok)}
+  .rvb.rej{background:#F8EAE9;color:var(--warn)} .rvb.resub{background:#E3F0FB;color:#1565C0}
+  .rvbtns{display:flex;gap:.35rem;margin-bottom:.35rem}
+  .rvbtn{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:7px;padding:.32rem;font-size:.78rem;font-weight:700;cursor:pointer}
+  .rvbtn.ok:hover{border-color:var(--ok);color:var(--ok)} .rvbtn.rej:hover{border-color:var(--warn);color:var(--warn)}
   .dots{display:flex;gap:.2rem;margin-bottom:.35rem}
   .dot{width:14px;height:14px;border-radius:4px;background:#E4D8C4;font-size:.6rem;color:#fff;display:flex;align-items:center;justify-content:center}
   .dot.on{background:var(--ok)}
@@ -137,7 +143,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
 const cfg = {
   apiKey: "AIzaSyAWsHD8UjeSbG0IvXW9izxbBiGDHpOzytk",
@@ -186,10 +192,12 @@ document.getElementById("rosterText").value = localStorage.getItem("nmk-teacher-
 let sortMode = "name";
 let expanded = new Set();
 let students = {};   // sid -> record
-let unsub = null;
+let reviews = {};    // sid -> { itemId -> {status,reason,at,photoAt} }
+let unsub = null, unsubR = null;
 
 function subscribe(){
   if (unsub) unsub();
+  if (unsubR) unsubR();
   document.getElementById("livedot").classList.remove("on");
   const r = ref(db, `museum/${TOUR}/students`);
   unsub = onValue(r, snap => {
@@ -201,6 +209,22 @@ function subscribe(){
     document.getElementById("fbWarn").hidden = false;
     document.getElementById("board").innerHTML = `<div class="empty"><div class="big">🔒</div>데이터를 읽지 못했습니다.<br><small>${err.message}</small></div>`;
   });
+  unsubR = onValue(ref(db, `museum/${TOUR}/reviews`), snap => { reviews = snap.val() || {}; render(); }, () => {});
+}
+
+async function setReview(sid, itemId, verdict){
+  const rec = students[sid] || {};
+  const photoAt = (rec.photoAt && rec.photoAt[itemId]) || 0;
+  let data;
+  if (verdict === "reject"){
+    const raw = prompt("반려 사유 (학생에게 그대로 표시됩니다)\n예: 유물이 아니라 설명판을 찍었어요 / 너무 흔들렸어요", "");
+    if (raw === null) return;   // 취소
+    data = { status: "rejected", reason: raw.trim().slice(0, 120), at: Date.now(), photoAt };
+  } else {
+    data = { status: "ok", at: Date.now(), photoAt };
+  }
+  try { await set(ref(db, `museum/${TOUR}/reviews/${sid}/${itemId}`), data); }
+  catch (e) { alert("저장 실패: " + (e && e.message || e)); }
 }
 
 document.getElementById("tourApply").addEventListener("click", () => {
@@ -332,6 +356,10 @@ function render(){
     expanded.has(sid) ? expanded.delete(sid) : expanded.add(sid);
     render();
   }));
+  document.querySelectorAll("[data-review]").forEach(btn => btn.addEventListener("click", e => {
+    e.stopPropagation();
+    setReview(btn.dataset.sid, btn.dataset.item, btn.dataset.review);
+  }));
 }
 
 function rowHTML(r){
@@ -373,10 +401,24 @@ function detailHTML(sid, rec){
     const pic = photos[id]
       ? `<a href="${esc(photos[id])}" target="_blank" rel="noopener"><img class="dpic" src="${esc(photos[id])}" alt="" loading="lazy"></a>`
       : `<div class="dpic nopic">사진 없음</div>`;
+    const rv = (reviews[sid] || {})[id];
+    const curAt = (rec.photoAt && rec.photoAt[id]) || 0;
+    let rbadge = "", rbtns = "";
+    if (photos[id]){
+      const stale = rv && Number(rv.photoAt || 0) !== Number(curAt);
+      if (!rv) rbadge = `<span class="rvb wait">검토 전</span>`;
+      else if (stale) rbadge = `<span class="rvb resub">🔄 새 사진 · 재검토</span>`;
+      else if (rv.status === "ok") rbadge = `<span class="rvb ok">✅ 승인함</span>`;
+      else rbadge = `<span class="rvb rej">❌ 반려함${rv.reason ? " · " + esc(rv.reason) : ""}</span>`;
+      rbtns = `<div class="rvbtns">
+        <button class="rvbtn ok" data-review="ok" data-sid="${sid}" data-item="${id}">승인</button>
+        <button class="rvbtn rej" data-review="reject" data-sid="${sid}" data-item="${id}">반려</button></div>`;
+    }
     return `<div class="dcard">
       <div class="dt">${m.e} ${m.n}
         <span class="st ${stamped?"":"no"}">${stamped?"● 스탬프":`${nDone}/${m.s.length}`}</span></div>
       ${pic}
+      ${rbadge}${rbtns}
       <div class="dots">${m.s.map((lbl,i)=>`<span class="dot ${done[i]?"on":""}" title="${lbl}">${done[i]?"✓":""}</span>`).join("")}</div>
       ${answers}
     </div>`;
