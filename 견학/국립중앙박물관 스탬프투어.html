@@ -31,6 +31,9 @@
   .gate h1{font-size:1.25rem;color:var(--main);text-align:center;line-height:1.35}
   .gate .lead{font-size:.83rem;color:var(--ink-sec);text-align:center;margin:.4rem 0 1.1rem}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+  .gate .gradefix{display:inline-block;background:#FBF2DF;border:1px solid var(--accent);color:var(--main);
+    font-weight:700;font-size:.82rem;border-radius:99px;padding:.2rem .7rem;margin-bottom:.7rem}
   .fld{margin-bottom:.6rem}
   .fld label{display:block;font-size:.76rem;font-weight:700;color:var(--ink-sec);margin-bottom:.25rem}
   .fld input,.fld select{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:.6rem .6rem;font-family:inherit;font-size:1rem;background:#FCFAF5}
@@ -150,9 +153,8 @@
   <div class="panel">
     <h1>🏛️ 국립중앙박물관<br>국보 스탬프 투어</h1>
     <div class="lead">먼저 내 정보를 입력하자.<br>선생님 화면에 <b>참여·진행 상황</b>이 나타납니다.</div>
-    <div class="grid3">
-      <div class="fld"><label for="gGrade">학년</label>
-        <select id="gGrade"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select></div>
+    <div class="gradefix">🎓 2학년 견학</div>
+    <div class="grid2">
       <div class="fld"><label for="gClass">반</label><input id="gClass" type="number" inputmode="numeric" min="1" max="20" placeholder="3"></div>
       <div class="fld"><label for="gNum">번호</label><input id="gNum" type="number" inputmode="numeric" min="1" max="50" placeholder="14"></div>
     </div>
@@ -650,7 +652,8 @@ function confetti(){
 
 /* ══════════ 학생 정보 게이트 ══════════ */
 const AVATARS = ["🐰","🐱","🐯","🐻","🐼","🐨","🦁","🐵","🐶","🦊","🐸","🐷","🐹","🐭","🐮","🦉","🐢","🐙","🦄","🐧"];
-const g = { grade:document.getElementById("gGrade"), cls:document.getElementById("gClass"),
+const GRADE = "2";  /* 2학년 견학 고정 */
+const g = { cls:document.getElementById("gClass"),
   num:document.getElementById("gNum"), name:document.getElementById("gName"),
   go:document.getElementById("gGo"), err:document.getElementById("gErr") };
 function gateValid(){
@@ -658,11 +661,11 @@ function gateValid(){
     && +g.cls.value >= 1 && +g.num.value >= 1;
   g.go.disabled = !ok; return ok;
 }
-[g.grade, g.cls, g.num, g.name].forEach(el => el.addEventListener("input", gateValid));
+[g.cls, g.num, g.name].forEach(el => el.addEventListener("input", gateValid));
 g.go.addEventListener("click", () => {
   if (!gateValid()) return;
   state.ident = {
-    grade: String(+g.grade.value), cls: String(+g.cls.value), num: String(+g.num.value),
+    grade: GRADE, cls: String(+g.cls.value), num: String(+g.num.value),
     name: g.name.value.trim().slice(0, 10),
     avatar: state.ident?.avatar || AVATARS[Math.floor(Math.random()*AVATARS.length)],
   };
@@ -684,7 +687,8 @@ function startApp(){
 /* 이미 정보가 있으면 게이트 건너뛰기 */
 if (state.ident && state.ident.name){
   const i = state.ident;
-  g.grade.value = i.grade; g.cls.value = i.cls; g.num.value = i.num; g.name.value = i.name;
+  i.grade = GRADE;
+  g.cls.value = i.cls; g.num.value = i.num; g.name.value = i.name;
   startApp();
 } else {
   document.getElementById("gName").focus?.();
