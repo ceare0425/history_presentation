@@ -46,6 +46,8 @@
   .btn:hover{border-color:var(--accent)}
   .btn.pri{background:var(--main);color:#FDF3DE;border-color:var(--main)}
   .btn.on{background:#FBF2DF;border-color:var(--accent);color:var(--main)}
+  .btn.danger{background:#fff;border-color:#E0B3AE;color:var(--warn)}
+  .btn.danger:hover{background:var(--warn);border-color:var(--warn);color:#fff}
 
   details.roster{background:var(--surface);border:1.5px solid var(--line);border-radius:10px;margin-bottom:1rem;box-shadow:var(--shadow)}
   details.roster summary{padding:.65rem .9rem;font-weight:700;font-size:.86rem;cursor:pointer}
@@ -143,7 +145,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
 const cfg = {
   apiKey: "AIzaSyAWsHD8UjeSbG0IvXW9izxbBiGDHpOzytk",
@@ -242,6 +244,17 @@ async function bulkApprove(sid){
     await Promise.all(todo.map(id => set(ref(db, `museum/${TOUR}/reviews/${sid}/${id}`),
       { status: "ok", at: Date.now(), photoAt: (rec.photoAt && rec.photoAt[id]) || 0 })));
   } catch (e) { alert("일괄 승인 실패: " + (e && e.message || e)); }
+}
+async function kickStudent(sid, name){
+  if (!confirm(`진짜 ${name} 학생을 내보내시겠습니까?\n\n이 학생의 진행 상황·올린 사진·검토 기록이 현황판에서 모두 삭제됩니다.\n(학생이 앱을 다시 열고 활동하면 새 참여자로 다시 올라올 수 있습니다.)`)) return;
+  try {
+    await Promise.all([
+      remove(ref(db, `museum/${TOUR}/students/${sid}`)),
+      remove(ref(db, `museum/${TOUR}/reviews/${sid}`)),
+      remove(ref(db, `museum/${TOUR}/photos/${sid}`)),
+    ]);
+    expanded.delete(sid);
+  } catch (e) { alert("내보내기 실패: " + (e && e.message || e)); }
 }
 
 document.getElementById("tourApply").addEventListener("click", () => {
@@ -381,6 +394,10 @@ function render(){
     e.stopPropagation();
     bulkApprove(btn.dataset.sid);
   }));
+  document.querySelectorAll("[data-kick]").forEach(btn => btn.addEventListener("click", e => {
+    e.stopPropagation();
+    kickStudent(btn.dataset.sid, btn.dataset.name);
+  }));
 }
 
 function rowHTML(r){
@@ -454,7 +471,11 @@ function detailHTML(sid, rec){
     ? `<button class="btn pri" data-bulkok data-sid="${sid}">이 학생 미검토 사진 ${pending}장 한꺼번에 승인</button>`
     : `<span style="font-size:.82rem;color:var(--ok);font-weight:700">✅ 이 학생 사진 전부 승인됨</span>`;
   return `<tr class="detail"><td colspan="7">
-    <div style="margin-bottom:.6rem">${bulk} <span style="font-size:.78rem;color:var(--ink-sec)">— 썸네일을 훑고 승인 후, 이상한 사진만 개별 [반려]</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.6rem">
+      ${bulk} <span style="font-size:.78rem;color:var(--ink-sec)">— 썸네일을 훑고 승인 후, 이상한 사진만 개별 [반려]</span>
+      <span style="flex:1;min-width:1rem"></span>
+      <button class="btn danger" data-kick data-sid="${sid}" data-name="${esc(rec.name || sid)}">🚪 이 학생 내보내기</button>
+    </div>
     <div class="dwrap">${cards}</div>
     <div class="drev">🏅 <span class="mvp">오늘의 MVP:</span> ${esc(mvp)} &nbsp;|&nbsp; ✍️ 후기: ${rec.review ? esc(rec.review) : "<i>미작성</i>"}</div>
   </td></tr>`;
