@@ -211,7 +211,7 @@ function subscribe(){
   unsub = onValue(r, snap => {
     students = snap.val() || {};
     document.getElementById("livedot").classList.add("on");
-    document.getElementById("fbWarn").hidden = Object.keys(students).length > 0;
+    document.getElementById("fbWarn").hidden = true;   // 읽기 성공 → 규칙 정상. 학생 0명이어도 경고 안 띄움
     render();
   }, err => {
     document.getElementById("fbWarn").hidden = false;
