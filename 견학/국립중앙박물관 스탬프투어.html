@@ -191,7 +191,7 @@
 <div class="topbar" id="topbar" hidden>
   <div class="row">
     <span class="who" id="who"></span>
-    <span class="count"><b id="cNow">0</b> / <span id="cTot">26</span> 스탬프</span>
+    <span class="count"><b id="cNow">0</b> / <span id="cTot">22</span> 스탬프</span>
   </div>
   <div class="bar"><i id="barFill"></i></div>
   <div class="sub">
@@ -229,9 +229,9 @@
     <h2>투어 마무리</h2>
     <div class="sub">스탬프를 모을수록 뱃지가 열립니다.</div>
     <div class="badges">
-      <div class="mbadge" data-need="10"><span class="ic">🚩</span>탐험가<br>10개</div>
-      <div class="mbadge" data-need="18"><span class="ic">🎖️</span>미션 클리어<br>18개</div>
-      <div class="mbadge" data-need="26"><span class="ic">🏆</span>올 스탬프<br>26개</div>
+      <div class="mbadge" data-need="8"><span class="ic">🚩</span>탐험가<br>8개</div>
+      <div class="mbadge" data-need="15"><span class="ic">🎖️</span>미션 클리어<br>15개</div>
+      <div class="mbadge" data-need="22"><span class="ic">🏆</span>올 스탬프<br>22개</div>
     </div>
     <label class="lb" for="mvp">오늘의 MVP 유물 (스탬프 찍은 것 중에서)</label>
     <select id="mvp"><option value="">— 아직 고르는 중 —</option></select>
@@ -242,11 +242,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v14</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v15</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v14");
+DBG("모듈 시작 v15");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -298,14 +298,6 @@ const PARTS = [
       {k:"look", q:"밭 가는 사람의 모습에서 특이한 점 하나 (자세·옷차림·도구 등)", ph:""},
       {k:"quiz", q:"이 유물의 쓰임새로 추정되는 것은?", opts:["풍년을 비는 의례 도구","실제 농기구","화폐"], a:0},
       {k:"think", q:"왜 지배자가 하필 ‘농사 장면’을 청동기에 새겼을까? 한 줄로", ph:""},
-    ]},
-  { id:"daho", emoji:"🖋️", nm:"창원 다호리 1호 무덤 출토품", nat:false, loc:"선사고대관 · 고조선·부여·삼한실",
-    blurb:"기원전 1세기 변한 지배자의 무덤에서 나온 유물 묶음. 무기·농공구·중국 거울·화폐와 함께 붓 다섯 자루와 글자를 깎아 고치는 손칼이 나와, 이 무렵 한반도 남부에서 이미 한자를 쓰고 문서를 다뤘음을 보여준다.",
-    steps:[
-      {k:"find", label:"다호리 1호 무덤 출토품 진열장을 찾았다"},
-      {k:"look", q:"출토품 중 ‘멀리서 온 것’으로 보이는 걸 하나 적어라 (중국 거울·동전 등)", ph:""},
-      {k:"quiz", q:"이 무덤에서 붓이 나온 사실이 알려주는 것은?", opts:["기원전 1세기 한반도 남부에서 글자(한자)를 썼다","붓으로 그림만 그렸다","글자는 삼국시대에 처음 들어왔다"], a:0},
-      {k:"think", q:"지배자의 무덤에 붓을 넣었다는 건 그 사람에게 ‘글자’가 어떤 의미였을까? 한 줄로", ph:""},
     ]},
   { id:"houu", emoji:"🥣", nm:"호우 글자가 있는 청동 그릇", nat:false, loc:"선사고대관 · 고구려실",
     blurb:"경주 호우총에서 나온 청동 그릇. 바닥에 ‘을묘년국강상광개토지호태왕’이 새겨져, 광개토대왕이 죽고 3년 뒤(415년) 고구려에서 만든 그릇이 신라 무덤에 들어갔음을 보여준다.",
@@ -403,30 +395,6 @@ const PARTS = [
     ]},
 ]},
 { no:"4부", title:"2층 · 서화관 & 기증관", loc:"박물관 추천 동선 ④ 글씨 → 그림 → 불교회화 → 공예 → 기증", items:[
-  { id:"nangong", emoji:"🖌️", nm:"태자사 낭공대사 비석", nat:false, loc:"서화관 · 서예실",
-    blurb:"통일신라 승려 낭공대사를 기리는 탑비로, 954년에 세웠다. 비문 글씨는 신라 최고의 명필 김생의 글씨를 여기저기서 모아(집자) 새긴 것이라 더 유명하다.",
-    steps:[
-      {k:"find", label:"서화관에서 낭공대사비(집자비)를 찾았다"},
-      {k:"look", q:"글자 하나를 골라 획의 굵기 변화나 인상을 한 줄로 묘사해라", ph:""},
-      {k:"quiz", q:"이 비석 글씨의 특별한 점은?", opts:["명필 김생의 글씨를 모아(집자) 새겼다","한글로 썼다","글씨 없이 그림만 있다"], a:0},
-      {k:"think", q:"수백 년 전 사람의 글씨를 굳이 모아서 새긴 이유를 한 줄로 추측", ph:""},
-    ]},
-  { id:"nosong", emoji:"🌲", nm:"노송도", nat:false, loc:"서화관 · 회화실",
-    blurb:"늙은 소나무를 화면 가득 그린 조선 후기 대작. 곧게 뻗지 않고 굽고 갈라진 노송에, 선비가 닮고 싶어 한 지조와 세월의 기품을 담았다.",
-    steps:[
-      {k:"find", label:"서화관에서 큰 소나무 그림(노송도)을 찾았다"},
-      {k:"look", q:"소나무 줄기가 곧게 자랐나, 굽고 갈라졌나? 인상을 한 줄로", ph:""},
-      {k:"quiz", q:"조선 선비들이 소나무를 즐겨 그린 이유로 알맞은 것은?", opts:["변치 않는 지조·기품의 상징이라서","가장 그리기 쉬운 나무라서","돈이 되는 나무라서"], a:0},
-      {k:"think", q:"이 그림 앞에 서서 든 느낌을 한 줄로", ph:""},
-    ]},
-  { id:"byeonsang", emoji:"🪷", nm:"변상도", nat:false, loc:"서화관 · 불교회화실",
-    blurb:"경전의 내용을 그림으로 요약해 보여주는 것이 변상도다. 검푸른 종이에 금·은 물감으로 부처의 가르침을 정교하게 그려, 글을 못 읽어도 이야기를 따라갈 수 있게 했다.",
-    steps:[
-      {k:"find", label:"불교회화실에서 경전 그림(변상도)을 찾았다"},
-      {k:"look", q:"어두운 바탕에 무슨 색으로 그렸는지, 어떤 장면이 보이는지 한 줄로", ph:""},
-      {k:"quiz", q:"변상도의 역할은?", opts:["경전 내용을 그림으로 풀어 보여준다","절의 설계도이다","스님들의 명단이다"], a:0},
-      {k:"think", q:"글 대신 그림으로 가르침을 전하면 어떤 점이 좋을까? 한 줄로", ph:""},
-    ]},
   { id:"najeon", emoji:"🐚", nm:"나전 칠 연꽃 넝쿨무늬 옷상자", nat:true, loc:"서화관 · 목칠공예실",
     blurb:"전복·소라 껍질을 얇게 오려 옻칠한 바탕에 박아 넣는 나전칠기. 연꽃 넝쿨무늬가 빼곡한 이 상자는 한국 나전칠기의 아름다움을 대표하는 조선 전기 명품이다.",
     steps:[
@@ -692,10 +660,10 @@ function refreshProgress(){
     cb.classList.add("show"); ct.textContent = "🏆 올 스탬프 달성!";
     cm.textContent = TOTAL + "점 완주. 오늘 국립중앙박물관을 제대로 털었다.";
     if (!state._fired){ confetti(); state._fired = true; persist(); }
-  } else if (n >= 18){
+  } else if (n >= 15){
     cb.classList.add("show"); ct.textContent = "🎖️ 미션 클리어!";
     cm.textContent = `${n}개 수집. 남은 ${TOTAL - n}개는 시간 되는 대로.`; state._fired = false;
-  } else if (n >= 10){
+  } else if (n >= 8){
     cb.classList.add("show"); ct.textContent = "🚩 탐험가 뱃지 획득";
     cm.textContent = `${n}개 수집. 추천 동선대로 계속 가보자.`; state._fired = false;
   } else { cb.classList.remove("show"); state._fired = false; }
