@@ -80,6 +80,8 @@
   .dcard .dt{font-weight:700;font-size:.82rem;margin-bottom:.3rem}
   .dcard .dt .st{font-weight:700;color:var(--ok);font-size:.76rem}
   .dcard .dt .st.no{color:#B0A088}
+  .dpic{display:block;width:100%;height:120px;object-fit:cover;border-radius:7px;border:1px solid var(--line);margin-bottom:.35rem;background:#F0E7D6}
+  .dpic.nopic{display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#A8977B}
   .dots{display:flex;gap:.2rem;margin-bottom:.35rem}
   .dot{width:14px;height:14px;border-radius:4px;background:#E4D8C4;font-size:.6rem;color:#fff;display:flex;align-items:center;justify-content:center}
   .dot.on{background:var(--ok)}
@@ -104,8 +106,9 @@
 
 <main>
   <div class="warnbox" id="fbWarn" hidden>
-    <b>아직 데이터가 없습니다.</b> 학생 페이지의 저장 경로(<code>museum/…</code>)가 Firebase 보안 규칙에 등록되어 있어야 학생 진행 상황이 이 화면에 나타납니다.
-    <code>review-game-firebase/firebase-database-rules.json</code>의 최신 내용을 Firebase 콘솔 → Realtime Database → 규칙 탭에 붙여넣고 <b>게시</b>하세요.
+    <b>아직 데이터가 없습니다.</b> 학생 진행 상황이 이 화면에 나타나려면 Firebase 설정 2가지가 필요합니다.
+    ① <b>Realtime Database → 규칙</b>: <code>review-game-firebase/firebase-database-rules.json</code> 내용을 붙여넣고 게시(<code>museum</code> 경로 포함).
+    ② <b>Storage → 규칙</b>: <code>review-game-firebase/firebase-storage-rules.txt</code> 내용을 붙여넣고 게시(유물 사진 업로드용).
     학생이 아직 아무도 시작하지 않았어도 이 문구가 보일 수 있습니다.
   </div>
 
@@ -150,27 +153,27 @@ const db = getDatabase(initializeApp(cfg, "museum-teacher"));
 /* 학생 페이지와 반드시 일치해야 하는 유물 순서·이름 (박물관 공식 추천 동선) */
 const ORDER = ["jumeok","bitsal","nonggyeong","houu","gwansik","gaya","geumgwan","gyeongcheon","cheolbul","daejang","hangeul","daedong","uigwe","chikmyeong","najeon","sohn","gamsan","banga","jeongbyeong","chilbo","jara","dalhangari"];
 const META = {
-  jumeok:{e:"🪨",n:"주먹도끼",s:["찾기","관찰","퀴즈:시대","생각"]},
-  bitsal:{e:"🏺",n:"빗살무늬 토기",s:["찾기","관찰","퀴즈:바닥","생각"]},
-  nonggyeong:{e:"⛏️",n:"농경문 청동기",s:["찾기","관찰","퀴즈:용도","생각"]},
-  houu:{e:"🥣",n:"호우 글자가 있는 청동 그릇",s:["찾기","관찰:글자","퀴즈","생각"]},
-  gwansik:{e:"👑",n:"무령왕릉 관 꾸미개",s:["찾기","관찰","퀴즈","생각"]},
-  gaya:{e:"🛡️",n:"가야 갑옷",s:["찾기","관찰","퀴즈:철","생각"]},
+  jumeok:{e:"🪨",n:"주먹도끼",s:["찾기","관찰","퀴즈:시대","생각","사진"]},
+  bitsal:{e:"🏺",n:"빗살무늬 토기",s:["찾기","관찰","퀴즈:바닥","생각","사진"]},
+  nonggyeong:{e:"⛏️",n:"농경문 청동기",s:["찾기","관찰","퀴즈:용도","생각","사진"]},
+  houu:{e:"🥣",n:"호우 글자가 있는 청동 그릇",s:["찾기","관찰:글자","퀴즈","생각","사진"]},
+  gwansik:{e:"👑",n:"무령왕릉 관 꾸미개",s:["찾기","관찰","퀴즈","생각","사진"]},
+  gaya:{e:"🛡️",n:"가야 갑옷",s:["찾기","관찰","퀴즈:철","생각","사진"]},
   geumgwan:{e:"✨",n:"금관과 금허리띠",s:["찾기","관찰","퀴즈:용도","생각","사진"]},
   gyeongcheon:{e:"🗼",n:"경천사 십층석탑",s:["찾기","관찰:층수","퀴즈:재질","생각","사진"]},
-  cheolbul:{e:"🧘",n:"철불",s:["찾기","관찰:이음선","퀴즈","생각"]},
-  daejang:{e:"📜",n:"재조대장경 경판으로 인쇄한 경전",s:["찾기","관찰","퀴즈:목적","생각"]},
-  hangeul:{e:"🔡",n:"을해자와 함께 쓴 한글 금속활자",s:["찾기","관찰","퀴즈","생각"]},
-  daedong:{e:"🗺️",n:"대동여지도를 찍어낸 목판",s:["찾기","관찰","퀴즈","생각"]},
-  uigwe:{e:"📕",n:"외규장각 의궤",s:["찾기","관찰","퀴즈:반환","생각"]},
-  chikmyeong:{e:"🟥",n:"칙명지보",s:["찾기","관찰:손잡이","퀴즈","생각"]},
-  najeon:{e:"🐚",n:"나전 칠 연꽃 넝쿨무늬 옷상자",s:["찾기","관찰","퀴즈","생각"]},
+  cheolbul:{e:"🧘",n:"철불",s:["찾기","관찰:이음선","퀴즈","생각","사진"]},
+  daejang:{e:"📜",n:"재조대장경 경판으로 인쇄한 경전",s:["찾기","관찰","퀴즈:목적","생각","사진"]},
+  hangeul:{e:"🔡",n:"을해자와 함께 쓴 한글 금속활자",s:["찾기","관찰","퀴즈","생각","사진"]},
+  daedong:{e:"🗺️",n:"대동여지도를 찍어낸 목판",s:["찾기","관찰","퀴즈","생각","사진"]},
+  uigwe:{e:"📕",n:"외규장각 의궤",s:["찾기","관찰","퀴즈:반환","생각","사진"]},
+  chikmyeong:{e:"🟥",n:"칙명지보",s:["찾기","관찰:손잡이","퀴즈","생각","사진"]},
+  najeon:{e:"🐚",n:"나전 칠 연꽃 넝쿨무늬 옷상자",s:["찾기","관찰","퀴즈","생각","사진"]},
   sohn:{e:"🥇",n:"그리스 청동 투구",s:["찾기","관찰","퀴즈","생각","사진"]},
-  gamsan:{e:"🌟",n:"감산사 미륵보살 아미타불",s:["찾기","관찰","퀴즈","생각"]},
+  gamsan:{e:"🌟",n:"감산사 미륵보살 아미타불",s:["찾기","관찰","퀴즈","생각","사진"]},
   banga:{e:"🧘",n:"반가사유상",s:["찾기","관찰","퀴즈:이름뜻","생각","사진"]},
-  jeongbyeong:{e:"🫗",n:"물가풍경무늬 정병",s:["찾기","관찰","퀴즈:기법","생각"]},
-  chilbo:{e:"🍵",n:"칠보무늬 향로",s:["찾기","관찰:토끼","퀴즈","생각"]},
-  jara:{e:"🪴",n:"분청사기 모란무늬 자라병",s:["찾기","관찰","퀴즈:시기","생각"]},
+  jeongbyeong:{e:"🫗",n:"물가풍경무늬 정병",s:["찾기","관찰","퀴즈:기법","생각","사진"]},
+  chilbo:{e:"🍵",n:"칠보무늬 향로",s:["찾기","관찰:토끼","퀴즈","생각","사진"]},
+  jara:{e:"🪴",n:"분청사기 모란무늬 자라병",s:["찾기","관찰","퀴즈:시기","생각","사진"]},
   dalhangari:{e:"🌕",n:"백자 항아리",s:["찾기","관찰:대칭","퀴즈","생각","사진"]},
 };
 const TOTAL = ORDER.length;
@@ -245,7 +248,8 @@ function parseRosterLine(line){
 function recProgress(rec){
   const sc = rec.stampCount ?? Object.values(rec.stamps||{}).filter(Boolean).length;
   const sd = rec.stepDone ?? 0;
-  return { sc, sd, pct: Math.round((sd / STEP_TOTAL) * 100) };
+  const pc = rec.photoCount ?? Object.keys(rec.photos||{}).length;
+  return { sc, sd, pc, pct: Math.round((sd / STEP_TOTAL) * 100) };
 }
 function statusOf(rec){
   if (!rec) return { k:"none", label:"미참여" };
@@ -304,10 +308,11 @@ function render(){
 
   const th = `<tr>
     <th style="width:44px">번호</th><th>이름</th>
-    <th class="sortable" style="width:120px">스탬프</th>
-    <th style="width:190px">세부 미션</th>
-    <th style="width:90px">상태</th>
-    <th style="width:90px">마지막 활동</th></tr>`;
+    <th style="width:110px">스탬프</th>
+    <th style="width:170px">세부 미션</th>
+    <th style="width:80px">📷 사진</th>
+    <th style="width:84px">상태</th>
+    <th style="width:84px">마지막</th></tr>`;
 
   document.getElementById("board").innerHTML = classNames.map(cn => {
     const list = byClass[cn];
@@ -333,10 +338,11 @@ function rowHTML(r){
   const st = statusOf(r.rec);
   if (!r.rec){
     return `<tr class="missing"><td>${r.num||""}</td><td>${esc(r.name)}</td>
-      <td>—</td><td>—</td><td><span class="pill none">미참여</span></td><td class="ago">—</td></tr>`;
+      <td>—</td><td>—</td><td>—</td><td><span class="pill none">미참여</span></td><td class="ago">—</td></tr>`;
   }
-  const { sc, sd, pct } = recProgress(r.rec);
+  const { sc, sd, pc, pct } = recProgress(r.rec);
   const open = expanded.has(r.sid);
+  const pcCls = pc >= TOTAL ? "done" : pc > 0 ? "mid" : "none";
   const main = `<tr class="stu" data-sid="${r.sid}">
     <td>${r.num||""}</td>
     <td>${r.rec.avatar||""} ${esc(r.name)} <span style="color:#B0A088">${open?"▲":"▼"}</span></td>
@@ -344,6 +350,7 @@ function rowHTML(r){
         <div class="mini"><i style="width:${sc/TOTAL*100}%"></i></div></td>
     <td>${sd} / ${STEP_TOTAL} <span style="color:#9C8A6E">(${pct}%)</span>
         <div class="mini"><i style="width:${pct}%"></i></div></td>
+    <td><span class="pill ${pcCls}">${pc} / ${TOTAL}</span></td>
     <td><span class="pill ${st.k}">${st.label}</span></td>
     <td class="ago">${ago(r.rec.updatedAt)}</td></tr>`;
   return main + (open ? detailHTML(r.sid, r.rec) : "");
@@ -352,9 +359,10 @@ function rowHTML(r){
 function detailHTML(sid, rec){
   const stamps = rec.stamps || {};
   const steps = rec.steps || {};
+  const photos = rec.photos || {};
   const cards = ORDER.map(id => {
     const m = META[id];
-    const done = steps ? m.s.map((_,i)=> !!stepVal(steps, `${id}:${i}`)) : [];
+    const done = m.s.map((lbl,i)=> lbl === "사진" ? !!photos[id] : !!stepVal(steps, `${id}:${i}`));
     const nDone = done.filter(Boolean).length;
     const stamped = !!stamps[id];
     const answers = m.s.map((lbl,i) => {
@@ -362,15 +370,19 @@ function detailHTML(sid, rec){
       if (typeof v === "string" && v.trim()) return `<div class="ans"><b>${lbl}:</b> ${esc(v)}</div>`;
       return "";
     }).join("");
+    const pic = photos[id]
+      ? `<a href="${esc(photos[id])}" target="_blank" rel="noopener"><img class="dpic" src="${esc(photos[id])}" alt="" loading="lazy"></a>`
+      : `<div class="dpic nopic">사진 없음</div>`;
     return `<div class="dcard">
       <div class="dt">${m.e} ${m.n}
         <span class="st ${stamped?"":"no"}">${stamped?"● 스탬프":`${nDone}/${m.s.length}`}</span></div>
+      ${pic}
       <div class="dots">${m.s.map((lbl,i)=>`<span class="dot ${done[i]?"on":""}" title="${lbl}">${done[i]?"✓":""}</span>`).join("")}</div>
       ${answers}
     </div>`;
   }).join("");
   const mvp = rec.mvp && META[rec.mvp] ? `${META[rec.mvp].e} ${META[rec.mvp].n}` : "—";
-  return `<tr class="detail"><td colspan="6">
+  return `<tr class="detail"><td colspan="7">
     <div class="dwrap">${cards}</div>
     <div class="drev">🏅 <span class="mvp">오늘의 MVP:</span> ${esc(mvp)} &nbsp;|&nbsp; ✍️ 후기: ${rec.review ? esc(rec.review) : "<i>미작성</i>"}</div>
   </td></tr>`;
@@ -388,13 +400,14 @@ function renderStats(rows){
   const done = parts.filter(r => recProgress(r.rec).sc >= TOTAL).length;
   const totalStamps = parts.reduce((a,r)=>a+recProgress(r.rec).sc,0);
   const totalSteps = parts.reduce((a,r)=>a+recProgress(r.rec).sd,0);
+  const totalPhotos = parts.reduce((a,r)=>a+recProgress(r.rec).pc,0);
   const recent = parts.slice().sort((a,b)=>(b.rec.updatedAt||0)-(a.rec.updatedAt||0))[0];
   const expected = rows.length;
   const s = [
     ["참여", `${parts.length}${expected!==parts.length?` / ${expected}`:""}`, expected!==parts.length?"명 (명단 대비)":"명이 시작함"],
     ["완주", done, `명 (${TOTAL}스탬프 전부)`],
     ["평균 스탬프", parts.length?Math.round(totalStamps/parts.length*10)/10:0, `/ ${TOTAL}`],
-    ["평균 세부미션", parts.length?Math.round(totalSteps/parts.length):0, `/ ${STEP_TOTAL}`],
+    ["올라온 사진", totalPhotos, `장 (평균 ${parts.length?Math.round(totalPhotos/parts.length):0}/${TOTAL})`],
     ["최근 활동", recent?ago(recent.rec.updatedAt):"—", recent?`${recent.name}`:""],
   ];
   document.getElementById("stats").innerHTML = s.map(([l,v,sub]) =>
@@ -403,14 +416,14 @@ function renderStats(rows){
 
 function exportCSV(){
   const rows = sortRows(currentRows());
-  const head = ["반","번호","이름","상태","스탬프","세부미션완료","세부미션총","진행률%","시작시각","마지막활동","MVP유물","후기"];
+  const head = ["반","번호","이름","상태","스탬프","세부미션완료","세부미션총","진행률%","사진수","사진총","시작시각","마지막활동","MVP유물","후기"];
   const lines = [head.join(",")];
   for (const r of rows){
     const st = statusOf(r.rec).label;
-    if (!r.rec){ lines.push([r.cls,r.num,r.name,st,"","","","","","","",""].map(csv).join(",")); continue; }
-    const { sc, sd, pct } = recProgress(r.rec);
+    if (!r.rec){ lines.push([r.cls,r.num,r.name,st,"","","","","","","","","",""].map(csv).join(",")); continue; }
+    const { sc, sd, pc, pct } = recProgress(r.rec);
     const mvp = r.rec.mvp && META[r.rec.mvp] ? META[r.rec.mvp].n : "";
-    lines.push([r.cls, r.num, r.name, st, sc, sd, STEP_TOTAL, pct,
+    lines.push([r.cls, r.num, r.name, st, sc, sd, STEP_TOTAL, pct, pc, TOTAL,
       r.rec.startedAt?new Date(r.rec.startedAt).toLocaleString("ko-KR"):"",
       r.rec.updatedAt?new Date(r.rec.updatedAt).toLocaleString("ko-KR"):"",
       mvp, r.rec.review||""].map(csv).join(","));
