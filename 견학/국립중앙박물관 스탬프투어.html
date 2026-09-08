@@ -159,6 +159,10 @@
   .clearBanner.show{display:block;animation:pop .4s ease}
   .clearBanner .big{font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1.12rem;color:var(--accent)}
   @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+  .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0));transform:translate(-50%,20px);
+    background:var(--header);color:#F6E9C8;border:1.5px solid var(--accent);border-radius:11px;padding:.7rem 1rem;
+    font-size:.86rem;font-weight:700;z-index:250;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:90vw;text-align:center}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
   .resetBtn{margin:1rem 0 0;width:100%;background:none;border:1.5px solid var(--line);color:var(--ink-sec);border-radius:9px;padding:.55rem;font-size:.8rem;cursor:pointer}
   .resetBtn:hover{border-color:var(--seal);color:var(--seal)}
   .foot{text-align:center;font-size:.72rem;color:#A8977B;padding:1.3rem 1rem 0}
@@ -240,6 +244,7 @@
         <li>이 투어는 <b>박물관 공식 추천 동선</b> 순서(1부→5부)를 그대로 따라갑니다.</li>
         <li>유물마다 미션 <b>5개</b>(찾기·관찰·퀴즈·생각·사진). 다 마쳐야 <b>스탬프</b>가 열립니다.</li>
         <li><b>사진은 그 자리에서 직접 촬영</b>해 올려야 합니다. 갤러리 사진·남의 사진은 안 됩니다.</li>
+        <li>올린 사진을 <b>선생님이 승인해야</b> 그 유물 스탬프가 열립니다. 반려되면 알림이 뜹니다.</li>
         <li>사진 촬영 O · <b>플래시·삼각대 금지</b> · 사유의 방은 촬영 규정을 꼭 확인</li>
         <li>큰 흐름: <b>1층(선사~대한제국) → 2층(서화·기증) → 3층(조각·공예)</b>, 반가사유상은 2층 사유의 방</li>
         <li>스탬프는 <b>실물을 눈으로 본 뒤</b>에 (그게 규칙)</li>
@@ -268,11 +273,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v17</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v18</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v17");
+DBG("모듈 시작 v18");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -567,7 +572,7 @@ async function uploadPhoto(itemId, onState){
     const url = await FB.sUrl(r);
     p.url = url; p.uploaded = true; delete p.data;
     persist();
-    if (onState) onState("✓ 업로드 완료", "ok");
+    if (onState) onState("업로드됨 · 선생님 승인 대기 중", "wait");
     refreshCardById(itemId);
     flushSync();
   } catch (e) {
@@ -603,18 +608,24 @@ function watchReviews(){
   } catch (e) {}
 }
 function handleReviews(map){
-  const changed = [], newlyRejected = [];
+  const changed = [], newlyRejected = [], newlyApproved = [];
   Object.keys(map).forEach(id => {
     const rv = map[id], p = state.photos[id];
     if (!p) return;
-    const active = rv && rv.status === "rejected" && Number(rv.photoAt || 0) === Number(p.at || 0);
-    if (active && !p.rejected){
-      p.rejected = true; p.rejectReason = rv.reason || "";
-      if (state.stamps[id]) delete state.stamps[id];
-      changed.push(id); newlyRejected.push(id);
-    } else if (!active && p.rejected){
-      p.rejected = false; delete p.rejectReason;
+    const same = rv && Number(rv.photoAt || 0) === Number(p.at || 0);
+    const rej = !!(same && rv.status === "rejected");
+    const ok  = !!(same && rv.status === "ok");
+    if (rej !== !!p.rejected){
+      p.rejected = rej;
+      if (rej){ p.rejectReason = rv.reason || ""; if (state.stamps[id]) delete state.stamps[id]; newlyRejected.push(id); }
+      else delete p.rejectReason;
       changed.push(id);
+    }
+    if (ok !== !!p.approved){
+      p.approved = ok;
+      if (ok) newlyApproved.push(id);
+      else if (state.stamps[id]) delete state.stamps[id];   // 승인 취소되면 스탬프도 회수
+      if (changed.indexOf(id) < 0) changed.push(id);
     }
   });
   if (!changed.length) return;
@@ -622,6 +633,13 @@ function handleReviews(map){
   changed.forEach(rerenderCard);
   refreshProgress();
   if (newlyRejected.length) showRejectModal(newlyRejected);
+  else if (newlyApproved.length) showToast("✅ 사진 " + newlyApproved.length + "장 승인됨 — 스탬프를 찍으세요!");
+}
+function showToast(msg){
+  let t = document.getElementById("toast");
+  if (!t){ t = document.createElement("div"); t.id = "toast"; t.className = "toast"; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 3200);
 }
 function showRejectModal(ids){
   const m = document.getElementById("rejModal");
@@ -679,7 +697,7 @@ function paintSync(){
 /* ══════════ 진행 계산 ══════════ */
 function stepDone(it, idx){
   const k = it.steps[idx].k;
-  if (k === "upload"){ const p = state.photos[it.id]; return !!(p && (p.uploaded || p.data) && !p.rejected); }
+  if (k === "upload"){ const p = state.photos[it.id]; return !!(p && p.approved); }   // 선생님 승인까지 받아야 완료
   const v = state.steps[`${it.id}:${idx}`];
   if (k === "find" || k === "photo") return v === true;
   if (k === "quiz") return v === it.steps[idx].a;   // 정답을 맞혀야 완료
@@ -771,8 +789,12 @@ function renderStep(it, st, i){
         box.classList.add("rejected");
         setState("❌ 선생님이 반려했어요: " + (p0.rejectReason || "사유 없음") + " — 다시 찍어 올려 주세요", "no");
         btn.textContent = "📸 다시 찍기";
-      } else {
-        setState(p0.uploaded ? "✓ 업로드 완료" : (p0.data ? "업로드 대기 중…" : ""), p0.uploaded ? "ok" : "wait");
+      } else if (p0.approved){
+        setState("✓ 선생님 승인 완료 — 스탬프 열림", "ok");
+      } else if (p0.uploaded){
+        setState("업로드됨 · 선생님 승인 대기 중 (승인돼야 스탬프가 열려요)", "wait");
+      } else if (p0.data){
+        setState("업로드 대기 중…", "wait");
       }
     }
     btn.addEventListener("click", () => inp.click());
@@ -815,8 +837,11 @@ function refreshCard(id){
   prog.textContent = `${n} / ${it.steps.length}`;
   const stamped = !!state.stamps[id];
   card.classList.toggle("done", stamped);
+  const ph = state.photos[id];
+  const onlyPhotoLeft = n === it.steps.length - 1 && ph && ph.uploaded && !ph.approved && !ph.rejected;
   if (stamped){ btn.textContent = "✓ 스탬프 완료 (취소하려면 탭)"; btn.disabled = false; }
   else if (cardDone(it)){ btn.textContent = "스탬프 찍기 ✦"; btn.disabled = false; }
+  else if (onlyPhotoLeft){ btn.textContent = "⏳ 선생님 사진 승인 대기 중"; btn.disabled = true; }
   else { btn.textContent = `미션 ${n}/${it.steps.length} — 다 풀면 열려요`; btn.disabled = true; }
   refreshProgress();
 }
