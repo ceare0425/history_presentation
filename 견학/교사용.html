@@ -220,7 +220,7 @@ async function setReview(sid, itemId, verdict){
   const photoAt = (rec.photoAt && rec.photoAt[itemId]) || 0;
   let data;
   if (verdict === "reject"){
-    const raw = prompt("반려 사유 (학생에게 그대로 표시됩니다)\n예: 유물과 얼굴이 같이 안 나왔어요 / 설명판만 찍었어요 / 너무 흔들렸어요", "");
+    const raw = prompt("반려 사유 (학생에게 그대로 표시됩니다)\n예: 유물과 내 모습이 같이 안 나왔어요 / 설명판만 찍었어요 / 너무 흔들렸어요", "");
     if (raw === null) return;   // 취소
     data = { status: "rejected", reason: raw.trim().slice(0, 120), at: Date.now(), photoAt };
   } else {
