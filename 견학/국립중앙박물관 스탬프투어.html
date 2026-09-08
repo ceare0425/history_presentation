@@ -273,11 +273,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v19</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v20</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v19");
+DBG("모듈 시작 v20");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -824,8 +824,8 @@ function paintQuiz(box, it, i){
   });
   const fb = box.querySelector("[data-fb]");
   if (!Number.isInteger(cur)) { fb.textContent = ""; fb.className = "fb"; }
-  else if (cur === ans) { fb.textContent = "정답! ✓"; fb.className = "fb ok"; }
-  else { fb.textContent = "아쉽다 — 다시 골라봐. (정답을 맞혀야 완료돼요)"; fb.className = "fb no"; }
+  else if (cur === ans) { fb.textContent = "정답이에요! ✓"; fb.className = "fb ok"; }
+  else { fb.textContent = "아쉬워요 — 다시 선택해 보세요 😂 (정답을 맞혀야 완료됩니다)"; fb.className = "fb no"; }
 }
 
 function refreshCard(id){
