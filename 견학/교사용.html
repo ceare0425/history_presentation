@@ -112,9 +112,9 @@
 
 <main>
   <div class="warnbox" id="fbWarn" hidden>
-    <b>아직 데이터가 없습니다.</b> 학생 진행 상황이 이 화면에 나타나려면 Firebase 설정 2가지가 필요합니다.
-    ① <b>Realtime Database → 규칙</b>: <code>review-game-firebase/firebase-database-rules.json</code> 내용을 붙여넣고 게시(<code>museum</code> 경로 포함).
-    ② <b>Storage → 규칙</b>: <code>review-game-firebase/firebase-storage-rules.txt</code> 내용을 붙여넣고 게시(유물 사진 업로드용).
+    <b>아직 데이터가 없습니다.</b> 학생 진행·사진이 이 화면에 나타나려면
+    <b>Realtime Database → 규칙</b> 탭에 <code>review-game-firebase/firebase-database-rules.json</code> 내용을 붙여넣고 게시해야 합니다
+    (<code>museum</code> 하위의 <code>students · reviews · photos</code> 쓰기 권한 포함). 사진도 이 DB에 저장되므로 Storage 설정·유료 플랜은 필요 없습니다.
     학생이 아직 아무도 시작하지 않았어도 이 문구가 보일 수 있습니다.
   </div>
 
@@ -193,11 +193,13 @@ let sortMode = "name";
 let expanded = new Set();
 let students = {};   // sid -> record
 let reviews = {};    // sid -> { itemId -> {status,reason,at,photoAt} }
-let unsub = null, unsubR = null;
+let photosAll = {};  // sid -> { itemId -> dataURL(base64) }
+let unsub = null, unsubR = null, unsubP = null;
 
 function subscribe(){
   if (unsub) unsub();
   if (unsubR) unsubR();
+  if (unsubP) unsubP();
   document.getElementById("livedot").classList.remove("on");
   const r = ref(db, `museum/${TOUR}/students`);
   unsub = onValue(r, snap => {
@@ -210,6 +212,7 @@ function subscribe(){
     document.getElementById("board").innerHTML = `<div class="empty"><div class="big">🔒</div>데이터를 읽지 못했습니다.<br><small>${err.message}</small></div>`;
   });
   unsubR = onValue(ref(db, `museum/${TOUR}/reviews`), snap => { reviews = snap.val() || {}; render(); }, () => {});
+  unsubP = onValue(ref(db, `museum/${TOUR}/photos`), snap => { photosAll = snap.val() || {}; render(); }, () => {});
 }
 
 async function setReview(sid, itemId, verdict){
@@ -228,7 +231,7 @@ async function setReview(sid, itemId, verdict){
 }
 async function bulkApprove(sid){
   const rec = students[sid] || {};
-  const photos = rec.photos || {}, rvAll = reviews[sid] || {};
+  const photos = photosAll[sid] || {}, rvAll = reviews[sid] || {};
   const todo = Object.keys(photos).filter(id => {
     const at = (rec.photoAt && rec.photoAt[id]) || 0, rv = rvAll[id];
     return !(rv && rv.status === "ok" && Number(rv.photoAt || 0) === Number(at));
@@ -286,7 +289,7 @@ function parseRosterLine(line){
 function recProgress(rec){
   const sc = rec.stampCount ?? Object.values(rec.stamps||{}).filter(Boolean).length;
   const sd = rec.stepDone ?? 0;
-  const pc = rec.photoCount ?? Object.keys(rec.photos||{}).length;
+  const pc = rec.photoCount ?? Object.keys(rec.photoAt||{}).length;
   return { sc, sd, pc, pct: Math.round((sd / STEP_TOTAL) * 100) };
 }
 function statusOf(rec){
@@ -405,7 +408,7 @@ function rowHTML(r){
 function detailHTML(sid, rec){
   const stamps = rec.stamps || {};
   const steps = rec.steps || {};
-  const photos = rec.photos || {};
+  const photos = photosAll[sid] || {};   // { itemId -> base64 dataURL }
   const cards = ORDER.map(id => {
     const m = META[id];
     const done = m.s.map((lbl,i)=> lbl === "사진" ? !!photos[id] : !!stepVal(steps, `${id}:${i}`));
