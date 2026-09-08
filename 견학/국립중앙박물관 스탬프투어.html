@@ -222,25 +222,25 @@
 <div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지</div>
 
 <script type="module">
-/* ══════════ Firebase (선택적 · 실패해도 앱은 로컬로 동작) ══════════ */
+/* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
-try {
-  const [{ initializeApp }, dbm] = await Promise.all([
-    import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"),
-    import("https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"),
-  ]);
-  const cfg = {
-    apiKey: "AIzaSyAWsHD8UjeSbG0IvXW9izxbBiGDHpOzytk",
-    authDomain: "history-review-game.firebaseapp.com",
-    databaseURL: "https://history-review-game-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "history-review-game",
-    storageBucket: "history-review-game.firebasestorage.app",
-    messagingSenderId: "663174446158",
-    appId: "1:663174446158:web:314c67ed3a3f69c0bed71f",
-  };
-  const app = initializeApp(cfg, "museum-" + Math.random().toString(36).slice(2, 7));
+const FB_CFG = {
+  apiKey: "AIzaSyAWsHD8UjeSbG0IvXW9izxbBiGDHpOzytk",
+  authDomain: "history-review-game.firebaseapp.com",
+  databaseURL: "https://history-review-game-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "history-review-game",
+  storageBucket: "history-review-game.firebasestorage.app",
+  messagingSenderId: "663174446158",
+  appId: "1:663174446158:web:314c67ed3a3f69c0bed71f",
+};
+Promise.all([
+  import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"),
+  import("https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"),
+]).then(([appMod, dbm]) => {
+  const app = appMod.initializeApp(FB_CFG, "museum-" + Math.random().toString(36).slice(2, 7));
   FB = { db: dbm.getDatabase(app), ref: dbm.ref, set: dbm.set, get: dbm.get, onValue: dbm.onValue };
-} catch (e) { FB = null; }
+  try { paintSync(); if (state.ident) flushSync(); } catch (e) {}
+}).catch(() => { FB = null; });
 
 const TOUR = (new URLSearchParams(location.search).get("tour") || "default").replace(/[.#$/\[\]]/g, "");
 const STORE = "nmk-tour-v2:" + TOUR;
