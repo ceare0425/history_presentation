@@ -147,12 +147,11 @@ const cfg = {
 const db = getDatabase(initializeApp(cfg, "museum-teacher"));
 
 /* 학생 페이지와 반드시 일치해야 하는 유물 순서·이름 (박물관 공식 추천 동선) */
-const ORDER = ["jumeok","bitsal","nonggyeong","daho","houu","gwansik","gaya","geumgwan","gyeongcheon","cheolbul","daejang","hangeul","daedong","uigwe","chikmyeong","nangong","nosong","byeonsang","najeon","sohn","gamsan","banga","jeongbyeong","chilbo","jara","dalhangari"];
+const ORDER = ["jumeok","bitsal","nonggyeong","houu","gwansik","gaya","geumgwan","gyeongcheon","cheolbul","daejang","hangeul","daedong","uigwe","chikmyeong","najeon","sohn","gamsan","banga","jeongbyeong","chilbo","jara","dalhangari"];
 const META = {
   jumeok:{e:"🪨",n:"주먹도끼",s:["찾기","관찰","퀴즈:시대","생각"]},
   bitsal:{e:"🏺",n:"빗살무늬 토기",s:["찾기","관찰","퀴즈:바닥","생각"]},
   nonggyeong:{e:"⛏️",n:"농경문 청동기",s:["찾기","관찰","퀴즈:용도","생각"]},
-  daho:{e:"🖋️",n:"창원 다호리 1호 무덤 출토품",s:["찾기","관찰","퀴즈:의미","생각"]},
   houu:{e:"🥣",n:"호우 글자가 있는 청동 그릇",s:["찾기","관찰:글자","퀴즈","생각"]},
   gwansik:{e:"👑",n:"무령왕릉 관 꾸미개",s:["찾기","관찰","퀴즈","생각"]},
   gaya:{e:"🛡️",n:"가야 갑옷",s:["찾기","관찰","퀴즈:철","생각"]},
@@ -164,9 +163,6 @@ const META = {
   daedong:{e:"🗺️",n:"대동여지도를 찍어낸 목판",s:["찾기","관찰","퀴즈","생각"]},
   uigwe:{e:"📕",n:"외규장각 의궤",s:["찾기","관찰","퀴즈:반환","생각"]},
   chikmyeong:{e:"🟥",n:"칙명지보",s:["찾기","관찰:손잡이","퀴즈","생각"]},
-  nangong:{e:"🖌️",n:"태자사 낭공대사 비석",s:["찾기","관찰","퀴즈:집자","생각"]},
-  nosong:{e:"🌲",n:"노송도",s:["찾기","관찰","퀴즈","생각"]},
-  byeonsang:{e:"🪷",n:"변상도",s:["찾기","관찰","퀴즈","생각"]},
   najeon:{e:"🐚",n:"나전 칠 연꽃 넝쿨무늬 옷상자",s:["찾기","관찰","퀴즈","생각"]},
   sohn:{e:"🥇",n:"그리스 청동 투구",s:["찾기","관찰","퀴즈","생각","사진"]},
   gamsan:{e:"🌟",n:"감산사 미륵보살 아미타불",s:["찾기","관찰","퀴즈","생각"]},
