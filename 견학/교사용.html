@@ -50,6 +50,8 @@
   .btn.danger:hover{background:var(--warn);border-color:var(--warn);color:#fff}
   .kickbtn{border:1.5px solid #E0B3AE;background:#fff;color:var(--warn);border-radius:7px;padding:.28rem .5rem;font-size:.76rem;font-weight:700;white-space:nowrap}
   .kickbtn:hover{background:var(--warn);border-color:var(--warn);color:#fff}
+  .camwait{display:inline-flex;align-items:center;gap:.12rem;background:#FBEECB;color:#8A6A12;border:1px solid #E7CE8E;
+    border-radius:99px;padding:.02rem .38rem;font-size:.74rem;font-weight:700;margin-left:.25rem;vertical-align:middle;white-space:nowrap}
 
   details.roster{background:var(--surface);border:1.5px solid var(--line);border-radius:10px;margin-bottom:1rem;box-shadow:var(--shadow)}
   details.roster summary{padding:.65rem .9rem;font-weight:700;font-size:.86rem;cursor:pointer}
@@ -307,6 +309,16 @@ function recProgress(rec){
   const pc = rec.photoCount ?? Object.keys(rec.photoAt||{}).length;
   return { sc, sd, pc, pct: Math.round((sd / STEP_TOTAL) * 100) };
 }
+function waitingPhotoCount(sid, rec){
+  const photos = photosAll[sid] || {}, rvAll = reviews[sid] || {};
+  return Object.keys(photos).filter(id => {
+    const at = (rec && rec.photoAt && rec.photoAt[id]) || 0;
+    const rv = rvAll[id];
+    if (!rv) return true;                                     // 아직 검토 안 함
+    if (Number(rv.photoAt || 0) !== Number(at)) return true;  // 새 사진 올림 → 재검토 대기
+    return rv.status !== "ok" && rv.status !== "rejected";
+  }).length;
+}
 function statusOf(rec){
   if (!rec) return { k:"none", label:"미참여" };
   const { sc } = recProgress(rec);
@@ -412,9 +424,11 @@ function rowHTML(r){
   const { sc, sd, pc, pct } = recProgress(r.rec);
   const open = expanded.has(r.sid);
   const pcCls = pc >= TOTAL ? "done" : pc > 0 ? "mid" : "none";
+  const wc = waitingPhotoCount(r.sid, r.rec);
+  const cam = wc ? ` <span class="camwait" title="사진 ${wc}장 승인 대기 중">📸${wc > 1 ? " " + wc : ""}</span>` : "";
   const main = `<tr class="stu" data-sid="${r.sid}">
     <td>${r.num||""}</td>
-    <td>${r.rec.avatar||""} ${esc(r.name)} <span style="color:#B0A088">${open?"▲":"▼"}</span></td>
+    <td>${r.rec.avatar||""} ${esc(r.name)}${cam} <span style="color:#B0A088">${open?"▲":"▼"}</span></td>
     <td><b>${sc}</b> / ${TOTAL}
         <div class="mini"><i style="width:${sc/TOTAL*100}%"></i></div></td>
     <td>${sd} / ${STEP_TOTAL} <span style="color:#9C8A6E">(${pct}%)</span>
