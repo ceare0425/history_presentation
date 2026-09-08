@@ -183,7 +183,8 @@
     <div class="fld"><label for="gName">이름</label><input id="gName" type="text" maxlength="10" placeholder="홍길동" autocomplete="off"></div>
     <button class="go" id="gGo" type="button">투어 시작</button>
     <div class="err" id="gErr"></div>
-    <div class="note">한 번 입력하면 이 기기에 저장돼, 브라우저를 닫았다 열어도 이어서 할 수 있습니다. <span style="opacity:.6">(v5)</span></div>
+    <div class="note">한 번 입력하면 이 기기에 저장돼, 브라우저를 닫았다 열어도 이어서 할 수 있습니다.<br>
+      <span style="opacity:.6">(v6) 진단: <b id="dbg">JS 대기…</b></span></div>
   </div>
 </div>
 
@@ -241,10 +242,13 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v5</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v6</span></div>
 
 <script type="module">
-console.log("[스탬프투어] 모듈 시작 v5");
+window.__mstage = "1-모듈진입";
+(function(){ var d=document.getElementById("dbg"); if(d) d.textContent="모듈 진입"; })();
+function DBG(s){ window.__mstage=s; try{ var d=document.getElementById("dbg"); if(d) d.textContent=s; }catch(e){} console.log("[스탬프투어]", s); }
+console.log("[스탬프투어] 모듈 시작 v6");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -451,6 +455,7 @@ const ALL = PARTS.flatMap(p => p.items);
 const TOTAL = ALL.length;
 const STEP_TOTAL = ALL.reduce((s, it) => s + it.steps.length, 0);
 const TK = { find:"찾기", look:"관찰", quiz:"퀴즈", think:"생각", photo:"사진" };
+DBG("2-데이터 로드됨 (" + ALL.length + "점)");
 
 /* ══════════ 상태 ══════════ */
 let state = load();
@@ -686,8 +691,10 @@ function gateValid(){
   return !!(cls && num && name && +cls >= 1 && +num >= 1);
 }
 function startFromGate(){
+  DBG("클릭됨 → 시작 시도");
   if (!gateValid()){
     if (g.err) g.err.textContent = "반 · 번호 · 이름을 모두 입력해 주세요.";
+    DBG("입력 미완료로 중단");
     return;
   }
   try {
@@ -698,16 +705,20 @@ function startFromGate(){
     };
     if (!state.startedAt) state.startedAt = Date.now();
     persist();
+    DBG("startApp 호출");
     startApp();
+    DBG("startApp 완료");
   } catch (e) {
     if (g.err) g.err.textContent = "시작 중 오류: " + (e && e.message || e);
-    throw e;
+    var b = document.getElementById("errbox");
+    if (b){ b.style.display="block"; b.textContent = "시작 중 오류:\n" + (e && e.stack || e && e.message || e); }
+    DBG("오류: " + (e && e.message || e));
   }
 }
 [g.cls, g.num, g.name].forEach(el => el && el.addEventListener("input", () => { if (g.err) g.err.textContent = ""; }));
 [g.cls, g.num, g.name].forEach(el => el && el.addEventListener("keydown", e => { if (e.key === "Enter") startFromGate(); }));
 g.go.addEventListener("click", startFromGate);
-console.log("[스탬프투어] 게이트 준비 완료 — 버튼 연결됨");
+DBG("준비완료 ✓ (시작 버튼 연결됨)");
 function startApp(){
   document.getElementById("gate").hidden = true;
   ["topbar","hero","introWrap","items","finaleWrap","foot"].forEach(id => document.getElementById(id).hidden = false);
@@ -733,6 +744,21 @@ if (state.ident && state.ident.name){
 /* 화면을 벗어날 때 마지막 저장 시도 */
 addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushSync(); });
 addEventListener("pagehide", flushSync);
+</script>
+
+<script>
+/* 모듈이 끝까지 안 돌면(파싱 오류 등) 1초 뒤 진단 표시 */
+setTimeout(function(){
+  var stage = window.__mstage || null;
+  var d = document.getElementById("dbg");
+  if (stage && stage.indexOf("준비완료") === 0) return;  // 정상
+  var msg = stage
+    ? ("모듈이 '" + stage + "' 단계에서 멈춤")
+    : "모듈이 아예 실행되지 않음 (스크립트 파싱 오류 가능성)";
+  if (d) d.textContent = msg;
+  var b = document.getElementById("errbox");
+  if (b){ b.style.display = "block"; b.textContent = "진단:\n" + msg + "\n\n이 문장을 그대로 알려주세요."; }
+}, 1200);
 </script>
 </body>
 </html>
