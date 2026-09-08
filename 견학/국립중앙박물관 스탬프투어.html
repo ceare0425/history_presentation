@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>국립중앙박물관 국보 스탬프 투어</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -148,6 +151,25 @@
 </head>
 <body>
 
+<div id="errbox" style="display:none;position:fixed;inset:0;z-index:9999;background:#7A1F1A;color:#fff;padding:22px;font:13px/1.6 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow:auto"></div>
+<script>
+/* 모듈 스크립트가 에러로 멈추면 화면에 표시 (원인 파악용) */
+(function(){
+  function show(msg){
+    var b=document.getElementById('errbox'); if(!b) return;
+    b.style.display='block';
+    b.textContent='⚠ 페이지 오류입니다. 이 내용을 선생님께 보여주세요.\n\n'+msg+'\n\n(닫으려면 화면을 두 번 탭)';
+    b.onclick=function(){ if(b._t&&Date.now()-b._t<600){b.style.display='none';} b._t=Date.now(); };
+  }
+  window.addEventListener('error',function(e){
+    show((e.message||'error')+'\n'+(e.filename||'')+' :'+(e.lineno||0)+':'+(e.colno||0));
+  });
+  window.addEventListener('unhandledrejection',function(e){
+    var r=e.reason; show('promise 거부: '+((r&&r.message)||r||'unknown'));
+  });
+})();
+</script>
+
 <!-- ── 학생 정보 입력 ── -->
 <div class="gate" id="gate">
   <div class="panel">
@@ -159,9 +181,9 @@
       <div class="fld"><label for="gNum">번호</label><input id="gNum" type="number" inputmode="numeric" min="1" max="50" placeholder="14"></div>
     </div>
     <div class="fld"><label for="gName">이름</label><input id="gName" type="text" maxlength="10" placeholder="홍길동" autocomplete="off"></div>
-    <button class="go" id="gGo" disabled>투어 시작</button>
+    <button class="go" id="gGo" type="button">투어 시작</button>
     <div class="err" id="gErr"></div>
-    <div class="note">한 번 입력하면 이 기기에 저장돼, 브라우저를 닫았다 열어도 이어서 할 수 있습니다.</div>
+    <div class="note">한 번 입력하면 이 기기에 저장돼, 브라우저를 닫았다 열어도 이어서 할 수 있습니다. <span style="opacity:.6">(v4)</span></div>
   </div>
 </div>
 
@@ -219,9 +241,10 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지</div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v4</span></div>
 
 <script type="module">
+console.log("[스탬프투어] 모듈 시작 v4");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -657,21 +680,34 @@ const g = { cls:document.getElementById("gClass"),
   num:document.getElementById("gNum"), name:document.getElementById("gName"),
   go:document.getElementById("gGo"), err:document.getElementById("gErr") };
 function gateValid(){
-  const ok = g.cls.value && g.num.value && g.name.value.trim().length >= 1
-    && +g.cls.value >= 1 && +g.num.value >= 1;
-  g.go.disabled = !ok; return ok;
+  const cls = g.cls && g.cls.value.trim();
+  const num = g.num && g.num.value.trim();
+  const name = g.name && g.name.value.trim();
+  return !!(cls && num && name && +cls >= 1 && +num >= 1);
 }
-[g.cls, g.num, g.name].forEach(el => el.addEventListener("input", gateValid));
-g.go.addEventListener("click", () => {
-  if (!gateValid()) return;
-  state.ident = {
-    grade: GRADE, cls: String(+g.cls.value), num: String(+g.num.value),
-    name: g.name.value.trim().slice(0, 10),
-    avatar: state.ident?.avatar || AVATARS[Math.floor(Math.random()*AVATARS.length)],
-  };
-  if (!state.startedAt) state.startedAt = Date.now();
-  persist(); startApp();
-});
+function startFromGate(){
+  if (!gateValid()){
+    if (g.err) g.err.textContent = "반 · 번호 · 이름을 모두 입력해 주세요.";
+    return;
+  }
+  try {
+    state.ident = {
+      grade: GRADE, cls: String(+g.cls.value), num: String(+g.num.value),
+      name: g.name.value.trim().slice(0, 10),
+      avatar: (state.ident && state.ident.avatar) || AVATARS[Math.floor(Math.random()*AVATARS.length)],
+    };
+    if (!state.startedAt) state.startedAt = Date.now();
+    persist();
+    startApp();
+  } catch (e) {
+    if (g.err) g.err.textContent = "시작 중 오류: " + (e && e.message || e);
+    throw e;
+  }
+}
+[g.cls, g.num, g.name].forEach(el => el && el.addEventListener("input", () => { if (g.err) g.err.textContent = ""; }));
+[g.cls, g.num, g.name].forEach(el => el && el.addEventListener("keydown", e => { if (e.key === "Enter") startFromGate(); }));
+g.go.addEventListener("click", startFromGate);
+console.log("[스탬프투어] 게이트 준비 완료 — 버튼 연결됨");
 function startApp(){
   document.getElementById("gate").hidden = true;
   ["topbar","hero","introWrap","items","finaleWrap","foot"].forEach(id => document.getElementById(id).hidden = false);
