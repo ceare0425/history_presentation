@@ -138,10 +138,10 @@
   .item.done{border-color:var(--accent)}
   .item.done .steps,.item.done .blurb{opacity:.32}
   .item.done .stampBtn{background:var(--ok);color:#fff;position:relative;z-index:6}
-  .seal{position:absolute;top:50%;left:50%;width:min(280px,66vw);height:min(280px,66vw);border-radius:50%;
+  .seal{--seal-d:min(292px,74vw);position:absolute;top:50%;left:50%;width:var(--seal-d);height:var(--seal-d);border-radius:50%;
     border:7px double var(--seal);color:var(--seal);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 1.1rem;
-    font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:clamp(.98rem,4.6vw,1.34rem);line-height:1.42;letter-spacing:.01em;word-break:keep-all;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 .5rem;
+    font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:calc(var(--seal-d) / 10.2);line-height:1.32;letter-spacing:0;word-break:keep-all;
     transform:translate(-50%,-50%) rotate(-14deg) scale(0);opacity:0;pointer-events:none;z-index:5;
     background:rgba(255,247,240,.4);box-shadow:0 0 0 3px rgba(181,50,43,.25),inset 0 0 18px rgba(181,50,43,.16);
     text-shadow:0 1px 0 rgba(255,255,255,.65)}
@@ -277,11 +277,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v28</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v29</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v28");
+DBG("모듈 시작 v29");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
