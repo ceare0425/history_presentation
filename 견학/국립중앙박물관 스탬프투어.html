@@ -111,6 +111,13 @@
   .step .txt:focus{outline:none;border-color:var(--accent)}
   .checkline{display:flex;align-items:center;gap:.55rem;font-size:.9rem;cursor:pointer}
   .checkline input{width:19px;height:19px;accent-color:var(--main);flex:none}
+  .upl{display:flex;flex-direction:column;gap:.4rem}
+  .uplthumb{width:100%;max-height:180px;object-fit:cover;border-radius:9px;border:1.5px solid var(--line)}
+  .uplbtn{align-self:flex-start;border:1.5px solid var(--main);background:#fff;color:var(--main);
+    border-radius:9px;padding:.5rem .8rem;font-family:inherit;font-weight:700;font-size:.86rem;cursor:pointer}
+  .uplbtn:active{transform:scale(.98)}
+  .uplstate{font-size:.76rem;font-weight:700;color:var(--ink-sec);min-height:1em}
+  .uplstate.ok{color:var(--ok)} .uplstate.no{color:var(--seal)} .uplstate.wait{color:#9A7B1E}
   .fb{margin-top:.4rem;font-size:.76rem;font-weight:700;min-height:1em}
   .fb.ok{color:var(--ok)} .fb.no{color:var(--seal)}
   .stepnum{font-size:.72rem;color:var(--ink-sec);margin:.1rem 1rem 0;font-weight:600}
@@ -213,7 +220,8 @@
     <div class="tips">
       <ul>
         <li>이 투어는 <b>박물관 공식 추천 동선</b> 순서(1부→5부)를 그대로 따라갑니다.</li>
-        <li>유물마다 미션이 <b>3~5개</b>. 다 풀어야 <b>스탬프</b>가 열립니다.</li>
+        <li>유물마다 미션 <b>5개</b>(찾기·관찰·퀴즈·생각·사진). 다 마쳐야 <b>스탬프</b>가 열립니다.</li>
+        <li><b>사진은 그 자리에서 직접 촬영</b>해 올려야 합니다. 갤러리 사진·남의 사진은 안 됩니다.</li>
         <li>사진 촬영 O · <b>플래시·삼각대 금지</b> · 사유의 방은 촬영 규정을 꼭 확인</li>
         <li>큰 흐름: <b>1층(선사~대한제국) → 2층(서화·기증) → 3층(조각·공예)</b>, 반가사유상은 2층 사유의 방</li>
         <li>스탬프는 <b>실물을 눈으로 본 뒤</b>에 (그게 규칙)</li>
@@ -242,11 +250,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v15</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v16</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v15");
+DBG("모듈 시작 v16");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -261,10 +269,14 @@ const FB_CFG = {
 Promise.all([
   import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"),
   import("https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"),
-]).then(([appMod, dbm]) => {
+  import("https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js"),
+]).then(([appMod, dbm, sm]) => {
   const app = appMod.initializeApp(FB_CFG, "museum-" + Math.random().toString(36).slice(2, 7));
-  FB = { db: dbm.getDatabase(app), ref: dbm.ref, set: dbm.set, get: dbm.get, onValue: dbm.onValue };
-  try { paintSync(); if (state.ident) flushSync(); } catch (e) {}
+  FB = {
+    db: dbm.getDatabase(app), ref: dbm.ref, set: dbm.set, get: dbm.get, onValue: dbm.onValue,
+    st: sm.getStorage(app), sRef: sm.ref, sPut: sm.uploadString, sUrl: sm.getDownloadURL,
+  };
+  try { paintSync(); if (state.ident) { flushSync(); retryPhotos(); } } catch (e) {}
 }).catch(() => { FB = null; });
 
 const TOUR = (new URLSearchParams(location.search).get("tour") || "default").replace(/[.#$\[\]\/]/g, "");
@@ -282,6 +294,7 @@ const PARTS = [
       {k:"look", q:"돌의 날 부분을 보고 — 한 면만 떼어냈나, 양면을 다 떼어냈나?", ph:""},
       {k:"quiz", q:"이 도구를 만든 시대는?", opts:["구석기","신석기","청동기"], a:0},
       {k:"think", q:"자르고·찍고·긁는 걸 이거 하나로 다 했다. 요즘 물건 중 ‘하나로 여러 일 하는 것’을 하나 적어봐", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"bitsal", emoji:"🏺", nm:"빗살무늬 토기", nat:false, loc:"선사고대관 · 신석기실",
     blurb:"약 6000년 전 서울 암사동 등에서 나온 신석기 그릇. 농사와 정착이 시작되며 식량을 저장·조리할 그릇이 필요해졌고, 기하학 무늬엔 당시 사람들의 세계관이 담겼다.",
@@ -290,6 +303,7 @@ const PARTS = [
       {k:"look", q:"몸통의 무늬가 어떤 모양·방향으로 그어져 있나?", ph:""},
       {k:"quiz", q:"바닥이 뾰족한 이유로 가장 알맞은 것은?", opts:["강가 모래에 꽂아 세우려고","굴리며 쓰려고","천장에 매달려고"], a:0},
       {k:"think", q:"‘저장용 그릇이 생겼다’는 건 생활이 어떻게 바뀌었다는 뜻일까? 한 줄로", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"nonggyeong", emoji:"⛏️", nm:"농경문 청동기", nat:false, loc:"선사고대관 · 청동기실",
     blurb:"앞면엔 밭 가는 사람, 뒷면엔 새가 앉은 나뭇가지가 새겨진 국내 유일의 ‘농사 그림’ 청동기. 농사와 제사를 잇는 의례용 도구로 본다.",
@@ -298,6 +312,7 @@ const PARTS = [
       {k:"look", q:"밭 가는 사람의 모습에서 특이한 점 하나 (자세·옷차림·도구 등)", ph:""},
       {k:"quiz", q:"이 유물의 쓰임새로 추정되는 것은?", opts:["풍년을 비는 의례 도구","실제 농기구","화폐"], a:0},
       {k:"think", q:"왜 지배자가 하필 ‘농사 장면’을 청동기에 새겼을까? 한 줄로", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"houu", emoji:"🥣", nm:"호우 글자가 있는 청동 그릇", nat:false, loc:"선사고대관 · 고구려실",
     blurb:"경주 호우총에서 나온 청동 그릇. 바닥에 ‘을묘년국강상광개토지호태왕’이 새겨져, 광개토대왕이 죽고 3년 뒤(415년) 고구려에서 만든 그릇이 신라 무덤에 들어갔음을 보여준다.",
@@ -306,6 +321,7 @@ const PARTS = [
       {k:"look", q:"그릇 바닥 글자 중 알아볼 수 있는 한자를 하나 적어라", ph:""},
       {k:"quiz", q:"신라 무덤에서 이 그릇이 나온 사실이 알려주는 것은?", opts:["5세기 신라가 고구려의 영향 아래 있었다","신라가 고구려를 정복했다","두 나라가 교류가 전혀 없었다"], a:0},
       {k:"think", q:"만주의 광개토대왕릉비와 경주의 이 그릇이 같은 왕을 가리킨다. 서로 다른 곳의 유물을 맞춰보는 공부가 왜 중요할까? 한 줄", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"gwansik", emoji:"👑", nm:"무령왕릉 관 꾸미개", nat:true, loc:"선사고대관 · 백제실",
     blurb:"도굴되지 않은 채 발견된 공주 무령왕릉에서 나온 왕·왕비의 금관 장식. 얇은 금판을 오려 인동·연꽃·불꽃 무늬를 세우고 달개를 달아, 움직이면 반짝이도록 만든 백제 금속공예의 정수다.",
@@ -314,6 +330,7 @@ const PARTS = [
       {k:"look", q:"왕의 것과 왕비의 것 — 무늬나 좌우 모양에서 다른 점을 하나 적어라", ph:""},
       {k:"quiz", q:"무령왕릉이 특별한 가장 큰 이유는?", opts:["무덤 주인을 적은 지석이 함께 나왔다","가장 큰 무덤이다","가장 오래된 무덤이다"], a:0},
       {k:"think", q:"연꽃·불꽃 무늬를 보고, 백제 왕실이 ‘어떻게 보이고 싶어 했는지’ 한 줄로", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"gaya", emoji:"🛡️", nm:"가야 갑옷", nat:false, loc:"선사고대관 · 가야실",
     blurb:"가로로 긴 철판을 못과 가죽으로 이어 붙인 판갑옷과 투구. 가야는 질 좋은 철을 낙랑·왜에까지 수출하며 성장했고, 이 갑옷이 그 제철 기술을 증명한다.",
@@ -322,6 +339,7 @@ const PARTS = [
       {k:"look", q:"철판들을 무엇으로 이어 붙였나? (못·가죽끈 등 보이는 대로)", ph:""},
       {k:"quiz", q:"가야를 경제적으로 성장시킨 자원은?", opts:["철","소금","비단"], a:0},
       {k:"think", q:"삼국과 달리 가야는 하나의 나라로 통합되지 못했다. 그 이유를 한 줄로 추측", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"geumgwan", emoji:"✨", nm:"금관과 금허리띠", nat:true, loc:"선사고대관 · 신라실",
     blurb:"황남대총에서 나온 ‘황금의 나라’ 신라의 상징. 나뭇가지·사슴뿔 모양 세움장식에 곡옥과 달개를 달았고, 금허리띠에는 물고기·칼·약통 같은 축소 모형이 주렁주렁 매달려 있다.",
@@ -330,7 +348,7 @@ const PARTS = [
       {k:"look", q:"금허리띠에 매달린 작은 장식 중 무엇인지 알아볼 수 있는 것 하나를 적어라", ph:""},
       {k:"quiz", q:"이 금관의 쓰임새로 가장 유력한 것은?", opts:["죽은 왕을 위한 껴묻거리(장례용)","전투용 투구","평소 집무용"], a:0},
       {k:"think", q:"금을 이만큼 무덤에 묻었다는 건 당시 신라 사회에 대해 뭘 말해줄까? 한 줄", ph:""},
-      {k:"photo", label:"금관 인증샷을 찍었다"},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
 ]},
 { no:"2부", title:"1층 · 「역사의 길」 & 통일신라실", loc:"박물관 추천 동선 ② 복도 중앙의 큰 탑 → 통일신라", items:[
@@ -341,7 +359,7 @@ const PARTS = [
       {k:"look", q:"몇 층 탑인지 직접 세어보고 적어라", ph:""},
       {k:"quiz", q:"이 탑의 재질은?", opts:["대리석","화강암","청동"], a:0},
       {k:"think", q:"통째로 뜯겨 일본까지 갔다가 돌아온 탑이다. ‘문화재 반환’에 대해 든 생각을 한 줄로", ph:""},
-      {k:"photo", label:"탑 인증샷을 찍었다"},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"cheolbul", emoji:"🧘", nm:"철불", nat:false, loc:"선사고대관 · 통일신라실",
     blurb:"철을 부어 만든 큰 불상으로, 국내에서 가장 이른 시기에 만들어진 철불로 꼽힌다. 신라 말 지방 세력이 커지면서 구리 대신 철로 대형 불상을 만들기 시작했다.",
@@ -350,6 +368,7 @@ const PARTS = [
       {k:"look", q:"불상 표면에서 거푸집을 이어 부은 ‘이음선’이 보이는지 찾아 적어라", ph:""},
       {k:"quiz", q:"신라 말에 불상 재료가 구리에서 철로 바뀐 배경으로 알맞은 것은?", opts:["지방 세력(호족)이 커지며 각지에서 불상을 만듦","구리가 완전히 사라져서","불교가 금지되어서"], a:0},
       {k:"think", q:"같은 부처라도 금동불과 철불은 느낌이 다르다. 이 철불에서 받은 인상을 한 줄로", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
 ]},
 { no:"3부", title:"1층 · 중·근세관", loc:"박물관 추천 동선 ③ 고려 → 조선 → 대한제국", items:[
@@ -360,6 +379,7 @@ const PARTS = [
       {k:"look", q:"한 면에 글자가 대략 몇 줄쯤 되는지, 인쇄 상태가 고른지 보고 한 줄로", ph:""},
       {k:"quiz", q:"재조대장경을 만든 주된 목적은?", opts:["몽골 침입을 부처의 힘으로 물리치려는 염원","세금 장부를 만들려고","한글을 보급하려고"], a:0},
       {k:"think", q:"전쟁 중에 국력을 쏟아 8만 장을 새겼다. 오늘날로 치면 어떤 국가적 사업에 견줄까? 한 줄", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"hangeul", emoji:"🔡", nm:"을해자와 함께 쓴 한글 금속활자", nat:true, loc:"중근세관 · 조선실",
     blurb:"1455년(을해년)에 만든 금속활자로, 실물이 남은 가장 오래된 조선 활자로 꼽힌다. 한자 활자와 함께 쓰던 한글 활자도 남아 있어, 훈민정음 반포 직후 인쇄 문화를 보여준다.",
@@ -368,6 +388,7 @@ const PARTS = [
       {k:"look", q:"한글 활자 중 알아볼 수 있는 글자를 하나 적어라", ph:""},
       {k:"quiz", q:"이 활자가 중요한 이유는?", opts:["실물이 남은 가장 오래된 조선 활자","세계 최초의 금속활자","목판을 대신할 수 없던 실패작"], a:0},
       {k:"think", q:"활자를 한 번 만들어두면 어떤 점이 좋을까? 목판과 비교해 한 줄로", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"daedong", emoji:"🗺️", nm:"대동여지도를 찍어낸 목판", nat:true, loc:"중근세관 · 조선실",
     blurb:"김정호가 1861년 대동여지도를 찍어내려고 새긴 목판. 남아 있는 12장에는 산줄기·물줄기·길과 거리 표시까지 정교하게 담겨, 조선 후기 지리 지식의 집대성을 보여준다.",
@@ -376,6 +397,7 @@ const PARTS = [
       {k:"look", q:"지도에서 산줄기와 물줄기가 어떻게 다르게 표현됐는지 보고 한 줄로", ph:""},
       {k:"quiz", q:"대동여지도의 특징으로 알맞은 것은?", opts:["목판으로 찍어 여러 벌을 만들 수 있었다","김정호가 직접 손으로 딱 한 장만 그렸다","위성 사진을 바탕으로 만들었다"], a:0},
       {k:"think", q:"정확한 지도가 나라에 왜 중요할까? 한 줄로", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"uigwe", emoji:"📕", nm:"외규장각 의궤", nat:true, loc:"중근세관 · 조선실",
     blurb:"조선 왕실의 행사를 글과 그림으로 꼼꼼히 기록한 의궤. 강화도 외규장각에 두었던 어람용(왕이 보던 최고급본)은 1866년 병인양요 때 프랑스군이 약탈해 갔다가 2011년 돌아왔다.",
@@ -384,6 +406,7 @@ const PARTS = [
       {k:"look", q:"펼쳐진 면에 그려진 행렬·건물·의식 장면 중 하나를 골라 무엇인지 적어라", ph:""},
       {k:"quiz", q:"외규장각 의궤가 국내로 돌아온 과정으로 맞는 것은?", opts:["1866년 프랑스가 약탈 → 2011년 반환","조선이 프랑스에 선물","원래부터 국내에 있었다"], a:0},
       {k:"think", q:"행사를 이렇게까지 자세히 기록으로 남긴 이유를 한 줄로 추측", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"chikmyeong", emoji:"🟥", nm:"칙명지보", nat:false, loc:"중근세관 · 대한제국실",
     blurb:"대한제국 황제가 내리는 명령서(칙명)에 찍던 국새. ‘황제의 도장’을 새로 만들었다는 것 자체가, 대한제국이 스스로 자주 독립국이자 황제국임을 선언한 것이다.",
@@ -392,6 +415,7 @@ const PARTS = [
       {k:"look", q:"도장 손잡이(꼭지)가 어떤 모양인지 적어라 (용·거북 등)", ph:""},
       {k:"quiz", q:"‘황제의 도장’을 새로 만든 것이 상징하는 바는?", opts:["대한제국이 자주 독립국·황제국임을 선언","청나라의 신하가 되겠다는 뜻","외국에 넘긴 통치권"], a:0},
       {k:"think", q:"‘왕’이 아니라 ‘황제’를 칭한 것은 어떤 의지의 표현일까? 한 줄로", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
 ]},
 { no:"4부", title:"2층 · 서화관 & 기증관", loc:"박물관 추천 동선 ④ 글씨 → 그림 → 불교회화 → 공예 → 기증", items:[
@@ -402,6 +426,7 @@ const PARTS = [
       {k:"look", q:"자개가 빛을 받아 무슨 색으로 반짝이는지 적어라", ph:""},
       {k:"quiz", q:"나전칠기의 ‘나전’은 무엇으로 무늬를 만드나?", opts:["조개·전복 껍질을 오려 붙인다","금가루를 뿌린다","유리를 녹여 붓는다"], a:0},
       {k:"think", q:"이렇게 손이 많이 가는 상자에는 무엇을 담았을까? 한 줄로 추측", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"sohn", emoji:"🥇", nm:"그리스 청동 투구", nat:true, loc:"기증관 · 기증문화재실",
     blurb:"기원전 6세기 고대 그리스에서 만든 청동 투구. 1936년 베를린 올림픽 마라톤 우승자 손기정에게 주려던 부상이 오랜 시간이 지나서야 전달됐고, 손기정은 이를 다시 나라에 기증했다.",
@@ -410,7 +435,7 @@ const PARTS = [
       {k:"look", q:"2500년 전 투구인데 어디를 어떻게 보호하도록 생겼는지 한 줄로", ph:""},
       {k:"quiz", q:"이 투구가 한국에 오게 된 계기는?", opts:["1936년 베를린 올림픽 마라톤 우승 부상","조선 왕이 사 온 것","일제강점기에 발굴된 것"], a:0},
       {k:"think", q:"자기 상이었던 이 투구를 손기정은 왜 나라에 기증했을까? 한 줄로", ph:""},
-      {k:"photo", label:"투구 인증샷을 찍었다"},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
 ]},
 { no:"5부", title:"3층 · 조각·공예관 & 사유의 방", loc:"박물관 추천 동선 ⑤ 불상 → 사유의 방 → 금속공예 → 도자기", items:[
@@ -421,6 +446,7 @@ const PARTS = [
       {k:"look", q:"두 상의 옷차림·장신구 차이를 하나 적어라 (보살상과 여래상)", ph:""},
       {k:"quiz", q:"이 불상들을 만든 이유는?", opts:["돌아가신 부모의 명복을 빌기 위해","전쟁 승리를 기념하려고","왕의 생일 선물로"], a:0},
       {k:"think", q:"만든 사람·연도·이유가 다 적힌 유물은 왜 특히 귀할까? 한 줄로", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"banga", emoji:"🧘", nm:"반가사유상", nat:true, loc:"2층 · 사유의 방",
     blurb:"삼국시대에 만든 금동 반가사유상 두 점을 어두운 독립 전시실에 나란히 뒀다. 한 다리를 무릎에 얹고 손끝을 뺨에 댄 ‘생각하는’ 자세로, 석가모니의 고민이 함축돼 있다.",
@@ -429,7 +455,7 @@ const PARTS = [
       {k:"look", q:"두 상의 차이를 하나 적어라 (관 모양·옷 주름·표정 등)", ph:""},
       {k:"quiz", q:"‘반가사유’라는 이름의 뜻에 가장 가까운 것은?", opts:["반쯤 다리를 걸치고(반가) 생각에 잠긴(사유) 자세","반씩 나눠 만든 불상","반절만 도금한 상"], a:0},
       {k:"think", q:"벤치에 2~3분 앉아 상을 바라본 뒤, 그때 든 생각·느낌을 한 줄로", ph:""},
-      {k:"photo", label:"사유의 방 분위기 인증샷을 찍었다 (촬영 규정 확인)"},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"jeongbyeong", emoji:"🫗", nm:"물가풍경무늬 정병", nat:true, loc:"조각공예관 · 금속공예실",
     blurb:"청동 표면을 가늘게 파고 그 홈에 은실을 박아 그림을 그린 ‘은입사’ 정병. 버드나무·물새·배가 있는 물가 풍경이 병 전체를 감싼, 고려 금속공예의 대표작이다.",
@@ -438,6 +464,7 @@ const PARTS = [
       {k:"look", q:"은실로 표현된 소재(버드나무·새·배·갈대 등) 중 눈에 띄는 것 두 개", ph:""},
       {k:"quiz", q:"표면을 장식한 기법의 이름은?", opts:["은입사","나전(자개)","금박"], a:0},
       {k:"think", q:"절에서 물을 담던 실용 그릇에 이렇게 공들여 그림을 새긴 이유를 한 줄로", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"chilbo", emoji:"🍵", nm:"칠보무늬 향로", nat:true, loc:"조각공예관 · 도자공예(청자)실",
     blurb:"고려청자를 대표하는 명품. 투각·상감·양각·첩화 등 온갖 기법을 한 점에 몰아넣었고, 뚜껑의 공 모양 칠보무늬 구멍으로 향 연기가 새어 나오며, 향로 몸체를 토끼 세 마리가 떠받친다.",
@@ -446,6 +473,7 @@ const PARTS = [
       {k:"look", q:"향로를 떠받친 토끼가 몇 마리인지 세어 적어라", ph:""},
       {k:"quiz", q:"이 향로가 특별한 이유는?", opts:["여러 청자 장식 기법을 한 점에 다 썼다","금으로 만들었다","조선 백자다"], a:0},
       {k:"think", q:"‘기술 자랑’처럼 느껴질 만큼 화려하다. 만든 사람은 무엇을 보여주고 싶었을까? 한 줄", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"jara", emoji:"🪴", nm:"분청사기 모란무늬 자라병", nat:true, loc:"조각공예관 · 도자공예(분청사기·백자)실",
     blurb:"납작하고 둥근 자라 모양의 여행용 물병. 회색 흙 위에 흰 분장토를 바르고, 모란 무늬만 남긴 채 배경을 긁어내(박지 기법) 흰 꽃과 회색 바탕이 대비되게 했다.",
@@ -454,6 +482,7 @@ const PARTS = [
       {k:"look", q:"흰 부분과 회색 부분 중, 어느 쪽을 긁어내서 만든 것 같은지 적어라", ph:""},
       {k:"quiz", q:"분청사기의 시기적 위치는?", opts:["청자에서 백자로 넘어가는 과도기","청자보다 이른 시기","백자보다 늦은 시기"], a:0},
       {k:"think", q:"청자의 단정함과 비교해, 분청사기에서 느껴지는 분위기를 한 줄로", ph:""},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
   { id:"dalhangari", emoji:"🌕", nm:"백자 항아리", nat:true, loc:"조각공예관 · 도자공예(분청사기·백자)실",
     blurb:"보름달처럼 크고 둥근 조선 후기 백자 항아리. 커서 위·아래를 따로 빚어 붙이기 때문에 완벽한 원이 아니라 살짝 비뚤어지는데, 그 넉넉한 비대칭이 매력으로 꼽힌다.",
@@ -462,23 +491,78 @@ const PARTS = [
       {k:"look", q:"좌우 윤곽선을 보고 — 완벽한 대칭인가, 어느 쪽이 더 부풀었나?", ph:""},
       {k:"quiz", q:"달항아리가 완벽한 원형이 아닌 주된 이유는?", opts:["위·아래를 따로 만들어 이어 붙여서","일부러 찌그러뜨려서","오래돼 변형돼서"], a:0},
       {k:"think", q:"청자·분청을 지나 순백자에 다다른 흐름을, 조선의 분위기(성리학)와 연결해 한 줄로", ph:""},
-      {k:"photo", label:"달항아리 인증샷을 찍었다"},
+      {k:"upload", q:"박물관에서 직접 찍은 이 유물 사진을 올려라 (그 자리에서 촬영)"},
     ]},
 ]},
 ];
 const ALL = PARTS.flatMap(p => p.items);
 const TOTAL = ALL.length;
 const STEP_TOTAL = ALL.reduce((s, it) => s + it.steps.length, 0);
-const TK = { find:"찾기", look:"관찰", quiz:"퀴즈", think:"생각", photo:"사진" };
+const TK = { find:"찾기", look:"관찰", quiz:"퀴즈", think:"생각", photo:"사진", upload:"📸 사진" };
 DBG("2-데이터 로드됨 (" + ALL.length + "점)");
 
 /* ══════════ 상태 ══════════ */
 let state = load();
 function load(){
-  try { const s = JSON.parse(localStorage.getItem(STORE)); if (s && s.v === 2) return s; } catch(e){}
-  return { v:2, ident:null, steps:{}, stamps:{}, mvp:"", review:"", startedAt:0, _fired:false };
+  try { const s = JSON.parse(localStorage.getItem(STORE)); if (s && s.v === 2) { s.photos = s.photos || {}; return s; } } catch(e){}
+  return { v:2, ident:null, steps:{}, stamps:{}, photos:{}, mvp:"", review:"", startedAt:0, _fired:false };
 }
 function persist(){ try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e){} scheduleSync(); }
+
+/* ══════════ 유물 사진 업로드 (Firebase Storage) ══════════ */
+function downscale(file, maxPx, quality){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+      const sc = Math.min(1, maxPx / Math.max(w, h));
+      const cv = document.createElement("canvas");
+      cv.width = Math.max(1, Math.round(w * sc));
+      cv.height = Math.max(1, Math.round(h * sc));
+      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(img.src);
+      resolve(cv.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(img.src); reject(new Error("이미지를 읽지 못했습니다")); };
+    img.src = URL.createObjectURL(file);
+  });
+}
+async function handlePhoto(itemId, file, onState){
+  onState("사진 처리 중…", "");
+  let dataUrl;
+  try { dataUrl = await downscale(file, 1024, 0.72); }
+  catch (e) { onState("사진을 읽지 못했어요. 다시 시도.", "no"); return; }
+  state.photos[itemId] = { data: dataUrl, uploaded: false, at: Date.now() };
+  persist();
+  onState("사진 확인됨 · 업로드 중…", "");
+  refreshCardById(itemId);
+  uploadPhoto(itemId, onState);
+}
+async function uploadPhoto(itemId, onState){
+  const p = state.photos[itemId];
+  if (!p || p.uploaded) return;
+  if (!FB || !FB.st || !state.ident){ if (onState) onState("업로드 대기 (인터넷 연결되면 자동 전송)", "wait"); return; }
+  try {
+    const path = `museum/${TOUR}/${sid()}/${itemId}.jpg`;
+    const r = FB.sRef(FB.st, path);
+    await FB.sPut(r, p.data, "data_url");
+    const url = await FB.sUrl(r);
+    p.url = url; p.uploaded = true; delete p.data;
+    persist();
+    if (onState) onState("✓ 업로드 완료", "ok");
+    refreshCardById(itemId);
+    flushSync();
+  } catch (e) {
+    if (onState) onState("업로드 실패 — 잠시 후 다시 시도돼요", "no");
+  }
+}
+function retryPhotos(){
+  Object.keys(state.photos || {}).forEach(id => {
+    const p = state.photos[id];
+    if (p && !p.uploaded && p.data) uploadPhoto(id, null);
+  });
+}
+function refreshCardById(id){ try { refreshCard(id); } catch (e) {} }
 
 /* ══════════ 동기화 (Firebase) ══════════ */
 let syncTimer = null, lastSyncOk = null;
@@ -493,12 +577,15 @@ async function flushSync(){
   const i = state.ident;
   const answers = {};
   for (const [k, v] of Object.entries(state.steps)) if (typeof v === "string") answers[k] = v.slice(0, 200);
+  const photos = {};
+  for (const [id, p] of Object.entries(state.photos || {})) if (p && p.uploaded && p.url) photos[id] = p.url;
   const payload = {
     name: i.name, grade: i.grade, cls: `${i.grade}-${i.cls}`, num: i.num, avatar: i.avatar || "",
     startedAt: state.startedAt || Date.now(), updatedAt: Date.now(),
     stampCount: count(), stepDone: stepsDone(), stepTotal: STEP_TOTAL,
     done: count() >= TOTAL,
     stamps: state.stamps || {}, steps: state.steps || {}, answers,
+    photos, photoCount: Object.keys(photos).length,
     mvp: state.mvp || "", review: (state.review || "").slice(0, 500),
   };
   try {
@@ -517,8 +604,9 @@ function paintSync(){
 
 /* ══════════ 진행 계산 ══════════ */
 function stepDone(it, idx){
-  const v = state.steps[`${it.id}:${idx}`];
   const k = it.steps[idx].k;
+  if (k === "upload"){ const p = state.photos[it.id]; return !!(p && (p.uploaded || p.data)); }
+  const v = state.steps[`${it.id}:${idx}`];
   if (k === "find" || k === "photo") return v === true;
   if (k === "quiz") return v === it.steps[idx].a;   // 정답을 맞혀야 완료
   return typeof v === "string" && v.trim().length > 0;
@@ -582,6 +670,34 @@ function renderStep(it, st, i){
     box.innerHTML = `<label class="checkline"><input type="checkbox" ${cur===true?"checked":""}><span>${st.label}</span></label>`;
     box.querySelector("input").addEventListener("change", e => {
       state.steps[key] = e.target.checked; persist(); refreshCard(it.id);
+    });
+  } else if (st.k === "upload"){
+    box.innerHTML = qhead + `
+      <div class="upl">
+        <img class="uplthumb" alt="" hidden>
+        <input type="file" accept="image/*" capture="environment" hidden>
+        <button type="button" class="uplbtn">📸 사진 찍어 올리기</button>
+        <div class="uplstate" data-uplstate></div>
+      </div>`;
+    const inp = box.querySelector("input");
+    const btn = box.querySelector(".uplbtn");
+    const thumb = box.querySelector(".uplthumb");
+    const stt = box.querySelector("[data-uplstate]");
+    const setState = (msg, cls) => { stt.textContent = msg || ""; stt.className = "uplstate" + (cls ? " " + cls : ""); };
+    const showThumb = () => {
+      const p = state.photos[it.id];
+      const src = p && (p.url || p.data);
+      if (src){ thumb.src = src; thumb.hidden = false; btn.textContent = "📸 다시 찍기"; }
+      else { thumb.hidden = true; btn.textContent = "📸 사진 찍어 올리기"; }
+    };
+    const p0 = state.photos[it.id];
+    if (p0){ showThumb(); setState(p0.uploaded ? "✓ 업로드 완료" : (p0.data ? "업로드 대기 중…" : ""), p0.uploaded ? "ok" : "wait"); }
+    btn.addEventListener("click", () => inp.click());
+    inp.addEventListener("change", e => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      handlePhoto(it.id, f, setState).then(showThumb);
+      inp.value = "";
     });
   } else {
     box.innerHTML = qhead + `<textarea class="txt" rows="1" placeholder="${st.ph || "한 줄로 적어봐"}"></textarea>`;
@@ -675,7 +791,7 @@ document.getElementById("jumpBtn").addEventListener("click", () => {
 document.getElementById("mvp").addEventListener("change", e => { state.mvp = e.target.value; persist(); });
 document.getElementById("review").addEventListener("input", e => { state.review = e.target.value; persist(); });
 document.getElementById("resetBtn").addEventListener("click", () => {
-  if (!confirm("이 기기의 스탬프·미션 답·후기를 모두 지웁니다. 학생 정보도 다시 입력해야 합니다. 계속할까요?")) return;
+  if (!confirm("이 기기의 스탬프·미션 답·사진·후기를 모두 지웁니다. 학생 정보도 다시 입력해야 합니다. 계속할까요?")) return;
   localStorage.removeItem(STORE); location.reload();
 });
 function confetti(){
