@@ -172,7 +172,7 @@ const META = {
 const TOTAL = ORDER.length;
 const STEP_TOTAL = ORDER.reduce((a,id)=>a+META[id].s.length,0);
 
-let TOUR = (new URLSearchParams(location.search).get("tour") || localStorage.getItem("nmk-teacher-tour") || "default").replace(/[.#$/\[\]]/g,"");
+let TOUR = (new URLSearchParams(location.search).get("tour") || localStorage.getItem("nmk-teacher-tour") || "default").replace(/[.#$\[\]\/]/g,"");
 document.getElementById("tourInput").value = TOUR;
 let roster = JSON.parse(localStorage.getItem("nmk-teacher-roster") || "[]");
 document.getElementById("rosterText").value = localStorage.getItem("nmk-teacher-roster-raw") || "";
@@ -197,7 +197,7 @@ function subscribe(){
 }
 
 document.getElementById("tourApply").addEventListener("click", () => {
-  TOUR = (document.getElementById("tourInput").value.trim() || "default").replace(/[.#$/\[\]]/g,"");
+  TOUR = (document.getElementById("tourInput").value.trim() || "default").replace(/[.#$\[\]\/]/g,"");
   localStorage.setItem("nmk-teacher-tour", TOUR);
   subscribe();
 });

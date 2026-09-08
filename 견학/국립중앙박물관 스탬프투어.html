@@ -183,7 +183,7 @@
     <div class="fld"><label for="gName">이름</label><input id="gName" type="text" maxlength="10" placeholder="홍길동" autocomplete="off"></div>
     <button class="go" id="gGo" type="button">투어 시작</button>
     <div class="err" id="gErr"></div>
-    <div class="note">한 번 입력하면 이 기기에 저장돼, 브라우저를 닫았다 열어도 이어서 할 수 있습니다. <span style="opacity:.6">(v4)</span></div>
+    <div class="note">한 번 입력하면 이 기기에 저장돼, 브라우저를 닫았다 열어도 이어서 할 수 있습니다. <span style="opacity:.6">(v5)</span></div>
   </div>
 </div>
 
@@ -241,10 +241,10 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v4</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v5</span></div>
 
 <script type="module">
-console.log("[스탬프투어] 모듈 시작 v4");
+console.log("[스탬프투어] 모듈 시작 v5");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -265,7 +265,7 @@ Promise.all([
   try { paintSync(); if (state.ident) flushSync(); } catch (e) {}
 }).catch(() => { FB = null; });
 
-const TOUR = (new URLSearchParams(location.search).get("tour") || "default").replace(/[.#$/\[\]]/g, "");
+const TOUR = (new URLSearchParams(location.search).get("tour") || "default").replace(/[.#$\[\]\/]/g, "");
 const STORE = "nmk-tour-v2:" + TOUR;
 
 /* ══════════ 유물 데이터 ══════════
@@ -727,7 +727,7 @@ if (state.ident && state.ident.name){
   g.cls.value = i.cls; g.num.value = i.num; g.name.value = i.name;
   startApp();
 } else {
-  document.getElementById("gName").focus?.();
+  var gn = document.getElementById("gName"); if (gn && gn.focus) gn.focus();
 }
 
 /* 화면을 벗어날 때 마지막 저장 시도 */
