@@ -273,11 +273,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v20</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v21</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v20");
+DBG("모듈 시작 v21");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -292,13 +292,9 @@ const FB_CFG = {
 Promise.all([
   import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"),
   import("https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"),
-  import("https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js"),
-]).then(([appMod, dbm, sm]) => {
+]).then(([appMod, dbm]) => {
   const app = appMod.initializeApp(FB_CFG, "museum-" + Math.random().toString(36).slice(2, 7));
-  FB = {
-    db: dbm.getDatabase(app), ref: dbm.ref, set: dbm.set, get: dbm.get, onValue: dbm.onValue,
-    st: sm.getStorage(app), sRef: sm.ref, sPut: sm.uploadString, sUrl: sm.getDownloadURL,
-  };
+  FB = { db: dbm.getDatabase(app), ref: dbm.ref, set: dbm.set, get: dbm.get, onValue: dbm.onValue };
   try { paintSync(); if (state.ident) { flushSync(); retryPhotos(); watchReviews(); } } catch (e) {}
 }).catch(() => { FB = null; });
 
@@ -532,7 +528,7 @@ function load(){
 }
 function persist(){ try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e){} scheduleSync(); }
 
-/* ══════════ 유물 사진 업로드 (Firebase Storage) ══════════ */
+/* ══════════ 유물 사진 업로드 (Realtime Database에 축소 이미지 저장 — 무료 플랜) ══════════ */
 function downscale(file, maxPx, quality){
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -553,7 +549,7 @@ function downscale(file, maxPx, quality){
 async function handlePhoto(itemId, file, onState){
   onState("사진 처리 중…", "");
   let dataUrl;
-  try { dataUrl = await downscale(file, 900, 0.7); }
+  try { dataUrl = await downscale(file, 720, 0.6); }
   catch (e) { onState("사진을 읽지 못했어요. 다시 시도.", "no"); return; }
   state.photos[itemId] = { data: dataUrl, uploaded: false, at: Date.now() };  // rejected 플래그 없이 새로 시작
   persist();
@@ -563,14 +559,11 @@ async function handlePhoto(itemId, file, onState){
 }
 async function uploadPhoto(itemId, onState){
   const p = state.photos[itemId];
-  if (!p || p.uploaded) return;
-  if (!FB || !FB.st || !state.ident){ if (onState) onState("업로드 대기 (인터넷 연결되면 자동 전송)", "wait"); return; }
+  if (!p || p.uploaded || !p.data) return;
+  if (!FB || !state.ident){ if (onState) onState("업로드 대기 (인터넷 연결되면 자동 전송)", "wait"); return; }
   try {
-    const path = `museum/${TOUR}/${sid()}/${itemId}.jpg`;
-    const r = FB.sRef(FB.st, path);
-    await FB.sPut(r, p.data, "data_url");
-    const url = await FB.sUrl(r);
-    p.url = url; p.uploaded = true; delete p.data;
+    await FB.set(FB.ref(FB.db, `museum/${TOUR}/photos/${sid()}/${itemId}`), p.data);
+    p.uploaded = true;
     persist();
     if (onState) onState("업로드됨 · 선생님 승인 대기 중", "wait");
     refreshCardById(itemId);
@@ -667,9 +660,9 @@ async function flushSync(){
   const i = state.ident;
   const answers = {};
   for (const [k, v] of Object.entries(state.steps)) if (typeof v === "string") answers[k] = v.slice(0, 200);
-  const photos = {}, photoAt = {};
+  const photoAt = {};   // 어느 유물 사진이 업로드됐는지 + 그 사진의 시각(교사 승인/반려 매칭용). 실제 이미지는 museum/{tour}/photos/{sid} 에 별도 저장.
   for (const [id, p] of Object.entries(state.photos || {})) {
-    if (p && p.uploaded && p.url) { photos[id] = p.url; photoAt[id] = p.at || 0; }
+    if (p && p.uploaded) photoAt[id] = p.at || 0;
   }
   const payload = {
     name: i.name, grade: i.grade, cls: `${i.grade}-${i.cls}`, num: i.num, avatar: i.avatar || "",
@@ -677,7 +670,7 @@ async function flushSync(){
     stampCount: count(), stepDone: stepsDone(), stepTotal: STEP_TOTAL,
     done: count() >= TOTAL,
     stamps: state.stamps || {}, steps: state.steps || {}, answers,
-    photos, photoAt, photoCount: Object.keys(photos).length,
+    photoAt, photoCount: Object.keys(photoAt).length,
     mvp: state.mvp || "", review: (state.review || "").slice(0, 500),
   };
   try {
