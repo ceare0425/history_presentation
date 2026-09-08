@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>국립중앙박물관 국보 스탬프 투어</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#F4EEE4; --surface:#FFFFFF; --ink:#241A0E; --ink-sec:#6E5B41;
+    --line:#E3D6C1; --main:#8B4513; --accent:#C5A028; --gold-deep:#9A7B1E;
+    --seal:#B5322B; --ok:#2E7D32; --header:#2C1A0E;
+    --radius:14px; --shadow:0 4px 18px rgba(44,26,14,.10);
+  }
+  html,body{
+    font-family:'Noto Sans KR',sans-serif; background:var(--bg); color:var(--ink);
+    font-size:16px; line-height:1.6; -webkit-text-size-adjust:100%;
+  }
+  body{max-width:560px;margin:0 auto;padding-bottom:72px;overflow-x:hidden}
+  h1,h2,h3,.serif{font-family:'Nanum Myeongjo',serif}
+  button{font-family:inherit}
+
+  /* ── gate (학생 정보 입력) ── */
+  .gate{position:fixed;inset:0;z-index:200;background:var(--header);
+    background-image:repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(197,160,40,.05) 5px,rgba(197,160,40,.05) 10px);
+    display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+  .gate .panel{background:var(--surface);border-radius:16px;max-width:380px;width:100%;padding:1.5rem 1.3rem;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+  .gate h1{font-size:1.25rem;color:var(--main);text-align:center;line-height:1.35}
+  .gate .lead{font-size:.83rem;color:var(--ink-sec);text-align:center;margin:.4rem 0 1.1rem}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem}
+  .fld{margin-bottom:.6rem}
+  .fld label{display:block;font-size:.76rem;font-weight:700;color:var(--ink-sec);margin-bottom:.25rem}
+  .fld input,.fld select{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:.6rem .6rem;font-family:inherit;font-size:1rem;background:#FCFAF5}
+  .fld input:focus,.fld select:focus{outline:none;border-color:var(--accent)}
+  .gate .go{width:100%;margin-top:.6rem;border:none;border-radius:10px;padding:.85rem;background:var(--main);color:#FDF3DE;font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1.05rem;cursor:pointer}
+  .gate .go:disabled{background:#D8CBB4;color:#8C7C60}
+  .gate .err{color:var(--seal);font-size:.78rem;text-align:center;min-height:1.1em;margin-top:.4rem}
+  .gate .note{font-size:.72rem;color:#9C8A6E;text-align:center;margin-top:.7rem;line-height:1.5}
+
+  /* ── sticky progress ── */
+  .topbar{position:sticky;top:0;z-index:50;background:var(--header);
+    background-image:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(197,160,40,.05) 4px,rgba(197,160,40,.05) 8px);
+    border-bottom:3px solid var(--accent);padding:.65rem 1rem;color:#F6E9C8}
+  .topbar .row{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+  .topbar .who{font-size:.78rem;color:rgba(246,233,200,.82);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topbar .who b{color:var(--accent);font-family:'Nanum Myeongjo',serif}
+  .topbar .count{font-weight:900;font-size:.95rem;white-space:nowrap}
+  .topbar .count b{color:#fff;font-size:1.2rem}
+  .bar{margin-top:.45rem;height:9px;border-radius:99px;background:rgba(255,255,255,.14);overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),#E8CE7A);transition:width .5s cubic-bezier(.2,.7,.3,1)}
+  .topbar .sub{margin-top:.32rem;display:flex;justify-content:space-between;font-size:.72rem;color:rgba(246,233,200,.68)}
+  .sync{font-size:.7rem}
+  .sync.on{color:#9ED89A} .sync.off{color:#E7B98C}
+  .jump{margin-top:.5rem;width:100%;border:none;border-radius:9px;padding:.5rem;background:var(--accent);color:#2C1A0E;font-weight:700;font-size:.82rem;cursor:pointer}
+  .jump:disabled{opacity:.45;cursor:default}
+
+  .hero{padding:1.3rem 1.1rem .3rem;text-align:center}
+  .hero .kick{font-size:.76rem;font-weight:700;letter-spacing:.2em;color:var(--gold-deep)}
+  .hero h1{font-size:1.42rem;font-weight:800;margin:.3rem 0 .15rem;color:var(--main);line-height:1.3}
+  .hero p{font-size:.83rem;color:var(--ink-sec)}
+
+  section{padding:0 1.1rem}
+  .card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin:.9rem 0;overflow:hidden}
+
+  .intro{padding:.95rem 1.05rem}
+  .intro h2{font-size:1rem;color:var(--main);margin-bottom:.5rem}
+  .tips{font-size:.8rem;color:var(--ink-sec);background:#FBF4E4;border:1px dashed var(--accent);border-radius:10px;padding:.6rem .7rem}
+  .tips b{color:var(--main)}
+  .tips ul{margin:.25rem 0 0 1.05rem}
+  .tips li{margin:.12rem 0}
+
+  .part{display:flex;align-items:center;gap:.55rem;margin:1.6rem 0 .1rem}
+  .part .no{font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:.78rem;color:#fff;background:var(--main);border-radius:99px;padding:.15rem .6rem;white-space:nowrap}
+  .part h2{font-size:1rem;color:var(--ink)}
+  .part .loc{font-size:.73rem;color:var(--ink-sec)}
+
+  .item{position:relative}
+  .item .head{display:flex;gap:.7rem;padding:.85rem 1rem .5rem}
+  .item .badge{flex:0 0 42px;height:42px;border-radius:11px;background:#F3EADA;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1.35rem}
+  .item .tt{flex:1;min-width:0}
+  .item .tt .nm{font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1.05rem;line-height:1.3}
+  .item .tt .meta{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.28rem}
+  .chip{font-size:.7rem;font-weight:700;border-radius:5px;padding:.12rem .42rem;white-space:nowrap}
+  .chip.nat{background:#FBEEC8;color:#8A6A12;border:1px solid #E7CE8E}
+  .chip.loc{background:#EEF4EC;color:#3C6B39}
+  .chip.pg{background:#F0EAF6;color:#5B3E86}
+  .item .blurb{padding:0 1rem .5rem;font-size:.86rem;color:#3A2E1E}
+
+  .steps{margin:.2rem 1rem .3rem;display:flex;flex-direction:column;gap:.5rem}
+  .step{border:1px solid var(--line);border-radius:11px;padding:.62rem .72rem;background:#FBF6EC}
+  .step .q{font-size:.83rem;font-weight:700;color:var(--ink);margin-bottom:.45rem;display:flex;gap:.4rem}
+  .step .q .tk{flex:none;font-size:.68rem;font-weight:800;color:#fff;border-radius:5px;padding:.06rem .38rem;letter-spacing:.02em}
+  .tk.find{background:#7A6033} .tk.look{background:#3C6B39} .tk.quiz{background:#1565C0} .tk.think{background:#8B4513} .tk.photo{background:#6A1B9A}
+  .opts{display:flex;flex-direction:column;gap:.32rem}
+  .opt{display:flex;align-items:center;gap:.5rem;font-size:.88rem;border:1.5px solid var(--line);border-radius:9px;padding:.46rem .55rem;cursor:pointer;background:#fff}
+  .opt input{accent-color:var(--main);width:17px;height:17px;flex:none}
+  .opt.sel{border-color:var(--main);background:#FBF0DE}
+  .opt.correct{border-color:var(--ok);background:#EAF5EA}
+  .opt.wrong{border-color:var(--seal);background:#F8EAE9}
+  .step .txt{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:.5rem .6rem;font-family:inherit;font-size:.9rem;background:#fff;resize:vertical;min-height:2.4em}
+  .step .txt:focus{outline:none;border-color:var(--accent)}
+  .checkline{display:flex;align-items:center;gap:.55rem;font-size:.9rem;cursor:pointer}
+  .checkline input{width:19px;height:19px;accent-color:var(--main);flex:none}
+  .fb{margin-top:.4rem;font-size:.76rem;font-weight:700;min-height:1em}
+  .fb.ok{color:var(--ok)} .fb.no{color:var(--seal)}
+  .stepnum{font-size:.72rem;color:var(--ink-sec);margin:.1rem 1rem 0;font-weight:600}
+
+  .stampBtn{display:block;width:calc(100% - 2rem);margin:.55rem 1rem 1rem;border:none;border-radius:11px;padding:.78rem;
+    background:var(--main);color:#FDF3DE;font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1rem;letter-spacing:.04em;cursor:pointer;transition:transform .1s,background .15s}
+  .stampBtn:active{transform:scale(.98)}
+  .stampBtn:disabled{background:#D8CBB4;color:#8C7C60;cursor:default}
+  .item.done{border-color:var(--accent)}
+  .item.done .steps,.item.done .blurb{opacity:.5}
+  .item.done .stampBtn{background:var(--ok);color:#fff}
+  .seal{position:absolute;top:8px;right:10px;width:60px;height:60px;border-radius:50%;border:3px double var(--seal);color:var(--seal);
+    display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:.64rem;line-height:1.1;
+    transform:rotate(-14deg) scale(0);opacity:0;pointer-events:none;background:rgba(255,255,255,.55)}
+  .item.done .seal{animation:stamp .45s cubic-bezier(.2,1.4,.4,1) forwards}
+  @keyframes stamp{0%{transform:rotate(-14deg) scale(2.4);opacity:0}60%{opacity:1}100%{transform:rotate(-14deg) scale(1);opacity:.92}}
+
+  .finale{padding:1.05rem}
+  .finale h2{font-size:1.1rem;color:var(--main);margin-bottom:.15rem}
+  .finale .sub{font-size:.8rem;color:var(--ink-sec);margin-bottom:.75rem}
+  .badges{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem}
+  .mbadge{flex:1;min-width:92px;text-align:center;border:1.5px dashed var(--line);border-radius:11px;padding:.55rem .3rem;font-size:.73rem;color:#9C8A6E;background:#FCFAF5}
+  .mbadge .ic{font-size:1.45rem;display:block;filter:grayscale(1);opacity:.4}
+  .mbadge.on{border-style:solid;border-color:var(--accent);color:var(--main);background:#FBF2DF;font-weight:700}
+  .mbadge.on .ic{filter:none;opacity:1}
+  .finale label.lb{display:block;font-size:.8rem;font-weight:700;color:var(--ink-sec);margin:.65rem 0 .28rem}
+  .finale select,.finale textarea{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:.58rem .62rem;font-family:inherit;font-size:.95rem;background:#FCFAF5}
+  .finale select:focus,.finale textarea:focus{outline:none;border-color:var(--accent)}
+  .clearBanner{display:none;margin-top:.9rem;text-align:center;background:linear-gradient(135deg,#2C1A0E,#5A3A1C);color:#F6E9C8;border-radius:12px;padding:.95rem}
+  .clearBanner.show{display:block;animation:pop .4s ease}
+  .clearBanner .big{font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1.12rem;color:var(--accent)}
+  @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+  .resetBtn{margin:1rem 0 0;width:100%;background:none;border:1.5px solid var(--line);color:var(--ink-sec);border-radius:9px;padding:.55rem;font-size:.8rem;cursor:pointer}
+  .resetBtn:hover{border-color:var(--seal);color:var(--seal)}
+  .foot{text-align:center;font-size:.72rem;color:#A8977B;padding:1.3rem 1rem 0}
+  .confetti{position:fixed;top:-40px;font-size:1.4rem;z-index:100;pointer-events:none;will-change:transform}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg)}}
+</style>
+</head>
+<body>
+
+<!-- ── 학생 정보 입력 ── -->
+<div class="gate" id="gate">
+  <div class="panel">
+    <h1>🏛️ 국립중앙박물관<br>국보 스탬프 투어</h1>
+    <div class="lead">먼저 내 정보를 입력하자.<br>선생님 화면에 <b>참여·진행 상황</b>이 나타납니다.</div>
+    <div class="grid3">
+      <div class="fld"><label for="gGrade">학년</label>
+        <select id="gGrade"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select></div>
+      <div class="fld"><label for="gClass">반</label><input id="gClass" type="number" inputmode="numeric" min="1" max="20" placeholder="3"></div>
+      <div class="fld"><label for="gNum">번호</label><input id="gNum" type="number" inputmode="numeric" min="1" max="50" placeholder="14"></div>
+    </div>
+    <div class="fld"><label for="gName">이름</label><input id="gName" type="text" maxlength="10" placeholder="홍길동" autocomplete="off"></div>
+    <button class="go" id="gGo" disabled>투어 시작</button>
+    <div class="err" id="gErr"></div>
+    <div class="note">한 번 입력하면 이 기기에 저장돼, 브라우저를 닫았다 열어도 이어서 할 수 있습니다.</div>
+  </div>
+</div>
+
+<div class="topbar" id="topbar" hidden>
+  <div class="row">
+    <span class="who" id="who"></span>
+    <span class="count"><b id="cNow">0</b> / <span id="cTot">20</span> 스탬프</span>
+  </div>
+  <div class="bar"><i id="barFill"></i></div>
+  <div class="sub">
+    <span id="stepStat">세부 미션 0 / 0</span>
+    <span class="sync off" id="sync">저장: 이 기기</span>
+  </div>
+  <button class="jump" id="jumpBtn">다음 미완료 유물로 이동 ↓</button>
+</div>
+
+<div class="hero" id="hero" hidden>
+  <div class="kick">NATIONAL MUSEUM OF KOREA</div>
+  <h1>국보 스탬프 투어</h1>
+  <p>유물을 찾아 · 자세히 보고 · 생각하고 · 스탬프를 찍어라</p>
+</div>
+
+<section id="introWrap" hidden>
+  <div class="card intro">
+    <h2>관람 규칙 &amp; 꿀팁</h2>
+    <div class="tips">
+      <ul>
+        <li>유물마다 미션이 <b>3~5개</b>. 다 풀어야 <b>스탬프</b>가 열립니다.</li>
+        <li>사진 촬영 O · <b>플래시·삼각대 금지</b> · 사유의 방은 촬영 규정을 꼭 확인</li>
+        <li>동선: <b>1층 → 2층 사유의 방 → 3층</b> 순서가 안 꼬임</li>
+        <li>1시간이면 빠듯하다. <b>최소 12개</b>를 목표로, 여유 있으면 20개 완주</li>
+        <li>스탬프는 <b>실물을 눈으로 본 뒤</b>에 (그게 규칙)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="items" hidden></section>
+
+<section id="finaleWrap" hidden>
+  <div class="card finale">
+    <h2>투어 마무리</h2>
+    <div class="sub">스탬프를 모을수록 뱃지가 열립니다.</div>
+    <div class="badges">
+      <div class="mbadge" data-need="8"><span class="ic">🚩</span>탐험가<br>8개</div>
+      <div class="mbadge" data-need="12"><span class="ic">🎖️</span>미션 클리어<br>12개</div>
+      <div class="mbadge" data-need="20"><span class="ic">🏆</span>올 스탬프<br>20개</div>
+    </div>
+    <label class="lb" for="mvp">오늘의 MVP 유물 (스탬프 찍은 것 중에서)</label>
+    <select id="mvp"><option value="">— 아직 고르는 중 —</option></select>
+    <label class="lb" for="review">한 줄 관람 후기</label>
+    <textarea id="review" rows="3" placeholder="가장 놀랐던 것, 실물 보고 생각이 바뀐 것, 다음에 또 보고 싶은 것…"></textarea>
+    <div class="clearBanner" id="clearBanner"><div class="big" id="clearTitle"></div><div id="clearMsg"></div></div>
+    <button class="resetBtn" id="resetBtn">처음부터 다시 (이 기기 기록 삭제)</button>
+  </div>
+</section>
+
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지</div>
+
+<script type="module">
+/* ══════════ Firebase (선택적 · 실패해도 앱은 로컬로 동작) ══════════ */
+let FB = null;
+try {
+  const [{ initializeApp }, dbm] = await Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"),
+  ]);
+  const cfg = {
+    apiKey: "AIzaSyAWsHD8UjeSbG0IvXW9izxbBiGDHpOzytk",
+    authDomain: "history-review-game.firebaseapp.com",
+    databaseURL: "https://history-review-game-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "history-review-game",
+    storageBucket: "history-review-game.firebasestorage.app",
+    messagingSenderId: "663174446158",
+    appId: "1:663174446158:web:314c67ed3a3f69c0bed71f",
+  };
+  const app = initializeApp(cfg, "museum-" + Math.random().toString(36).slice(2, 7));
+  FB = { db: dbm.getDatabase(app), ref: dbm.ref, set: dbm.set, get: dbm.get, onValue: dbm.onValue };
+} catch (e) { FB = null; }
+
+const TOUR = (new URLSearchParams(location.search).get("tour") || "default").replace(/[.#$/\[\]]/g, "");
+const STORE = "nmk-tour-v2:" + TOUR;
+
+/* ══════════ 유물 데이터 ══════════
+   step k: find | look | quiz | think | photo
+   find/photo → 체크 · look/think → 한 줄 쓰기 · quiz → 3지선다(a=정답 index) */
+const PARTS = [
+{ no:"1부", title:"1층 · 선사·고대관", loc:"선사 → 삼국 → 남북국", items:[
+  { id:"jumeok", emoji:"🪨", nm:"주먹도끼", nat:false, loc:"구석기실",
+    blurb:"경기 연천 전곡리에서 나온 약 30만 년 전 뗀석기. 양면을 대칭으로 다듬은 ‘아슐리안형’으로, 동아시아엔 없다던 학설을 뒤집었다.",
+    steps:[
+      {k:"find", label:"구석기실에서 주먹도끼 진열장을 찾았다"},
+      {k:"look", q:"돌의 가장자리(날)를 보고 — 한 면만 떼어냈나, 양면을 다 떼어냈나?", ph:"예: 양면을 다 떼어냄"},
+      {k:"quiz", q:"이 도구를 만든 시대는?", opts:["구석기","신석기","청동기"], a:0},
+      {k:"think", q:"자르고·찍고·긁는 걸 이거 하나로 다 했다. 요즘 물건 중 ‘하나로 여러 일 하는 것’을 하나 적어봐", ph:"예: 스마트폰"},
+    ]},
+  { id:"bitsal", emoji:"🏺", nm:"빗살무늬 토기", nat:false, loc:"신석기실",
+    blurb:"약 6000년 전 서울 암사동 등에서 나온 신석기 그릇. 농사·정착이 시작되며 식량을 저장·조리할 그릇이 필요해졌다.",
+    steps:[
+      {k:"find", label:"신석기실에서 바닥이 뾰족한 큰 토기를 찾았다"},
+      {k:"look", q:"몸통의 무늬가 어떤 모양·방향으로 그어져 있나?", ph:"예: 비스듬한 빗금"},
+      {k:"quiz", q:"바닥이 뾰족한 이유로 가장 알맞은 것은?", opts:["강가 모래에 꽂아 세우려고","굴리며 쓰려고","천장에 매달려고"], a:0},
+      {k:"think", q:"‘저장용 그릇이 생겼다’는 건 생활이 어떻게 바뀌었다는 뜻일까? 한 줄로", ph:""},
+    ]},
+  { id:"nonggyeong", emoji:"⛏️", nm:"농경문 청동기", nat:false, loc:"청동기·고조선실",
+    blurb:"앞면엔 밭 가는 사람, 뒷면엔 새가 앉은 나뭇가지가 새겨진 국내 유일의 ‘농사 그림’ 청동기. 의례용으로 본다.",
+    steps:[
+      {k:"find", label:"사람이 밭 가는 그림이 새겨진 청동판을 찾았다"},
+      {k:"look", q:"밭 가는 사람의 모습에서 특이한 점 하나 (자세·옷차림·도구 등)", ph:""},
+      {k:"quiz", q:"이 유물의 쓰임새로 추정되는 것은?", opts:["풍년을 비는 의례 도구","실제 농기구","화폐"], a:0},
+      {k:"think", q:"왜 지배자가 하필 ‘농사 장면’을 청동기에 새겼을까? 한 줄로", ph:""},
+    ]},
+  { id:"bipa", emoji:"🗡️", nm:"비파형 동검", nat:false, loc:"청동기·고조선실",
+    blurb:"악기 비파를 닮은 청동검. 만주~한반도 서북부에 집중 분포해 고조선의 문화 범위를 보여주는 표지 유물이다.",
+    steps:[
+      {k:"find", label:"칼몸이 비파처럼 불룩한 청동검을 찾았다"},
+      {k:"look", q:"칼날과 손잡이가 한 몸인가, 따로 만들어 조립하게 돼 있나?", ph:"예: 따로 조립"},
+      {k:"quiz", q:"이 동검의 분포 범위가 알려주는 것은?", opts:["고조선의 세력·문화권","고구려의 남쪽 국경","통일신라의 무역로"], a:0},
+      {k:"think", q:"뒷날 폭이 좁은 ‘세형동검’으로 바뀐다. 무기 모양이 지역·시대마다 달라지는 이유를 한 줄로 추측", ph:""},
+    ]},
+  { id:"hyangno", emoji:"🐉", nm:"백제 금동대향로", nat:true, loc:"백제실",
+    blurb:"1993년 부여 능산리 절터 진흙 웅덩이에서 거의 온전하게 출토. 뚜껑에 봉황, 74개 산봉우리, 5명의 악사가 있다.",
+    steps:[
+      {k:"find", label:"뚜껑 꼭대기에 봉황이 앉은 향로를 찾았다"},
+      {k:"look", q:"뚜껑(산봉우리 부분)에서 사람이나 동물을 하나 찾아 무엇인지 적어라", ph:"예: 피리 부는 사람"},
+      {k:"quiz", q:"이 향로의 재질은?", opts:["순금","청동에 금도금(금동)","청자"], a:1},
+      {k:"think", q:"도교(신선)와 불교 요소가 한 유물에 섞여 있다. 왜 섞였을지, 또는 오늘날 ‘섞인’ 예를 한 줄로", ph:""},
+      {k:"photo", label:"향로 인증샷을 찍었다"},
+    ]},
+  { id:"muryeong", emoji:"🦏", nm:"무령왕릉 진묘수·금제 관식", nat:false, loc:"백제실",
+    blurb:"도굴되지 않은 채 발견된 유일한 백제 왕릉. 무덤을 지키는 돌짐승(진묘수)과 왕·왕비의 금제 관 장식이 나왔다.",
+    steps:[
+      {k:"find", label:"무령왕릉 코너(돌짐승·금제 관식)를 찾았다"},
+      {k:"look", q:"진묘수 머리에 난 뿔은 몇 개?", ph:"숫자로"},
+      {k:"quiz", q:"무령왕릉이 특별한 가장 큰 이유는?", opts:["무덤 주인을 적은 지석이 함께 나왔다","가장 큰 무덤이다","가장 오래된 무덤이다"], a:0},
+      {k:"think", q:"왕·왕비 관 장식 무늬(불꽃·꽃)를 보고, 백제가 ‘어떻게 보이고 싶어 했는지’ 한 줄로", ph:""},
+    ]},
+  { id:"gima", emoji:"🐎", nm:"도기 기마인물형 명기", nat:true, loc:"신라실",
+    blurb:"말 탄 사람을 본뜬 신라 토기 두 점(주인상·하인상). 말 잔등에 잔, 가슴에 대롱이 달려 액체를 따르는 그릇이다.",
+    steps:[
+      {k:"find", label:"말 탄 사람 모양 토기 두 점을 찾았다"},
+      {k:"look", q:"주인상과 하인상의 차림새 차이를 하나 적어라 (모자·복장 등)", ph:""},
+      {k:"quiz", q:"이 토기의 실제 용도는?", opts:["제사 때 술·물을 따르는 그릇","아이 장난감","무기"], a:0},
+      {k:"think", q:"1500년 전 신라의 말·안장·복장을 이렇게 자세히 알 수 있는 이유를 한 줄로", ph:""},
+      {k:"photo", label:"인증샷을 찍었다"},
+    ]},
+  { id:"geumgwan", emoji:"👑", nm:"신라 금관", nat:true, loc:"신라실",
+    blurb:"얇은 금판을 오려 ‘出’자 세움장식과 사슴뿔 장식을 세우고 곡옥·달개를 매달았다. 황남대총·금관총 등 왕족 무덤 출토.",
+    steps:[
+      {k:"find", label:"곡옥이 주렁주렁 달린 금관을 찾았다"},
+      {k:"look", q:"금관에 매달린 초록빛 굽은 옥(곡옥)이 대략 몇 개쯤 보이나?", ph:"어림수로"},
+      {k:"quiz", q:"이 금관의 쓰임새로 가장 유력한 것은?", opts:["죽은 왕을 위한 껴묻거리(장례용)","전투용 투구","평소 집무용"], a:0},
+      {k:"think", q:"금을 이만큼 무덤에 묻었다는 건 당시 신라 사회에 대해 뭘 말해줄까? 한 줄", ph:""},
+    ]},
+  { id:"houu", emoji:"🥣", nm:"호우명 청동 그릇", nat:false, loc:"신라실",
+    blurb:"경주 호우총 출토 청동 그릇. 바닥에 ‘을묘년국강상광개토지호태왕’ 글자가 있어 고구려에서 만들어 신라로 전해졌음을 보여준다.",
+    steps:[
+      {k:"find", label:"바닥에 한자가 새겨진 청동 그릇(호우명 그릇)을 찾았다"},
+      {k:"look", q:"그릇 바닥 글자 중 알아볼 수 있는 한자를 하나 적어라", ph:"예: 王, 年"},
+      {k:"quiz", q:"신라 무덤에서 이 그릇이 나온 사실이 알려주는 것은?", opts:["5세기 신라가 고구려의 영향 아래 있었다","신라가 고구려를 정복했다","두 나라가 교류가 전혀 없었다"], a:0},
+      {k:"think", q:"광개토대왕릉비(만주)와 이 그릇(경주)이 같은 왕을 가리킨다. 서로 다른 곳의 유물을 맞춰보는 공부가 왜 중요할까? 한 줄", ph:""},
+    ]},
+  { id:"gaya", emoji:"🛡️", nm:"가야 판갑옷과 투구", nat:false, loc:"가야실",
+    blurb:"철판을 두드려 잇대 만든 가야 무사의 갑옷. 가야는 질 좋은 철을 낙랑·왜에 수출하며 성장했다.",
+    steps:[
+      {k:"find", label:"철판을 이어 붙인 갑옷·투구를 찾았다"},
+      {k:"look", q:"철판들을 무엇으로 이어 붙였나? (못·가죽끈 등 보이는 대로)", ph:""},
+      {k:"quiz", q:"가야를 경제적으로 성장시킨 자원은?", opts:["철","소금","비단"], a:0},
+      {k:"think", q:"삼국과 달리 가야는 하나의 나라로 통합되지 못했다. 그 이유를 한 줄로 추측", ph:""},
+    ]},
+  { id:"gameun", emoji:"✨", nm:"감은사지 삼층석탑 사리장엄구", nat:false, loc:"통일신라실",
+    blurb:"문무왕이 왜구를 막고자 지은 감은사, 그 두 탑에서 나온 손바닥만 한 금동 사리기. 사천왕상·주악상의 표정까지 정교하다.",
+    steps:[
+      {k:"find", label:"감은사 탑에서 나온 금동 사리기를 찾았다"},
+      {k:"look", q:"네 모서리를 지키는 사천왕상 중 하나의 자세·표정을 한 줄로 묘사해라", ph:""},
+      {k:"quiz", q:"감은사를 지은 목적과 관련 있는 것은?", opts:["바다로 오는 적(왜구)을 부처의 힘으로 막으려 함","왕의 생일 기념","농사 풍년 기원"], a:0},
+      {k:"think", q:"이렇게 작은 것에 이만한 공을 들인 이유를 한 줄로", ph:""},
+    ]},
+  { id:"balhae", emoji:"☸️", nm:"발해 이불병좌상", nat:false, loc:"발해실",
+    blurb:"부처 두 분이 나란히 앉은 발해 불상. 옷 주름·광배 표현이 고구려 불상과 닮아 발해의 고구려 계승 근거로 자주 인용된다.",
+    steps:[
+      {k:"find", label:"부처 두 분이 나란히 앉은 작은 불상을 찾았다"},
+      {k:"look", q:"두 부처의 크기·자세가 같나, 다른가?", ph:""},
+      {k:"quiz", q:"이 불상이 ‘발해=고구려 계승’의 근거가 되는 이유는?", opts:["양식(만든 방식)이 고구려 불상과 닮아서","고구려 왕 이름이 새겨져서","고구려 옛 땅에서 나와서"], a:0},
+      {k:"think", q:"‘발해는 우리 역사’의 근거를 하나 더 떠올려 적어봐 (연호·국서 등)", ph:""},
+    ]},
+]},
+{ no:"2부", title:"1층 · 중·근세관", loc:"고려 → 조선", items:[
+  { id:"cheongja", emoji:"🍵", nm:"고려청자", nat:true, loc:"고려실",
+    blurb:"‘청자 참외모양 병’ 등 고려실 대표 청자. 맑은 옥빛을 ‘비색’이라 불렀고, 뒤이어 흙을 파내고 다른 색 흙을 메우는 ‘상감’ 기법이 더해진다.",
+    steps:[
+      {k:"find", label:"참외 모양 청자 병, 또는 학·구름 무늬 상감청자를 찾았다"},
+      {k:"look", q:"무늬가 표면에 ‘그려진’ 것인지, 파내고 다른 흙으로 ‘메운’ 것인지 가까이 보고 적어라", ph:"예: 파내서 메움(상감)"},
+      {k:"quiz", q:"고려 사람들이 청자의 빛깔을 부른 말은?", opts:["비색","분청","진사"], a:0},
+      {k:"think", q:"도자기 기술은 당시 첨단 산업이었다. 오늘날로 치면 어떤 산업에 견줄까? 한 줄", ph:""},
+    ]},
+  { id:"jeongbyeong", emoji:"🫗", nm:"청동 은입사 물가풍경무늬 정병", nat:true, loc:"고려실",
+    blurb:"청동 표면을 가늘게 파고 홈에 은실을 박아 그림을 그린 ‘은입사’ 정병. 버드나무·물새·배가 있는 물가 풍경이 병을 감싼다. 절에서 정한 물을 담던 그릇.",
+    steps:[
+      {k:"find", label:"목이 길고 은실로 물가 풍경이 새겨진 청동 병을 찾았다"},
+      {k:"look", q:"은실로 표현된 소재(버드나무·새·배·갈대 등) 중 눈에 띄는 것 두 개", ph:""},
+      {k:"quiz", q:"표면을 장식한 기법의 이름은?", opts:["은입사","나전(자개)","금박"], a:0},
+      {k:"think", q:"물 담는 실용 그릇에 이렇게 공들여 그림을 새긴 이유를 한 줄로", ph:""},
+    ]},
+]},
+{ no:"3부", title:"2층 · 사유의 방 & 서화관", loc:"조용히 감상하는 층", items:[
+  { id:"banga", emoji:"🧘", nm:"금동미륵보살반가사유상", nat:true, loc:"사유의 방",
+    blurb:"삼국시대에 만든 금동 반가사유상 두 점을 어두운 독립 전시실에 나란히 뒀다. 한 다리를 무릎에 얹고 손끝을 뺨에 댄 ‘생각하는’ 자세.",
+    steps:[
+      {k:"find", label:"사유의 방에 들어가 반가사유상 두 점 앞에 섰다"},
+      {k:"look", q:"두 상의 차이를 하나 적어라 (관 모양·옷 주름·표정 등)", ph:""},
+      {k:"quiz", q:"‘반가사유’라는 이름의 뜻에 가장 가까운 것은?", opts:["반쯤 다리를 걸치고(반가) 생각에 잠긴(사유) 자세","반씩 나눠 만든 불상","반절만 도금한 상"], a:0},
+      {k:"think", q:"벤치에 2~3분 앉아 상을 바라본 뒤, 그때 든 생각·느낌을 한 줄로", ph:""},
+      {k:"photo", label:"사유의 방 분위기 인증샷을 찍었다 (촬영 규정 확인)"},
+    ]},
+  { id:"seohwa", emoji:"🖼️", nm:"옛 그림 한 점 고르기", nat:false, loc:"서화관 (전시 수시 교체)",
+    blurb:"김홍도·정선·신윤복 등 조선 회화가 걸린다(전시 교체가 잦다). 마음에 드는 그림 하나를 골라 자세히 보자.",
+    steps:[
+      {k:"find", label:"서화관에서 마음에 드는 옛 그림 한 점을 골랐다"},
+      {k:"look", q:"그림 제목과 그린 사람(작가)을 적어라 (설명 카드 참고)", ph:"예: 김홍도 「씨름」"},
+      {k:"look", q:"그 그림에 무엇이 그려져 있는지 한 줄로 묘사해라", ph:""},
+      {k:"think", q:"그 그림을 고른 이유를 한 줄로", ph:""},
+      {k:"photo", label:"고른 그림을 사진으로 남겼다"},
+    ]},
+]},
+{ no:"4부", title:"3층 · 조각·공예관", loc:"도자기와 불상", items:[
+  { id:"dalhangari", emoji:"🌕", nm:"백자 달항아리", nat:false, loc:"도자공예실",
+    blurb:"조선 후기 백자 항아리. 커서 위·아래를 따로 빚어 붙이므로 완벽한 원이 아니라 살짝 비뚤어진다. 그 넉넉한 비대칭이 특징.",
+    steps:[
+      {k:"find", label:"흰 대형 백자 항아리(달항아리)를 찾았다"},
+      {k:"look", q:"좌우 윤곽선을 보고 — 완벽한 대칭인가, 어느 쪽이 더 부풀었나?", ph:""},
+      {k:"quiz", q:"달항아리가 완벽한 원형이 아닌 주된 이유는?", opts:["위·아래를 따로 만들어 이어 붙여서","일부러 찌그러뜨려서","오래돼 변형돼서"], a:0},
+      {k:"think", q:"청자·분청 계열에서 순백자로 흐름이 바뀐 걸, 조선의 성리학 분위기와 연결해 한 줄로", ph:""},
+    ]},
+  { id:"buncheong", emoji:"🪴", nm:"분청사기", nat:false, loc:"도자공예실",
+    blurb:"15~16세기, 청자에서 백자로 넘어가는 과도기 그릇. 분장토를 바르고 긁고 도장 찍고 붓칠하며 자유롭게 꾸민다.",
+    steps:[
+      {k:"find", label:"회청색 바탕에 자유분방한 무늬가 있는 분청사기를 찾았다"},
+      {k:"look", q:"무늬를 넣은 방법으로 보이는 것을 하나 적어라 (도장 찍기·긁어내기·붓칠 등)", ph:""},
+      {k:"quiz", q:"분청사기의 시기적 위치는?", opts:["청자에서 백자로 넘어가는 과도기","청자보다 이른 시기","백자보다 늦은 시기"], a:0},
+      {k:"think", q:"같은 시대에 왕실은 백자를, 지방 가마는 분청을 주로 썼다. 이유를 한 줄로 추측", ph:""},
+    ]},
+  { id:"geumdongbul", emoji:"🌟", nm:"통일신라 금동불", nat:true, loc:"불교조각실",
+    blurb:"8세기 통일신라 금동불. 통통한 얼굴과 자연스러운 옷 주름은 인도 굽타 양식의 영향으로, 불교미술이 실크로드를 타고 신라까지 왔음을 보여준다.",
+    steps:[
+      {k:"find", label:"불교조각실에서 통일신라 금동불을 찾았다"},
+      {k:"look", q:"불상 뒤 광배(빛 무늬)나 옷 주름에서 눈에 띄는 특징을 한 줄로", ph:""},
+      {k:"quiz", q:"이 불상 양식에 영향을 준 지역은?", opts:["인도(굽타 양식)","일본","몽골"], a:0},
+      {k:"think", q:"종교와 함께 미술 양식이 국경을 넘어 전해진 다른 예를 하나 떠올려 적어봐", ph:""},
+    ]},
+]},
+{ no:"보너스", title:"3층 · 세계문화관", loc:"시간 남으면", items:[
+  { id:"world", emoji:"🌍", nm:"이집트 미라 & 신안선 유물", nat:false, loc:"세계문화관",
+    blurb:"3층엔 진짜 이집트 미라와, 신안 앞바다에서 건진 14세기 무역선의 화물(도자기·동전 등 수만 점)이 있다.",
+    steps:[
+      {k:"find", label:"세계문화관(이집트실 또는 신안 해저문화재실)에 들어갔다"},
+      {k:"look", q:"본 유물 하나를 골라 이름과 어느 나라·시대 것인지 적어라", ph:""},
+      {k:"quiz", q:"신안선 유물이 알려주는 것은?", opts:["14세기 동아시아를 잇는 바닷길 무역","신라의 삼국통일","조선의 쇄국 정책"], a:0},
+      {k:"think", q:"한국 박물관에 이집트·중국 유물이 있는 게 왜 의미 있을까? 한 줄", ph:""},
+    ]},
+]},
+];
+const ALL = PARTS.flatMap(p => p.items);
+const TOTAL = ALL.length;
+const STEP_TOTAL = ALL.reduce((s, it) => s + it.steps.length, 0);
+const TK = { find:"찾기", look:"관찰", quiz:"퀴즈", think:"생각", photo:"사진" };
+
+/* ══════════ 상태 ══════════ */
+let state = load();
+function load(){
+  try { const s = JSON.parse(localStorage.getItem(STORE)); if (s && s.v === 2) return s; } catch(e){}
+  return { v:2, ident:null, steps:{}, stamps:{}, mvp:"", review:"", startedAt:0, _fired:false };
+}
+function persist(){ try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e){} scheduleSync(); }
+
+/* ══════════ 동기화 (Firebase) ══════════ */
+let syncTimer = null, lastSyncOk = null;
+function sid(){ const i = state.ident; return i ? `${i.grade}-${i.cls}-${i.num}` : null; }
+function scheduleSync(){
+  if (!FB || !state.ident) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(flushSync, 900);
+}
+async function flushSync(){
+  if (!FB || !state.ident) return;
+  const i = state.ident;
+  const answers = {};
+  for (const [k, v] of Object.entries(state.steps)) if (typeof v === "string") answers[k] = v.slice(0, 200);
+  const payload = {
+    name: i.name, grade: i.grade, cls: `${i.grade}-${i.cls}`, num: i.num, avatar: i.avatar || "",
+    startedAt: state.startedAt || Date.now(), updatedAt: Date.now(),
+    stampCount: count(), stepDone: stepsDone(), stepTotal: STEP_TOTAL,
+    done: count() >= TOTAL,
+    stamps: state.stamps || {}, steps: state.steps || {}, answers,
+    mvp: state.mvp || "", review: (state.review || "").slice(0, 500),
+  };
+  try {
+    await FB.set(FB.ref(FB.db, `museum/${TOUR}/students/${sid()}`), payload);
+    lastSyncOk = true;
+  } catch(e) { lastSyncOk = false; }
+  paintSync();
+}
+function paintSync(){
+  const el = document.getElementById("sync");
+  if (!FB){ el.className = "sync off"; el.textContent = "저장: 이 기기"; return; }
+  if (lastSyncOk === true){ el.className = "sync on"; el.textContent = "선생님께 전송됨 ✓"; }
+  else if (lastSyncOk === false){ el.className = "sync off"; el.textContent = "전송 대기 (인터넷 확인)"; }
+  else { el.className = "sync off"; el.textContent = "연결 중…"; }
+}
+
+/* ══════════ 진행 계산 ══════════ */
+function stepDone(it, idx){
+  const v = state.steps[`${it.id}:${idx}`];
+  const k = it.steps[idx].k;
+  if (k === "find" || k === "photo") return v === true;
+  if (k === "quiz") return Number.isInteger(v);
+  return typeof v === "string" && v.trim().length > 0;
+}
+function cardDone(it){ return it.steps.every((_, i) => stepDone(it, i)); }
+function count(){ return ALL.filter(x => state.stamps[x.id]).length; }
+function stepsDone(){ return ALL.reduce((s, it) => s + it.steps.filter((_, i) => stepDone(it, i)).length, 0); }
+
+/* ══════════ 렌더 ══════════ */
+const itemsWrap = document.getElementById("items");
+function buildItems(){
+  itemsWrap.innerHTML = "";
+  PARTS.forEach(part => {
+    const ph = document.createElement("div");
+    ph.className = "part";
+    ph.innerHTML = `<span class="no">${part.no}</span><div><h2>${part.title}</h2><div class="loc">${part.loc}</div></div>`;
+    itemsWrap.appendChild(ph);
+    part.items.forEach(it => {
+      const c = document.createElement("div");
+      c.className = "card item";
+      c.id = "card-" + it.id;
+      c.innerHTML = `
+        <div class="seal">국립중앙<br>박물관<br>관람필</div>
+        <div class="head">
+          <div class="badge">${it.emoji}</div>
+          <div class="tt">
+            <div class="nm">${it.nm}</div>
+            <div class="meta">
+              ${it.nat ? '<span class="chip nat">★ 국보</span>' : ''}
+              <span class="chip loc">📍 ${it.loc}</span>
+              <span class="chip pg" data-cardprog>0 / ${it.steps.length}</span>
+            </div>
+          </div>
+        </div>
+        <div class="blurb">${it.blurb}</div>
+        <div class="steps"></div>
+        <button class="stampBtn" data-act="stamp" data-id="${it.id}">스탬프 찍기</button>`;
+      itemsWrap.appendChild(c);
+      const sw = c.querySelector(".steps");
+      it.steps.forEach((st, i) => sw.appendChild(renderStep(it, st, i)));
+      refreshCard(it.id);
+    });
+  });
+}
+
+function renderStep(it, st, i){
+  const key = `${it.id}:${i}`;
+  const cur = state.steps[key];
+  const box = document.createElement("div");
+  box.className = "step";
+  const qhead = `<div class="q"><span class="tk ${st.k}">${TK[st.k]}</span><span>${st.q || st.label}</span></div>`;
+  if (st.k === "quiz"){
+    box.innerHTML = qhead + `<div class="opts">` + st.opts.map((o, oi) =>
+      `<label class="opt" data-oi="${oi}"><input type="radio" name="q-${key}" ${cur===oi?"checked":""}><span>${o}</span></label>`
+    ).join("") + `</div><div class="fb" data-fb></div>`;
+    box.querySelectorAll("input").forEach((r, oi) => r.addEventListener("change", () => {
+      state.steps[key] = oi; persist(); paintQuiz(box, it, i); refreshCard(it.id);
+    }));
+    paintQuiz(box, it, i);
+  } else if (st.k === "find" || st.k === "photo"){
+    box.innerHTML = `<label class="checkline"><input type="checkbox" ${cur===true?"checked":""}><span>${st.label}</span></label>`;
+    box.querySelector("input").addEventListener("change", e => {
+      state.steps[key] = e.target.checked; persist(); refreshCard(it.id);
+    });
+  } else {
+    box.innerHTML = qhead + `<textarea class="txt" rows="1" placeholder="${st.ph || "한 줄로 적어봐"}"></textarea>`;
+    const ta = box.querySelector("textarea");
+    if (typeof cur === "string") ta.value = cur;
+    autoGrow(ta);
+    ta.addEventListener("input", () => { state.steps[key] = ta.value; autoGrow(ta); persist(); refreshCard(it.id); });
+  }
+  return box;
+}
+function autoGrow(ta){ ta.style.height = "auto"; ta.style.height = Math.max(ta.scrollHeight, 34) + "px"; }
+function paintQuiz(box, it, i){
+  const key = `${it.id}:${i}`, cur = state.steps[key], ans = it.steps[i].a;
+  box.querySelectorAll(".opt").forEach(op => {
+    const oi = Number(op.dataset.oi);
+    op.classList.remove("sel","correct","wrong");
+    if (!Number.isInteger(cur)) return;
+    if (oi === ans) op.classList.add("correct");
+    else if (oi === cur) op.classList.add("wrong");
+    if (oi === cur && cur !== ans) op.classList.add("wrong");
+  });
+  const fb = box.querySelector("[data-fb]");
+  if (!Number.isInteger(cur)) { fb.textContent = ""; fb.className = "fb"; }
+  else if (cur === ans) { fb.textContent = "정답!"; fb.className = "fb ok"; }
+  else { fb.textContent = "아쉽다 — 정답은 초록색. 그래도 미션은 완료로 쳐줄게."; fb.className = "fb no"; }
+}
+
+function refreshCard(id){
+  const it = ALL.find(x => x.id === id);
+  const card = document.getElementById("card-" + id);
+  const btn = card.querySelector('[data-act="stamp"]');
+  const prog = card.querySelector("[data-cardprog]");
+  const n = it.steps.filter((_, i) => stepDone(it, i)).length;
+  prog.textContent = `${n} / ${it.steps.length}`;
+  const stamped = !!state.stamps[id];
+  card.classList.toggle("done", stamped);
+  if (stamped){ btn.textContent = "✓ 스탬프 완료 (취소하려면 탭)"; btn.disabled = false; }
+  else if (cardDone(it)){ btn.textContent = "스탬프 찍기 ✦"; btn.disabled = false; }
+  else { btn.textContent = `미션 ${n}/${it.steps.length} — 다 풀면 열려요`; btn.disabled = true; }
+  refreshProgress();
+}
+
+itemsWrap.addEventListener("click", e => {
+  const b = e.target.closest('[data-act="stamp"]');
+  if (!b) return;
+  const id = b.dataset.id, it = ALL.find(x => x.id === id);
+  if (state.stamps[id]) delete state.stamps[id];
+  else { if (!cardDone(it)) return; state.stamps[id] = true; }
+  if (!state.startedAt) state.startedAt = Date.now();
+  persist();
+  const card = document.getElementById("card-" + id);
+  card.classList.remove("done"); void card.offsetWidth;
+  refreshCard(id);
+});
+
+/* ══════════ 상단 진행 + 마무리 ══════════ */
+function refreshProgress(){
+  const n = count();
+  document.getElementById("cNow").textContent = n;
+  document.getElementById("cTot").textContent = TOTAL;
+  document.getElementById("barFill").style.width = (n / TOTAL * 100) + "%";
+  document.getElementById("stepStat").textContent = `세부 미션 ${stepsDone()} / ${STEP_TOTAL}`;
+  document.getElementById("jumpBtn").disabled = (n >= TOTAL);
+
+  document.querySelectorAll(".mbadge").forEach(x => x.classList.toggle("on", n >= Number(x.dataset.need)));
+
+  const sel = document.getElementById("mvp");
+  const keep = state.mvp;
+  sel.innerHTML = `<option value="">— 아직 고르는 중 —</option>` +
+    ALL.filter(x => state.stamps[x.id]).map(x => `<option value="${x.id}">${x.emoji} ${x.nm}</option>`).join("");
+  if (keep && state.stamps[keep]) sel.value = keep;
+  else if (keep && !state.stamps[keep]) { state.mvp = ""; }
+
+  const cb = document.getElementById("clearBanner");
+  const ct = document.getElementById("clearTitle");
+  const cm = document.getElementById("clearMsg");
+  if (n >= TOTAL){
+    cb.classList.add("show"); ct.textContent = "🏆 올 스탬프 달성!";
+    cm.textContent = "20점 완주. 오늘 국립중앙박물관을 제대로 털었다.";
+    if (!state._fired){ confetti(); state._fired = true; persist(); }
+  } else if (n >= 12){
+    cb.classList.add("show"); ct.textContent = "🎖️ 미션 클리어!";
+    cm.textContent = `${n}개 수집. 남은 ${TOTAL - n}개는 시간 되는 대로.`; state._fired = false;
+  } else if (n >= 8){
+    cb.classList.add("show"); ct.textContent = "🚩 탐험가 뱃지 획득";
+    cm.textContent = "절반 가까이 왔다. 2층 사유의 방 잊지 말기."; state._fired = false;
+  } else { cb.classList.remove("show"); state._fired = false; }
+}
+document.getElementById("jumpBtn").addEventListener("click", () => {
+  const next = ALL.find(x => !state.stamps[x.id]);
+  if (next) document.getElementById("card-" + next.id).scrollIntoView({ behavior:"smooth", block:"center" });
+});
+document.getElementById("mvp").addEventListener("change", e => { state.mvp = e.target.value; persist(); });
+document.getElementById("review").addEventListener("input", e => { state.review = e.target.value; persist(); });
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("이 기기의 스탬프·미션 답·후기를 모두 지웁니다. 학생 정보도 다시 입력해야 합니다. 계속할까요?")) return;
+  localStorage.removeItem(STORE); location.reload();
+});
+function confetti(){
+  const em = ["🎉","⭐","🏛️","🥇","✨","🎊"];
+  for (let k = 0; k < 44; k++){
+    const s = document.createElement("div");
+    s.className = "confetti"; s.textContent = em[k % em.length];
+    s.style.left = Math.random()*100 + "vw";
+    s.style.fontSize = (1 + Math.random()*1.1) + "rem";
+    s.style.animation = `fall ${2.4 + Math.random()*1.8}s linear ${Math.random()*.6}s forwards`;
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 5200);
+  }
+}
+
+/* ══════════ 학생 정보 게이트 ══════════ */
+const AVATARS = ["🐰","🐱","🐯","🐻","🐼","🐨","🦁","🐵","🐶","🦊","🐸","🐷","🐹","🐭","🐮","🦉","🐢","🐙","🦄","🐧"];
+const g = { grade:document.getElementById("gGrade"), cls:document.getElementById("gClass"),
+  num:document.getElementById("gNum"), name:document.getElementById("gName"),
+  go:document.getElementById("gGo"), err:document.getElementById("gErr") };
+function gateValid(){
+  const ok = g.cls.value && g.num.value && g.name.value.trim().length >= 1
+    && +g.cls.value >= 1 && +g.num.value >= 1;
+  g.go.disabled = !ok; return ok;
+}
+[g.grade, g.cls, g.num, g.name].forEach(el => el.addEventListener("input", gateValid));
+g.go.addEventListener("click", () => {
+  if (!gateValid()) return;
+  state.ident = {
+    grade: String(+g.grade.value), cls: String(+g.cls.value), num: String(+g.num.value),
+    name: g.name.value.trim().slice(0, 10),
+    avatar: state.ident?.avatar || AVATARS[Math.floor(Math.random()*AVATARS.length)],
+  };
+  if (!state.startedAt) state.startedAt = Date.now();
+  persist(); startApp();
+});
+function startApp(){
+  document.getElementById("gate").hidden = true;
+  ["topbar","hero","introWrap","items","finaleWrap","foot"].forEach(id => document.getElementById(id).hidden = false);
+  const i = state.ident;
+  document.getElementById("who").innerHTML = `${i.avatar} <b>${i.name}</b> · ${i.grade}학년 ${i.cls}반 ${i.num}번`;
+  document.getElementById("review").value = state.review || "";
+  buildItems();
+  refreshProgress();
+  paintSync();
+  flushSync();
+}
+
+/* 이미 정보가 있으면 게이트 건너뛰기 */
+if (state.ident && state.ident.name){
+  const i = state.ident;
+  g.grade.value = i.grade; g.cls.value = i.cls; g.num.value = i.num; g.name.value = i.name;
+  startApp();
+} else {
+  document.getElementById("gName").focus?.();
+}
+
+/* 화면을 벗어날 때 마지막 저장 시도 */
+addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushSync(); });
+addEventListener("pagehide", flushSync);
+</script>
+</body>
+</html>

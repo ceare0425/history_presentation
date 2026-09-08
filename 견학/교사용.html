@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>스탬프 투어 · 교사용 현황판</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#F4EEE4; --surface:#FFFFFF; --ink:#241A0E; --ink-sec:#6E5B41;
+    --line:#E3D6C1; --main:#8B4513; --accent:#C5A028; --header:#2C1A0E;
+    --ok:#2E7D32; --warn:#B5322B; --shadow:0 2px 12px rgba(44,26,14,.10);
+  }
+  html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.55}
+  body{max-width:1120px;margin:0 auto;padding-bottom:60px}
+  h1,h2,h3{font-family:'Nanum Myeongjo',serif}
+  button{font-family:inherit;cursor:pointer}
+  code{background:#EEE4D2;border:1px solid var(--line);border-radius:4px;padding:.05rem .35rem;font-size:.85em}
+
+  header{background:var(--header);
+    background-image:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(197,160,40,.05) 4px,rgba(197,160,40,.05) 8px);
+    border-bottom:3px solid var(--accent);color:#F6E9C8;padding:1.1rem 1.4rem;display:flex;flex-wrap:wrap;gap:.8rem 1.2rem;align-items:center;justify-content:space-between}
+  header .logo{font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1.25rem;color:var(--accent)}
+  header .logo small{display:block;font-family:'Noto Sans KR';font-weight:400;font-size:.72rem;color:rgba(246,233,200,.6);letter-spacing:.03em}
+  .tourpick{display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:rgba(246,233,200,.85)}
+  .tourpick input{border:1px solid rgba(246,233,200,.35);background:rgba(0,0,0,.2);color:#fff;border-radius:7px;padding:.4rem .55rem;font-family:inherit;font-size:.9rem;width:150px}
+  .tourpick input:focus{outline:none;border-color:var(--accent)}
+  .livedot{width:9px;height:9px;border-radius:50%;background:#7f7f7f;display:inline-block}
+  .livedot.on{background:#8BE28B;box-shadow:0 0 0 3px rgba(139,226,139,.25)}
+
+  main{padding:1.2rem 1.4rem}
+  .warnbox{background:#FBF0EE;border:1px solid #E7BFBB;border-radius:10px;padding:.7rem .9rem;font-size:.82rem;color:#7A2A24;margin-bottom:1rem}
+  .warnbox b{color:var(--warn)}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin-bottom:1rem}
+  .stat{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:.75rem .9rem;box-shadow:var(--shadow)}
+  .stat .v{font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1.5rem;color:var(--main);line-height:1}
+  .stat .l{font-size:.76rem;color:var(--ink-sec);margin-top:.28rem}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.8rem}
+  .toolbar .grow{flex:1}
+  .btn{border:1.5px solid var(--line);background:var(--surface);border-radius:8px;padding:.45rem .8rem;font-size:.83rem;font-weight:600;color:var(--ink)}
+  .btn:hover{border-color:var(--accent)}
+  .btn.pri{background:var(--main);color:#FDF3DE;border-color:var(--main)}
+  .btn.on{background:#FBF2DF;border-color:var(--accent);color:var(--main)}
+
+  details.roster{background:var(--surface);border:1.5px solid var(--line);border-radius:10px;margin-bottom:1rem;box-shadow:var(--shadow)}
+  details.roster summary{padding:.65rem .9rem;font-weight:700;font-size:.86rem;cursor:pointer}
+  details.roster .body{padding:0 .9rem .9rem}
+  details.roster textarea{width:100%;min-height:110px;border:1.5px solid var(--line);border-radius:8px;padding:.55rem .65rem;font-family:'Noto Sans KR';font-size:.85rem;resize:vertical;background:#FCFAF5}
+  details.roster .hint{font-size:.76rem;color:var(--ink-sec);margin:.4rem 0}
+
+  .classblock{margin-bottom:1.3rem}
+  .classhdr{display:flex;flex-wrap:wrap;align-items:baseline;gap:.6rem;padding:.4rem .2rem;border-bottom:2px solid var(--main);margin-bottom:.2rem}
+  .classhdr h2{font-size:1.05rem;color:var(--main)}
+  .classhdr .roll{font-size:.8rem;color:var(--ink-sec)}
+
+  table{width:100%;border-collapse:collapse;background:var(--surface);box-shadow:var(--shadow);border-radius:10px;overflow:hidden}
+  th,td{padding:.5rem .6rem;text-align:left;font-size:.85rem;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{background:#F0E7D6;font-size:.76rem;color:var(--ink-sec);font-weight:700;white-space:nowrap;cursor:pointer;user-select:none}
+  th.sortable:hover{color:var(--main)}
+  tr.stu{cursor:pointer}
+  tr.stu:hover{background:#FBF6EC}
+  tr.missing td{color:#A8977B}
+  .mini{height:8px;border-radius:99px;background:#EEE4D2;overflow:hidden;min-width:80px;max-width:140px}
+  .mini > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#E8CE7A)}
+  .pill{display:inline-block;font-size:.72rem;font-weight:700;border-radius:99px;padding:.1rem .5rem}
+  .pill.none{background:#EEE4D2;color:#8A7659}
+  .pill.go{background:#FBEECB;color:#8A6A12}
+  .pill.mid{background:#E3F0FB;color:#1565C0}
+  .pill.done{background:#E7F5E7;color:var(--ok)}
+  .ago{font-size:.78rem;color:var(--ink-sec);white-space:nowrap}
+
+  tr.detail td{background:#FBF7EF;padding:.8rem 1rem}
+  .dwrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.6rem}
+  .dcard{border:1px solid var(--line);border-radius:9px;padding:.55rem .65rem;background:#fff}
+  .dcard .dt{font-weight:700;font-size:.82rem;margin-bottom:.3rem}
+  .dcard .dt .st{font-weight:700;color:var(--ok);font-size:.76rem}
+  .dcard .dt .st.no{color:#B0A088}
+  .dots{display:flex;gap:.2rem;margin-bottom:.35rem}
+  .dot{width:14px;height:14px;border-radius:4px;background:#E4D8C4;font-size:.6rem;color:#fff;display:flex;align-items:center;justify-content:center}
+  .dot.on{background:var(--ok)}
+  .ans{font-size:.78rem;color:#3A2E1E;margin:.12rem 0;padding-left:.5rem;border-left:2px solid var(--line)}
+  .ans b{color:var(--main);font-weight:700}
+  .drev{margin-top:.6rem;font-size:.83rem}
+  .drev .mvp{color:var(--main);font-weight:700}
+  .empty{text-align:center;color:var(--ink-sec);padding:3rem 1rem}
+  .empty .big{font-size:2rem;margin-bottom:.5rem}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🏛️ 국보 스탬프 투어 <small>교사용 실시간 현황판 · National Museum of Korea</small></div>
+  <div class="tourpick">
+    <span class="livedot" id="livedot"></span>
+    <label>투어 코드 <input id="tourInput" type="text" placeholder="default"></label>
+    <button class="btn" id="tourApply">적용</button>
+  </div>
+</header>
+
+<main>
+  <div class="warnbox" id="fbWarn" hidden>
+    <b>아직 데이터가 없습니다.</b> 학생 페이지의 저장 경로(<code>museum/…</code>)가 Firebase 보안 규칙에 등록되어 있어야 학생 진행 상황이 이 화면에 나타납니다.
+    <code>review-game-firebase/firebase-database-rules.json</code>의 최신 내용을 Firebase 콘솔 → Realtime Database → 규칙 탭에 붙여넣고 <b>게시</b>하세요.
+    학생이 아직 아무도 시작하지 않았어도 이 문구가 보일 수 있습니다.
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <button class="btn" id="sortName">반·번호순</button>
+    <button class="btn" id="sortProg">진행률순</button>
+    <button class="btn" id="sortRecent">최근활동순</button>
+    <span class="grow"></span>
+    <button class="btn" id="expandAll">전체 펼치기</button>
+    <button class="btn pri" id="csv">CSV 내보내기</button>
+  </div>
+
+  <details class="roster">
+    <summary>반 명단 붙여넣기 (선택) — 참여 안 한 학생까지 표시</summary>
+    <div class="body">
+      <div class="hint">한 줄에 한 명. <code>학년-반 번호 이름</code> 순서 (예: <code>2-3 14 홍길동</code>). 탭·쉼표·공백 어떤 구분자든 됩니다. 저장은 이 브라우저에만 됩니다.</div>
+      <textarea id="rosterText" placeholder="2-3 1 김민준&#10;2-3 2 이서연&#10;2-3 3 박도윤"></textarea>
+      <div style="margin-top:.5rem"><button class="btn pri" id="rosterSave">명단 적용</button> <button class="btn" id="rosterClear">지우기</button></div>
+    </div>
+  </details>
+
+  <div id="board"><div class="empty"><div class="big">⏳</div>불러오는 중…</div></div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+const cfg = {
+  apiKey: "AIzaSyAWsHD8UjeSbG0IvXW9izxbBiGDHpOzytk",
+  authDomain: "history-review-game.firebaseapp.com",
+  databaseURL: "https://history-review-game-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "history-review-game",
+  storageBucket: "history-review-game.firebasestorage.app",
+  messagingSenderId: "663174446158",
+  appId: "1:663174446158:web:314c67ed3a3f69c0bed71f",
+};
+const db = getDatabase(initializeApp(cfg, "museum-teacher"));
+
+/* 학생 페이지와 반드시 일치해야 하는 유물 순서·이름 */
+const ORDER = ["jumeok","bitsal","nonggyeong","bipa","hyangno","muryeong","gima","geumgwan","houu","gaya","gameun","balhae","cheongja","jeongbyeong","banga","seohwa","dalhangari","buncheong","geumdongbul","world"];
+const META = {
+  jumeok:{e:"🪨",n:"주먹도끼",s:["찾기","관찰","퀴즈:시대","생각"]},
+  bitsal:{e:"🏺",n:"빗살무늬 토기",s:["찾기","관찰","퀴즈:바닥","생각"]},
+  nonggyeong:{e:"⛏️",n:"농경문 청동기",s:["찾기","관찰","퀴즈:용도","생각"]},
+  bipa:{e:"🗡️",n:"비파형 동검",s:["찾기","관찰","퀴즈:분포","생각"]},
+  hyangno:{e:"🐉",n:"백제 금동대향로",s:["찾기","관찰","퀴즈:재질","생각","사진"]},
+  muryeong:{e:"🦏",n:"무령왕릉 진묘수",s:["찾기","관찰:뿔","퀴즈","생각"]},
+  gima:{e:"🐎",n:"도기 기마인물형 명기",s:["찾기","관찰","퀴즈:용도","생각","사진"]},
+  geumgwan:{e:"👑",n:"신라 금관",s:["찾기","관찰:곡옥","퀴즈:용도","생각"]},
+  houu:{e:"🥣",n:"호우명 청동 그릇",s:["찾기","관찰:글자","퀴즈","생각"]},
+  gaya:{e:"🛡️",n:"가야 판갑옷과 투구",s:["찾기","관찰","퀴즈:철","생각"]},
+  gameun:{e:"✨",n:"감은사지 사리장엄구",s:["찾기","관찰:사천왕","퀴즈:목적","생각"]},
+  balhae:{e:"☸️",n:"발해 이불병좌상",s:["찾기","관찰","퀴즈:계승","생각"]},
+  cheongja:{e:"🍵",n:"고려청자",s:["찾기","관찰:상감","퀴즈:비색","생각"]},
+  jeongbyeong:{e:"🫗",n:"은입사 정병",s:["찾기","관찰","퀴즈:기법","생각"]},
+  banga:{e:"🧘",n:"금동미륵보살반가사유상",s:["찾기","관찰","퀴즈:이름뜻","생각","사진"]},
+  seohwa:{e:"🖼️",n:"옛 그림 한 점",s:["찾기","관찰:제목작가","관찰:내용","생각:이유","사진"]},
+  dalhangari:{e:"🌕",n:"백자 달항아리",s:["찾기","관찰:대칭","퀴즈","생각"]},
+  buncheong:{e:"🪴",n:"분청사기",s:["찾기","관찰:기법","퀴즈:시기","생각"]},
+  geumdongbul:{e:"🌟",n:"통일신라 금동불",s:["찾기","관찰","퀴즈:영향","생각"]},
+  world:{e:"🌍",n:"이집트 미라·신안선",s:["찾기","관찰:유물","퀴즈:신안선","생각"]},
+};
+const TOTAL = ORDER.length;
+const STEP_TOTAL = ORDER.reduce((a,id)=>a+META[id].s.length,0);
+
+let TOUR = (new URLSearchParams(location.search).get("tour") || localStorage.getItem("nmk-teacher-tour") || "default").replace(/[.#$/\[\]]/g,"");
+document.getElementById("tourInput").value = TOUR;
+let roster = JSON.parse(localStorage.getItem("nmk-teacher-roster") || "[]");
+document.getElementById("rosterText").value = localStorage.getItem("nmk-teacher-roster-raw") || "";
+let sortMode = "name";
+let expanded = new Set();
+let students = {};   // sid -> record
+let unsub = null;
+
+function subscribe(){
+  if (unsub) unsub();
+  document.getElementById("livedot").classList.remove("on");
+  const r = ref(db, `museum/${TOUR}/students`);
+  unsub = onValue(r, snap => {
+    students = snap.val() || {};
+    document.getElementById("livedot").classList.add("on");
+    document.getElementById("fbWarn").hidden = Object.keys(students).length > 0;
+    render();
+  }, err => {
+    document.getElementById("fbWarn").hidden = false;
+    document.getElementById("board").innerHTML = `<div class="empty"><div class="big">🔒</div>데이터를 읽지 못했습니다.<br><small>${err.message}</small></div>`;
+  });
+}
+
+document.getElementById("tourApply").addEventListener("click", () => {
+  TOUR = (document.getElementById("tourInput").value.trim() || "default").replace(/[.#$/\[\]]/g,"");
+  localStorage.setItem("nmk-teacher-tour", TOUR);
+  subscribe();
+});
+document.getElementById("sortName").addEventListener("click", () => setSort("name"));
+document.getElementById("sortProg").addEventListener("click", () => setSort("prog"));
+document.getElementById("sortRecent").addEventListener("click", () => setSort("recent"));
+function setSort(m){ sortMode = m; render(); }
+document.getElementById("expandAll").addEventListener("click", () => {
+  const rows = currentRows();
+  if (expanded.size >= rows.filter(r=>r.rec).length) expanded.clear();
+  else rows.forEach(r => { if (r.rec) expanded.add(r.sid); });
+  render();
+});
+document.getElementById("csv").addEventListener("click", exportCSV);
+document.getElementById("rosterSave").addEventListener("click", () => {
+  const raw = document.getElementById("rosterText").value;
+  localStorage.setItem("nmk-teacher-roster-raw", raw);
+  roster = raw.split(/\r?\n/).map(parseRosterLine).filter(Boolean);
+  localStorage.setItem("nmk-teacher-roster", JSON.stringify(roster));
+  render();
+});
+document.getElementById("rosterClear").addEventListener("click", () => {
+  document.getElementById("rosterText").value = "";
+  localStorage.removeItem("nmk-teacher-roster-raw");
+  localStorage.removeItem("nmk-teacher-roster");
+  roster = []; render();
+});
+function parseRosterLine(line){
+  const t = line.trim(); if (!t) return null;
+  const p = t.split(/[\s,\t]+/).filter(Boolean);
+  if (p.length < 2) return null;
+  let cls, num, name;
+  if (p.length >= 3){ cls = p[0]; num = p[1]; name = p.slice(2).join(" "); }
+  else { cls = ""; num = p[0]; name = p.slice(1).join(" "); }
+  cls = cls.replace(/반$/,"");
+  if (!/^\d+(-\d+)?$/.test(num) && /^\d+$/.test(cls)) { [cls,num] = [num,cls]; } // 순서가 바뀐 경우 보정
+  return { cls, num: String(parseInt(num,10) || num), name };
+}
+
+/* ── 행 목록 만들기 (명단 + 실제 참여자 병합) ── */
+function recProgress(rec){
+  const sc = rec.stampCount ?? Object.values(rec.stamps||{}).filter(Boolean).length;
+  const sd = rec.stepDone ?? 0;
+  return { sc, sd, pct: Math.round((sd / STEP_TOTAL) * 100) };
+}
+function statusOf(rec){
+  if (!rec) return { k:"none", label:"미참여" };
+  const { sc } = recProgress(rec);
+  if (sc >= TOTAL) return { k:"done", label:"완주" };
+  if (sc > 0 || (rec.stepDone||0) > 0) return { k:"mid", label:"진행 중" };
+  return { k:"go", label:"입장만" };
+}
+function currentRows(){
+  const rows = [];
+  const seen = new Set();
+  for (const [sid, rec] of Object.entries(students)){
+    seen.add(sid);
+    rows.push({ sid, rec, cls: rec.cls || "?", num: +rec.num || 0, name: rec.name || "(이름없음)" });
+  }
+  for (const r of roster){
+    const sid = `${r.cls}-${r.num}`.replace(/^-/,"");
+    if (seen.has(sid)) continue;
+    // 명단의 cls가 "3"처럼 반만이면 학년 붙은 sid와도 매칭 시도
+    const alt = Object.keys(students).find(k => students[k].num == r.num &&
+      (students[k].cls === r.cls || String(students[k].cls).endsWith("-" + r.cls)));
+    if (alt) continue;
+    rows.push({ sid, rec:null, cls:r.cls || "?", num:+r.num || 0, name:r.name });
+  }
+  return rows;
+}
+function sortRows(rows){
+  const s = rows.slice();
+  if (sortMode === "name") s.sort((a,b)=> String(a.cls).localeCompare(String(b.cls),"ko") || a.num-b.num);
+  else if (sortMode === "prog") s.sort((a,b)=> (b.rec?recProgress(b.rec).sd:-1) - (a.rec?recProgress(a.rec).sd:-1));
+  else s.sort((a,b)=> (b.rec?.updatedAt||0) - (a.rec?.updatedAt||0));
+  return s;
+}
+function ago(ts){
+  if (!ts) return "—";
+  const d = Date.now() - ts;
+  if (d < 60000) return "방금";
+  if (d < 3600000) return Math.floor(d/60000) + "분 전";
+  if (d < 86400000) return Math.floor(d/3600000) + "시간 전";
+  return new Date(ts).toLocaleDateString("ko-KR",{month:"numeric",day:"numeric"});
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function render(){
+  const rows = sortRows(currentRows());
+  renderStats(rows);
+
+  if (rows.length === 0){
+    document.getElementById("board").innerHTML = `<div class="empty"><div class="big">🎫</div>아직 시작한 학생이 없습니다.<br><small>학생이 스탬프 투어 페이지에서 정보를 입력하면 여기에 실시간으로 나타납니다. (투어 코드: <code>${esc(TOUR)}</code>)</small></div>`;
+    return;
+  }
+  // 반별 그룹
+  const byClass = {};
+  rows.forEach(r => (byClass[r.cls] = byClass[r.cls] || []).push(r));
+  const classNames = Object.keys(byClass).sort((a,b)=>String(a).localeCompare(String(b),"ko"));
+
+  const th = `<tr>
+    <th style="width:44px">번호</th><th>이름</th>
+    <th class="sortable" style="width:120px">스탬프</th>
+    <th style="width:190px">세부 미션</th>
+    <th style="width:90px">상태</th>
+    <th style="width:90px">마지막 활동</th></tr>`;
+
+  document.getElementById("board").innerHTML = classNames.map(cn => {
+    const list = byClass[cn];
+    const parts = list.filter(r => r.rec);
+    const done = parts.filter(r => recProgress(r.rec).sc >= TOTAL).length;
+    const avg = parts.length ? Math.round(parts.reduce((a,r)=>a+recProgress(r.rec).sc,0)/parts.length*10)/10 : 0;
+    const roll = `참여 <b>${parts.length}</b>${list.length!==parts.length?` / ${list.length}명`:"명"} · 평균 스탬프 ${avg} · 완주 ${done}`;
+    const body = list.map(r => rowHTML(r)).join("");
+    return `<div class="classblock">
+      <div class="classhdr"><h2>${esc(cn)}${/^\d+-\d+$/.test(cn)?"반":""}</h2><span class="roll">${roll}</span></div>
+      <table><thead>${th}</thead><tbody>${body}</tbody></table></div>`;
+  }).join("");
+
+  document.querySelectorAll("tr.stu").forEach(tr => tr.addEventListener("click", () => {
+    const sid = tr.dataset.sid;
+    if (!students[sid]) return;
+    expanded.has(sid) ? expanded.delete(sid) : expanded.add(sid);
+    render();
+  }));
+}
+
+function rowHTML(r){
+  const st = statusOf(r.rec);
+  if (!r.rec){
+    return `<tr class="missing"><td>${r.num||""}</td><td>${esc(r.name)}</td>
+      <td>—</td><td>—</td><td><span class="pill none">미참여</span></td><td class="ago">—</td></tr>`;
+  }
+  const { sc, sd, pct } = recProgress(r.rec);
+  const open = expanded.has(r.sid);
+  const main = `<tr class="stu" data-sid="${r.sid}">
+    <td>${r.num||""}</td>
+    <td>${r.rec.avatar||""} ${esc(r.name)} <span style="color:#B0A088">${open?"▲":"▼"}</span></td>
+    <td><b>${sc}</b> / ${TOTAL}
+        <div class="mini"><i style="width:${sc/TOTAL*100}%"></i></div></td>
+    <td>${sd} / ${STEP_TOTAL} <span style="color:#9C8A6E">(${pct}%)</span>
+        <div class="mini"><i style="width:${pct}%"></i></div></td>
+    <td><span class="pill ${st.k}">${st.label}</span></td>
+    <td class="ago">${ago(r.rec.updatedAt)}</td></tr>`;
+  return main + (open ? detailHTML(r.sid, r.rec) : "");
+}
+
+function detailHTML(sid, rec){
+  const stamps = rec.stamps || {};
+  const steps = rec.steps || {};
+  const cards = ORDER.map(id => {
+    const m = META[id];
+    const done = steps ? m.s.map((_,i)=> !!stepVal(steps, `${id}:${i}`)) : [];
+    const nDone = done.filter(Boolean).length;
+    const stamped = !!stamps[id];
+    const answers = m.s.map((lbl,i) => {
+      const v = steps[`${id}:${i}`];
+      if (typeof v === "string" && v.trim()) return `<div class="ans"><b>${lbl}:</b> ${esc(v)}</div>`;
+      return "";
+    }).join("");
+    return `<div class="dcard">
+      <div class="dt">${m.e} ${m.n}
+        <span class="st ${stamped?"":"no"}">${stamped?"● 스탬프":`${nDone}/${m.s.length}`}</span></div>
+      <div class="dots">${m.s.map((lbl,i)=>`<span class="dot ${done[i]?"on":""}" title="${lbl}">${done[i]?"✓":""}</span>`).join("")}</div>
+      ${answers}
+    </div>`;
+  }).join("");
+  const mvp = rec.mvp && META[rec.mvp] ? `${META[rec.mvp].e} ${META[rec.mvp].n}` : "—";
+  return `<tr class="detail"><td colspan="6">
+    <div class="dwrap">${cards}</div>
+    <div class="drev">🏅 <span class="mvp">오늘의 MVP:</span> ${esc(mvp)} &nbsp;|&nbsp; ✍️ 후기: ${rec.review ? esc(rec.review) : "<i>미작성</i>"}</div>
+  </td></tr>`;
+}
+function stepVal(steps, key){
+  const v = steps[key];
+  if (v === true) return true;
+  if (typeof v === "number") return true;
+  if (typeof v === "string") return v.trim().length > 0;
+  return false;
+}
+
+function renderStats(rows){
+  const parts = rows.filter(r => r.rec);
+  const done = parts.filter(r => recProgress(r.rec).sc >= TOTAL).length;
+  const totalStamps = parts.reduce((a,r)=>a+recProgress(r.rec).sc,0);
+  const totalSteps = parts.reduce((a,r)=>a+recProgress(r.rec).sd,0);
+  const recent = parts.slice().sort((a,b)=>(b.rec.updatedAt||0)-(a.rec.updatedAt||0))[0];
+  const expected = rows.length;
+  const s = [
+    ["참여", `${parts.length}${expected!==parts.length?` / ${expected}`:""}`, expected!==parts.length?"명 (명단 대비)":"명이 시작함"],
+    ["완주", done, `명 (${TOTAL}스탬프 전부)`],
+    ["평균 스탬프", parts.length?Math.round(totalStamps/parts.length*10)/10:0, `/ ${TOTAL}`],
+    ["평균 세부미션", parts.length?Math.round(totalSteps/parts.length):0, `/ ${STEP_TOTAL}`],
+    ["최근 활동", recent?ago(recent.rec.updatedAt):"—", recent?`${recent.name}`:""],
+  ];
+  document.getElementById("stats").innerHTML = s.map(([l,v,sub]) =>
+    `<div class="stat"><div class="v">${v}</div><div class="l">${l} <span style="opacity:.7">${sub||""}</span></div></div>`).join("");
+}
+
+function exportCSV(){
+  const rows = sortRows(currentRows());
+  const head = ["반","번호","이름","상태","스탬프","세부미션완료","세부미션총","진행률%","시작시각","마지막활동","MVP유물","후기"];
+  const lines = [head.join(",")];
+  for (const r of rows){
+    const st = statusOf(r.rec).label;
+    if (!r.rec){ lines.push([r.cls,r.num,r.name,st,"","","","","","","",""].map(csv).join(",")); continue; }
+    const { sc, sd, pct } = recProgress(r.rec);
+    const mvp = r.rec.mvp && META[r.rec.mvp] ? META[r.rec.mvp].n : "";
+    lines.push([r.cls, r.num, r.name, st, sc, sd, STEP_TOTAL, pct,
+      r.rec.startedAt?new Date(r.rec.startedAt).toLocaleString("ko-KR"):"",
+      r.rec.updatedAt?new Date(r.rec.updatedAt).toLocaleString("ko-KR"):"",
+      mvp, r.rec.review||""].map(csv).join(","));
+  }
+  const blob = new Blob([String.fromCharCode(0xFEFF) + lines.join("\r\n")], { type:"text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `스탬프투어_${TOUR}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function csv(v){ v = String(v ?? ""); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }
+
+subscribe();
+</script>
+</body>
+</html>

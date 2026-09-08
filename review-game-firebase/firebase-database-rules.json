@@ -32,6 +32,17 @@
           }
         }
       }
+    },
+    "museum": {
+      ".read": true,
+      "$tour": {
+        "students": {
+          "$sid": {
+            ".write": true,
+            ".validate": "newData.hasChild('name') && newData.child('name').isString() && newData.child('name').val().length <= 20"
+          }
+        }
+      }
     }
   }
 }
