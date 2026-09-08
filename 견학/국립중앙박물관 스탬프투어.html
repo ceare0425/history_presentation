@@ -242,11 +242,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v7</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v8</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v7");
+DBG("모듈 시작 v8");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -503,7 +503,7 @@ function stepDone(it, idx){
   const v = state.steps[`${it.id}:${idx}`];
   const k = it.steps[idx].k;
   if (k === "find" || k === "photo") return v === true;
-  if (k === "quiz") return Number.isInteger(v);
+  if (k === "quiz") return v === it.steps[idx].a;   // 정답을 맞혀야 완료
   return typeof v === "string" && v.trim().length > 0;
 }
 function cardDone(it){ return it.steps.every((_, i) => stepDone(it, i)); }
@@ -581,15 +581,13 @@ function paintQuiz(box, it, i){
   box.querySelectorAll(".opt").forEach(op => {
     const oi = Number(op.dataset.oi);
     op.classList.remove("sel","correct","wrong");
-    if (!Number.isInteger(cur)) return;
-    if (oi === ans) op.classList.add("correct");
-    else if (oi === cur) op.classList.add("wrong");
-    if (oi === cur && cur !== ans) op.classList.add("wrong");
+    if (!Number.isInteger(cur) || oi !== cur) return;
+    op.classList.add(cur === ans ? "correct" : "wrong");
   });
   const fb = box.querySelector("[data-fb]");
   if (!Number.isInteger(cur)) { fb.textContent = ""; fb.className = "fb"; }
-  else if (cur === ans) { fb.textContent = "정답!"; fb.className = "fb ok"; }
-  else { fb.textContent = "아쉽다 — 정답은 초록색. 그래도 미션은 완료로 쳐줄게."; fb.className = "fb no"; }
+  else if (cur === ans) { fb.textContent = "정답! ✓"; fb.className = "fb ok"; }
+  else { fb.textContent = "아쉽다 — 다시 골라봐. (정답을 맞혀야 완료돼요)"; fb.className = "fb no"; }
 }
 
 function refreshCard(id){
