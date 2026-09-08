@@ -48,6 +48,8 @@
   .btn.on{background:#FBF2DF;border-color:var(--accent);color:var(--main)}
   .btn.danger{background:#fff;border-color:#E0B3AE;color:var(--warn)}
   .btn.danger:hover{background:var(--warn);border-color:var(--warn);color:#fff}
+  .kickbtn{border:1.5px solid #E0B3AE;background:#fff;color:var(--warn);border-radius:7px;padding:.28rem .5rem;font-size:.76rem;font-weight:700;white-space:nowrap}
+  .kickbtn:hover{background:var(--warn);border-color:var(--warn);color:#fff}
 
   details.roster{background:var(--surface);border:1.5px solid var(--line);border-radius:10px;margin-bottom:1rem;box-shadow:var(--shadow)}
   details.roster summary{padding:.65rem .9rem;font-weight:700;font-size:.86rem;cursor:pointer}
@@ -366,7 +368,8 @@ function render(){
     <th style="width:170px">세부 미션</th>
     <th style="width:80px">📷 사진</th>
     <th style="width:84px">상태</th>
-    <th style="width:84px">마지막</th></tr>`;
+    <th style="width:84px">마지막</th>
+    <th style="width:78px"></th></tr>`;
 
   document.getElementById("board").innerHTML = classNames.map(cn => {
     const list = byClass[cn];
@@ -404,7 +407,7 @@ function rowHTML(r){
   const st = statusOf(r.rec);
   if (!r.rec){
     return `<tr class="missing"><td>${r.num||""}</td><td>${esc(r.name)}</td>
-      <td>—</td><td>—</td><td>—</td><td><span class="pill none">미참여</span></td><td class="ago">—</td></tr>`;
+      <td>—</td><td>—</td><td>—</td><td><span class="pill none">미참여</span></td><td class="ago">—</td><td></td></tr>`;
   }
   const { sc, sd, pc, pct } = recProgress(r.rec);
   const open = expanded.has(r.sid);
@@ -418,7 +421,8 @@ function rowHTML(r){
         <div class="mini"><i style="width:${pct}%"></i></div></td>
     <td><span class="pill ${pcCls}">${pc} / ${TOTAL}</span></td>
     <td><span class="pill ${st.k}">${st.label}</span></td>
-    <td class="ago">${ago(r.rec.updatedAt)}</td></tr>`;
+    <td class="ago">${ago(r.rec.updatedAt)}</td>
+    <td><button class="kickbtn" data-kick data-sid="${r.sid}" data-name="${esc(r.name)}">내보내기</button></td></tr>`;
   return main + (open ? detailHTML(r.sid, r.rec) : "");
 }
 
@@ -470,12 +474,8 @@ function detailHTML(sid, rec){
   const bulk = pending
     ? `<button class="btn pri" data-bulkok data-sid="${sid}">이 학생 미검토 사진 ${pending}장 한꺼번에 승인</button>`
     : `<span style="font-size:.82rem;color:var(--ok);font-weight:700">✅ 이 학생 사진 전부 승인됨</span>`;
-  return `<tr class="detail"><td colspan="7">
-    <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.6rem">
-      ${bulk} <span style="font-size:.78rem;color:var(--ink-sec)">— 썸네일을 훑고 승인 후, 이상한 사진만 개별 [반려]</span>
-      <span style="flex:1;min-width:1rem"></span>
-      <button class="btn danger" data-kick data-sid="${sid}" data-name="${esc(rec.name || sid)}">🚪 이 학생 내보내기</button>
-    </div>
+  return `<tr class="detail"><td colspan="8">
+    <div style="margin-bottom:.6rem">${bulk} <span style="font-size:.78rem;color:var(--ink-sec)">— 썸네일을 훑고 승인 후, 이상한 사진만 개별 [반려]</span></div>
     <div class="dwrap">${cards}</div>
     <div class="drev">🏅 <span class="mvp">오늘의 MVP:</span> ${esc(mvp)} &nbsp;|&nbsp; ✍️ 후기: ${rec.review ? esc(rec.review) : "<i>미작성</i>"}</div>
   </td></tr>`;
