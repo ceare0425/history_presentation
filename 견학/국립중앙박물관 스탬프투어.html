@@ -136,13 +136,17 @@
   .stampBtn:active{transform:scale(.98)}
   .stampBtn:disabled{background:#D8CBB4;color:#8C7C60;cursor:default}
   .item.done{border-color:var(--accent)}
-  .item.done .steps,.item.done .blurb{opacity:.5}
-  .item.done .stampBtn{background:var(--ok);color:#fff}
-  .seal{position:absolute;top:8px;right:10px;width:60px;height:60px;border-radius:50%;border:3px double var(--seal);color:var(--seal);
-    display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:.64rem;line-height:1.1;
-    transform:rotate(-14deg) scale(0);opacity:0;pointer-events:none;background:rgba(255,255,255,.55)}
-  .item.done .seal{animation:stamp .45s cubic-bezier(.2,1.4,.4,1) forwards}
-  @keyframes stamp{0%{transform:rotate(-14deg) scale(2.4);opacity:0}60%{opacity:1}100%{transform:rotate(-14deg) scale(1);opacity:.92}}
+  .item.done .steps,.item.done .blurb{opacity:.32}
+  .item.done .stampBtn{background:var(--ok);color:#fff;position:relative;z-index:6}
+  .seal{position:absolute;top:50%;left:50%;width:min(280px,66vw);height:min(280px,66vw);border-radius:50%;
+    border:7px double var(--seal);color:var(--seal);
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:clamp(1.2rem,6vw,2rem);line-height:1.15;letter-spacing:.02em;
+    transform:translate(-50%,-50%) rotate(-14deg) scale(0);opacity:0;pointer-events:none;z-index:5;
+    background:rgba(255,247,240,.4);box-shadow:0 0 0 3px rgba(181,50,43,.25),inset 0 0 18px rgba(181,50,43,.16);
+    text-shadow:0 1px 0 rgba(255,255,255,.65)}
+  .item.done .seal{animation:stamp .5s cubic-bezier(.2,1.4,.4,1) forwards}
+  @keyframes stamp{0%{transform:translate(-50%,-50%) rotate(-14deg) scale(2.6);opacity:0}55%{opacity:1}100%{transform:translate(-50%,-50%) rotate(-14deg) scale(1);opacity:.95}}
 
   .finale{padding:1.05rem}
   .finale h2{font-size:1.1rem;color:var(--main);margin-bottom:.15rem}
@@ -273,11 +277,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v25</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v26</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v25");
+DBG("모듈 시작 v26");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
