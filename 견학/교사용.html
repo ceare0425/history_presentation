@@ -147,7 +147,7 @@ const cfg = {
 const db = getDatabase(initializeApp(cfg, "museum-teacher"));
 
 /* 학생 페이지와 반드시 일치해야 하는 유물 순서·이름 */
-const ORDER = ["jumeok","bitsal","nonggyeong","bipa","hyangno","muryeong","gima","geumgwan","houu","gaya","gameun","balhae","cheongja","jeongbyeong","banga","seohwa","dalhangari","buncheong","geumdongbul","world"];
+const ORDER = ["jumeok","bitsal","nonggyeong","bipa","hyangno","muryeong","gima","geumgwan","houu","gaya","gameun","balhae","cheongja","jeongbyeong","banga","seohwa","dalhangari","buncheong","geumdongbul"];
 const META = {
   jumeok:{e:"🪨",n:"주먹도끼",s:["찾기","관찰","퀴즈:시대","생각"]},
   bitsal:{e:"🏺",n:"빗살무늬 토기",s:["찾기","관찰","퀴즈:바닥","생각"]},
@@ -168,7 +168,6 @@ const META = {
   dalhangari:{e:"🌕",n:"백자 달항아리",s:["찾기","관찰:대칭","퀴즈","생각"]},
   buncheong:{e:"🪴",n:"분청사기",s:["찾기","관찰:기법","퀴즈:시기","생각"]},
   geumdongbul:{e:"🌟",n:"통일신라 금동불",s:["찾기","관찰","퀴즈:영향","생각"]},
-  world:{e:"🌍",n:"이집트 미라·신안선",s:["찾기","관찰:유물","퀴즈:신안선","생각"]},
 };
 const TOTAL = ORDER.length;
 const STEP_TOTAL = ORDER.reduce((a,id)=>a+META[id].s.length,0);

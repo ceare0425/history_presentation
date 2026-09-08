@@ -191,7 +191,7 @@
 <div class="topbar" id="topbar" hidden>
   <div class="row">
     <span class="who" id="who"></span>
-    <span class="count"><b id="cNow">0</b> / <span id="cTot">20</span> 스탬프</span>
+    <span class="count"><b id="cNow">0</b> / <span id="cTot">19</span> 스탬프</span>
   </div>
   <div class="bar"><i id="barFill"></i></div>
   <div class="sub">
@@ -230,7 +230,7 @@
     <div class="badges">
       <div class="mbadge" data-need="8"><span class="ic">🚩</span>탐험가<br>8개</div>
       <div class="mbadge" data-need="12"><span class="ic">🎖️</span>미션 클리어<br>12개</div>
-      <div class="mbadge" data-need="20"><span class="ic">🏆</span>올 스탬프<br>20개</div>
+      <div class="mbadge" data-need="19"><span class="ic">🏆</span>올 스탬프<br>19개</div>
     </div>
     <label class="lb" for="mvp">오늘의 MVP 유물 (스탬프 찍은 것 중에서)</label>
     <select id="mvp"><option value="">— 아직 고르는 중 —</option></select>
@@ -241,11 +241,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v10</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v11</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v10");
+DBG("모듈 시작 v11");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -435,16 +435,6 @@ const PARTS = [
       {k:"look", q:"불상 뒤 광배(빛 무늬)나 옷 주름에서 눈에 띄는 특징을 한 줄로", ph:""},
       {k:"quiz", q:"이 불상 양식에 영향을 준 지역은?", opts:["인도(굽타 양식)","일본","몽골"], a:0},
       {k:"think", q:"종교와 함께 미술 양식이 국경을 넘어 전해진 다른 예를 하나 떠올려 적어봐", ph:""},
-    ]},
-]},
-{ no:"보너스", title:"3층 · 세계문화관", loc:"시간 남으면", items:[
-  { id:"world", emoji:"🌍", nm:"이집트 미라 & 신안선 유물", nat:false, loc:"세계문화관",
-    blurb:"3층엔 진짜 이집트 미라와, 신안 앞바다에서 건진 14세기 무역선의 화물(도자기·동전 등 수만 점)이 있다.",
-    steps:[
-      {k:"find", label:"세계문화관(이집트실 또는 신안 해저문화재실)에 들어갔다"},
-      {k:"look", q:"본 유물 하나를 골라 이름과 어느 나라·시대 것인지 적어라", ph:""},
-      {k:"quiz", q:"신안선 유물이 알려주는 것은?", opts:["14세기 동아시아를 잇는 바닷길 무역","신라의 삼국통일","조선의 쇄국 정책"], a:0},
-      {k:"think", q:"한국 박물관에 이집트·중국 유물이 있는 게 왜 의미 있을까? 한 줄", ph:""},
     ]},
 ]},
 ];
@@ -640,7 +630,7 @@ function refreshProgress(){
   const cm = document.getElementById("clearMsg");
   if (n >= TOTAL){
     cb.classList.add("show"); ct.textContent = "🏆 올 스탬프 달성!";
-    cm.textContent = "20점 완주. 오늘 국립중앙박물관을 제대로 털었다.";
+    cm.textContent = TOTAL + "점 완주. 오늘 국립중앙박물관을 제대로 털었다.";
     if (!state._fired){ confetti(); state._fired = true; persist(); }
   } else if (n >= 12){
     cb.classList.add("show"); ct.textContent = "🎖️ 미션 클리어!";
