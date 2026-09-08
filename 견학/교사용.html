@@ -226,6 +226,20 @@ async function setReview(sid, itemId, verdict){
   try { await set(ref(db, `museum/${TOUR}/reviews/${sid}/${itemId}`), data); }
   catch (e) { alert("저장 실패: " + (e && e.message || e)); }
 }
+async function bulkApprove(sid){
+  const rec = students[sid] || {};
+  const photos = rec.photos || {}, rvAll = reviews[sid] || {};
+  const todo = Object.keys(photos).filter(id => {
+    const at = (rec.photoAt && rec.photoAt[id]) || 0, rv = rvAll[id];
+    return !(rv && rv.status === "ok" && Number(rv.photoAt || 0) === Number(at));
+  });
+  if (!todo.length) return;
+  if (!confirm(`${rec.name || sid} 학생의 검토 안 된 사진 ${todo.length}장을 모두 승인할까요?\n(썸네일을 먼저 훑어보고 눌러 주세요. 이상한 사진은 개별 [반려]로 되돌릴 수 있습니다.)`)) return;
+  try {
+    await Promise.all(todo.map(id => set(ref(db, `museum/${TOUR}/reviews/${sid}/${id}`),
+      { status: "ok", at: Date.now(), photoAt: (rec.photoAt && rec.photoAt[id]) || 0 })));
+  } catch (e) { alert("일괄 승인 실패: " + (e && e.message || e)); }
+}
 
 document.getElementById("tourApply").addEventListener("click", () => {
   TOUR = (document.getElementById("tourInput").value.trim() || "default").replace(/[.#$\[\]\/]/g,"");
@@ -360,6 +374,10 @@ function render(){
     e.stopPropagation();
     setReview(btn.dataset.sid, btn.dataset.item, btn.dataset.review);
   }));
+  document.querySelectorAll("[data-bulkok]").forEach(btn => btn.addEventListener("click", e => {
+    e.stopPropagation();
+    bulkApprove(btn.dataset.sid);
+  }));
 }
 
 function rowHTML(r){
@@ -406,8 +424,8 @@ function detailHTML(sid, rec){
     let rbadge = "", rbtns = "";
     if (photos[id]){
       const stale = rv && Number(rv.photoAt || 0) !== Number(curAt);
-      if (!rv) rbadge = `<span class="rvb wait">검토 전</span>`;
-      else if (stale) rbadge = `<span class="rvb resub">🔄 새 사진 · 재검토</span>`;
+      if (!rv || (rv.status !== "ok" && rv.status !== "rejected")) rbadge = `<span class="rvb wait">⏳ 승인 대기 (스탬프 잠김)</span>`;
+      else if (stale) rbadge = `<span class="rvb resub">🔄 새 사진 · 재검토 필요</span>`;
       else if (rv.status === "ok") rbadge = `<span class="rvb ok">✅ 승인함</span>`;
       else rbadge = `<span class="rvb rej">❌ 반려함${rv.reason ? " · " + esc(rv.reason) : ""}</span>`;
       rbtns = `<div class="rvbtns">
@@ -424,7 +442,16 @@ function detailHTML(sid, rec){
     </div>`;
   }).join("");
   const mvp = rec.mvp && META[rec.mvp] ? `${META[rec.mvp].e} ${META[rec.mvp].n}` : "—";
+  const rvAll = reviews[sid] || {};
+  const pending = Object.keys(photos).filter(id => {
+    const at = (rec.photoAt && rec.photoAt[id]) || 0, rv = rvAll[id];
+    return !(rv && rv.status === "ok" && Number(rv.photoAt || 0) === Number(at));
+  }).length;
+  const bulk = pending
+    ? `<button class="btn pri" data-bulkok data-sid="${sid}">이 학생 미검토 사진 ${pending}장 한꺼번에 승인</button>`
+    : `<span style="font-size:.82rem;color:var(--ok);font-weight:700">✅ 이 학생 사진 전부 승인됨</span>`;
   return `<tr class="detail"><td colspan="7">
+    <div style="margin-bottom:.6rem">${bulk} <span style="font-size:.78rem;color:var(--ink-sec)">— 썸네일을 훑고 승인 후, 이상한 사진만 개별 [반려]</span></div>
     <div class="dwrap">${cards}</div>
     <div class="drev">🏅 <span class="mvp">오늘의 MVP:</span> ${esc(mvp)} &nbsp;|&nbsp; ✍️ 후기: ${rec.review ? esc(rec.review) : "<i>미작성</i>"}</div>
   </td></tr>`;
