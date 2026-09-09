@@ -339,8 +339,8 @@
     </div>
     <label class="lb" for="mvp">오늘의 MVP 유물 (스탬프 찍은 것 중에서)</label>
     <select id="mvp"><option value="">— 아직 고르는 중 —</option></select>
-    <label class="lb" for="review">한 줄 관람 후기</label>
-    <textarea id="review" rows="3" placeholder="가장 놀랐던 것, 실물 보고 생각이 바뀐 것, 다음에 또 보고 싶은 것…"></textarea>
+    <label class="lb" for="review">자세한 관람 후기</label>
+    <textarea id="review" rows="6" placeholder="가장 인상 깊었던 유물과 그 이유, 실물을 보고 생각이 바뀐 점, 사진·영상으로 볼 때와 달랐던 점, 오늘 새로 알게 된 사실, 다음에 또 보고 싶은 것 등을 자유롭게 적어 보세요."></textarea>
     <div class="clearBanner" id="clearBanner"><div class="big" id="clearTitle"></div><div id="clearMsg"></div></div>
 
     <div class="certwrap" id="certWrap" hidden>
@@ -359,11 +359,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v36</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v37</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v36");
+DBG("모듈 시작 v37");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -747,7 +747,7 @@ async function flushSync(){
     done: count() >= TOTAL,
     stamps: state.stamps || {}, steps: state.steps || {}, answers,
     photoAt, photoCount: Object.keys(photoAt).length,
-    mvp: state.mvp || "", review: (state.review || "").slice(0, 500),
+    mvp: state.mvp || "", review: (state.review || "").slice(0, 2000),
   };
   try {
     await FB.set(FB.ref(FB.db, `museum/${TOUR}/students/${sid()}`), payload);
