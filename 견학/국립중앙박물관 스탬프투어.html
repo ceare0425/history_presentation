@@ -802,7 +802,7 @@ function renderStep(it, st, i){
       inp.value = "";
     });
   } else {
-    box.innerHTML = qhead + `<textarea class="txt" rows="1" placeholder="${st.ph || "한 줄로 적어봐"}"></textarea>`;
+    box.innerHTML = qhead + `<textarea class="txt" rows="1" placeholder="${st.ph || "한 줄로 작성해보세요"}"></textarea>`;
     const ta = box.querySelector("textarea");
     if (typeof cur === "string") ta.value = cur;
     autoGrow(ta);
