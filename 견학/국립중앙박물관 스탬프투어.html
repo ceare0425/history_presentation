@@ -172,6 +172,55 @@
   .foot{text-align:center;font-size:.72rem;color:#A8977B;padding:1.3rem 1rem 0}
   .confetti{position:fixed;top:-40px;font-size:1.4rem;z-index:100;pointer-events:none;will-change:transform}
   @keyframes fall{to{transform:translateY(105vh) rotate(540deg)}}
+
+  /* ── 스탬프 찍는 연출 ── */
+  .item.thud{animation:cardthud .42s cubic-bezier(.2,.8,.3,1)}
+  @keyframes cardthud{0%{transform:translateY(-7px) scale(1.018)}38%{transform:translateY(0) scale(.988)}64%{transform:scale(1.006)}100%{transform:none}}
+  .shock{position:absolute;top:50%;left:50%;width:64px;height:64px;border-radius:50%;
+    border:5px solid var(--seal);transform:translate(-50%,-50%) scale(.3);opacity:.85;
+    pointer-events:none;z-index:7;animation:shock .52s ease-out forwards}
+  @keyframes shock{to{transform:translate(-50%,-50%) scale(6.2);opacity:0;border-width:1px}}
+
+  /* ── 부(部) 클리어 연출 ── */
+  .partclear{position:fixed;inset:0;z-index:280;background:rgba(20,11,6,.62);
+    display:flex;align-items:center;justify-content:center;padding:22px}
+  .partclear .pcbox{background:linear-gradient(150deg,#3A2411,#20140A);border:2px solid var(--accent);
+    border-radius:18px;max-width:380px;width:100%;padding:1.5rem 1.35rem;text-align:center;
+    box-shadow:0 24px 60px rgba(0,0,0,.5);animation:pop .42s cubic-bezier(.2,1.3,.4,1)}
+  .partclear .pckick{font-size:.72rem;font-weight:800;letter-spacing:.22em;color:var(--accent);opacity:.85}
+  .partclear .pcbig{font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1.55rem;color:#FBF2DF;margin:.28rem 0 .1rem}
+  .partclear .pcttl{font-size:.86rem;font-weight:700;color:var(--accent);margin-bottom:.7rem}
+  .partclear .pcera{font-size:.86rem;line-height:1.6;color:#EAD9BE;background:rgba(255,255,255,.06);
+    border:1px solid rgba(197,160,40,.28);border-radius:11px;padding:.7rem .8rem;word-break:keep-all}
+  .partclear .pcgo{margin-top:.95rem;width:100%;border:none;border-radius:10px;padding:.75rem;
+    background:var(--accent);color:#2C1A0E;font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1rem;cursor:pointer}
+
+  /* ── 완주 수료증 ── */
+  .certwrap{margin-top:.9rem}
+  .certcard{position:relative;background:#FDF8EC;border:2px solid var(--gold-deep);border-radius:12px;
+    padding:1.15rem 1rem 1.05rem;text-align:center;overflow:hidden}
+  .certcard::before{content:"";position:absolute;inset:6px;border:1px solid rgba(154,123,30,.45);border-radius:8px;pointer-events:none}
+  .certcard .ct{font-family:'Nanum Myeongjo',serif;font-weight:800;letter-spacing:.35em;font-size:1.15rem;color:var(--main)}
+  .certcard .cbody{font-size:.8rem;line-height:1.65;color:#4A3A26;margin:.55rem .2rem .5rem;word-break:keep-all}
+  .certcard .cname{font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1.5rem;color:var(--ink);margin:.15rem 0 .05rem}
+  .certcard .cmeta{font-size:.78rem;color:var(--ink-sec)}
+  .certcard .cdate{font-size:.8rem;color:#4A3A26;margin-top:.5rem;font-weight:600}
+  .certcard .cseal{position:absolute;right:.7rem;bottom:.7rem;width:62px;height:62px;border-radius:50%;
+    border:2.5px double var(--seal);color:var(--seal);display:flex;align-items:center;justify-content:center;
+    font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:.62rem;text-align:center;line-height:1.2;
+    transform:rotate(-12deg);background:rgba(181,50,43,.06)}
+  .certbtn{margin-top:.6rem;width:100%;border:none;border-radius:10px;padding:.72rem;
+    background:var(--gold-deep);color:#FDF3DE;font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:.98rem;cursor:pointer}
+  .certmodal{position:fixed;inset:0;z-index:300;background:rgba(20,11,6,.72);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7rem;padding:20px}
+  .certmodal img{max-width:100%;max-height:70vh;border-radius:8px;box-shadow:0 14px 40px rgba(0,0,0,.5)}
+  .certmodal .chint{font-size:.82rem;color:#F6E9C8;text-align:center;line-height:1.5}
+  .certmodal .chint b{color:var(--accent)}
+  .certmodal .crow{display:flex;gap:.5rem}
+  .certmodal a,.certmodal button{border:1.5px solid var(--accent);border-radius:9px;padding:.6rem 1rem;
+    font-family:inherit;font-weight:700;font-size:.86rem;cursor:pointer;text-decoration:none}
+  .certmodal a{background:var(--accent);color:#2C1A0E}
+  .certmodal button{background:none;color:#F6E9C8}
 </style>
 </head>
 <body>
@@ -184,6 +233,25 @@
     <p class="sub">선생님이 아래 유물 사진을 반려했어요. 실물 앞에서 다시 찍어 올려 주세요. (해당 유물 스탬프는 다시 잠겼어요)</p>
     <div id="rejBody"></div>
     <button class="ok" id="rejOk">확인 · 해당 유물로 이동</button>
+  </div>
+</div>
+
+<div class="partclear" id="partClear" hidden>
+  <div class="pcbox">
+    <div class="pckick">PART CLEAR</div>
+    <div class="pcbig" id="pcBig">1부 클리어!</div>
+    <div class="pcttl" id="pcTtl"></div>
+    <div class="pcera" id="pcEra"></div>
+    <button class="pcgo" id="pcGo">계속하기</button>
+  </div>
+</div>
+
+<div class="certmodal" id="certModal" hidden>
+  <img id="certImg" alt="국립중앙박물관 스탬프 투어 수료증">
+  <div class="chint">이미지를 <b>길게 눌러</b> ‘사진에 저장’을 누르세요.</div>
+  <div class="crow">
+    <a id="certDl" download="국립중앙박물관_스탬프투어_수료증.png">기기에 저장</a>
+    <button id="certClose" type="button">닫기</button>
   </div>
 </div>
 <script>
@@ -273,15 +341,28 @@
     <label class="lb" for="review">한 줄 관람 후기</label>
     <textarea id="review" rows="3" placeholder="가장 놀랐던 것, 실물 보고 생각이 바뀐 것, 다음에 또 보고 싶은 것…"></textarea>
     <div class="clearBanner" id="clearBanner"><div class="big" id="clearTitle"></div><div id="clearMsg"></div></div>
+
+    <div class="certwrap" id="certWrap" hidden>
+      <div class="certcard" id="certCard">
+        <div class="ct">수 료 증</div>
+        <div class="cbody">위 학생은 국립중앙박물관 상설전시관의<br>유물 <b id="certN">22</b>점을 모두 찾아<br><b>스탬프 투어</b>를 완주하였기에 이 증서를 드립니다.</div>
+        <div class="cname" id="certName">홍길동</div>
+        <div class="cmeta" id="certMeta">2학년 3반 14번</div>
+        <div class="cdate" id="certDate">2026년 9월 9일</div>
+        <div class="cseal">국립중앙<br>박물관<br>스탬프투어</div>
+      </div>
+      <button class="certbtn" id="certSave" type="button">🖼️ 수료증 이미지로 저장</button>
+    </div>
+
     <button class="resetBtn" id="resetBtn">처음부터 다시 (이 기기 기록 삭제)</button>
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v29</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v30</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v29");
+DBG("모듈 시작 v30");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -522,6 +603,14 @@ const ALL = PARTS.flatMap(p => p.items);
 const TOTAL = ALL.length;
 const STEP_TOTAL = ALL.reduce((s, it) => s + it.steps.length, 0);
 const TK = { find:"찾기", look:"관찰", quiz:"퀴즈", think:"생각", photo:"사진", upload:"📸" };
+/* 부(部)별 한 줄 시대 요약 — 부 클리어 연출에 사용 */
+const ERA = [
+  "돌을 깨서 도구를 만든 구석기부터, 흙으로 그릇을 빚고 청동으로 권력을 새긴 삼국·가야·신라까지 — 나라의 뼈대가 세워진 시대.",
+  "삼국을 하나로 묶은 통일신라 — 불교의 힘으로 탑과 종을 세우고, 당·서역과 이어졌던 국제 도시 경주의 시대.",
+  "고려의 귀족 문화와 대장경, 조선의 성리학·한글·과학, 그리고 대한제국의 개혁까지 — 중세에서 근대로 건너간 시대.",
+  "글씨와 그림으로 마음을 표현한 조선 선비들, 그리고 아끼던 유물을 나라에 내놓은 기증자들의 방.",
+  "돌·쇠·금으로 부처를 빚고, 반가사유상 앞에서 생각에 잠기고, 청자에서 백자로 이어진 공예의 절정.",
+];
 DBG("2-데이터 로드됨 (" + ALL.length + "점)");
 
 /* ══════════ 상태 ══════════ */
@@ -843,17 +932,101 @@ function refreshCard(id){
   refreshProgress();
 }
 
+/* ── 스탬프 "쾅" 효과음 (WebAudio · 파일 없이 합성) ── */
+let _actx = null;
+function stampSound(){
+  try {
+    _actx = _actx || new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = _actx;
+    if (ctx.state === "suspended") ctx.resume();
+    const t = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "triangle";
+    o.frequency.setValueAtTime(190, t);
+    o.frequency.exponentialRampToValueAtTime(46, t + 0.19);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.55, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.33);
+    o.connect(g).connect(ctx.destination);
+    o.start(t); o.stop(t + 0.35);
+    const len = Math.floor(ctx.sampleRate * 0.07);
+    const nb = ctx.createBuffer(1, len, ctx.sampleRate), d = nb.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random()*2 - 1) * (1 - i/len);
+    const ns = ctx.createBufferSource(); ns.buffer = nb;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.3, t);
+    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+    ns.connect(ng).connect(ctx.destination);
+    ns.start(t);
+  } catch (e) {}
+}
+function stampFx(card){
+  card.classList.remove("thud"); void card.offsetWidth; card.classList.add("thud");
+  const sh = document.createElement("div");
+  sh.className = "shock";
+  card.appendChild(sh);
+  sh.addEventListener("animationend", () => sh.remove());
+  try { navigator.vibrate && navigator.vibrate([0, 45, 35, 90]); } catch (e) {}
+  stampSound();
+}
+
 itemsWrap.addEventListener("click", e => {
   const b = e.target.closest('[data-act="stamp"]');
   if (!b) return;
   const id = b.dataset.id, it = ALL.find(x => x.id === id);
-  if (state.stamps[id]) delete state.stamps[id];
+  const wasStamped = !!state.stamps[id];
+  if (wasStamped){
+    delete state.stamps[id];
+    const pi = PARTS.findIndex(p => p.items.some(x => x.id === id));
+    if (pi >= 0 && state.partsCleared) delete state.partsCleared[pi];   // 부가 다시 미완성 → 재완주 시 다시 축하
+  }
   else { if (!cardDone(it)) return; state.stamps[id] = true; }
   if (!state.startedAt) state.startedAt = Date.now();
   persist();
   const card = document.getElementById("card-" + id);
   card.classList.remove("done"); void card.offsetWidth;
   refreshCard(id);
+  if (!wasStamped){ stampFx(card); checkPartClear(); }
+});
+
+/* ── 부(部) 클리어 감지 + 연출 ── */
+let pcQueue = [];
+/* 이미 완료된 부는 조용히 기록만 (재접속 시 뒤늦게 팝업 뜨는 것 방지) */
+function seedPartsCleared(){
+  state.partsCleared = state.partsCleared || {};
+  let dirty = false;
+  PARTS.forEach((part, pi) => {
+    if (!state.partsCleared[pi] && part.items.every(it => state.stamps[it.id])){
+      state.partsCleared[pi] = Date.now(); dirty = true;
+    }
+  });
+  if (dirty) persist();
+}
+function checkPartClear(){
+  state.partsCleared = state.partsCleared || {};
+  PARTS.forEach((part, pi) => {
+    if (state.partsCleared[pi]) return;
+    if (part.items.every(it => state.stamps[it.id])){
+      state.partsCleared[pi] = Date.now();
+      pcQueue.push(pi);
+    }
+  });
+  persist();
+  if (pcQueue.length && document.getElementById("partClear").hidden) showNextPartClear();
+}
+function showNextPartClear(){
+  const pi = pcQueue.shift();
+  if (pi == null) return;
+  const part = PARTS[pi];
+  document.getElementById("pcBig").textContent = part.no + " 클리어!";
+  document.getElementById("pcTtl").textContent = part.title;
+  document.getElementById("pcEra").textContent = ERA[pi] || "";
+  document.getElementById("partClear").hidden = false;
+  confetti();
+}
+document.getElementById("pcGo").addEventListener("click", () => {
+  document.getElementById("partClear").hidden = true;
+  if (pcQueue.length) setTimeout(showNextPartClear, 260);
 });
 
 /* ══════════ 상단 진행 + 마무리 ══════════ */
@@ -877,6 +1050,8 @@ function refreshProgress(){
   const cb = document.getElementById("clearBanner");
   const ct = document.getElementById("clearTitle");
   const cm = document.getElementById("clearMsg");
+  document.getElementById("certWrap").hidden = (n < TOTAL);
+  if (n >= TOTAL) updateCert();
   if (n >= TOTAL){
     cb.classList.add("show"); ct.textContent = "🏆 올 스탬프 달성!";
     cm.textContent = TOTAL + "점 완주. 오늘 국립중앙박물관을 제대로 털었다.";
@@ -911,6 +1086,74 @@ function confetti(){
     setTimeout(() => s.remove(), 5200);
   }
 }
+
+/* ══════════ 완주 수료증 ══════════ */
+function certDateStr(){
+  const d = new Date();
+  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+}
+function updateCert(){
+  const i = state.ident; if (!i) return;
+  document.getElementById("certN").textContent = TOTAL;
+  document.getElementById("certName").textContent = i.name;
+  document.getElementById("certMeta").textContent = `${i.grade}학년 ${i.cls}반 ${i.num}번`;
+  document.getElementById("certDate").textContent = certDateStr();
+}
+function drawCert(){
+  const i = state.ident || { name:"", grade:"2", cls:"", num:"" };
+  const W = 820, H = 1160, cv = document.createElement("canvas");
+  cv.width = W; cv.height = H;
+  const x = cv.getContext("2d");
+  x.fillStyle = "#FDF8EC"; x.fillRect(0, 0, W, H);
+  x.strokeStyle = "#9A7B1E"; x.lineWidth = 8;  x.strokeRect(26, 26, W - 52, H - 52);
+  x.lineWidth = 2; x.strokeRect(46, 46, W - 92, H - 92);
+  x.textAlign = "center"; x.fillStyle = "#8B4513";
+  x.font = "800 62px 'Nanum Myeongjo', serif";
+  x.fillText("수  료  증", W / 2, 190);
+  x.fillStyle = "#4A3A26"; x.font = "400 27px 'Noto Sans KR', sans-serif";
+  x.fillText("위 학생은 국립중앙박물관 상설전시관의", W / 2, 340);
+  x.fillText(`유물 ${TOTAL}점을 모두 찾아 스탬프 투어를`, W / 2, 384);
+  x.fillText("완주하였기에 이 증서를 드립니다.", W / 2, 428);
+  x.fillStyle = "#241A0E"; x.font = "800 78px 'Nanum Myeongjo', serif";
+  x.fillText(i.name || "　", W / 2, 590);
+  x.fillStyle = "#6E5B41"; x.font = "500 32px 'Noto Sans KR', sans-serif";
+  x.fillText(`${i.grade}학년 ${i.cls}반 ${i.num}번`, W / 2, 648);
+  x.fillStyle = "#4A3A26"; x.font = "600 30px 'Noto Sans KR', sans-serif";
+  x.fillText(`스탬프 ${TOTAL} / ${TOTAL} 완주`, W / 2, 760);
+  const mvpIt = ALL.find(a => a.id === state.mvp);
+  if (mvpIt) x.fillText(`오늘의 MVP 유물 · ${mvpIt.nm}`, W / 2, 806);
+  x.font = "600 34px 'Nanum Myeongjo', serif"; x.fillStyle = "#4A3A26";
+  x.fillText(certDateStr(), W / 2, 930);
+  x.font = "800 30px 'Nanum Myeongjo', serif"; x.fillStyle = "#2C1A0E";
+  x.fillText("국 립 중 앙 박 물 관", W / 2, 1000);
+  x.save();
+  x.translate(W - 150, 990); x.rotate(-12 * Math.PI / 180);
+  x.strokeStyle = "#B5322B"; x.lineWidth = 5;
+  x.beginPath(); x.arc(0, 0, 62, 0, Math.PI * 2); x.stroke();
+  x.beginPath(); x.arc(0, 0, 54, 0, Math.PI * 2); x.stroke();
+  x.fillStyle = "#B5322B"; x.font = "800 19px 'Nanum Myeongjo', serif";
+  x.fillText("스탬프", 0, -6); x.fillText("투어", 0, 20);
+  x.restore();
+  return cv;
+}
+function openCert(){
+  const cv = drawCert();
+  const show = (url) => {
+    document.getElementById("certImg").src = url;
+    const dl = document.getElementById("certDl");
+    dl.href = url;
+    document.getElementById("certModal").hidden = false;
+  };
+  if (cv.toBlob) cv.toBlob(b => show(b ? URL.createObjectURL(b) : cv.toDataURL("image/png")), "image/png");
+  else show(cv.toDataURL("image/png"));
+}
+document.getElementById("certSave").addEventListener("click", () => {
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(openCert).catch(openCert);
+  else openCert();
+});
+document.getElementById("certClose").addEventListener("click", () => {
+  document.getElementById("certModal").hidden = true;
+});
 
 /* ══════════ 학생 정보 게이트 ══════════ */
 const AVATARS = ["🐰","🐱","🐯","🐻","🐼","🐨","🦁","🐵","🐶","🦊","🐸","🐷","🐹","🐭","🐮","🦉","🐢","🐙","🦄","🐧"];
@@ -966,6 +1209,7 @@ function startApp(){
   document.getElementById("who").innerHTML = `${i.avatar} <b>${i.name}</b> · ${i.grade}학년 ${i.cls}반 ${i.num}번`;
   document.getElementById("review").value = state.review || "";
   buildItems();
+  seedPartsCleared();
   refreshProgress();
   paintSync();
   flushSync();
