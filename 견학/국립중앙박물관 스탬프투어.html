@@ -521,7 +521,7 @@ const PARTS = [
 const ALL = PARTS.flatMap(p => p.items);
 const TOTAL = ALL.length;
 const STEP_TOTAL = ALL.reduce((s, it) => s + it.steps.length, 0);
-const TK = { find:"찾기", look:"관찰", quiz:"퀴즈", think:"생각", photo:"사진", upload:"📸 사진" };
+const TK = { find:"찾기", look:"관찰", quiz:"퀴즈", think:"생각", photo:"사진", upload:"📸" };
 DBG("2-데이터 로드됨 (" + ALL.length + "점)");
 
 /* ══════════ 상태 ══════════ */
