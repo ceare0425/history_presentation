@@ -163,7 +163,7 @@ const cfg = {
 const db = getDatabase(initializeApp(cfg, "museum-teacher"));
 
 /* 학생 페이지와 반드시 일치해야 하는 유물 순서·이름 (박물관 공식 추천 동선) */
-const ORDER = ["jumeok","bitsal","nonggyeong","houu","gwansik","gaya","geumgwan","gyeongcheon","cheolbul","daejang","hangeul","daedong","chikmyeong","uigwe","sohn","banga","gamsan","jeongbyeong","chilbo","jara","dalhangari"];
+const ORDER = ["jumeok","bitsal","nonggyeong","houu","gwansik","gaya","geumgwan","gyeongcheon","cheolbul","daejang","hangeul","daedong","chikmyeong","uigwe","sohn","banga","gamsan","jeongbyeong","chilbo","dalhangari"];
 const META = {
   jumeok:{e:"🪨",n:"주먹도끼",s:["찾기","관찰","퀴즈:시대","생각","사진"]},
   bitsal:{e:"🏺",n:"빗살무늬 토기",s:["찾기","관찰","퀴즈:바닥","생각","사진"]},
@@ -184,7 +184,6 @@ const META = {
   banga:{e:"🧘",n:"반가사유상",s:["찾기","관찰","퀴즈:이름뜻","생각","사진"]},
   jeongbyeong:{e:"🫗",n:"물가풍경무늬 정병",s:["찾기","관찰","퀴즈:기법","생각","사진"]},
   chilbo:{e:"🍵",n:"칠보무늬 향로",s:["찾기","관찰:토끼","퀴즈","생각","사진"]},
-  jara:{e:"🪴",n:"분청사기 모란무늬 자라병",s:["찾기","관찰","퀴즈:시기","생각","사진"]},
   dalhangari:{e:"🌕",n:"백자 항아리",s:["찾기","관찰:대칭","퀴즈","생각","사진"]},
 };
 const TOTAL = ORDER.length;
