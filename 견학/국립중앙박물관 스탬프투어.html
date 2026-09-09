@@ -293,7 +293,7 @@
 <div class="topbar" id="topbar" hidden>
   <div class="row">
     <span class="who" id="who"></span>
-    <span class="count"><b id="cNow">0</b> / <span id="cTot">21</span> 스탬프</span>
+    <span class="count"><b id="cNow">0</b> / <span id="cTot">20</span> 스탬프</span>
   </div>
   <div class="bar"><i id="barFill"></i></div>
   <div class="sub">
@@ -335,7 +335,7 @@
     <div class="badges">
       <div class="mbadge" data-need="8"><span class="ic">🚩</span>탐험가<br>8개</div>
       <div class="mbadge" data-need="15"><span class="ic">🎖️</span>미션 클리어<br>15개</div>
-      <div class="mbadge" data-need="21"><span class="ic">🏆</span>올 스탬프<br>21개</div>
+      <div class="mbadge" data-need="20"><span class="ic">🏆</span>올 스탬프<br>20개</div>
     </div>
     <label class="lb" for="mvp">오늘의 MVP 유물 (스탬프 찍은 것 중에서)</label>
     <select id="mvp"><option value="">— 아직 고르는 중 —</option></select>
@@ -346,7 +346,7 @@
     <div class="certwrap" id="certWrap" hidden>
       <div class="certcard" id="certCard">
         <div class="ct">수 료 증</div>
-        <div class="cbody">위 학생은 국립중앙박물관 상설전시관의<br>유물 <b id="certN">21</b>점을 모두 찾아<br><b>스탬프 투어</b>를 완주하였기에 이 증서를 드립니다.</div>
+        <div class="cbody">위 학생은 국립중앙박물관 상설전시관의<br>유물 <b id="certN">20</b>점을 모두 찾아<br><b>스탬프 투어</b>를 완주하였기에 이 증서를 드립니다.</div>
         <div class="cname" id="certName">홍길동</div>
         <div class="cmeta" id="certMeta">2학년 3반 14번</div>
         <div class="cdate" id="certDate">2026년 9월 9일</div>
@@ -359,11 +359,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v35</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v36</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v35");
+DBG("모듈 시작 v36");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -571,15 +571,6 @@ const PARTS = [
       {k:"think", q:"‘기술 자랑’처럼 느껴질 만큼 화려해요. 만든 사람은 무엇을 보여 주고 싶었을까요? 한 줄로 적어 보세요", ph:""},
       {k:"upload", q:"이 유물과 내 모습이 함께 나오게 찍어 올려 주세요 — 그 자리에서 직접 촬영"},
     ]},
-  { id:"jara", emoji:"🪴", nm:"분청사기 모란무늬 자라병", nat:true, loc:"조각공예관 · 도자공예(분청사기·백자)실",
-    blurb:"납작하고 둥근 자라 모양의 여행용 물병. 회색 흙 위에 흰 분장토를 바르고, 모란 무늬만 남긴 채 배경을 긁어내(박지 기법) 흰 꽃과 회색 바탕이 대비되게 했다. 끈을 꿰어 허리에 차거나 말에 매달던 휴대용 병이라, 몸에 밀착되도록 납작하게 만들었다.",
-    steps:[
-      {k:"find", label:"자라(거북)처럼 납작하고 둥근 분청사기 병을 찾았어요"},
-      {k:"look", q:"흰 부분과 회색 부분 중 어느 쪽을 긁어내서 만든 것 같은지 적어 보세요", ph:""},
-      {k:"quiz", q:"분청사기를 청자·백자와 구별 짓는 특징으로 알맞은 것은 무엇일까요?", opts:["고려 왕실이 원의 취향에 맞춰 만든 수출용 도자기다","백자보다 늦게 나타나 조선 후기를 대표한다","청자 흙에 흰 분장토를 발라 꾸민, 청자에서 백자로 넘어가는 시기의 그릇이다"], a:2},
-      {k:"think", q:"청자의 단정함과 비교해, 분청사기에서 느껴지는 분위기를 한 줄로 적어 보세요", ph:""},
-      {k:"upload", q:"이 유물과 내 모습이 함께 나오게 찍어 올려 주세요 — 그 자리에서 직접 촬영"},
-    ]},
   { id:"dalhangari", emoji:"🌕", nm:"백자 항아리", nat:true, loc:"조각공예관 · 도자공예(분청사기·백자)실",
     blurb:"보름달처럼 크고 둥근 조선 후기 백자 항아리. 커서 위·아래를 따로 빚어 붙이기 때문에 완벽한 원이 아니라 살짝 비뚤어지는데, 그 넉넉한 비대칭이 매력으로 꼽힌다. ‘달항아리’라는 이름은 20세기 화가·수집가들이 붙인 것으로, 조선 시대에는 그냥 흰 항아리였다.",
     steps:[
@@ -601,7 +592,7 @@ const ERA = [
   "삼국을 하나로 묶은 통일신라 — 불교의 힘으로 탑과 종을 세우고, 당·서역과 이어졌던 국제 도시 경주의 시대.",
   "고려의 귀족 문화와 대장경, 조선의 성리학·한글·과학, 그리고 대한제국의 개혁까지 — 중세에서 근대로 건너간 시대.",
   "프랑스에서 145년 만에 돌아온 왕실 기록 의궤, 그리스에서 손기정을 거쳐 온 투구, 어둠 속에서 천 년 넘게 생각에 잠긴 반가사유상 — 먼 길을 돌아 2층에 모였다.",
-  "돌과 쇠로 부처를 빚고, 청동에 은실을 박고, 청자에서 분청사기를 지나 백자로 이어진 3층 공예의 절정.",
+  "돌과 쇠로 부처를 빚고, 청동에 은실을 박고, 청자에서 백자로 이어진 3층 공예의 절정.",
 ];
 DBG("2-데이터 로드됨 (" + ALL.length + "점)");
 
