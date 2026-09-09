@@ -293,7 +293,7 @@
 <div class="topbar" id="topbar" hidden>
   <div class="row">
     <span class="who" id="who"></span>
-    <span class="count"><b id="cNow">0</b> / <span id="cTot">22</span> 스탬프</span>
+    <span class="count"><b id="cNow">0</b> / <span id="cTot">21</span> 스탬프</span>
   </div>
   <div class="bar"><i id="barFill"></i></div>
   <div class="sub">
@@ -335,7 +335,7 @@
     <div class="badges">
       <div class="mbadge" data-need="8"><span class="ic">🚩</span>탐험가<br>8개</div>
       <div class="mbadge" data-need="15"><span class="ic">🎖️</span>미션 클리어<br>15개</div>
-      <div class="mbadge" data-need="22"><span class="ic">🏆</span>올 스탬프<br>22개</div>
+      <div class="mbadge" data-need="21"><span class="ic">🏆</span>올 스탬프<br>21개</div>
     </div>
     <label class="lb" for="mvp">오늘의 MVP 유물 (스탬프 찍은 것 중에서)</label>
     <select id="mvp"><option value="">— 아직 고르는 중 —</option></select>
@@ -346,7 +346,7 @@
     <div class="certwrap" id="certWrap" hidden>
       <div class="certcard" id="certCard">
         <div class="ct">수 료 증</div>
-        <div class="cbody">위 학생은 국립중앙박물관 상설전시관의<br>유물 <b id="certN">22</b>점을 모두 찾아<br><b>스탬프 투어</b>를 완주하였기에 이 증서를 드립니다.</div>
+        <div class="cbody">위 학생은 국립중앙박물관 상설전시관의<br>유물 <b id="certN">21</b>점을 모두 찾아<br><b>스탬프 투어</b>를 완주하였기에 이 증서를 드립니다.</div>
         <div class="cname" id="certName">홍길동</div>
         <div class="cmeta" id="certMeta">2학년 3반 14번</div>
         <div class="cdate" id="certDate">2026년 9월 9일</div>
@@ -359,11 +359,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v32</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v33</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v32");
+DBG("모듈 시작 v33");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -486,7 +486,7 @@ const PARTS = [
       {k:"think", q:"전쟁 중에 국력을 쏟아 8만 장을 새겼어요. 오늘날로 치면 어떤 국가적 사업에 견줄 수 있을까요? 한 줄로 적어 보세요", ph:""},
       {k:"upload", q:"이 유물과 내 모습이 함께 나오게 찍어 올려 주세요 — 그 자리에서 직접 촬영"},
     ]},
-  { id:"hangeul", emoji:"🔡", nm:"을해자와 함께 쓴 한글 금속활자", nat:true, loc:"중근세관 · 조선실",
+  { id:"hangeul", emoji:"🔡", nm:"을해자와 함께 쓴 한글 금속활자", nat:false, loc:"중근세관 · 조선실",
     blurb:"1455년(을해년)에 만든 금속활자로, 실물이 남은 가장 오래된 조선 활자로 꼽힌다. 한자 활자와 함께 쓰던 한글 활자도 남아 있어, 훈민정음 반포 직후 인쇄 문화를 보여준다. 글자를 하나씩 따로 부어 만들어, 필요한 글자만 골라 판에 짜 맞추면 어떤 책이든 찍어낼 수 있었다.",
     steps:[
       {k:"find", label:"조선실에서 금속활자(한자·한글) 전시를 찾았어요"},
@@ -523,16 +523,7 @@ const PARTS = [
       {k:"upload", q:"이 유물과 내 모습이 함께 나오게 찍어 올려 주세요 — 그 자리에서 직접 촬영"},
     ]},
 ]},
-{ no:"4부", title:"2층 · 서화관 & 기증관", loc:"박물관 추천 동선 ④ 글씨 → 그림 → 불교회화 → 공예 → 기증", items:[
-  { id:"najeon", emoji:"🐚", nm:"나전 칠 연꽃 넝쿨무늬 옷상자", nat:true, loc:"서화관 · 목칠공예실",
-    blurb:"전복·소라 껍질을 얇게 오려 옻칠한 바탕에 박아 넣는 나전칠기. 연꽃 넝쿨무늬가 빼곡한 이 상자는 한국 나전칠기의 아름다움을 대표하는 조선 전기 명품이다. 자개는 보는 각도에 따라 푸른빛·붉은빛으로 색이 바뀌는데, 껍데기 속 얇은 결이 빛을 나누기 때문이다.",
-    steps:[
-      {k:"find", label:"자개로 무늬를 낸 옻칠 상자(나전칠기)를 찾았어요"},
-      {k:"look", q:"자개가 빛을 받아 무슨 색으로 반짝이는지 적어 보세요", ph:""},
-      {k:"quiz", q:"나전칠기를 만드는 방법으로 옳은 것은 무엇일까요?", opts:["전복·소라 껍질을 얇게 갈아 무늬 모양으로 오려 옻칠 바탕에 박아 넣는다","금·은 가루를 뿌려 무늬를 낸 뒤 옻으로 덮는다","옻을 여러 번 칠하면 저절로 무지갯빛 무늬가 생긴다"], a:0},
-      {k:"think", q:"이렇게 손이 많이 가는 상자에는 무엇을 담았을까요? 한 줄로 추측해 보세요", ph:""},
-      {k:"upload", q:"이 유물과 내 모습이 함께 나오게 찍어 올려 주세요 — 그 자리에서 직접 촬영"},
-    ]},
+{ no:"4부", title:"2층 · 기증관", loc:"박물관 추천 동선 ④ 서화관을 지나 기증관으로", items:[
   { id:"sohn", emoji:"🥇", nm:"그리스 청동 투구", nat:true, loc:"기증관 · 기증문화재실",
     blurb:"기원전 6세기 고대 그리스에서 만든 청동 투구. 1936년 베를린 올림픽 마라톤 우승자 손기정에게 주려던 부상이었지만, 아마추어 규정에 막혀 50년이 지난 1986년에야 그의 품에 전해졌고, 손기정은 이를 다시 나라에 기증했다. 그는 시상대에서 부상으로 받은 참나무 묘목으로 가슴의 일장기를 가린 것으로도 유명하다.",
     steps:[
