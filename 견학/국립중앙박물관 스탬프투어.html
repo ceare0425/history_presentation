@@ -127,6 +127,7 @@
   .uplbtn:active{transform:scale(.98)}
   .uplstate{font-size:.76rem;font-weight:700;color:var(--ink-sec);min-height:1em}
   .uplstate.ok{color:var(--ok)} .uplstate.no{color:var(--seal)} .uplstate.wait{color:#9A7B1E}
+  .uplhint{font-size:.72rem;color:#9C8A6E;line-height:1.45}
   .fb{margin-top:.4rem;font-size:.76rem;font-weight:700;min-height:1em}
   .fb.ok{color:var(--ok)} .fb.no{color:var(--seal)}
   .stepnum{font-size:.72rem;color:var(--ink-sec);margin:.1rem 1rem 0;font-weight:600}
@@ -315,7 +316,7 @@
       <ul>
         <li>이 투어는 <b>박물관 공식 추천 동선</b> 순서(1부→5부)를 그대로 따라갑니다.</li>
         <li>유물마다 미션 <b>5개</b>(찾기·관찰·퀴즈·생각·사진). 다 마쳐야 <b>스탬프</b>가 열립니다.</li>
-        <li><b>사진은 유물과 내 모습이 함께</b> 나오게 그 자리에서 직접 찍어야 합니다(친구가 찍어 주거나 셀피). 갤러리·인터넷 사진은 안 됩니다.</li>
+        <li><b>사진은 유물과 내 모습이 함께</b> 나오게 그 자리에서 새로 찍어야 합니다(친구가 찍어 주거나 셀피). 폰 카메라 앱으로 찍고 ‘사진 보관함’에서 골라도 되지만, 예전 사진·인터넷 사진은 안 됩니다.</li>
         <li>올린 사진을 <b>선생님이 승인해야</b> 그 유물 스탬프가 열립니다. 반려되면 알림이 뜹니다.</li>
         <li>사진 촬영 O · <b>플래시·삼각대 금지</b> · 사유의 방은 촬영 규정을 꼭 확인</li>
         <li>큰 흐름: <b>1층(선사~대한제국) → 2층(서화·기증) → 3층(조각·공예)</b>, 반가사유상은 2층 사유의 방</li>
@@ -358,11 +359,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v31</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v32</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v31");
+DBG("모듈 시작 v32");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -853,8 +854,9 @@ function renderStep(it, st, i){
     box.innerHTML = qhead + `
       <div class="upl">
         <img class="uplthumb" alt="" hidden>
-        <input type="file" accept="image/*" capture="environment" hidden>
+        <input type="file" accept="image/*" hidden>
         <button type="button" class="uplbtn">📸 유물+나 함께 찍기</button>
+        <div class="uplhint">‘카메라’로 바로 찍거나, <b>폰 카메라 앱으로 먼저 찍은 뒤</b> ‘사진 보관함’에서 골라도 돼요 — 그래야 사진이 폰에도 남아요.</div>
         <div class="uplstate" data-uplstate></div>
       </div>`;
     const inp = box.querySelector("input");
