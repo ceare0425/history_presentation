@@ -221,11 +221,11 @@
       <button type="button" class="secondary" id="soloClearBtn" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;">기록 비우기</button>
     </div>
     <div>
-      <div class="pool-count"><b>최근 세션</b> (최대 40개)</div>
+      <div class="pool-count"><b>학생별 최근 연습</b> · 이름을 누르면 전체 누적 상세</div>
       <div style="overflow-x:auto;">
         <table>
-          <thead><tr><th>시작</th><th>종료</th><th>반</th><th>이름</th><th>주제(범위)</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
-          <tbody id="soloRecent"><tr><td colspan="9" class="muted">아직 기록이 없습니다.</td></tr></tbody>
+          <thead><tr><th>최근 시작</th><th>종료</th><th>반</th><th>이름</th><th>연습</th><th>최근 주제</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
+          <tbody id="soloRecent"><tr><td colspan="10" class="muted">아직 기록이 없습니다.</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -908,7 +908,16 @@ function renderSoloStats(){
 
   const clsLabel = (c) => (c === undefined || c === null || c === '' || c === '-') ? '-' : escapeHtml(String(c)) + '반';
 
-  el('soloRecent').innerHTML = entries.length ? entries.slice(0,40).map(e=>{
+  // 학생(이름+반)별로 묶어 가장 최근 세션 한 줄만 — entries는 이미 ts 내림차순
+  const byStu = new Map();
+  for(const e of entries){
+    const key = (e.name || '(이름 없음)') + '␟' + String(e.cls ?? '');
+    const g = byStu.get(key);
+    if(g) g.count++;
+    else byStu.set(key, { e, count: 1 });
+  }
+
+  el('soloRecent').innerHTML = byStu.size ? [...byStu.values()].map(({ e, count })=>{
     const total = (e.correct||0)+(e.wrong||0);
     const acc = total ? Math.round(100*(e.correct||0)/total) : null;
     const accClass = acc===null ? 'muted' : (acc>=70 ? 'acc-ok' : 'acc-bad');
@@ -917,13 +926,14 @@ function renderSoloStats(){
       <td class="muted">${soloEndLabel(e)}</td>
       <td>${clsLabel(e.cls)}</td>
       <td><span class="name-link" data-name="${escapeHtml(e.name || '(이름 없음)')}" data-cls="${escapeHtml(String(e.cls ?? ''))}">${escapeHtml(e.name || '(이름 없음)')}</span></td>
+      <td class="${count>1?'acc-ok':'muted'}">${count}회</td>
       <td>${escapeHtml(soloRangeLabel(e.units))}</td>
       <td class="muted">${soloDurLabel(e.duration_sec)}</td>
       <td>${e.floor||0}층</td>
       <td class="${accClass}">${e.correct||0}/${e.wrong||0}${acc===null?'':` (${acc}%)`}</td>
       <td class="${(e.hints||0)>0?'':'muted'}">${e.hints||0}회</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="9" class="muted">아직 기록이 없습니다.</td></tr>';
+  }).join('') : '<tr><td colspan="10" class="muted">아직 기록이 없습니다.</td></tr>';
 
   if(soloModalSel) renderSoloModal();
 }
