@@ -79,6 +79,8 @@
   .stat-cell{ background:var(--bg); border-radius:10px; padding:10px 12px; }
   .stat-cell .k{ font-size:.72rem; color:var(--sub); margin-bottom:2px; }
   .stat-cell .v{ font-size:1.05rem; font-weight:800; color:var(--sky1); }
+  .mini-del{ padding:3px 8px; font-size:.72rem; background:var(--bad); }
+  input[type=checkbox].solo-pick, #soloPickAll{ width:15px; height:15px; cursor:pointer; }
 
   .team-standings{ display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
   .team-bar-row{ display:flex; align-items:center; gap:8px; font-size:.82rem; }
@@ -218,14 +220,15 @@
     <div class="sub" style="margin-top:-6px;">학생이 <code>solo.html</code>(혼자 연습하기)에서 이름을 넣고 한 문제라도 풀면 여기 쌓입니다. 중간에 그만둔 세션도 기록됩니다. 수업 게임 점수와는 별개입니다. <b>이름을 클릭</b>하면 그 학생의 모든 연습이 누적된 현황이 뜹니다.</div>
     <div class="status-line">
       <span class="muted" id="soloSummary">불러오는 중...</span>
+      <button type="button" class="bad" id="soloDelSelBtn" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;" disabled>선택 삭제</button>
       <button type="button" class="secondary" id="soloClearBtn" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;">기록 비우기</button>
     </div>
     <div>
-      <div class="pool-count"><b>학생별 최근 연습</b> · 이름을 누르면 전체 누적 상세</div>
+      <div class="pool-count"><b>학생별 최근 연습</b> · 이름을 누르면 전체 누적 상세 · 왼쪽 체크 후 <b>선택 삭제</b></div>
       <div style="overflow-x:auto;">
         <table>
-          <thead><tr><th>최근 시작</th><th>종료</th><th>반</th><th>이름</th><th>연습</th><th>최근 주제</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
-          <tbody id="soloRecent"><tr><td colspan="10" class="muted">아직 기록이 없습니다.</td></tr></tbody>
+          <thead><tr><th style="width:22px;"><input type="checkbox" id="soloPickAll" title="전체 선택"></th><th>최근 시작</th><th>종료</th><th>반</th><th>이름</th><th>연습</th><th>최근 주제</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
+          <tbody id="soloRecent"><tr><td colspan="11" class="muted">아직 기록이 없습니다.</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -239,10 +242,10 @@
     <h3 id="soloModalTitle">학생 누적 현황</h3>
     <div class="muted" id="soloModalSub" style="font-size:.82rem;"></div>
     <div class="stat-grid" id="soloModalStats"></div>
-    <div class="pool-count"><b>세션 기록</b> (최근순)</div>
+    <div class="pool-count" style="display:flex; align-items:center; gap:8px;"><b>세션 기록</b> (최근순)<button type="button" class="bad" id="soloModalDelAll" style="margin-left:auto; padding:3px 9px; font-size:.75rem;">이 학생 기록 전체 삭제</button></div>
     <div style="overflow-x:auto;">
       <table>
-        <thead><tr><th>시작</th><th>종료</th><th>주제(범위)</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
+        <thead><tr><th>시작</th><th>종료</th><th>주제(범위)</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th><th></th></tr></thead>
         <tbody id="soloModalRows"></tbody>
       </table>
     </div>
@@ -917,11 +920,14 @@ function renderSoloStats(){
     else byStu.set(key, { e, count: 1 });
   }
 
-  el('soloRecent').innerHTML = byStu.size ? [...byStu.values()].map(({ e, count })=>{
+  for(const gk of [...soloPicked]) if(!byStu.has(gk)) soloPicked.delete(gk); // 사라진 학생은 선택 해제
+
+  el('soloRecent').innerHTML = byStu.size ? [...byStu.entries()].map(([key, { e, count }])=>{
     const total = (e.correct||0)+(e.wrong||0);
     const acc = total ? Math.round(100*(e.correct||0)/total) : null;
     const accClass = acc===null ? 'muted' : (acc>=70 ? 'acc-ok' : 'acc-bad');
     return `<tr>
+      <td><input type="checkbox" class="solo-pick" data-gk="${escapeHtml(key)}"${soloPicked.has(key)?' checked':''}></td>
       <td class="muted">${fmtSoloTime(e.started_ts || e.ts)}</td>
       <td class="muted">${soloEndLabel(e)}</td>
       <td>${clsLabel(e.cls)}</td>
@@ -933,7 +939,8 @@ function renderSoloStats(){
       <td class="${accClass}">${e.correct||0}/${e.wrong||0}${acc===null?'':` (${acc}%)`}</td>
       <td class="${(e.hints||0)>0?'':'muted'}">${e.hints||0}회</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="10" class="muted">아직 기록이 없습니다.</td></tr>';
+  }).join('') : '<tr><td colspan="11" class="muted">아직 기록이 없습니다.</td></tr>';
+  updateSoloDelBtn();
 
   if(soloModalSel) renderSoloModal();
 }
@@ -944,7 +951,8 @@ let soloModalSel = null; // { name, cls }
 function renderSoloModal(){
   if(!soloModalSel) return;
   const { name, cls } = soloModalSel;
-  const list = Object.values(soloLogObj)
+  const list = Object.entries(soloLogObj)
+    .map(([k, v]) => ({ ...v, _k: k }))
     .filter(e => e && e.ts && (e.name || '(이름 없음)') === name && String(e.cls ?? '') === cls)
     .sort((a,b)=>(b.ts||0)-(a.ts||0));
   if(!list.length){ closeSoloModal(); return; }
@@ -982,6 +990,7 @@ function renderSoloModal(){
       <td>${e.floor||0}층</td>
       <td class="${ac}">${e.correct||0}/${e.wrong||0}${a===null?'':` (${a}%)`}</td>
       <td class="${(e.hints||0)>0?'':'muted'}">${e.hints||0}회</td>
+      <td><button type="button" class="mini-del" data-k="${e._k}">삭제</button></td>
     </tr>`;
   }).join('');
 }
@@ -1000,6 +1009,90 @@ el('soloRecent').addEventListener('click', (ev)=>{
 });
 el('soloModalClose').onclick = closeSoloModal;
 el('soloModal').addEventListener('click', (ev)=>{ if(ev.target === el('soloModal')) closeSoloModal(); });
+
+// ── 선택 삭제 ──────────────────────────────────────
+const soloPicked = new Set(); // 학생 그룹 key = "이름␟반"
+
+function soloKeysFor(nm, cl){ // 한 학생(이름+반)의 solo_log push 키들
+  return Object.entries(soloLogObj)
+    .filter(([,v]) => v && v.ts && (v.name || '(이름 없음)') === nm && String(v.cls ?? '') === String(cl ?? ''))
+    .map(([k]) => k);
+}
+function updateSoloDelBtn(){
+  const btn = el('soloDelSelBtn');
+  btn.disabled = soloPicked.size === 0;
+  btn.textContent = soloPicked.size ? `선택 삭제 (${soloPicked.size}명)` : '선택 삭제';
+  const all = el('soloPickAll');
+  const boxes = el('soloRecent').querySelectorAll('.solo-pick');
+  if(all) all.checked = boxes.length > 0 && soloPicked.size >= boxes.length;
+}
+
+el('soloRecent').addEventListener('change', (ev)=>{
+  const cb = ev.target.closest('.solo-pick');
+  if(!cb) return;
+  if(cb.checked) soloPicked.add(cb.dataset.gk); else soloPicked.delete(cb.dataset.gk);
+  updateSoloDelBtn();
+});
+el('soloPickAll').addEventListener('change', (ev)=>{
+  const on = ev.target.checked;
+  el('soloRecent').querySelectorAll('.solo-pick').forEach(cb=>{
+    cb.checked = on;
+    if(on) soloPicked.add(cb.dataset.gk); else soloPicked.delete(cb.dataset.gk);
+  });
+  updateSoloDelBtn();
+});
+
+el('soloDelSelBtn').onclick = async () => {
+  if(!soloPicked.size) return;
+  const updates = {};
+  let cnt = 0;
+  for(const gk of soloPicked){
+    const i = gk.indexOf('␟');
+    const nm = i < 0 ? gk : gk.slice(0, i);
+    const cl = i < 0 ? '' : gk.slice(i + 1);
+    for(const k of soloKeysFor(nm, cl)){ updates[k] = null; cnt++; }
+  }
+  if(!cnt){ soloPicked.clear(); updateSoloDelBtn(); return; }
+  if(!confirm(`선택한 학생 ${soloPicked.size}명의 연습 기록 ${cnt}건을 삭제할까요?\n(되돌릴 수 없습니다.)`)) return;
+  el('soloDelSelBtn').disabled = true;
+  try{
+    await update(roomRef(ROOM,'solo_log'), updates);
+    soloPicked.clear();
+    el('soloMsg').className = 'msg ok'; el('soloMsg').textContent = `연습 기록 ${cnt}건을 삭제했습니다.`;
+  }catch(err){
+    el('soloMsg').className = 'msg err'; el('soloMsg').textContent = '삭제 실패: ' + err.message;
+  }finally{
+    updateSoloDelBtn();
+  }
+};
+
+el('soloModalRows').addEventListener('click', async (ev)=>{
+  const b = ev.target.closest('.mini-del');
+  if(!b) return;
+  if(!confirm('이 세션 기록 1건을 삭제할까요?')) return;
+  b.disabled = true;
+  try{
+    await remove(roomRef(ROOM,'solo_log', b.dataset.k));
+  }catch(err){
+    b.disabled = false; alert('삭제 실패: ' + err.message);
+  }
+});
+
+el('soloModalDelAll').onclick = async () => {
+  if(!soloModalSel) return;
+  const keys = soloKeysFor(soloModalSel.name, soloModalSel.cls);
+  if(!keys.length){ closeSoloModal(); return; }
+  if(!confirm(`${soloModalSel.name} 학생의 연습 기록 ${keys.length}건을 모두 삭제할까요?\n(되돌릴 수 없습니다.)`)) return;
+  el('soloModalDelAll').disabled = true;
+  const updates = {}; keys.forEach(k => updates[k] = null);
+  try{
+    await update(roomRef(ROOM,'solo_log'), updates);
+  }catch(err){
+    alert('삭제 실패: ' + err.message);
+  }finally{
+    el('soloModalDelAll').disabled = false;
+  }
+};
 
 onValue(roomRef(ROOM,'solo_log'), (snap)=>{
   soloLogObj = snap.val() || {};
