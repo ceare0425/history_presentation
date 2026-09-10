@@ -218,10 +218,9 @@
   .streak-box .s{ flex:1; background:linear-gradient(135deg,#fff4d9,#ffe8ad); border:1px solid var(--gold); border-radius:12px; padding:10px; text-align:center; }
   .streak-box .s .v{ font-size:1.3rem; font-weight:800; color:var(--gold-dark); }
   .streak-box .s .k{ font-size:.72rem; color:#8a6d1f; margin-top:2px; }
-
-  .floor-bars{ display:flex; align-items:flex-end; gap:4px; height:70px; padding:16px 8px 6px; background:#f4f6fb; border:1px solid var(--line); border-radius:12px; }
-  .floor-bars .fb{ flex:1; background:linear-gradient(180deg,var(--sky2),var(--sky1)); border-radius:3px 3px 0 0; min-height:3px; position:relative; }
-  .floor-bars .fb span{ position:absolute; top:-14px; left:0; right:0; text-align:center; font-size:.6rem; color:var(--sub); }
+  .streak-box .s.blue{ background:linear-gradient(135deg,#e8f0fb,#d3e4f7); border-color:var(--sky2); }
+  .streak-box .s.blue .v{ color:var(--sky1); }
+  .streak-box .s.blue .k{ color:var(--sub); }
 
   .badge-wrap{ display:flex; flex-wrap:wrap; gap:6px; }
   .badge{ background:linear-gradient(135deg,var(--gold),var(--gold-dark)); color:#3a2c05; font-weight:800; font-size:.78rem; border-radius:999px; padding:4px 12px; }
@@ -1064,8 +1063,7 @@ function renderDash(list, soloObj){
   const conquered = urows.filter(isMaster).map(r=>r.u);
   const totalUnits = allUnits.length || urows.length;
 
-  const bars = agg.floors.slice(-12);
-  const bmax = Math.max(agg.best, ...bars.map(b=>b.floor), 1);
+  const lastFloorVal = agg.floors.length ? agg.floors[agg.floors.length - 1].floor : 0;
 
   // ── 친구들과 비교 ──────────────────────────────
   const totals = allStudentTotals(soloObj);
@@ -1125,9 +1123,10 @@ function renderDash(list, soloObj){
     </div>
 
     <div class="dash-section">
-      <h3>🏢 최근 층수 <span class="note">최고 ${agg.best}층</span></h3>
-      <div class="floor-bars">
-        ${bars.map(b=>`<div class="fb" style="height:${Math.max(4, Math.round(100 * b.floor / bmax))}%" title="${b.floor}층"><span>${b.floor}</span></div>`).join('')}
+      <h3>🏢 층수</h3>
+      <div class="streak-box">
+        <div class="s blue"><div class="v">${lastFloorVal}층</div><div class="k">가장 최근 연습</div></div>
+        <div class="s blue"><div class="v">${agg.best}층</div><div class="k">최고 기록</div></div>
       </div>
     </div>
 
