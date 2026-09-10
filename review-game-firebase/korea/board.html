@@ -538,8 +538,9 @@ function detectOvertakes(players, ranked, effective){
 }
 
 // ── 배경음악(BGM): 유튜브 무저작권 브금을 화면 밖 플레이어로 반복 재생 ──
-// 영상: "[중간광고X] 귀여운 소통방송용 브금BGM 3시간" (포아티스트)
-const BGM_VIDEO_ID = 'c4U5kBGrfNc';
+// 목록에서 세션마다(전광판 열 때마다) 랜덤으로 한 곡을 골라 반복 재생한다.
+const BGM_VIDEO_IDS = ['wjR4ObKmfOU', 'edoeWZuKYc8', 'iCaAWHlkLZs'];
+const BGM_VIDEO_ID = BGM_VIDEO_IDS[Math.floor(Math.random() * BGM_VIDEO_IDS.length)];
 const BGM_MUTE_KEY = 'rg_fb_bgm_muted';
 const BGM_VOLUME = 30;                 // 0~100, 교실 스피커 기준 낮게
 let ytPlayer = null, ytReady = false;
