@@ -690,6 +690,14 @@ function submitAnswer(){
   }, correct ? 700 : 2000);
 }
 
+// 이번 세션에서 고른 주제(범위)를 사람이 읽기 좋은 문구로. 예: 「08. …」 / 「08. …」 외 2개 주제 / 전체 범위
+function selectedRangeLabel(){
+  const u = sessionUnits;
+  if(!u || !u.length) return '전체 범위';
+  if(u.length === 1) return `「${u[0]}」`;
+  return `「${u[0]}」 외 ${u.length - 1}개 주제`;
+}
+
 // 선택한 범위의 문제를 한 번씩 모두 맞혔는지 검사하고, 그렇다면 계속/종료 안내를 띄운다 (세션당 1회).
 function maybeShowClearPrompt(){
   if(allClearedPrompted || ended) return false;
@@ -705,7 +713,7 @@ function maybeShowClearPrompt(){
   const total = correctCount + wrongCount;
   const acc = total ? Math.round(100*correctCount/total) : 0;
   el('clearSub').textContent =
-    `선택한 ${pool.length}문제를 한 번씩 모두 맞혔어요. 지금 ${floor}층 · 정답률 ${acc}%. 계속하면 같은 범위가 복습으로 다시 나와요.`;
+    `선택한 ${selectedRangeLabel()}의 문제 ${pool.length}개를 한 번씩 모두 맞혔어요. 지금 ${floor}층 · 정답률 ${acc}%. 계속하면 같은 범위가 복습으로 다시 나와요.`;
   el('clearPrompt').classList.remove('hidden');
   return true;
 }
