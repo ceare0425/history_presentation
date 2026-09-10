@@ -166,6 +166,70 @@
 
   .hidden{ display:none !important; }
 
+  /* ── 내 기록 요약 스트립 (setup 화면) ── */
+  .record-teaser{
+    width:100%; text-align:left; border:2px solid var(--line); background:#f4f6fb;
+    border-radius:12px; padding:10px 14px; margin-bottom:12px; cursor:pointer;
+    display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; font-family:inherit;
+    color:var(--ink); font-weight:700; font-size:.9rem; transition:border-color .15s;
+  }
+  .record-teaser:hover{ border-color:var(--gold-dark); }
+  .record-teaser:disabled, .record-teaser.empty{ cursor:default; color:var(--sub); font-weight:600; }
+  .record-teaser:disabled:hover, .record-teaser.empty:hover{ border-color:var(--line); }
+  .record-teaser .rt-item{ white-space:nowrap; }
+  .record-teaser .rt-more{ margin-left:auto; color:var(--sky1); font-weight:800; }
+  .record-teaser.empty .rt-more, .record-teaser:disabled .rt-more{ display:none; }
+
+  /* ── 내 학습 기록 대시보드 ── */
+  .dash-panel{
+    position:absolute; inset:0; z-index:6; background:#fff; border-radius:22px;
+    display:flex; flex-direction:column; padding:2.4vh 4vw;
+  }
+  .dash-head{ display:flex; align-items:flex-start; gap:12px; flex:0 0 auto; margin-bottom:1.4vh; }
+  .dash-title{ font-size:1.2rem; font-weight:800; color:var(--sky1); }
+  .dash-sub{ font-size:.82rem; color:var(--sub); margin-top:3px; }
+  .dash-close{
+    margin-left:auto; width:auto; flex:0 0 auto; background:#e6e9f0; color:var(--sub);
+    padding:8px 14px; font-size:1rem; border-radius:10px;
+  }
+  .dash-body{ flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-right:4px; }
+
+  .dash-section{ margin-bottom:18px; }
+  .dash-section h3{ font-size:.9rem; color:var(--ink); margin:0 0 8px; font-weight:800; }
+  .dash-section h3 .note{ font-weight:600; color:var(--sub); font-size:.78rem; }
+
+  .dash-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .dash-stats .cell{ background:#f4f6fb; border:1px solid var(--line); border-radius:12px; padding:10px 8px; text-align:center; }
+  .dash-stats .cell .k{ font-size:.72rem; color:var(--sub); }
+  .dash-stats .cell .v{ font-size:1.15rem; font-weight:800; color:var(--sky1); margin-top:2px; }
+
+  .streak-box{ display:flex; gap:10px; }
+  .streak-box .s{ flex:1; background:linear-gradient(135deg,#fff4d9,#ffe8ad); border:1px solid var(--gold); border-radius:12px; padding:10px; text-align:center; }
+  .streak-box .s .v{ font-size:1.3rem; font-weight:800; color:var(--gold-dark); }
+  .streak-box .s .k{ font-size:.72rem; color:#8a6d1f; margin-top:2px; }
+
+  .floor-bars{ display:flex; align-items:flex-end; gap:4px; height:70px; padding:16px 8px 6px; background:#f4f6fb; border:1px solid var(--line); border-radius:12px; }
+  .floor-bars .fb{ flex:1; background:linear-gradient(180deg,var(--sky2),var(--sky1)); border-radius:3px 3px 0 0; min-height:3px; position:relative; }
+  .floor-bars .fb span{ position:absolute; top:-14px; left:0; right:0; text-align:center; font-size:.6rem; color:var(--sub); }
+
+  .badge-wrap{ display:flex; flex-wrap:wrap; gap:6px; }
+  .badge{ background:linear-gradient(135deg,var(--gold),var(--gold-dark)); color:#3a2c05; font-weight:800; font-size:.78rem; border-radius:999px; padding:4px 12px; }
+
+  .utable{ width:100%; border-collapse:collapse; font-size:.82rem; }
+  .utable td{ padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:middle; word-break:keep-all; overflow-wrap:anywhere; }
+  .utable .uname{ font-weight:700; color:var(--ink); }
+  .utable .tag{ font-size:.66rem; font-weight:800; border-radius:6px; padding:1px 6px; margin-left:6px; }
+  .utable .tag.weak{ background:#fbeaea; color:var(--bad); }
+  .utable .tag.master{ background:#e6f7ec; color:var(--good); }
+  .utable .bar{ height:8px; border-radius:5px; background:#e6e9f0; overflow:hidden; min-width:56px; }
+  .utable .bar > i{ display:block; height:100%; background:var(--sky2); }
+  .utable .bar > i.lo{ background:var(--bad); }
+  .utable .bar > i.hi{ background:var(--good); }
+  .utable .pct{ font-weight:800; color:var(--sub); white-space:nowrap; text-align:right; }
+  .utable button.mini{ width:auto; padding:5px 10px; font-size:.72rem; border-radius:8px; flex:0 0 auto; }
+  .utable button.mini:disabled{ opacity:.4; }
+  .dash-empty{ color:var(--sub); font-size:.85rem; padding:8px 0; line-height:1.6; }
+
   @media (max-width:700px), (orientation:portrait){
     body{ padding:0; min-height:0; }
     .card{
@@ -173,6 +237,12 @@
       aspect-ratio:auto; border-radius:0; box-shadow:none;
       padding:3vh 5vw max(3vh, env(safe-area-inset-bottom));
     }
+    .dash-panel{ border-radius:0; padding:3vh 5vw max(3vh, env(safe-area-inset-bottom)); }
+    .dash-stats{ grid-template-columns:repeat(2,1fr); }
+    .utable{ font-size:.78rem; }
+    .utable td{ padding:7px 3px; }
+    .utable .bar{ min-width:34px; }
+    .utable button.mini{ padding:5px 8px; }
   }
 </style>
 </head>
@@ -186,6 +256,7 @@
   <div id="setupView" class="view center">
     <div class="inner">
       <p class="sub">원하는 범위를 골라서 언제든 혼자 연습할 수 있어요. 문제는 선생님만 추가/수정할 수 있습니다.</p>
+      <button type="button" id="recordTeaser" class="record-teaser hidden"></button>
       <label>반</label>
       <div class="class-row" id="classRow">
         <button type="button" data-class="1">1반</button>
@@ -258,13 +329,25 @@
       <div class="final-stat" id="finalStat"></div>
       <div class="best-note" id="bestNote"></div>
       <button id="retryBtn">↺ 다른 범위로 다시 연습하기</button>
+      <button id="dashFromEndBtn" class="secondary" style="margin-top:10px;">📊 내 학습 기록 보기</button>
     </div>
+  </div>
+
+  <div id="dashPanel" class="dash-panel hidden">
+    <div class="dash-head">
+      <div>
+        <div class="dash-title">📊 <span id="dashName">내</span> 학습 기록</div>
+        <div class="dash-sub" id="dashSub"></div>
+      </div>
+      <button type="button" id="dashClose" class="dash-close">✕ 닫기</button>
+    </div>
+    <div class="dash-body" id="dashBody"></div>
   </div>
 </div>
 
 <script type="module">
 import {
-  roomRef, onValue, push, update, serverNow,
+  roomRef, onValue, get, push, update, serverNow,
   isCorrect, computeGain, fmtTime, escapeHtml, shuffle, choseongHint,
   unitsFromQuestions, poolFromQuestions, recencyWeightFn, weightedQueue
 } from '../shared/lib.js';
@@ -279,6 +362,7 @@ let sessionStartedAt = null, sessionUnits = [], sessionDuration = null, sessionO
 let sessionClass = null;
 let soloLogged = false;
 let hintCount = 0;      // 이번 세션에서 초성 힌트를 쓴 문제 수
+let unitStats = {};     // 이번 세션 단원별 정답/오답 { 단원명: {c, w} } — 종료 시 solo_log에 배열로 저장
 let soloLogRef = null;  // 이번 세션의 solo_log 항목 ref (첫 정답/오답 때 생성 후 계속 갱신)
 
 let questionsObj = {};
@@ -541,6 +625,10 @@ function submitAnswer(){
   const correct = isCorrect(text, q.answers);
   let gain = 0;
 
+  const uName = q.unit || '(기타)';
+  const uStat = unitStats[uName] || (unitStats[uName] = { c:0, w:0 });
+  uStat[correct ? 'c' : 'w'] += 1;
+
   if(correct){
     gain = usedHint ? 1 : computeGain(elapsed);
     floor += gain;
@@ -615,7 +703,8 @@ function syncSoloLog(final){
     floor: floor,
     correct: correctCount,
     wrong: wrongCount,
-    hints: hintCount
+    hints: hintCount,
+    unit_stats: Object.entries(unitStats).map(([u,x]) => ({ u, c: x.c, w: x.w }))
   };
   try{
     if(soloLogRef) update(soloLogRef, data);
@@ -687,7 +776,7 @@ el('startBtn').onclick = () => {
   msg.textContent = '';
 
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
-  hintCount = 0; soloLogRef = null;
+  hintCount = 0; soloLogRef = null; unitStats = {};
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
 
   // 이번 세션 정보 기록용으로 저장 (종료 시 선생님 화면으로 보냄)
@@ -722,7 +811,237 @@ el('retryBtn').onclick = () => {
   ended = true;
   roundState = null;
   showView('setupView');
+  refreshRecord(true); // 방금 끝낸 세션까지 반영
 };
+
+// ══════════════════════════════════════════════════════════════
+//  내 학습 기록 대시보드 (① 개인 성장 현황 + 약점 단원, ② 마스터리 배지·연속 학습)
+//  solo_log 를 이름+반으로 모아서 클라이언트에서 계산한다.
+// ══════════════════════════════════════════════════════════════
+const MASTER_MIN = 10;   // 이 문제 수 이상 + 정답률 80% 이상이면 '정복'
+const WEAK_MIN   = 5;    // 이 문제 수 이상 + 정답률 60% 미만이면 '약점'
+
+let soloCache = null, soloCacheAt = 0;
+async function loadSoloLog(force){
+  if(!force && soloCache && Date.now() - soloCacheAt < 15000) return soloCache;
+  try{
+    const snap = await get(roomRef(ROOM, 'solo_log'));
+    soloCache = snap.val() || {};
+    soloCacheAt = Date.now();
+  }catch(_e){ if(!soloCache) soloCache = {}; }
+  return soloCache;
+}
+
+function myName(){ return (el('nameInput').value.trim() || '').slice(0, 20); }
+
+function mySessions(obj){
+  const nm = myName(), cl = selectedClass;
+  if(!nm || !cl) return [];
+  return Object.values(obj || {}).filter(e =>
+    e && e.ts && (e.name || '') === nm && String(e.cls ?? '') === String(cl)
+  );
+}
+
+// 로컬 자정 기준 '며칠째'인지 (정수). 연속 학습일 계산용.
+function dayNum(ms){
+  const d = new Date(ms || 0);
+  d.setHours(0,0,0,0);
+  return Math.round(d.getTime() / 86400000);
+}
+
+function streaks(daySet){
+  if(!daySet.size) return { cur:0, max:0 };
+  const days = [...daySet].sort((a,b)=>a-b);
+  let max = 1, run = 1;
+  for(let i=1;i<days.length;i++){
+    run = days[i] === days[i-1] + 1 ? run + 1 : 1;
+    if(run > max) max = run;
+  }
+  const today = dayNum(Date.now());
+  const last = days[days.length-1];
+  let cur = 0;
+  if(last === today || last === today - 1){
+    cur = 1;
+    for(let i=days.length-1;i>0;i--){
+      if(days[i] === days[i-1] + 1) cur++; else break;
+    }
+  }
+  return { cur, max };
+}
+
+function aggregate(list){
+  const units = {}; // 단원명 -> {c, w}
+  let c = 0, w = 0, h = 0, best = 0;
+  const daySet = new Set();
+  const floors = []; // {ts, floor}
+  list.forEach(e=>{
+    c += e.correct || 0; w += e.wrong || 0; h += e.hints || 0;
+    best = Math.max(best, e.floor || 0);
+    daySet.add(dayNum(e.started_ts || e.ts));
+    floors.push({ ts: e.started_ts || e.ts, floor: e.floor || 0 });
+    (Array.isArray(e.unit_stats) ? e.unit_stats : []).forEach(us=>{
+      if(!us || !us.u) return;
+      const t = units[us.u] || (units[us.u] = { c:0, w:0 });
+      t.c += us.c || 0; t.w += us.w || 0;
+    });
+  });
+  floors.sort((a,b)=>a.ts - b.ts);
+  return { units, c, w, h, best, daySet, floors, count: list.length };
+}
+
+let lastAgg = null;
+
+async function refreshRecord(force){
+  const t = el('recordTeaser');
+  const nm = myName(), cl = selectedClass;
+  t.classList.remove('hidden');
+  if(!nm || !cl){
+    t.classList.add('empty'); t.disabled = true;
+    t.innerHTML = '<span>반과 이름을 입력하면 내 학습 기록·연속 학습일이 보여요</span>';
+    return;
+  }
+  t.disabled = false;
+  const list = mySessions(await loadSoloLog(force));
+  lastAgg = aggregate(list);
+  if(!list.length){
+    t.classList.add('empty');
+    t.innerHTML = '<span>아직 연습 기록이 없어요 — 첫 연습을 시작해 보세요! 📊</span>';
+    return;
+  }
+  t.classList.remove('empty');
+  const s = streaks(lastAgg.daySet);
+  const totQ = lastAgg.c + lastAgg.w;
+  const acc = totQ ? Math.round(100 * lastAgg.c / totQ) : 0;
+  const conquered = Object.values(lastAgg.units).filter(x=>{
+    const tt = x.c + x.w; return tt >= MASTER_MIN && x.c / tt >= 0.8;
+  }).length;
+  t.innerHTML =
+    `<span class="rt-item">🔥 ${s.cur ? s.cur + '일 연속' : '연속 끊김'}</span>` +
+    `<span class="rt-item">🏅 정복 ${conquered}단원</span>` +
+    `<span class="rt-item">🏢 최고 ${lastAgg.best}층</span>` +
+    `<span class="rt-item">🎯 정답률 ${acc}%</span>` +
+    `<span class="rt-more">자세히 ▸</span>`;
+}
+
+function renderDash(list){
+  const agg = aggregate(list);
+  el('dashName').textContent = (myName() || '나') + '의';
+  const totQ = agg.c + agg.w;
+  const acc = totQ ? Math.round(100 * agg.c / totQ) : 0;
+
+  el('dashSub').textContent = list.length
+    ? `${selectedClass}반 · 연습 ${agg.count}회 · 총 ${totQ}문제`
+    : `${selectedClass ? selectedClass + '반 · ' : ''}아직 기록이 없어요`;
+
+  if(!list.length){
+    el('dashBody').innerHTML =
+      `<div class="dash-empty">첫 연습을 시작하면 여기에 정답률·연속 학습일·단원 정복 배지가 쌓여요.<br>아래 '연습 시작'을 눌러 보세요! 🚀</div>`;
+    return;
+  }
+
+  const s = streaks(agg.daySet);
+
+  const urows = Object.entries(agg.units).map(([u,x])=>{
+    const t = x.c + x.w;
+    return { u, t, acc: t ? x.c / t : 0 };
+  }).filter(r=>r.t > 0).sort((a,b)=> a.acc - b.acc || b.t - a.t);
+
+  const isMaster = r => r.t >= MASTER_MIN && r.acc >= 0.8;
+  const isWeak   = r => r.t >= WEAK_MIN   && r.acc < 0.6;
+  const conquered = urows.filter(isMaster).map(r=>r.u);
+  const totalUnits = allUnits.length || urows.length;
+
+  const bars = agg.floors.slice(-12);
+  const bmax = Math.max(agg.best, ...bars.map(b=>b.floor), 1);
+
+  el('dashBody').innerHTML = `
+    <div class="dash-section">
+      <div class="dash-stats">
+        <div class="cell"><div class="k">연습 횟수</div><div class="v">${agg.count}</div></div>
+        <div class="cell"><div class="k">푼 문제</div><div class="v">${totQ}</div></div>
+        <div class="cell"><div class="k">정답률</div><div class="v">${acc}%</div></div>
+        <div class="cell"><div class="k">누적 힌트</div><div class="v">${agg.h}</div></div>
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <h3>🔥 연속 학습</h3>
+      <div class="streak-box">
+        <div class="s"><div class="v">${s.cur}일</div><div class="k">지금 연속 (하루 1번 이상)</div></div>
+        <div class="s"><div class="v">${s.max}일</div><div class="k">최장 기록</div></div>
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <h3>🏢 최근 층수 <span class="note">최고 ${agg.best}층</span></h3>
+      <div class="floor-bars">
+        ${bars.map(b=>`<div class="fb" style="height:${Math.max(4, Math.round(100 * b.floor / bmax))}%" title="${b.floor}층"><span>${b.floor}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <h3>🏅 단원 정복 ${conquered.length} / ${totalUnits}단원 <span class="note">정답률 80%↑ · ${MASTER_MIN}문제 이상</span></h3>
+      <div class="badge-wrap">
+        ${conquered.length
+          ? conquered.map(u=>`<span class="badge">🏅 ${escapeHtml(u)}</span>`).join('')
+          : `<span class="dash-empty">아직 정복한 단원이 없어요. 한 단원을 집중해서 연습해 정답률 80%를 넘겨 보세요!</span>`}
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <h3>📚 단원별 정답률 <span class="note">낮은 순 · 약점부터</span></h3>
+      ${urows.length ? `<table class="utable"><tbody>
+        ${urows.map(r=>{
+          const p = Math.round(100 * r.acc);
+          const barCls = r.acc < 0.6 ? 'lo' : (r.acc >= 0.8 ? 'hi' : '');
+          const tag = isMaster(r) ? '<span class="tag master">정복</span>'
+                    : isWeak(r)   ? '<span class="tag weak">약점</span>' : '';
+          const avail = allUnits.some(x=>x.unit === r.u);
+          return `<tr>
+            <td><span class="uname">${escapeHtml(r.u)}</span>${tag}<div style="font-size:.7rem;color:var(--sub)">${r.t}문제</div></td>
+            <td style="width:32%"><div class="bar"><i class="${barCls}" style="width:${p}%"></i></div></td>
+            <td class="pct">${p}%</td>
+            <td><button type="button" class="mini secondary" data-practice-unit="${escapeHtml(r.u)}"${avail ? '' : ' disabled title="지금 이 범위엔 문제가 없어요"'}>연습</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>` : `<div class="dash-empty">단원별 정답률은 이 업데이트 이후 연습부터 쌓여요. 조금만 더 연습하면 여기에 나타나요!</div>`}
+    </div>
+  `;
+}
+
+function openDash(){
+  el('dashPanel').classList.remove('hidden');
+  el('dashBody').innerHTML = '<div class="dash-empty">불러오는 중…</div>';
+  loadSoloLog(true).then(obj=>{
+    renderDash(mySessions(obj));
+    refreshRecord(false);
+  });
+}
+function closeDash(){ el('dashPanel').classList.add('hidden'); }
+
+el('recordTeaser').onclick = () => { if(!el('recordTeaser').disabled) openDash(); };
+el('dashClose').onclick = closeDash;
+el('dashFromEndBtn').onclick = openDash;
+
+// 대시보드의 '연습' 버튼: 그 단원만 범위로 잡고 setup 으로
+el('dashBody').addEventListener('click', (ev)=>{
+  const b = ev.target.closest('[data-practice-unit]');
+  if(!b || b.disabled) return;
+  const u = b.dataset.practiceUnit;
+  selectedUnits = new Set([u]);
+  renderUnits();
+  closeDash();
+  ended = true; roundState = null;
+  showView('setupView');
+  el('unitList').scrollIntoView({ block:'center', behavior:'smooth' });
+});
+
+// 이름/반이 바뀌면 요약 스트립 갱신
+el('nameInput').addEventListener('change', ()=>refreshRecord(false));
+el('classRow').querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click', ()=>refreshRecord(false));
+});
+refreshRecord(false); // 첫 진입 (기기에 이름·반이 저장돼 있으면 바로 표시)
 </script>
 </body>
 </html>
