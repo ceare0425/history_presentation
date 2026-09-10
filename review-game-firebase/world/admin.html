@@ -69,6 +69,17 @@
   .toggle-row button.active{ background:var(--sky1); color:#fff; }
   .hidden{ display:none !important; }
 
+  .name-link{ color:var(--sky1); font-weight:700; cursor:pointer; border-bottom:1px dashed var(--sky2); }
+  .name-link:hover{ background:#eef2fb; }
+  .modal-back{ position:fixed; inset:0; background:rgba(20,30,55,.5); display:flex; align-items:center; justify-content:center; padding:20px; z-index:100; }
+  .modal-box{ background:var(--card); border-radius:14px; padding:20px; max-width:580px; width:100%; max-height:85vh; overflow-y:auto; box-shadow:0 12px 44px rgba(30,60,114,.35); }
+  .modal-box h3{ margin:0 0 4px; font-size:1.05rem; color:var(--sky1); }
+  .modal-box .mclose{ float:right; padding:4px 10px; font-size:.8rem; background:#8b96ab; }
+  .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin:14px 0; }
+  .stat-cell{ background:var(--bg); border-radius:10px; padding:10px 12px; }
+  .stat-cell .k{ font-size:.72rem; color:var(--sub); margin-bottom:2px; }
+  .stat-cell .v{ font-size:1.05rem; font-weight:800; color:var(--sky1); }
+
   .team-standings{ display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
   .team-bar-row{ display:flex; align-items:center; gap:8px; font-size:.82rem; }
   .team-bar-row .tlabel{ width:78px; flex-shrink:0; font-weight:700; }
@@ -204,7 +215,7 @@
 
   <div class="card" style="grid-column:1 / -1">
     <h2>⑤ 혼자 연습 현황</h2>
-    <div class="sub" style="margin-top:-6px;">학생이 <code>solo.html</code>(혼자 연습하기)에서 이름을 넣고 한 문제라도 풀면 여기 쌓입니다. 중간에 그만둔 세션도 기록됩니다. 수업 게임 점수와는 별개입니다.</div>
+    <div class="sub" style="margin-top:-6px;">학생이 <code>solo.html</code>(혼자 연습하기)에서 이름을 넣고 한 문제라도 풀면 여기 쌓입니다. 중간에 그만둔 세션도 기록됩니다. 수업 게임 점수와는 별개입니다. <b>이름을 클릭</b>하면 그 학생의 모든 연습이 누적된 현황이 뜹니다.</div>
     <div class="status-line">
       <span class="muted" id="soloSummary">불러오는 중...</span>
       <button type="button" class="secondary" id="soloClearBtn" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;">기록 비우기</button>
@@ -219,6 +230,22 @@
       </div>
     </div>
     <div class="msg" id="soloMsg"></div>
+  </div>
+</div>
+
+<div id="soloModal" class="modal-back hidden">
+  <div class="modal-box">
+    <button type="button" class="mclose" id="soloModalClose">닫기 ✕</button>
+    <h3 id="soloModalTitle">학생 누적 현황</h3>
+    <div class="muted" id="soloModalSub" style="font-size:.82rem;"></div>
+    <div class="stat-grid" id="soloModalStats"></div>
+    <div class="pool-count"><b>세션 기록</b> (최근순)</div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>시작</th><th>종료</th><th>주제(범위)</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
+        <tbody id="soloModalRows"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -890,7 +917,7 @@ function renderSoloStats(){
       <td class="muted">${fmtSoloTime(e.started_ts || e.ts)}</td>
       <td class="muted">${soloEndLabel(e)}</td>
       <td>${clsLabel(e.cls)}</td>
-      <td>${escapeHtml(e.name || '(이름 없음)')}</td>
+      <td><span class="name-link" data-name="${escapeHtml(e.name || '(이름 없음)')}" data-cls="${escapeHtml(String(e.cls ?? ''))}">${escapeHtml(e.name || '(이름 없음)')}</span></td>
       <td>${escapeHtml(soloRangeLabel(e.units))}</td>
       <td class="muted">${soloDurLabel(e.duration_sec)}</td>
       <td>${e.floor||0}층</td>
@@ -898,7 +925,72 @@ function renderSoloStats(){
       <td class="${(e.hints||0)>0?'':'muted'}">${e.hints||0}회</td>
     </tr>`;
   }).join('') : '<tr><td colspan="9" class="muted">아직 기록이 없습니다.</td></tr>';
+
+  if(soloModalSel) renderSoloModal();
 }
+
+// ── 학생별 누적 현황 (이름 클릭) ──
+let soloModalSel = null; // { name, cls }
+
+function renderSoloModal(){
+  if(!soloModalSel) return;
+  const { name, cls } = soloModalSel;
+  const list = Object.values(soloLogObj)
+    .filter(e => e && e.ts && (e.name || '(이름 없음)') === name && String(e.cls ?? '') === cls)
+    .sort((a,b)=>(b.ts||0)-(a.ts||0));
+  if(!list.length){ closeSoloModal(); return; }
+
+  const sum = (k) => list.reduce((s,e)=>s+(e[k]||0), 0);
+  const tc = sum('correct'), tw = sum('wrong'), th = sum('hints'), tot = tc + tw;
+  const acc = tot ? Math.round(100*tc/tot) : null;
+  const bestFloor = Math.max(...list.map(e=>e.floor||0));
+  const avgFloor = Math.round(list.reduce((s,e)=>s+(e.floor||0), 0) / list.length);
+  const first = list[list.length-1], last = list[0];
+  const clsPrefix = (cls === '' || cls === '-') ? '' : cls + '반 · ';
+
+  el('soloModalTitle').textContent = `${name} · 누적 현황`;
+  el('soloModalSub').textContent =
+    `${clsPrefix}첫 연습 ${fmtSoloTime(first.started_ts || first.ts)} · 최근 연습 ${fmtSoloTime(last.started_ts || last.ts)}`;
+
+  el('soloModalStats').innerHTML = [
+    ['연습 횟수', list.length + '회'],
+    ['누적 정답/오답', `${tc}/${tw}` + (acc===null ? '' : ` (${acc}%)`)],
+    ['푼 문제 수', tot + '문제'],
+    ['누적 힌트', th + '회'],
+    ['최고 층수', bestFloor + '층'],
+    ['평균 층수', avgFloor + '층'],
+  ].map(([k,v]) => `<div class="stat-cell"><div class="k">${k}</div><div class="v">${escapeHtml(String(v))}</div></div>`).join('');
+
+  el('soloModalRows').innerHTML = list.map(e=>{
+    const t = (e.correct||0)+(e.wrong||0);
+    const a = t ? Math.round(100*(e.correct||0)/t) : null;
+    const ac = a===null ? 'muted' : (a>=70 ? 'acc-ok' : 'acc-bad');
+    return `<tr>
+      <td class="muted">${fmtSoloTime(e.started_ts || e.ts)}</td>
+      <td class="muted">${soloEndLabel(e)}</td>
+      <td>${escapeHtml(soloRangeLabel(e.units))}</td>
+      <td class="muted">${soloDurLabel(e.duration_sec)}</td>
+      <td>${e.floor||0}층</td>
+      <td class="${ac}">${e.correct||0}/${e.wrong||0}${a===null?'':` (${a}%)`}</td>
+      <td class="${(e.hints||0)>0?'':'muted'}">${e.hints||0}회</td>
+    </tr>`;
+  }).join('');
+}
+
+function closeSoloModal(){
+  soloModalSel = null;
+  el('soloModal').classList.add('hidden');
+}
+
+el('soloRecent').addEventListener('click', (ev)=>{
+  const sp = ev.target.closest('.name-link');
+  if(!sp) return;
+  soloModalSel = { name: sp.dataset.name, cls: sp.dataset.cls || '' };
+  el('soloModal').classList.remove('hidden');
+  renderSoloModal();
+});
+el('soloModalClose').onclick = closeSoloModal;
+el('soloModal').addEventListener('click', (ev)=>{ if(ev.target === el('soloModal')) closeSoloModal(); });
 
 onValue(roomRef(ROOM,'solo_log'), (snap)=>{
   soloLogObj = snap.val() || {};
