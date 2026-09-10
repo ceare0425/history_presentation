@@ -166,6 +166,17 @@
 
   .hidden{ display:none !important; }
 
+  /* ── '선택 범위 전부 완료' 안내 ── */
+  .clear-prompt{
+    position:absolute; inset:0; z-index:5; background:rgba(244,246,251,.97);
+    display:flex; align-items:center; justify-content:center; padding:6vw; border-radius:22px;
+  }
+  .clear-box{ text-align:center; max-width:420px; }
+  .clear-emoji{ font-size:3.2rem; margin-bottom:.4rem; animation:avatarHappy .8s ease; }
+  .clear-title{ font-size:1.3rem; font-weight:800; color:var(--sky1); margin-bottom:.6rem; word-break:keep-all; }
+  .clear-sub{ font-size:.95rem; color:var(--sub); margin-bottom:1.5rem; line-height:1.65; word-break:keep-all; }
+  .clear-btns{ display:flex; flex-direction:column; gap:10px; }
+
   /* ── 내 기록 요약 스트립 (setup 화면) ── */
   .record-teaser{
     width:100%; text-align:left; border:2px solid var(--line); background:#f4f6fb;
@@ -237,6 +248,7 @@
       aspect-ratio:auto; border-radius:0; box-shadow:none;
       padding:3vh 5vw max(3vh, env(safe-area-inset-bottom));
     }
+    .clear-prompt{ border-radius:0; }
     .dash-panel{ border-radius:0; padding:3vh 5vw max(3vh, env(safe-area-inset-bottom)); }
     .dash-stats{ grid-template-columns:repeat(2,1fr); }
     .utable{ font-size:.78rem; }
@@ -322,6 +334,18 @@
     </div>
   </div>
 
+  <div id="clearPrompt" class="clear-prompt hidden">
+    <div class="clear-box">
+      <div class="clear-emoji">🎉</div>
+      <div class="clear-title">이 범위의 문제를 모두 풀었어요!</div>
+      <div class="clear-sub" id="clearSub"></div>
+      <div class="clear-btns">
+        <button type="button" id="clearContinueBtn">▶ 계속 연습하기</button>
+        <button type="button" id="clearStopBtn" class="secondary">■ 여기서 마치기</button>
+      </div>
+    </div>
+  </div>
+
   <div id="endedView" class="view center hidden">
     <div class="ended">
       <div>🏁 연습 종료!</div>
@@ -386,6 +410,9 @@ let lastQid = null;
 let floor = 0, correctCount = 0, wrongCount = 0, streak = 0;
 let lastFloor = 0;
 let ended = false;
+let clearedQids = new Set();     // 이번 세션에서 한 번이라도 정답 처리한 문제 id
+let allClearedPrompted = false;  // '선택 범위 전부 완료' 안내를 이미 띄웠는지 (세션당 1회)
+let paused = false, pausedAt = 0; // 완료 안내를 보는 동안 타이머 일시정지
 
 const el = (id) => document.getElementById(id);
 
@@ -635,6 +662,7 @@ function submitAnswer(){
     correctCount += 1;
     streak += 1;
     retryMiss[answeredQid] = 0;
+    clearedQids.add(answeredQid);
   } else {
     wrongCount += 1;
     streak = 0;
@@ -656,10 +684,51 @@ function submitAnswer(){
 
   setTimeout(()=>{
     if(ended) return;
+    if(maybeShowClearPrompt()) return;   // 선택 범위를 다 풀었으면 계속할지 물어본다 (입력창은 잠근 채로)
     el('submitBtn').disabled = false; el('answerInput').disabled = false;
     assignNextQuestion();
   }, correct ? 700 : 2000);
 }
+
+// 선택한 범위의 문제를 한 번씩 모두 맞혔는지 검사하고, 그렇다면 계속/종료 안내를 띄운다 (세션당 1회).
+function maybeShowClearPrompt(){
+  if(allClearedPrompted || ended) return false;
+  const pool = currentPool();
+  if(pool.length === 0) return false;
+  let done = 0;
+  for(const [qid] of pool){ if(clearedQids.has(qid)) done++; }
+  if(done < pool.length) return false;
+
+  allClearedPrompted = true;
+  paused = true;
+  pausedAt = serverNow();
+  const total = correctCount + wrongCount;
+  const acc = total ? Math.round(100*correctCount/total) : 0;
+  el('clearSub').textContent =
+    `선택한 ${pool.length}문제를 한 번씩 모두 맞혔어요. 지금 ${floor}층 · 정답률 ${acc}%. 계속하면 같은 범위가 복습으로 다시 나와요.`;
+  el('clearPrompt').classList.remove('hidden');
+  return true;
+}
+
+function resumeFromClear(){
+  el('clearPrompt').classList.add('hidden');
+  if(paused){
+    if(roundState) roundState.end_time += serverNow() - pausedAt;  // 안내 보는 동안 흐른 시간만큼 제한시간 연장
+    paused = false;
+  }
+}
+
+el('clearContinueBtn').onclick = () => {
+  resumeFromClear();
+  if(!ended){
+    el('submitBtn').disabled = false; el('answerInput').disabled = false;
+    assignNextQuestion();
+  }
+};
+el('clearStopBtn').onclick = () => {
+  resumeFromClear();
+  showEndedView();
+};
 
 el('submitBtn').onclick = submitAnswer;
 el('answerInput').addEventListener('keydown', e=>{ if(e.key==='Enter') submitAnswer(); });
@@ -723,6 +792,8 @@ window.addEventListener('pagehide', ()=>{ if(soloLogRef && !soloLogged){ try{ sy
 
 function showEndedView(){
   ended = true;
+  paused = false;
+  el('clearPrompt').classList.add('hidden');
   logSoloSession();
   el('finalFloor').textContent = floor;
   const total = correctCount + wrongCount;
@@ -741,7 +812,7 @@ function showEndedView(){
 }
 
 function tick(){
-  if(!roundState || ended) return;
+  if(!roundState || ended || paused) return;
   const remaining = Math.max(0, Math.round((roundState.end_time - serverNow())/1000));
   el('timerVal').textContent = fmtTime(remaining);
   if(remaining<=0){
@@ -777,6 +848,8 @@ el('startBtn').onclick = () => {
 
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
   hintCount = 0; soloLogRef = null; unitStats = {};
+  clearedQids = new Set(); allClearedPrompted = false; paused = false;
+  el('clearPrompt').classList.add('hidden');
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
 
   // 이번 세션 정보 기록용으로 저장 (종료 시 선생님 화면으로 보냄)
