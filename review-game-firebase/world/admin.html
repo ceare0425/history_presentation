@@ -183,7 +183,7 @@
       <h2>③ 문제 목록 관리 / 삭제</h2>
       <label>주제 필터</label>
       <select id="manageUnitFilter">
-        <option value="">전체 (<span id="manageAllCount">0</span>개)</option>
+        <option value="">전체 (0개)</option>
       </select>
       <div class="btnrow">
         <button class="bad" id="deleteUnitBtn" type="button">선택한 주제 문제 전체 삭제</button>
@@ -628,7 +628,6 @@ el('xlsxFileInput').onchange = async () => {
 function renderManageUnitOptions(){
   const sel = el('manageUnitFilter');
   const prev = sel.value;
-  el('manageAllCount').textContent = Object.keys(questionsObj).length;
   sel.innerHTML = `<option value="">전체 (${Object.keys(questionsObj).length}개)</option>` +
     allUnits.map(u=>`<option value="${escapeHtml(u.unit)}">${escapeHtml(u.unit)} (${u.count}개)</option>`).join('');
   sel.value = prev && allUnits.some(u=>u.unit===prev) ? prev : '';
