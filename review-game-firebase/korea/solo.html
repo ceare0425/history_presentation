@@ -241,6 +241,13 @@
   .utable button.mini:disabled{ opacity:.4; }
   .dash-empty{ color:var(--sub); font-size:.85rem; padding:8px 0; line-height:1.6; }
 
+  .ptable{ width:100%; border-collapse:collapse; font-size:.84rem; }
+  .ptable td{ padding:8px 6px; border-bottom:1px solid var(--line); }
+  .ptable td:first-child{ color:var(--ink); font-weight:700; white-space:nowrap; }
+  .ptable .pv{ color:var(--sky1); font-weight:800; white-space:nowrap; text-align:right; padding-right:12px; }
+  .ptable .pr{ color:var(--sub); width:99%; }
+  .ptable .pr b{ color:var(--good); }
+
   @media (max-width:700px), (orientation:portrait){
     body{ padding:0; min-height:0; }
     .card{
@@ -970,6 +977,31 @@ function aggregate(list){
   return { units, c, w, h, best, daySet, floors, count: list.length };
 }
 
+function median(arr){
+  if(!arr.length) return 0;
+  const a = arr.slice().sort((x,y)=>x-y);
+  const m = Math.floor(a.length / 2);
+  return a.length % 2 ? a[m] : Math.round((a[m-1] + a[m]) / 2);
+}
+
+// solo_log 전체를 학생(이름+반)별로 합산 — 친구들과 비교용
+function allStudentTotals(obj){
+  const map = new Map();
+  Object.values(obj || {}).forEach(e=>{
+    if(!e || !e.ts || !e.name) return;
+    const key = e.name + '␟' + String(e.cls ?? '');
+    let m = map.get(key);
+    if(!m){ m = { correct:0, attempted:0, sessions:0, best:0, daySet:new Set() }; map.set(key, m); }
+    m.correct   += e.correct || 0;
+    m.attempted += (e.correct || 0) + (e.wrong || 0);
+    m.sessions  += 1;
+    m.best = Math.max(m.best, e.floor || 0);
+    m.daySet.add(dayNum(e.started_ts || e.ts));
+  });
+  return map;
+}
+const MIN_PEERS = 5; // 이 인원 이상 모여야 '상위 %'를 보여준다
+
 let lastAgg = null;
 
 async function refreshRecord(force){
@@ -1004,7 +1036,7 @@ async function refreshRecord(force){
     `<span class="rt-more">자세히 ▸</span>`;
 }
 
-function renderDash(list){
+function renderDash(list, soloObj){
   const agg = aggregate(list);
   el('dashName').textContent = (myName() || '나') + '의';
   const totQ = agg.c + agg.w;
@@ -1035,6 +1067,44 @@ function renderDash(list){
   const bars = agg.floors.slice(-12);
   const bmax = Math.max(agg.best, ...bars.map(b=>b.floor), 1);
 
+  // ── 친구들과 비교 ──────────────────────────────
+  const totals = allStudentTotals(soloObj);
+  const myKey = myName() + '␟' + String(selectedClass);
+  const me = totals.get(myKey);
+  let peerHtml = '';
+  if(me && totals.size >= MIN_PEERS){
+    const all = [...totals.values()];
+    const others = [...totals].filter(([k])=>k !== myKey).map(([,v])=>v);
+    const row = (label, pick, unit, showDiff) => {
+      const mine = pick(me);
+      const better = all.filter(v => pick(v) > mine).length;
+      const topPct = Math.max(1, Math.round((better + 1) / all.length * 100));
+      let diff = '';
+      if(showDiff && others.length){
+        const d = mine - median(others.map(pick));
+        diff = d > 0 ? ` · 평균보다 <b>+${d}${unit}</b>` : (d < 0 ? ` · 평균보다 ${d}${unit}` : ' · 평균과 비슷');
+      }
+      return `<tr><td>${label}</td><td class="pv">${mine}${unit}</td><td class="pr">상위 ${topPct}%${diff}</td></tr>`;
+    };
+    peerHtml = `
+    <div class="dash-section">
+      <h3>🏆 친구들과 비교 <span class="note">혼자 연습한 친구 ${totals.size}명 중</span></h3>
+      <table class="ptable"><tbody>
+        ${row('맞힌 문제', v=>v.correct, '개', true)}
+        ${row('푼 문제', v=>v.attempted, '개', true)}
+        ${row('연습 횟수', v=>v.sessions, '회', false)}
+        ${row('최고 층수', v=>v.best, '층', false)}
+        ${row('연속 학습일', v=>streaks(v.daySet).max, '일', false)}
+      </tbody></table>
+    </div>`;
+  } else if(me){
+    peerHtml = `
+    <div class="dash-section">
+      <h3>🏆 친구들과 비교</h3>
+      <div class="dash-empty">혼자 연습한 친구가 좀 더 모이면 상위 몇 %인지 보여줄게요.</div>
+    </div>`;
+  }
+
   el('dashBody').innerHTML = `
     <div class="dash-section">
       <div class="dash-stats">
@@ -1044,6 +1114,7 @@ function renderDash(list){
         <div class="cell"><div class="k">누적 힌트</div><div class="v">${agg.h}</div></div>
       </div>
     </div>
+    ${peerHtml}
 
     <div class="dash-section">
       <h3>🔥 연속 학습</h3>
@@ -1094,7 +1165,7 @@ function openDash(){
   el('dashPanel').classList.remove('hidden');
   el('dashBody').innerHTML = '<div class="dash-empty">불러오는 중…</div>';
   loadSoloLog(true).then(obj=>{
-    renderDash(mySessions(obj));
+    renderDash(mySessions(obj), obj);
     refreshRecord(false);
   });
 }
