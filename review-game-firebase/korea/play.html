@@ -427,7 +427,7 @@ function itemsOn(){ return itemsMode !== 'off'; }
 
 // 아이템 추첨 옵션 — 정답 획득·랜덤박스 재추첨에서 공용.
 // 난타전: 누구나 저격 아이템을 뽑을 수 있고, 인생 한방은 안 나온다(방구석 축제는 하위권에게 그대로 나옴).
-//         저격 대상인 상위 5등(개인전)은 방어·해독 아이템이 훨씬 자주 나온다(defenseHeavy).
+//         저격 대상인 상위 3등(개인전)은 방어·해독 아이템이 훨씬 자주 나온다(defenseHeavy).
 function itemRollOpts(){
   const nanta = itemsMode === 'nanta';
   const canAttack = nanta || (itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId)));
@@ -976,7 +976,7 @@ function renderItemBar(){
     bar.innerHTML = '';
     hint.textContent = itemsMode !== 'nanta' ? '3연속 정답하면 아이템 획득!'
       : inTopRanks(allPlayers, playerId, NANTA_TARGET_TOP) ? '상위권! 저격을 많이 받아요 — 🍵해독·🛟구명조끼·🪞반사경으로 버티세요 🛡️'
-      : '정답마다 아이템! 상위 5등을 저격하세요 ⚔️';
+      : '정답마다 아이템! 상위 3등을 저격하세요 ⚔️';
   }
 }
 
