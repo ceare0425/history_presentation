@@ -256,8 +256,9 @@ export function activeBonus(round, nowMs) {
 
 // ── 아이템전 ──────────────────────────────────────
 // round.items_mode: 'off' | 'nanta'(난타전) | 'spicy'(매운맛)
-//   nanta : 저격 아이템이 주력인 난투 모드. 정답마다 아이템 1개, 누구나 저격을 받고 쏨.
-//           저격 대상은 '나보다 위에 있는 사람 아무나'(격차 조건 없음), 인생 한방·방구석 축제는 안 나옴.
+//   nanta : 저격 아이템이 주력인 난투 모드. 정답마다 아이템 1개, 아래 등수도 상위권을 저격할 수 있음.
+//           저격 대상은 '상위 NANTA_TARGET_TOP등'(격차 조건 없음). 상위권은 방어·해독 아이템을 훨씬 자주 받음.
+//           인생 한방·방구석 축제는 안 나옴.
 //   spicy : 자기 강화 + 전체 이벤트 + '선두권 견제'(상위권만 겨냥). 3연속 정답마다 아이템 1개.
 // 아이템 보유는 1개 한도.
 // 팀전에서도 동작하며, '선두권 견제' 아이템은 내 팀이 아닌 '선두 상대 팀 전원'에게 적용된다.
@@ -332,22 +333,26 @@ export function itemPool(opts = {}) {
 // opts.jackpotTier(0|1|2): '인생 한방' 가중치 — 1=중하위권(4배), 2=하위권(6배).
 //   ('인생 한방'은 opts.canJackpot 일 때만 풀에 들어오므로 실제로는 tier 1·2에서만 쓰임)
 // comeback 아이템('방구석 축제')은 가중치 8배 — 하위권에게 자주 나오도록.
-// 난타전(mode='nanta')은 저격이 주력이라 방해 아이템 가중치를 크게(10배) 주고, 반격용 방어(해독·반사경)도 조금(3배) 올린다.
+// 난타전(mode='nanta'): 저격이 주력이라 방해 아이템 가중치를 크게(10배) 준다.
+//   opts.defenseHeavy(난타전 상위권): 저격을 실컷 얻어맞는 자리라 🍵해독·🪞반사경·🛟구명조끼를 훨씬 자주(14배) 주고,
+//   대신 자기가 쏘는 저격 가중치는 3배로 낮춘다.
 export function rollItem(opts = {}) {
   const pool = itemPool(opts);
   if (!pool.length) return null;
   const nanta = opts.mode === 'nanta';
+  const dh = nanta && opts.defenseHeavy;
   const bias = opts.attackBias || 0;
-  const aw = nanta ? 10 : (bias > 0 ? 1 + 8 * Math.min(1, bias) : 1);   // 견제 아이템 가중치: 난타전 10배 / 팀전 최대 9배
+  const aw = nanta ? (dh ? 3 : 10) : (bias > 0 ? 1 + 8 * Math.min(1, bias) : 1);   // 견제 아이템 가중치
   const fw = opts.teamMode && bias > 0 ? 1 + 5 * Math.min(1, bias) : 1;   // 팀전 '🌈축제' 최대 6배
   const jw = opts.jackpotTier === 2 ? 6 : opts.jackpotTier === 1 ? 4 : 1;   // '인생 한방'
   const weights = pool.map((k) => {
     const kind = ITEMS[k] && ITEMS[k].kind;
     if (k === 'jackpot') return jw;
     if (k === 'festival') return fw;
+    if (dh && (k === 'cure' || k === 'mirror' || k === 'vest')) return 14;   // 난타전 상위권: 방어·해독 위주
     if (kind === 'attack') return aw;
     if (kind === 'comeback') return 8;
-    if (nanta && kind === 'defense') return 3;   // 난타전: 얻어맞는 만큼 반격 수단도 자주
+    if (nanta && (kind === 'defense' || k === 'vest')) return 3;   // 난타전: 얻어맞는 만큼 반격 수단도 자주
     return 1;
   });
   let r = Math.random() * weights.reduce((a, b) => a + b, 0);
@@ -382,6 +387,14 @@ export function inTopGroup(players, id) {
   return ranked.slice(0, n).some((p) => p.id === id);
 }
 
+// 난타전 저격 대상 = 상위 몇 등까지인지.
+export const NANTA_TARGET_TOP = 5;
+
+// id가 상위 n등 안에 드는지 (난타전에서 '상위권 = 방어 아이템 우대' 판정용).
+export function inTopRanks(players, id, n) {
+  return rankedPlayers(players).slice(0, n).some((p) => p.id === id);
+}
+
 // 하위권: 참가 6명 이상일 때, 순위 하위 topGroupSize명 중 '중위권보다 2층 이상 뒤처진' 사람.
 // '방구석 축제'(혼자 30초 2배) 아이템을 이들에게만 준다 — 등수가 낮아 속상해하는 학생 사기 진작용.
 export function inBottomGroup(players, id) {
@@ -409,14 +422,14 @@ export function inLowerHalf(players, id) {
 // 방해 대상 후보: 상위 그룹 중 '중위권보다 일정 층 이상 앞선' 사람(자신 제외). 랭킹 순으로 반환.
 // 후보가 없으면 [] → 호출부에서 자기 강화로 전환한다.
 // spicy(매운맛): 상위 그룹을 1명 넓히고 필요 격차를 4→2층으로 낮춰 접전에서도 견제가 들어간다.
-// nanta(난타전): 상위 그룹·격차 조건을 무시하고 '나보다 위에 있는 사람 전원'이 후보(내가 1등이면 나 빼고 전원).
+// nanta(난타전): 격차 조건 없이 '상위 NANTA_TARGET_TOP등(=상위권)'이 후보(자신 제외). 아래 등수도 상위권을 저격할 수 있다.
 export function attackCandidates(players, byId, spicy = false, nanta = false) {
   const ranked = rankedPlayers(players);
   if (ranked.length < 2) return [];
   if (nanta) {
-    const meIdx = ranked.findIndex((p) => p.id === byId);
-    const above = meIdx > 0 ? ranked.slice(0, meIdx) : ranked.filter((p) => p.id !== byId);
-    return above.map((p, i) => ({ ...p, rank: i + 1 }));
+    return ranked.slice(0, NANTA_TARGET_TOP)
+      .filter((p) => p.id !== byId)
+      .map((p, i) => ({ ...p, rank: i + 1 }));
   }
   const n = topGroupSize(ranked.length) + (spicy ? 1 : 0);
   const medianFloor = ranked[Math.floor(ranked.length / 2)]?.floor || 0;
