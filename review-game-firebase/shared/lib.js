@@ -256,8 +256,9 @@ export function activeBonus(round, nowMs) {
 
 // ── 아이템전 ──────────────────────────────────────
 // round.items_mode: 'off' | 'nanta'(난타전) | 'spicy'(매운맛)
-//   nanta : 자기 강화 + 전체 이벤트만 (저격 없음) · 정답마다 아이템 1개
-//   spicy : 위 + '선두권 견제' 방해 아이템 포함 · 3연속 정답마다 아이템 1개
+//   nanta : 저격 아이템이 주력인 난투 모드. 정답마다 아이템 1개, 누구나 저격을 받고 쏨.
+//           저격 대상은 '나보다 위에 있는 사람 아무나'(격차 조건 없음), 인생 한방·방구석 축제는 안 나옴.
+//   spicy : 자기 강화 + 전체 이벤트 + '선두권 견제'(상위권만 겨냥). 3연속 정답마다 아이템 1개.
 // 아이템 보유는 1개 한도.
 // 팀전에서도 동작하며, '선두권 견제' 아이템은 내 팀이 아닌 '선두 상대 팀 전원'에게 적용된다.
 // (구버전 값 'mild'(순한맛)은 호출부에서 'nanta'로 취급한다.)
@@ -291,31 +292,34 @@ export const ITEMS = {
   steal:    { emoji: '🥷',  name: '강탈',      kind: 'attack',  desc: '선두권 -4층, 나 +4층 (팀전은 상대 팀 전원 -2)' },
 };
 
-// 매운맛(spicy)에서는 방해 효과가 더 오래/세게 간다.
+// 매운맛(spicy)·난타전(nanta)에서는 방해 효과가 더 오래/세게 간다.
+// 난타전은 피격 후 무적이 아주 짧아서 연달아 얻어맞는다.
 export const ITEM_FX_MS = {
   fog: 8000, ice: 8000, festival: 20000, immunity: 8000,
   fogSpicy: 10000, iceSpicy: 10000, immunitySpicy: 4000,
+  immunityNanta: 1500,
   soloFest: 30000, clover: 30000, mirror: 15000, vest: 20000,
 };
 
 // 이번 판에서 뽑을 수 있는 아이템 key 목록. opts:
-//   mode        : 'nanta' | 'spicy' (그 밖의 값은 non-spicy = 난타전과 동일 취급)
-//   canAttack   : 방해(attack) 아이템 후보 포함 (매운맛 + 뽑는 사람이 상위권이 아닐 때)
-//   canComeback : '방구석 축제' 포함 (개인전 하위권). 하위권은 방해를 안 받으므로 '해독'은 제외된다.
-//   canJackpot  : '인생 한방' 포함 (하위 50%=중하위권 이하일 때만)
+//   mode        : 'nanta'(난타전) | 'spicy'(매운맛) (그 밖의 값은 non-spicy = 난타전과 동일 취급)
+//   canAttack   : 방해(attack) 아이템 후보 포함 (매운맛 + 뽑는 사람이 상위권이 아닐 때). 난타전은 무시하고 항상 포함.
+//   canComeback : '방구석 축제' 포함 (개인전 하위권). 난타전에선 안 나옴.
+//   canJackpot  : '인생 한방' 포함 (하위 50%=중하위권 이하일 때만). 난타전에선 안 나옴.
 //   teamMode    : 팀전 여부 — '추격'은 개인전만, '팀 응원가'는 팀전만
-//   teamLeader  : 팀전 1등 팀 — 견제(attack)·전체(global: 축제·응원가) 아이템 제외, 개인 향상만
-// 그리고 '반사경'은 견제가 있는 매운맛에서만 나온다.
+//   teamLeader  : 팀전 1등 팀 — 전체(global: 축제·응원가) 아이템 제외, 개인 향상만 (난타전에선 저격은 그대로 나옴)
+// '반사경'은 견제가 있는 난타전·매운맛에서만 나온다.
 export function itemPool(opts = {}) {
   const { mode = 'nanta', canAttack = false, canComeback = false, teamMode = false, teamLeader = false } = opts;
+  const nanta = mode === 'nanta';
   return Object.entries(ITEMS)
     .filter(([k, it]) => {
-      if (it.kind === 'attack') return mode === 'spicy' && canAttack && !teamLeader;
+      if (it.kind === 'attack') return nanta || (mode === 'spicy' && canAttack && !teamLeader);
       if (it.kind === 'global') return (k === 'anthem' ? teamMode : true) && !teamLeader;
-      if (it.kind === 'comeback') return canComeback;
-      if (k === 'jackpot') return !!opts.canJackpot;     // '인생 한방'은 중하위권 이하만
+      if (it.kind === 'comeback') return canComeback && !nanta;
+      if (k === 'jackpot') return !!opts.canJackpot && !nanta;   // '인생 한방'은 중하위권 이하만, 난타전 제외
       if (k === 'cure') return !canComeback;             // '해독'은 하위권에겐 안 뜸 (방해는 선두권만 걸리므로 쓸모없음)
-      if (k === 'mirror') return mode === 'spicy';
+      if (k === 'mirror') return mode === 'spicy' || nanta;
       if (k === 'magnet') return !teamMode;
       if (k === 'randombox') return !opts.noRandombox;   // '랜덤박스' 재추첨 땐 제외
       return true;
@@ -328,11 +332,13 @@ export function itemPool(opts = {}) {
 // opts.jackpotTier(0|1|2): '인생 한방' 가중치 — 1=중하위권(4배), 2=하위권(6배).
 //   ('인생 한방'은 opts.canJackpot 일 때만 풀에 들어오므로 실제로는 tier 1·2에서만 쓰임)
 // comeback 아이템('방구석 축제')은 가중치 8배 — 하위권에게 자주 나오도록.
+// 난타전(mode='nanta')은 저격이 주력이라 방해 아이템 가중치를 크게(10배) 주고, 반격용 방어(해독·반사경)도 조금(3배) 올린다.
 export function rollItem(opts = {}) {
   const pool = itemPool(opts);
   if (!pool.length) return null;
+  const nanta = opts.mode === 'nanta';
   const bias = opts.attackBias || 0;
-  const aw = bias > 0 ? 1 + 8 * Math.min(1, bias) : 1;   // 견제 아이템 가중치 최대 9배
+  const aw = nanta ? 10 : (bias > 0 ? 1 + 8 * Math.min(1, bias) : 1);   // 견제 아이템 가중치: 난타전 10배 / 팀전 최대 9배
   const fw = opts.teamMode && bias > 0 ? 1 + 5 * Math.min(1, bias) : 1;   // 팀전 '🌈축제' 최대 6배
   const jw = opts.jackpotTier === 2 ? 6 : opts.jackpotTier === 1 ? 4 : 1;   // '인생 한방'
   const weights = pool.map((k) => {
@@ -341,6 +347,7 @@ export function rollItem(opts = {}) {
     if (k === 'festival') return fw;
     if (kind === 'attack') return aw;
     if (kind === 'comeback') return 8;
+    if (nanta && kind === 'defense') return 3;   // 난타전: 얻어맞는 만큼 반격 수단도 자주
     return 1;
   });
   let r = Math.random() * weights.reduce((a, b) => a + b, 0);
@@ -402,9 +409,15 @@ export function inLowerHalf(players, id) {
 // 방해 대상 후보: 상위 그룹 중 '중위권보다 일정 층 이상 앞선' 사람(자신 제외). 랭킹 순으로 반환.
 // 후보가 없으면 [] → 호출부에서 자기 강화로 전환한다.
 // spicy(매운맛): 상위 그룹을 1명 넓히고 필요 격차를 4→2층으로 낮춰 접전에서도 견제가 들어간다.
-export function attackCandidates(players, byId, spicy = false) {
+// nanta(난타전): 상위 그룹·격차 조건을 무시하고 '나보다 위에 있는 사람 전원'이 후보(내가 1등이면 나 빼고 전원).
+export function attackCandidates(players, byId, spicy = false, nanta = false) {
   const ranked = rankedPlayers(players);
   if (ranked.length < 2) return [];
+  if (nanta) {
+    const meIdx = ranked.findIndex((p) => p.id === byId);
+    const above = meIdx > 0 ? ranked.slice(0, meIdx) : ranked.filter((p) => p.id !== byId);
+    return above.map((p, i) => ({ ...p, rank: i + 1 }));
+  }
   const n = topGroupSize(ranked.length) + (spicy ? 1 : 0);
   const medianFloor = ranked[Math.floor(ranked.length / 2)]?.floor || 0;
   const gap = spicy ? 2 : 4;
@@ -416,10 +429,11 @@ export function attackCandidates(players, byId, spicy = false) {
 }
 
 // 후보(랭킹 순) 중 하나를 가중치로 고른다. 1·2·3위에 50/30/20, 그 아래는 완만히 감소.
-export function pickAttackTarget(candidates) {
+// flat=true(난타전): 가중치 없이 후보 전원 균등 추첨 — 공격이 특정인에게 쏠리지 않고 판 전체로 퍼진다.
+export function pickAttackTarget(candidates, flat = false) {
   if (!candidates.length) return null;
   const W = [50, 30, 20, 12, 8, 5, 3, 2, 1];
-  const weights = candidates.map((_, i) => W[i] ?? 1);
+  const weights = candidates.map((_, i) => (flat ? 1 : (W[i] ?? 1)));
   const total = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * total;
   for (let i = 0; i < candidates.length; i++) {
