@@ -901,9 +901,10 @@ function flashClimberFx(pid, type){
   if(!badge){ badge = document.createElement('div'); badge.className = 'fx-badge'; node.appendChild(badge); }
   badge.textContent = emoji;
   if(type==='fog') node.classList.add('fx-fog');
-  const spicy = roundState.items_mode === 'spicy' || roundState.items_mode === 'nanta';
-  const dur = type==='fog' ? (spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog)
-            : type==='ice' ? (spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) : 2600;
+  const nanta = roundState.items_mode === 'nanta';
+  const spicy = roundState.items_mode === 'spicy' || nanta;
+  const dur = type==='fog' ? (nanta ? ITEM_FX_MS.fogNanta : spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog)
+            : type==='ice' ? (nanta ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) : 2600;
   setTimeout(()=>{ if(badge) badge.remove(); node.classList.remove('fx-fog'); }, dur);
 }
 
