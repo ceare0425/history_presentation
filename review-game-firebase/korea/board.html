@@ -1032,7 +1032,7 @@ function render(){
   const imb = el('itemsModeBadge');
   const im = roundState.items_mode;
   imb.classList.toggle('hidden', !im || im === 'off');
-  imb.textContent = im === 'spicy' ? '⚔️ 아이템전 · 매운맛' : im === 'mild' ? '🎁 아이템전 · 순한맛' : '';
+  imb.textContent = im === 'spicy' ? '⚔️ 아이템전 · 매운맛' : (im && im !== 'off') ? '🥁 아이템전 · 난타전' : '';
 
   if(effective === 'ended' && prevEffective !== 'ended'){
     showEndCelebration(players, ranked);
