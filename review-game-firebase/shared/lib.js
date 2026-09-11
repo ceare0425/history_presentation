@@ -298,7 +298,7 @@ export const ITEMS = {
 export const ITEM_FX_MS = {
   fog: 8000, ice: 8000, festival: 20000, immunity: 8000,
   fogSpicy: 10000, iceSpicy: 10000, immunitySpicy: 4000,
-  immunityNanta: 1500,
+  fogNanta: 5000, iceNanta: 5000, immunityNanta: 1500,
   soloFest: 30000, clover: 30000, mirror: 15000, vest: 20000,
 };
 
