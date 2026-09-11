@@ -419,6 +419,7 @@ let festivalBy = '';         // '축제'를 쓴 학생 이름 (배너 표시용)
 let myImmuneUntil = 0;       // 방해 피격 후 무적 종료 시각(ms)
 let frozen = false;          // '얼음' 피격 중 입력 잠금
 let iceTimer = null, fogTimer = null, itemAlertTimer = null;
+let fogAlertActive = false, iceAlertActive = false;   // 안개·얼음 알림은 효과가 끝날 때까지 유지
 const seenItemEvents = new Set();
 
 const el = (id) => document.getElementById(id);
@@ -488,7 +489,7 @@ function popFloorBadge(){
 
 function renderQuestion(q){
   clearChoseongHint();  // 문제가 바뀌면 이전 힌트는 지운다
-  clearItemAlert();     // 아이템 사용 알림도 문제가 바뀌면 사라진다 (축제 배너는 별도)
+  if(!fogAlertActive && !iceAlertActive) clearItemAlert();   // 안개·얼음 알림은 효과가 끝날 때까지 문제가 바뀌어도 유지
   if(!q){
     el('qText').textContent = '출제할 문제가 없습니다. 선생님께 문의하세요.';
     el('unitTag').textContent = '';
@@ -762,6 +763,7 @@ function tick(){
       // 아이템 로컬 상태 초기화
       heldItem = null; myBoost = 0; mySkipFloor = false; myHintQid = null; myShield = false;
       mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myImmuneUntil = 0; frozen = false;
+      fogAlertActive = false; iceAlertActive = false;
       myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
       myUndoAvailable = false; myUndoFloorDelta = 0; randomboxOfferPending = false;
       clearTimeout(iceTimer); clearTimeout(fogTimer);
@@ -1078,6 +1080,7 @@ function clearIncomingFx(){
   el('qbox').classList.remove('fogged');
   clearTimeout(fogTimer); clearTimeout(iceTimer);
   frozen = false; mySnailNext = 0;
+  fogAlertActive = false; iceAlertActive = false;
   if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; }
 }
 
@@ -1341,18 +1344,26 @@ function applyIncomingFx(type){
   if(type === 'fog'){
     const box = el('qbox');
     box.classList.add('fogged');
+    fogAlertActive = true;
     showItemAlert('🌫️ 안개에 맞았다! 문제가 흐려요 (알면 그냥 풀 수 있어요)');
     clearTimeout(fogTimer);
-    fogTimer = setTimeout(()=> box.classList.remove('fogged'), itemsMode === 'nanta' ? ITEM_FX_MS.fogNanta : spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog);
+    fogTimer = setTimeout(()=>{
+      box.classList.remove('fogged');
+      fogAlertActive = false;
+      if(!iceAlertActive) clearItemAlert();
+    }, itemsMode === 'nanta' ? ITEM_FX_MS.fogNanta : spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog);
   } else if(type === 'ice'){
     frozen = true;
+    iceAlertActive = true;
     el('answerInput').disabled = true;
     el('submitBtn').disabled = true;
     showItemAlert('🧊 얼음! 잠시 제출할 수 없어요');
     clearTimeout(iceTimer);
     iceTimer = setTimeout(()=>{
       frozen = false;
+      iceAlertActive = false;
       if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; el('answerInput').focus(); }
+      if(!fogAlertActive) clearItemAlert();
     }, itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice);
   } else if(type === 'snail'){
     mySnailNext = spicy ? 2 : 1;
