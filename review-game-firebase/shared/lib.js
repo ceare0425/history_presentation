@@ -258,7 +258,7 @@ export function activeBonus(round, nowMs) {
 // round.items_mode: 'off' | 'nanta'(난타전) | 'spicy'(매운맛)
 //   nanta : 저격 아이템이 주력인 난투 모드. 정답마다 아이템 1개, 아래 등수도 상위권을 저격할 수 있음.
 //           저격 대상은 '상위 NANTA_TARGET_TOP등'(격차 조건 없음). 상위권은 방어·해독 아이템을 훨씬 자주 받음.
-//           인생 한방·방구석 축제는 안 나옴.
+//           인생 한방은 안 나옴 (방구석 축제는 하위권에게 그대로 나옴).
 //   spicy : 자기 강화 + 전체 이벤트 + '선두권 견제'(상위권만 겨냥). 3연속 정답마다 아이템 1개.
 // 아이템 보유는 1개 한도.
 // 팀전에서도 동작하며, '선두권 견제' 아이템은 내 팀이 아닌 '선두 상대 팀 전원'에게 적용된다.
@@ -305,7 +305,7 @@ export const ITEM_FX_MS = {
 // 이번 판에서 뽑을 수 있는 아이템 key 목록. opts:
 //   mode        : 'nanta'(난타전) | 'spicy'(매운맛) (그 밖의 값은 non-spicy = 난타전과 동일 취급)
 //   canAttack   : 방해(attack) 아이템 후보 포함 (매운맛 + 뽑는 사람이 상위권이 아닐 때). 난타전은 무시하고 항상 포함.
-//   canComeback : '방구석 축제' 포함 (개인전 하위권). 난타전에선 안 나옴.
+//   canComeback : '방구석 축제' 포함 (개인전 하위권). 난타전도 포함(하위권은 저격 걱정 없이 몰래 버프).
 //   canJackpot  : '인생 한방' 포함 (하위 50%=중하위권 이하일 때만). 난타전에선 안 나옴.
 //   teamMode    : 팀전 여부 — '추격'은 개인전만, '팀 응원가'는 팀전만
 //   teamLeader  : 팀전 1등 팀 — 전체(global: 축제·응원가) 아이템 제외, 개인 향상만 (난타전에선 저격은 그대로 나옴)
@@ -317,7 +317,7 @@ export function itemPool(opts = {}) {
     .filter(([k, it]) => {
       if (it.kind === 'attack') return nanta || (mode === 'spicy' && canAttack && !teamLeader);
       if (it.kind === 'global') return (k === 'anthem' ? teamMode : true) && !teamLeader;
-      if (it.kind === 'comeback') return canComeback && !nanta;
+      if (it.kind === 'comeback') return canComeback;
       if (k === 'jackpot') return !!opts.canJackpot && !nanta;   // '인생 한방'은 중하위권 이하만, 난타전 제외
       if (k === 'cure') return !canComeback;             // '해독'은 하위권에겐 안 뜸 (방해는 선두권만 걸리므로 쓸모없음)
       if (k === 'mirror') return mode === 'spicy' || nanta;

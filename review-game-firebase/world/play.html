@@ -426,13 +426,13 @@ const el = (id) => document.getElementById(id);
 function itemsOn(){ return itemsMode !== 'off'; }
 
 // 아이템 추첨 옵션 — 정답 획득·랜덤박스 재추첨에서 공용.
-// 난타전: 누구나 저격 아이템을 뽑을 수 있고, 인생 한방·방구석 축제는 안 나온다.
+// 난타전: 누구나 저격 아이템을 뽑을 수 있고, 인생 한방은 안 나온다(방구석 축제는 하위권에게 그대로 나옴).
 //         저격 대상인 상위 5등(개인전)은 방어·해독 아이템이 훨씬 자주 나온다(defenseHeavy).
 function itemRollOpts(){
   const nanta = itemsMode === 'nanta';
   const canAttack = nanta || (itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId)));
   const atkBias = roundState.team_mode ? teamAttackBias(allPlayers, myTeam) : 0;
-  const canComeback = !nanta && inBottomGroup(allPlayers, playerId);
+  const canComeback = inBottomGroup(allPlayers, playerId);   // 방구석 축제는 난타전에서도 하위권에게 그대로 나옴
   const canJackpot = !nanta && inLowerHalf(allPlayers, playerId);
   const jackpotTier = nanta ? 0 : (inBottomGroup(allPlayers, playerId) ? 2 : canJackpot ? 1 : 0);
   const teamLeader = roundState.team_mode && isTeamLeader(allPlayers, myTeam);
@@ -938,6 +938,9 @@ function renderItemBar(){
   if(heldItem && ITEMS[heldItem]){
     const it = ITEMS[heldItem];
     let desc = it.desc;
+    if(!roundState.team_mode && heldItem === 'steal' && itemsMode === 'nanta'){
+      desc = `상위권 -5${unitLabel()}, 나 +5${unitLabel()}`;
+    }
     if(roundState.team_mode){
       const u = unitLabel();
       if(heldItem === 'festival') desc = '20초간 우리 팀 2배';
@@ -1241,8 +1244,9 @@ async function useItem(){
     renderItemBar();
     const tgtLabel = nanta ? (target.name || '상대') : '선두권';
     if(key === 'steal'){
-      await bumpFloor(4);
-      showItemAlert(`🥷 강탈! ${tgtLabel} -4${unitLabel()}, 나 +4${unitLabel()}`);
+      const amt = nanta ? 5 : 4;   // 난타전은 -5층으로 더 세게
+      await bumpFloor(amt);
+      showItemAlert(`🥷 강탈! ${tgtLabel} -${amt}${unitLabel()}, 나 +${amt}${unitLabel()}`);
     } else {
       showItemAlert(`${it.emoji} ${it.name} → ${tgtLabel}에게 발사!`);
     }
@@ -1357,7 +1361,7 @@ function applyIncomingFx(type){
     showItemAlert('⬇️ 미끄럼틀! 조금 뒤로 밀렸어요');
     slideDown();
   } else if(type === 'steal'){
-    const amt = roundState.team_mode ? 2 : 4;   // 개인전은 -4층, 팀전은 팀원 각자 -2층
+    const amt = roundState.team_mode ? 2 : (itemsMode === 'nanta' ? 5 : 4);   // 개인전 매운맛 -4층·난타전 -5층, 팀전은 팀원 각자 -2층
     showItemAlert(`🥷 강탈당했다! -${amt}${unitLabel()}`);
     bumpFloor(-amt);
   }
