@@ -390,7 +390,7 @@ let kicked = false;
 let myAnswered = false; // 이번 라운드에서 한 문제라도 제출했는지 (아직 안 했으면 종료 화면 대신 대기 화면을 보여줌)
 
 // ── 아이템전 상태 ──
-let itemsMode = 'off';       // 'off' | 'mild' | 'spicy' (round.items_mode)
+let itemsMode = 'off';       // 'off' | 'nanta' | 'spicy' (round.items_mode)
 let heldItem = null;         // 보유 중인 아이템 key (players/<id>/item 과 동기화)
 let allPlayers = [];         // [{id, ...}] — 방해 대상 계산용
 let myTeam = null;           // 팀전에서 내 팀 key (players/<id>/team 과 동기화)
@@ -624,8 +624,8 @@ async function submitAnswer(){
     p.streak = (p.streak||0) + 1;
     p.bestStreak = Math.max(p.bestStreak||0, p.streak);
     retryMiss[answeredQid] = 0;
-    // 3연속 정답마다 아이템 1개 (보유 중이 아닐 때, 개인전 + 아이템전 켜짐)
-    if(itemsOn() && !heldItem && p.streak > 0 && p.streak % 3 === 0){
+    // 아이템 1개 획득 (보유 중이 아닐 때, 아이템전 켜짐) — 난타전: 정답마다 / 매운맛: 3연속마다
+    if(itemsOn() && !heldItem && p.streak > 0 && (itemsMode === 'nanta' || p.streak % 3 === 0)){
       // 팀전에서는 공격 아이템이 상대 팀을 노리므로 상위권도 뽑을 수 있다
       const canAttack = itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId));
       // 팀전: 선두와 격차·순위로 '뒤처진 정도' 0~1 (매운맛이면 견제, 그리고 🌈축제 가중치에 쓰임)
@@ -849,7 +849,7 @@ function startListening(){
       weight: r.order === 'recent' ? 'recent' : (r.weight || 'even'),
       qids: r.qids || [],
       team_mode: !!r.team_mode, team_count: r.team_count || 4, bonus: r.bonus || [],
-      items_mode: r.items_mode || 'off'
+      items_mode: (r.items_mode === 'mild' ? 'nanta' : r.items_mode) || 'off'   // 구버전 '순한맛' 값 호환
     } : { status:'idle', units:[], duration_sec:300, end_time:null, token:0, order:'random', weight:'even', qids:[], team_mode:false, team_count:4, bonus:[], items_mode:'off' };
     itemsMode = roundState.items_mode;
     refreshUnitLabels();
@@ -966,7 +966,7 @@ function renderItemBar(){
     hint.textContent = '안 쓸 아이템은 버리면 다음 걸 받아요';
   } else {
     bar.innerHTML = '';
-    hint.textContent = '3연속 정답하면 아이템 획득!';
+    hint.textContent = itemsMode === 'nanta' ? '정답을 맞히면 아이템 획득!' : '3연속 정답하면 아이템 획득!';
   }
 }
 
@@ -1030,7 +1030,7 @@ async function discardItem(){
   heldItem = null;
   await update(roomRef(ROOM, 'players', playerId), { item: null, name: playerName, lastActive: serverNow() });
   renderItemBar();
-  showItemAlert('🗑️ 아이템을 버렸어요 — 3연속 정답하면 새로 받아요');
+  showItemAlert(itemsMode === 'nanta' ? '🗑️ 아이템을 버렸어요 — 정답을 맞히면 새로 받아요' : '🗑️ 아이템을 버렸어요 — 3연속 정답하면 새로 받아요');
 }
 
 // '힌트' 아이템: 초성을 문제 아래에 계속 띄워두고, 다음 문제로 넘어갈 때 지운다

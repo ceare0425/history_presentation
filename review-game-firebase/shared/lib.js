@@ -255,11 +255,12 @@ export function activeBonus(round, nowMs) {
 }
 
 // ── 아이템전 ──────────────────────────────────────
-// round.items_mode: 'off' | 'mild'(순한맛) | 'spicy'(매운맛)
-//   mild  : 자기 강화 + 전체 이벤트만 (저격 없음)
-//   spicy : 위 + '선두권 견제' 방해 아이템 포함
-// 아이템은 3연속 정답마다 1개 획득(보유 1개 한도).
+// round.items_mode: 'off' | 'nanta'(난타전) | 'spicy'(매운맛)
+//   nanta : 자기 강화 + 전체 이벤트만 (저격 없음) · 정답마다 아이템 1개
+//   spicy : 위 + '선두권 견제' 방해 아이템 포함 · 3연속 정답마다 아이템 1개
+// 아이템 보유는 1개 한도.
 // 팀전에서도 동작하며, '선두권 견제' 아이템은 내 팀이 아닌 '선두 상대 팀 전원'에게 적용된다.
+// (구버전 값 'mild'(순한맛)은 호출부에서 'nanta'로 취급한다.)
 export const ITEMS = {
   boost:    { emoji: '⚡',  name: '부스터',    kind: 'self',    desc: '다음 정답 3개 2배' },
   ladder:   { emoji: '🪜',  name: '사다리',    kind: 'self',    desc: '즉시 +2층' },
@@ -298,7 +299,7 @@ export const ITEM_FX_MS = {
 };
 
 // 이번 판에서 뽑을 수 있는 아이템 key 목록. opts:
-//   mode        : 'mild' | 'spicy'
+//   mode        : 'nanta' | 'spicy' (그 밖의 값은 non-spicy = 난타전과 동일 취급)
 //   canAttack   : 방해(attack) 아이템 후보 포함 (매운맛 + 뽑는 사람이 상위권이 아닐 때)
 //   canComeback : '방구석 축제' 포함 (개인전 하위권). 하위권은 방해를 안 받으므로 '해독'은 제외된다.
 //   canJackpot  : '인생 한방' 포함 (하위 50%=중하위권 이하일 때만)
@@ -306,7 +307,7 @@ export const ITEM_FX_MS = {
 //   teamLeader  : 팀전 1등 팀 — 견제(attack)·전체(global: 축제·응원가) 아이템 제외, 개인 향상만
 // 그리고 '반사경'은 견제가 있는 매운맛에서만 나온다.
 export function itemPool(opts = {}) {
-  const { mode = 'mild', canAttack = false, canComeback = false, teamMode = false, teamLeader = false } = opts;
+  const { mode = 'nanta', canAttack = false, canComeback = false, teamMode = false, teamLeader = false } = opts;
   return Object.entries(ITEMS)
     .filter(([k, it]) => {
       if (it.kind === 'attack') return mode === 'spicy' && canAttack && !teamLeader;
