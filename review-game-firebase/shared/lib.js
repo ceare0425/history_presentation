@@ -388,7 +388,7 @@ export function inTopGroup(players, id) {
 }
 
 // 난타전 저격 대상 = 상위 몇 등까지인지.
-export const NANTA_TARGET_TOP = 5;
+export const NANTA_TARGET_TOP = 3;
 
 // id가 상위 n등 안에 드는지 (난타전에서 '상위권 = 방어 아이템 우대' 판정용).
 export function inTopRanks(players, id, n) {
