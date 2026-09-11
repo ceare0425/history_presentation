@@ -343,7 +343,7 @@ import {
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   TEAM_OPTIONS, teamInfo, teamStandings, activeBonus,
-  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inBottomGroup, inLowerHalf, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader, choseongHint
+  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader, choseongHint
 } from '../shared/lib.js';
 
 const ROOM = 'world';
@@ -427,6 +427,7 @@ function itemsOn(){ return itemsMode !== 'off'; }
 
 // 아이템 추첨 옵션 — 정답 획득·랜덤박스 재추첨에서 공용.
 // 난타전: 누구나 저격 아이템을 뽑을 수 있고, 인생 한방·방구석 축제는 안 나온다.
+//         저격 대상인 상위 5등(개인전)은 방어·해독 아이템이 훨씬 자주 나온다(defenseHeavy).
 function itemRollOpts(){
   const nanta = itemsMode === 'nanta';
   const canAttack = nanta || (itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId)));
@@ -435,7 +436,8 @@ function itemRollOpts(){
   const canJackpot = !nanta && inLowerHalf(allPlayers, playerId);
   const jackpotTier = nanta ? 0 : (inBottomGroup(allPlayers, playerId) ? 2 : canJackpot ? 1 : 0);
   const teamLeader = roundState.team_mode && isTeamLeader(allPlayers, myTeam);
-  return { mode: itemsMode, canAttack, attackBias: atkBias, canComeback, canJackpot, jackpotTier, teamMode: roundState.team_mode, teamLeader };
+  const defenseHeavy = nanta && !roundState.team_mode && inTopRanks(allPlayers, playerId, NANTA_TARGET_TOP);
+  return { mode: itemsMode, canAttack, attackBias: atkBias, canComeback, canJackpot, jackpotTier, teamMode: roundState.team_mode, teamLeader, defenseHeavy };
 }
 
 function roundEnded(){
@@ -969,7 +971,9 @@ function renderItemBar(){
     hint.textContent = '안 쓸 아이템은 버리면 다음 걸 받아요';
   } else {
     bar.innerHTML = '';
-    hint.textContent = itemsMode === 'nanta' ? '정답마다 아이템! 위에 있는 사람을 저격하세요 ⚔️' : '3연속 정답하면 아이템 획득!';
+    hint.textContent = itemsMode !== 'nanta' ? '3연속 정답하면 아이템 획득!'
+      : inTopRanks(allPlayers, playerId, NANTA_TARGET_TOP) ? '상위권! 저격을 많이 받아요 — 🍵해독·🛟구명조끼·🪞반사경으로 버티세요 🛡️'
+      : '정답마다 아이템! 상위 5등을 저격하세요 ⚔️';
   }
 }
 
