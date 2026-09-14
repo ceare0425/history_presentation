@@ -1195,21 +1195,22 @@ async function bumpFloor(n){
   lastFloor = nf;
 }
 
-// '콤보 스파크' 카드 뒤집기: 카드 n장 중 하나를 직접 골라 보상을 받고, 나머지 카드도 뒤집어서 뭐였는지 보여준다.
-// 카드별 보상은 미리 정해져 있고(대박 확률은 연속 정답 수가 늘수록 상승), 고른 카드만 실제로 적용된다.
+// '콤보 스파크' 카드 뒤집기: 카드 3장 중 하나를 직접 골라 보상을 받고, 나머지 카드도 뒤집어서 뭐였는지 보여준다.
+// 카드는 항상 서로 다른 숫자 — 대박(10) 등장 여부만 연속 정답 수에 따른 확률로 정하고, 나머지 자리는 1~3 중 겹치지 않게 채운다.
 function openComboSparkPicker(streak, onDone){
-  const n = 3;
   const bigChance = Math.min(0.5, Math.floor(streak / 2) * 0.1);   // 2연속마다 +10%p, 최대 50%
-  const values = Array.from({ length: n }, () => (Math.random() < bigChance ? 10 : 1));
+  const hasJackpot = Math.random() < bigChance;
+  const smalls = shuffle([1, 2, 3]);
+  const values = shuffle(hasJackpot ? [10, smalls[0], smalls[1]] : smalls);
   const cardsEl = el('comboCards');
-  cardsEl.innerHTML = values.map((v) => `<button type="button" class="combo-card" data-v="${v}">🎴</button>`).join('');
+  cardsEl.innerHTML = values.map((v) => `<button type="button" class="combo-card" data-v="${v}">✨</button>`).join('');
   el('comboResult').textContent = '';
   el('comboOverlay').classList.remove('hidden');
   const btns = Array.from(cardsEl.querySelectorAll('.combo-card'));
   const flip = (btn) => {
     const v = Number(btn.dataset.v);
     btn.classList.add('flipped');
-    btn.textContent = v >= 10 ? '💎+10' : '+1';
+    btn.textContent = v >= 10 ? '💎+10' : `+${v}`;
   };
   btns.forEach((btn) => {
     btn.onclick = () => {
@@ -1219,9 +1220,9 @@ function openComboSparkPicker(streak, onDone){
       flip(btn);
       setTimeout(() => {
         btns.forEach((b) => { if(b !== btn) flip(b); });
-        el('comboResult').textContent = chosenVal >= 10 ? `🎉 대박! +10${unitLabel()} 획득!` : `+1${unitLabel()} 획득`;
+        el('comboResult').textContent = chosenVal >= 10 ? `🎉 대박! +10${unitLabel()} 획득!` : `+${chosenVal}${unitLabel()} 획득`;
         bumpFloor(chosenVal);
-        showItemAlert(chosenVal >= 10 ? `🎇 콤보 스파크 대박! +10${unitLabel()} 추가!` : `🎇 콤보 스파크! +1${unitLabel()} 추가`);
+        showItemAlert(chosenVal >= 10 ? `🎇 콤보 스파크 대박! +10${unitLabel()} 추가!` : `🎇 콤보 스파크! +${chosenVal}${unitLabel()} 추가`);
       }, 500);
       setTimeout(() => {
         el('comboOverlay').classList.add('hidden');
