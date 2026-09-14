@@ -1379,9 +1379,9 @@ function handleItemEvents(obj){
       if(e.target !== playerId) return;
       myStealAttackUntil = 0;
       if(e.outcome === 'defended'){
-        showItemAlert(`🛡️ 강탈 실패! 상대가 방어해서 -${e.amt}${unitLabel()}만 들어갔어요`);
+        showItemAlert(`🛡️ 상대가 방어! ${e.amt}${unitLabel()}밖에 못 빼앗았어요`);
       } else {
-        showItemAlert(`🥷 강탈 성공! 상대에게 -${e.amt}${unitLabel()} 적용됐어요`);
+        showItemAlert(`🥷 강탈 성공! ${e.amt}${unitLabel()} 빼앗아왔어요!`);
       }
       return;
     }
