@@ -395,7 +395,7 @@ import {
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   TEAM_OPTIONS, teamInfo, teamStandings, activeBonus,
-  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader, choseongHint
+  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastPlace, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader, choseongHint
 } from '../shared/lib.js';
 
 const ROOM = 'world';
@@ -1262,7 +1262,11 @@ async function applySelfItem(key){
   }
   else if(key === 'shield'){ myShield = true; showItemAlert('🛡️ 콤보 방패 장착 — 다음 오답에도 연속 유지'); }
   else if(key === 'cure'){ clearIncomingFx(); showItemAlert('🍵 해독! 걸려 있던 방해를 풀었어요'); }
-  else if(key === 'soloFest'){ mySoloFestUntil = serverNow() + ITEM_FX_MS.soloFest; showItemAlert('🛋️ 방구석 축제 발동! 30초간 나만 2배 🎉'); }
+  else if(key === 'soloFest'){
+    const dur = isLastPlace(allPlayers, playerId) ? ITEM_FX_MS.soloFestLast : ITEM_FX_MS.soloFest;
+    mySoloFestUntil = serverNow() + dur;
+    showItemAlert(`🛋️ 방구석 축제 발동! ${Math.round(dur/1000)}초간 나만 2배 🎉`);
+  }
   else if(key === 'goldenbell'){ myGoldenbellArmed = true; showItemAlert('🎯 골든벨! 다음 정답은 ×3, 틀리면 -2층'); }
   else if(key === 'jackpot'){ myJackpotArmed = true; showItemAlert(`🎲 인생 한방! 다음 정답 +20${unitLabel()}, 틀리면 -10${unitLabel()}`); }
   else if(key === 'snowball'){ mySnowballArmed = true; showItemAlert('🌀 눈덩이! 다음 정답에 지금 연속 수만큼 층수 추가'); }
@@ -1274,8 +1278,9 @@ async function applySelfItem(key){
     showItemAlert(`🪞 반사경! ${Math.round(dur/1000)}초 안에 날아오는 첫 견제를 되돌려요`);
   }
   else if(key === 'comboSpark'){
-    myComboSparkUntil = serverNow() + ITEM_FX_MS.comboSpark;
-    showItemAlert(`🎇 콤보 스파크 발동! ${Math.round(ITEM_FX_MS.comboSpark/1000)}초간 정답마다 카드 뒤집기 찬스, 연속일수록 대박 확률 UP`);
+    const dur = isLastPlace(allPlayers, playerId) ? ITEM_FX_MS.comboSparkLast : ITEM_FX_MS.comboSpark;
+    myComboSparkUntil = serverNow() + dur;
+    showItemAlert(`🎇 콤보 스파크 발동! ${Math.round(dur/1000)}초간 정답마다 카드 뒤집기 찬스, 연속일수록 대박 확률 UP`);
   }
   else if(key === 'roulette'){
     const d = Math.floor(Math.random() * 8) + 1;   // +1 ~ +8
