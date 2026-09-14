@@ -1281,7 +1281,7 @@ async function useItem(){
     }
     heldItem = null;
     await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
-    if(target.immuneUntil && serverNow() < target.immuneUntil){
+    if((key === 'ice' || key === 'fog') && target.immuneUntil && serverNow() < target.immuneUntil){
       renderItemBar();
       showItemAlert('🛡️ 상대방이 무적 상태여서 아이템이 작동하지 않습니다');
       return;
