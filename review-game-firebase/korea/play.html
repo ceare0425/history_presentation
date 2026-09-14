@@ -306,6 +306,7 @@
       <div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! <span id="bonusRemain"></span>초 남음</div>
       <div class="festival-banner" id="festivalBanner">🌈 <span id="festivalWho"></span>축제! <span id="festivalScope">모두</span> 2배 · <span id="festivalRemain"></span>초 남음</div>
       <div class="festival-banner" id="soloFestBanner">🛋️ 방구석 축제! 나만 2배 · <span id="soloFestRemain"></span>초 남음</div>
+      <div class="festival-banner" id="comboSparkBanner">🎇 콤보 스파크! 정답마다 카드 뒤집기 · <span id="comboSparkRemain"></span>초 남음</div>
       <div class="festival-banner" id="goldenbellBanner">🎯 골든벨 문제! 맞히면 ×3 · 틀리면 -2</div>
       <div class="festival-banner" id="jackpotBanner">🎲 인생 한방! 맞히면 +20 · 틀리면 -10</div>
       <div class="festival-banner" id="snowballBanner">🌀 눈덩이! 다음 정답에 연속 수만큼 추가</div>
@@ -425,6 +426,7 @@ let myShield = false;        // '콤보 방패' 활성 — 다음 오답에 연�
 let mySnailNext = 0;         // '느림보' 피격 — 남은 제한 정답 수(각 +1층). 매운맛은 2회
 let festivalUntil = 0;       // '축제' 종료 시각(ms)
 let mySoloFestUntil = 0;     // '방구석 축제' — 나만 2배 종료 시각(ms)
+let myComboSparkUntil = 0;   // '콤보 스파크' — 정답마다 카드 뒤집기 보너스 종료 시각(ms)
 let myGoldenbellArmed = false; // '골든벨' — 다음 정답 ×3 / 오답 -2
 let myJackpotArmed = false;  // '인생 한방' — 다음 정답 +20 / 오답 -10
 let mySnowballArmed = false; // '눈덩이' — 다음 정답에 연속 수만큼 층수 추가
@@ -674,6 +676,11 @@ async function submitAnswer(){
     if(myBoost > 0){ gain *= 2; myBoost--; }                  // '부스터'
     if(myGoldenbellArmed){ gain *= 3; myGoldenbellArmed = false; showItemAlert(`🎯 골든벨 성공! ×3 → +${gain}${unitLabel()}!`); } // '골든벨'
     if(serverNow() < myCloverUntil && Math.random() < 0.5){ gain += 1; showItemAlert(`🍀 행운! +1${unitLabel()} 더!`); } // '네잎클로버'
+    if(serverNow() < myComboSparkUntil){   // '콤보 스파크' — 연속 정답 2번마다 대박 확률 +10%p(최대 50%)
+      const bigChance = Math.min(0.5, Math.floor((p.streak||0) / 2) * 0.1);
+      if(Math.random() < bigChance){ gain += 10; showItemAlert(`🎇 콤보 스파크 대박! +10${unitLabel()} 추가!`); }
+      else { gain += 1; showItemAlert(`🎇 콤보 스파크! +1${unitLabel()} 추가`); }
+    }
     if(mySnowballArmed){ const add = Math.max(1, p.streak || 0); gain += add; mySnowballArmed = false; showItemAlert(`🌀 눈덩이! 연속 ${add} → +${add}${unitLabel()} 추가!`); } // '눈덩이'
     if(mySkipFloor){ gain = 0; mySkipFloor = false; }         // '로켓 점프' 반동
     if(myJackpotArmed){ gain = 20; myJackpotArmed = false; showItemAlert(`🎲 인생 한방 대성공! +20${unitLabel()} 🎉`); } // '인생 한방' (다른 배수 무시, 고정 +20)
@@ -811,7 +818,7 @@ function tick(){
       queue = []; retryList = []; retryMiss = {}; lastQid = null; currentQid = null; currentQuestion = null; currentStartedAt = null;
       // 아이템 로컬 상태 초기화
       heldItem = null; myBoost = 0; mySkipFloor = false; myHintQid = null; myShield = false;
-      mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myImmuneUntil = 0; frozen = false;
+      mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myComboSparkUntil = 0; myImmuneUntil = 0; frozen = false;
       fogAlertActive = false; iceAlertActive = false; myFogUntil = 0; myIceUntil = 0;
       myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
       myUndoAvailable = false; myUndoFloorDelta = 0; randomboxOfferPending = false;
@@ -850,6 +857,13 @@ function tick(){
       el('soloFestRemain').textContent = Math.ceil((mySoloFestUntil - serverNow()) / 1000);
     } else {
       sfb.classList.remove('show');
+    }
+    const csb = el('comboSparkBanner');
+    if(serverNow() < myComboSparkUntil){
+      csb.classList.add('show');
+      el('comboSparkRemain').textContent = Math.ceil((myComboSparkUntil - serverNow()) / 1000);
+    } else {
+      csb.classList.remove('show');
     }
     el('goldenbellBanner').classList.toggle('show', myGoldenbellArmed);
     el('jackpotBanner').classList.toggle('show', myJackpotArmed);
@@ -1190,7 +1204,10 @@ async function applySelfItem(key){
     myMirrorUntil = serverNow() + dur;
     showItemAlert(`🪞 반사경! ${Math.round(dur/1000)}초 안에 날아오는 첫 견제를 되돌려요`);
   }
-  else if(key === 'magnet'){ await applyMagnet(); }
+  else if(key === 'comboSpark'){
+    myComboSparkUntil = serverNow() + ITEM_FX_MS.comboSpark;
+    showItemAlert('🎇 콤보 스파크 발동! 20초간 정답마다 카드 뒤집기 찬스, 연속일수록 대박 확률 UP');
+  }
   else if(key === 'roulette'){
     const d = Math.floor(Math.random() * 8) + 1;   // +1 ~ +8
     showItemAlert(d >= 7 ? `🎰 룰렛! +${d}${unitLabel()} 대박 잭팟! 🎉` : `🎰 룰렛! +${d}${unitLabel()}!`);
@@ -1216,17 +1233,6 @@ async function applyUndo(){
   el('streakVal').textContent = myUndoStreak >= 2 ? `🔥 ${myUndoStreak}연속 정답!` : '';
   myUndoAvailable = false; myUndoFloorDelta = 0;
   showItemAlert('🪃 방금 오답을 없던 일로! 연속 복구 ✨');
-}
-
-async function applyMagnet(){
-  if(roundState.team_mode){ showItemAlert(`🧲 팀전에선 추격 대신 🪜 +2${unitLabel()}!`); return bumpFloor(2); }
-  const ranked = rankedPlayers(allPlayers);
-  const myIdx = ranked.findIndex(p=> p.id === playerId);
-  if(myIdx <= 0){ showItemAlert(`🧲 이미 선두! 추격 대신 🪜 +2${unitLabel()}`); return bumpFloor(2); }
-  const gap = (ranked[myIdx-1].floor || 0) - (ranked[myIdx].floor || 0);
-  const jump = Math.max(1, Math.floor(gap / 2));
-  showItemAlert(`🧲 추격! +${jump}${unitLabel()} 따라붙었어요`);
-  await bumpFloor(jump);
 }
 
 async function useItem(){
