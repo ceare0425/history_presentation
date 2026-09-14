@@ -68,11 +68,13 @@
   .pulse{ animation:pulse 1.4s ease-in-out infinite; }
   @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.4;} }
 
-  .hud{ display:flex; justify-content:space-between; align-items:center; margin-bottom:1vh; flex:0 0 auto; }
+  .hud{ display:flex; justify-content:space-between; align-items:center; margin-bottom:1vh; flex:0 0 auto; flex-wrap:wrap; row-gap:4px; }
+  .floor-rank{ display:flex; align-items:center; gap:8px; }
   .floor-badge{
     background:linear-gradient(135deg,var(--gold),var(--gold-dark)); color:#3a2c05; font-weight:800;
     border-radius:14px; padding:8px 16px; font-size:1.25rem; box-shadow:0 4px 10px rgba(197,160,40,.4);
   }
+  .rank-badge{ font-size:.82rem; font-weight:700; color:var(--sub); white-space:nowrap; }
   .timer{ font-weight:700; color:var(--sky1); font-variant-numeric:tabular-nums; font-size:1.25rem; }
   .streak{ font-size:.9rem; color:var(--sub); text-align:right; min-height:1.3em; flex:0 0 auto; }
 
@@ -307,7 +309,10 @@
       <div class="debuff-banner" id="iceBanner">🧊 얼음! 제출 불가 · <span id="iceRemain"></span>초 남음</div>
       <div class="item-alert" id="itemAlert"></div>
       <div class="hud">
-        <div class="floor-badge">🏢 <span id="floorVal">0</span><span class="u-unit">층</span></div>
+        <div class="floor-rank">
+          <div class="floor-badge">🏢 <span id="floorVal">0</span><span class="u-unit">층</span></div>
+          <span class="rank-badge" id="rankBadge"></span>
+        </div>
         <span class="team-badge hidden" id="teamBadge"></span>
         <div class="timer">⏱ <span id="timerVal">--:--</span></div>
       </div>
@@ -448,6 +453,23 @@ function itemRollOpts(){
   const teamLeader = roundState.team_mode && isTeamLeader(allPlayers, myTeam);
   const defenseHeavy = nanta && !roundState.team_mode && inTopRanks(allPlayers, playerId, NANTA_TARGET_TOP);
   return { mode: itemsMode, canAttack, attackBias: atkBias, canComeback, canJackpot, jackpotTier, teamMode: roundState.team_mode, teamLeader, defenseHeavy };
+}
+
+// HUD의 층수 배지 옆에 표시할 실시간 등수 ("N명 중 M등" / 팀전은 "N팀 중 M등")
+function updateRankBadge(){
+  const badge = el('rankBadge');
+  if(!badge) return;
+  if(!allPlayers.length){ badge.textContent = ''; return; }
+  if(roundState.team_mode){
+    if(!myTeam){ badge.textContent = ''; return; }
+    const standings = teamStandings(allPlayers);
+    const idx = standings.findIndex(s=>s.team===myTeam);
+    badge.textContent = idx>=0 ? `${idx+1}등 / ${standings.length}팀 중` : '';
+  } else {
+    const ranked = rankedPlayers(allPlayers);
+    const idx = ranked.findIndex(p=>p.id===playerId);
+    badge.textContent = idx>=0 ? `${idx+1}등 / ${ranked.length}명 중` : '';
+  }
 }
 
 function roundEnded(){
@@ -886,6 +908,7 @@ function startListening(){
     el('avatarChar').hidden = roundState.team_mode;   // 팀전에서는 개인 캐릭터 숨김
     el('festivalScope').textContent = roundState.team_mode ? '우리 팀' : '모두';
     renderItemBar();
+    updateRankBadge();
   });
 
   onValue(roomRef(ROOM, 'players', playerId), (snap)=>{
@@ -916,6 +939,7 @@ function startListening(){
     } else {
       badge.classList.add('hidden');
     }
+    updateRankBadge();
   });
 
   // 연결이 끊겨도(스마트폰 화면 잠금·앱 전환·와이파이↔LTE 전환 등) 학생을 명단에서 자동으로
@@ -927,6 +951,7 @@ function startListening(){
   onValue(roomRef(ROOM, 'players'), (snap)=>{
     allPlayers = Object.entries(snap.val() || {}).map(([id,p])=>({ id, ...p }));
     checkMyOvertake();
+    updateRankBadge();
   });
   onValue(roomRef(ROOM, 'item_events'), (snap)=>{
     handleItemEvents(snap.val() || {});
