@@ -316,7 +316,12 @@ export function itemPool(opts = {}) {
   return Object.entries(ITEMS)
     .filter(([k, it]) => {
       if (it.kind === 'attack') return nanta || (mode === 'spicy' && canAttack && !teamLeader);
-      if (it.kind === 'global') return (k === 'anthem' ? teamMode : true) && !teamLeader;
+      if (it.kind === 'global') {
+        if (teamLeader) return false;
+        if (k === 'anthem') return teamMode;
+        if (k === 'festival') return !nanta;   // 난타전은 '전체 2배' 축제 제외 (저격 위주 밸런스 유지)
+        return true;
+      }
       if (it.kind === 'comeback') return canComeback;
       if (k === 'jackpot') return !!opts.canJackpot && !nanta;   // '인생 한방'은 중하위권 이하만, 난타전 제외
       if (k === 'cure') return !canComeback;             // '해독'은 하위권에겐 안 뜸 (방해는 선두권만 걸리므로 쓸모없음)
