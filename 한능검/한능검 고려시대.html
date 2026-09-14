@@ -291,21 +291,21 @@ body {
 }
 
 /* === TOC === */
-.toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4em; flex: 1; }
+.toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.32em; flex: 1; align-content: start; }
 .toc-item {
   background: var(--card-bg);
   border: 1.5px solid var(--border);
   border-left: 4px solid var(--main);
   border-radius: 4px;
-  padding: 0.4em 0.75em;
+  padding: 0.28em 0.55em;
   cursor: pointer;
   transition: background 0.2s, transform 0.2s;
-  display: flex; flex-direction: column; gap: 0.08em;
+  display: flex; flex-direction: column; gap: 0.05em;
 }
 .toc-item:hover { background: rgba(139,69,19,0.07); transform: translateX(3px); }
-.toc-num { font-size: 1em; font-weight: 900; color: var(--accent); font-family: 'Nanum Myeongjo', serif; }
-.toc-name { font-size: 0.82em; font-weight: 700; color: var(--main); }
-.toc-sub { font-size: 0.66em; color: var(--text-sub); }
+.toc-num { font-size: 0.85em; font-weight: 900; color: var(--accent); font-family: 'Nanum Myeongjo', serif; }
+.toc-name { font-size: 0.7em; font-weight: 700; color: var(--main); }
+.toc-sub { font-size: 0.58em; color: var(--text-sub); }
 
 /* === Summary table === */
 .sum-table { width: 100%; border-collapse: collapse; font-size: 0.74em; }
@@ -400,7 +400,6 @@ body {
   <div class="cover-subtitle">건국·초기정치 · 문벌귀족~무신정변 · 대외관계(거란·여진·몽골) · 원간섭기~공민왕 · 멸망 · 경제·사회·문화</div>
   <div class="cover-hint">⌨ PageDown / → : 정답 한 개씩 공개 &nbsp;|&nbsp; PageUp / ← : 정답 숨기기 &nbsp;|&nbsp; 터치 스와이프 지원</div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 1: TOC ═══════════════════════ -->
 <div class="slide" data-slide="1">
   <div class="slide-header">
@@ -428,15 +427,16 @@ body {
       <li class="toc-item" onclick="goSlide(18)"><span class="toc-num">17</span><span class="toc-name">문화 — 유학과 교육, 풍수지리</span><span class="toc-sub">사학 12도, 성리학의 수용</span></li>
       <li class="toc-item" onclick="goSlide(19)"><span class="toc-num">18</span><span class="toc-name">문화 — 역사서</span><span class="toc-sub">삼국사기 · 삼국유사 · 제왕운기</span></li>
       <li class="toc-item" onclick="goSlide(20)"><span class="toc-num">19</span><span class="toc-name">문화 — 불교</span><span class="toc-sub">의천의 천태종, 지눌의 조계종</span></li>
-      <li class="toc-item" onclick="goSlide(21)"><span class="toc-num">20</span><span class="toc-name">문화 — 불상·불화 (사진)</span><span class="toc-sub">문화재 사진으로 확인하기</span></li>
-      <li class="toc-item" onclick="goSlide(22)"><span class="toc-num">21</span><span class="toc-name">문화 — 불탑 (사진)</span><span class="toc-sub">문화재 사진으로 확인하기</span></li>
-      <li class="toc-item" onclick="goSlide(23)"><span class="toc-num">22</span><span class="toc-name">문화 — 공예·인쇄 (사진)</span><span class="toc-sub">고려청자, 팔만대장경, 직지심체요절</span></li>
-      <li class="toc-item" onclick="goSlide(24)"><span class="toc-num">23</span><span class="toc-name">문화 — 건축 (사진)</span><span class="toc-sub">봉정사 극락전, 부석사 무량수전</span></li>
-      <li class="toc-item" onclick="goSlide(25)"><span class="toc-num">24</span><span class="toc-name">문화 — 과학·의학·무기</span><span class="toc-sub">향약구급방, 화통도감</span></li>
+      <li class="toc-item" onclick="goSlide(21)"><span class="toc-num">20</span><span class="toc-name">문화 — 불상 (사진)</span><span class="toc-sub">전기, 철불·대형 석불</span></li>
+      <li class="toc-item" onclick="goSlide(22)"><span class="toc-num">21</span><span class="toc-name">문화 — 불상·불화 (사진)</span><span class="toc-sub">중기·후기, 수월관음도</span></li>
+      <li class="toc-item" onclick="goSlide(23)"><span class="toc-num">22</span><span class="toc-name">문화 — 불탑 (사진)</span><span class="toc-sub">월정사, 경천사지 10층 석탑</span></li>
+      <li class="toc-item" onclick="goSlide(24)"><span class="toc-num">23</span><span class="toc-name">문화 — 공예 (사진)</span><span class="toc-sub">상감청자, 팔만대장경</span></li>
+      <li class="toc-item" onclick="goSlide(25)"><span class="toc-num">24</span><span class="toc-name">문화 — 인쇄술 (사진)</span><span class="toc-sub">직지심체요절</span></li>
+      <li class="toc-item" onclick="goSlide(26)"><span class="toc-num">25</span><span class="toc-name">문화 — 건축 (사진)</span><span class="toc-sub">봉정사 극락전, 부석사 무량수전</span></li>
+      <li class="toc-item" onclick="goSlide(27)"><span class="toc-num">26</span><span class="toc-name">문화 — 과학·의학·무기</span><span class="toc-sub">향약구급방, 화통도감</span></li>
     </ul>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 2: 태조의 정책 ═══════════════════════ -->
 <div class="slide" data-slide="2">
   <div class="slide-header">
@@ -473,7 +473,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 3: 광종~성종 ═══════════════════════ -->
 <div class="slide" data-slide="3">
   <div class="slide-header">
@@ -509,7 +508,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 4: 중앙 통치체제 ═══════════════════════ -->
 <div class="slide" data-slide="4">
   <div class="slide-header">
@@ -545,7 +543,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 5: 지방 군사제도 ═══════════════════════ -->
 <div class="slide" data-slide="5">
   <div class="slide-header">
@@ -580,7 +577,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 6: 문벌귀족사회 무신정변 배경 ═══════════════════════ -->
 <div class="slide" data-slide="6">
   <div class="slide-header">
@@ -616,7 +612,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 7: 무신정권의 전개 ═══════════════════════ -->
 <div class="slide" data-slide="7">
   <div class="slide-header">
@@ -650,7 +645,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 8: 무신정권기 사회동요 ═══════════════════════ -->
 <div class="slide" data-slide="8">
   <div class="slide-header">
@@ -692,7 +686,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 9: 거란의 침입 ═══════════════════════ -->
 <div class="slide" data-slide="9">
   <div class="slide-header">
@@ -711,7 +704,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 10: 여진 몽골 ═══════════════════════ -->
 <div class="slide" data-slide="10">
   <div class="slide-header">
@@ -747,7 +739,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 11: 원간섭기 ═══════════════════════ -->
 <div class="slide" data-slide="11">
   <div class="slide-header">
@@ -781,7 +772,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 12: 공민왕 ═══════════════════════ -->
 <div class="slide" data-slide="12">
   <div class="slide-header">
@@ -817,7 +807,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 13: 고려의 멸망 ═══════════════════════ -->
 <div class="slide" data-slide="13">
   <div class="slide-header">
@@ -853,7 +842,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 14: 경제 토지제도 ═══════════════════════ -->
 <div class="slide" data-slide="14">
   <div class="slide-header">
@@ -873,7 +861,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 15: 경제 수취 상업 ═══════════════════════ -->
 <div class="slide" data-slide="15">
   <div class="slide-header">
@@ -907,7 +894,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 16: 사회 신분제 ═══════════════════════ -->
 <div class="slide" data-slide="16">
   <div class="slide-header">
@@ -941,7 +927,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 17: 사회 향도 가족제도 ═══════════════════════ -->
 <div class="slide" data-slide="17">
   <div class="slide-header">
@@ -981,7 +966,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 18: 유학 교육 풍수지리 ═══════════════════════ -->
 <div class="slide" data-slide="18">
   <div class="slide-header">
@@ -1013,7 +997,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 19: 역사서 ═══════════════════════ -->
 <div class="slide" data-slide="19">
   <div class="slide-header">
@@ -1048,7 +1031,6 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 20: 불교 ═══════════════════════ -->
 <div class="slide" data-slide="20">
   <div class="slide-header">
@@ -1089,15 +1071,14 @@ body {
     </div>
   </div>
 </div>
-
-<!-- ═══════════════════════ SLIDE 21: 불상 불화 (문화재 사진) ═══════════════════════ -->
+<!-- ═══════════════════════ SLIDE: 불상 (전기, 문화재 사진) ═══════════════════════ -->
 <div class="slide" data-slide="21">
   <div class="slide-header">
     <span class="slide-chapter">20 문화</span>
-    <span class="slide-title">불상 · 불화 — 문화재 사진으로 확인하기</span>
+    <span class="slide-title">불상 — 전기, 문화재 사진으로 확인하기</span>
   </div>
   <div class="slide-body tall">
-    <div class="photo-grid-4">
+    <div class="photo-grid-2">
       <div class="photo-card">
         <div class="photo-wrap"><img src="img/철조석가여래좌상.jpg" alt="하남 하사창동 철조 석가여래좌상" loading="lazy"></div>
         <div class="photo-cap"><span class="photo-tag">전기 · 철불</span><br><span class="blank" data-answer="하남 하사창동 철조 석가여래좌상"></span></div>
@@ -1106,6 +1087,21 @@ body {
         <div class="photo-wrap"><img src="img/관촉사_미륵보살상.jpg" alt="논산 관촉사 석조 미륵보살입상" loading="lazy"></div>
         <div class="photo-cap"><span class="photo-tag">전기 · 대형 석불</span><br><span class="blank" data-answer="논산 관촉사 석조 미륵보살입상"></span></div>
       </div>
+    </div>
+    <div class="info-box">
+      💡 고려 전기에는 지방 호족의 후원으로 대형·개성 있는 불상이 많이 만들어짐(철불 유행, 거대한 지방 양식 석불)
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE: 불상·불화 (중기·후기, 문화재 사진) ═══════════════════════ -->
+<div class="slide" data-slide="22">
+  <div class="slide-header">
+    <span class="slide-chapter">21 문화</span>
+    <span class="slide-title">불상 · 불화 — 중기·후기, 문화재 사진으로 확인하기</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="photo-grid-2">
       <div class="photo-card">
         <div class="photo-wrap"><img src="img/부석사_소조여래좌상.jpg" alt="영주 부석사 소조여래좌상" loading="lazy"></div>
         <div class="photo-cap"><span class="photo-tag">중기 · 신라 양식 계승</span><br><span class="blank" data-answer="영주 부석사 소조여래좌상"></span></div>
@@ -1122,9 +1118,9 @@ body {
 </div>
 
 <!-- ═══════════════════════ SLIDE 22: 불탑 (문화재 사진) ═══════════════════════ -->
-<div class="slide" data-slide="22">
+<div class="slide" data-slide="23">
   <div class="slide-header">
-    <span class="slide-chapter">21 문화</span>
+    <span class="slide-chapter">22 문화</span>
     <span class="slide-title">불탑 — 문화재 사진으로 확인하기</span>
   </div>
   <div class="slide-body tall">
@@ -1143,38 +1139,52 @@ body {
     </div>
   </div>
 </div>
-
-<!-- ═══════════════════════ SLIDE 23: 공예 인쇄 (문화재 사진) ═══════════════════════ -->
-<div class="slide" data-slide="23">
+<!-- ═══════════════════════ SLIDE: 공예 (문화재 사진) ═══════════════════════ -->
+<div class="slide" data-slide="24">
   <div class="slide-header">
-    <span class="slide-chapter">22 문화</span>
-    <span class="slide-title">공예 · 인쇄술 — 문화재 사진으로 확인하기</span>
+    <span class="slide-chapter">23 문화</span>
+    <span class="slide-title">공예 — 문화재 사진으로 확인하기</span>
   </div>
   <div class="slide-body tall">
-    <div class="photo-grid-3">
+    <div class="photo-grid-2">
       <div class="photo-card">
         <div class="photo-wrap"><img src="img/상감청자.jpg" alt="청자 상감운학문 매병" loading="lazy"></div>
         <div class="photo-cap"><span class="photo-tag">공예 · 중기 전성</span><br><span class="blank" data-answer="청자 상감운학문 매병"></span></div>
       </div>
       <div class="photo-card">
-        <div class="photo-wrap"><img src="img/팔만대장경.jpg" alt="합천 해인사 장경판전 팔만대장경" loading="lazy"></div>
+        <div class="photo-wrap"><img src="img/팔만대장경.jpg" alt="팔만대장경(합천 해인사 장경판전)" loading="lazy"></div>
         <div class="photo-cap"><span class="photo-tag">목판 인쇄 · 몽골 대비</span><br><span class="blank" data-answer="팔만대장경(합천 해인사 장경판전)"></span></div>
       </div>
+    </div>
+    <div class="info-box">
+      💡 순청자 → 상감청자(고려 독자적 기법) → 후기 분청사기·은입사로 변화
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE: 인쇄술 (문화재 사진) ═══════════════════════ -->
+<div class="slide" data-slide="25">
+  <div class="slide-header">
+    <span class="slide-chapter">24 문화</span>
+    <span class="slide-title">인쇄술 — 문화재 사진으로 확인하기</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="photo-grid-2">
       <div class="photo-card">
-        <div class="photo-wrap"><img src="img/직지심체요절.jpg" alt="직지심체요절" loading="lazy"></div>
+        <div class="photo-wrap"><img src="img/직지심체요절.jpg" alt="직지심체요절(청주 흥덕사)" loading="lazy"></div>
         <div class="photo-cap"><span class="photo-tag">금속 활자 · 세계 최고(最古)</span><br><span class="blank" data-answer="직지심체요절(청주 흥덕사)"></span></div>
       </div>
     </div>
     <div class="info-box">
-      💡 순청자 → <span class="blank" data-answer="상감청자"></span>(고려 독자적 기법) → 후기 분청사기·은입사로 변화. 초조대장경(거란 대비, 소실) → 팔만대장경(몽골 대비)
+      ⭐ 초조대장경(거란 대비, 소실) → 팔만대장경(몽골 대비) → 직지심체요절(청주 흥덕사, 금속 활자로 세계 최고最古) 순서로 기억
     </div>
   </div>
 </div>
 
 <!-- ═══════════════════════ SLIDE 24: 건축 (문화재 사진) ═══════════════════════ -->
-<div class="slide" data-slide="24">
+<div class="slide" data-slide="26">
   <div class="slide-header">
-    <span class="slide-chapter">23 문화</span>
+    <span class="slide-chapter">25 문화</span>
     <span class="slide-title">건축 — 문화재 사진으로 확인하기</span>
   </div>
   <div class="slide-body tall">
@@ -1193,11 +1203,10 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 25: 과학 의학 무기 ═══════════════════════ -->
-<div class="slide" data-slide="25">
+<div class="slide" data-slide="27">
   <div class="slide-header">
-    <span class="slide-chapter">24 문화</span>
+    <span class="slide-chapter">26 문화</span>
     <span class="slide-title">과학 · 의학 · 무기</span>
   </div>
   <div class="slide-body">
@@ -1235,9 +1244,8 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 26: 전체 흐름 정리 ═══════════════════════ -->
-<div class="slide" data-slide="26">
+<div class="slide" data-slide="28">
   <div class="slide-header">
     <span class="slide-chapter">정리</span>
     <span class="slide-title">전체 흐름 한눈에 보기</span>
@@ -1255,9 +1263,8 @@ body {
     </div>
   </div>
 </div>
-
 <!-- ═══════════════════════ SLIDE 27: 마무리 ═══════════════════════ -->
-<div class="slide slide-end" data-slide="27">
+<div class="slide slide-end" data-slide="29">
   <div style="font-size:2.2em">🎉</div>
   <div style="font-size:2.2em;font-weight:900;color:var(--main);font-family:'Nanum Myeongjo',serif">수고하셨습니다!</div>
   <div style="font-size:0.88em;color:var(--text-sub)">한국사능력검정시험 — 고려시대 개념 정리를 모두 마쳤습니다.</div>
@@ -1275,7 +1282,7 @@ body {
   <button class="nav-btn" id="prevBtn" onclick="pageUp()" title="PageUp / ← : 정답 숨기기">
     <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
   </button>
-  <span class="nav-label"><span id="curSlide">1</span> / <span id="totSlides">28</span></span>
+  <span class="nav-label"><span id="curSlide">1</span> / <span id="totSlides">30</span></span>
   <button class="nav-btn" id="nextBtn" onclick="pageDown()" title="PageDown / → : 정답 공개">
     <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
   </button>
