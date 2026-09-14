@@ -1275,7 +1275,7 @@ async function applySelfItem(key){
   }
   else if(key === 'comboSpark'){
     myComboSparkUntil = serverNow() + ITEM_FX_MS.comboSpark;
-    showItemAlert('🎇 콤보 스파크 발동! 20초간 정답마다 카드 뒤집기 찬스, 연속일수록 대박 확률 UP');
+    showItemAlert(`🎇 콤보 스파크 발동! ${Math.round(ITEM_FX_MS.comboSpark/1000)}초간 정답마다 카드 뒤집기 찬스, 연속일수록 대박 확률 UP`);
   }
   else if(key === 'roulette'){
     const d = Math.floor(Math.random() * 8) + 1;   // +1 ~ +8
