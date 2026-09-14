@@ -46,6 +46,25 @@
       ]
     },
     {
+      "name": "한능검",
+      "emoji": "🎖️",
+      "pages": [
+        {
+          "title": "한능검 대비 — 선사~남북국시대",
+          "path": "한능검/한능검 선사~남북국시대.html",
+          "emoji": "🏺",
+          "description": "한국사능력검정시험 대비 필기노트 기반 정리. 선사~철기, 고조선, 여러 나라, 삼국·가야 왕대별 위기·전성기와 사료 힌트, 귀족 합의 기구 비교, 삼국 통일 과정, 통일신라 민정문서·대외무역, 발해, 신라 하대·후삼국 통일 전투까지 빈칸 학습.",
+          "tags": [
+            { "label": "한능검 대비", "color": "orange" },
+            { "label": "선사~남북국", "color": "purple" },
+            { "label": "사료 힌트", "color": "blue" },
+            { "label": "빈칸 학습", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #6B3010, #C5A028)"
+        }
+      ]
+    },
+    {
       "name": "세계사",
       "emoji": "🌍",
       "groups": [

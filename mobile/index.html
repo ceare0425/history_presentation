@@ -61,15 +61,37 @@
   .search-box svg { width: 16px; height: 16px; fill: var(--text-sec); flex-shrink: 0; }
   .search-box input { border: none; outline: none; background: transparent; font-family: inherit; font-size: 0.95rem; width: 100%; }
 
-  .subject-name {
+  /* ── 아코디언 (과목 / 단원 접기·펼치기) ── */
+  .subject-acc { margin-bottom: 0.7rem; }
+  .subject-acc summary.subject-name {
     font-family: 'Nanum Myeongjo', serif; font-size: 1.05rem; font-weight: 700;
-    margin: 1.1rem 0 0.5rem; padding-bottom: 0.4rem;
-    border-bottom: 2px solid var(--border);
+    padding: 0.75rem 0.9rem; margin: 0; border-radius: 10px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    display: flex; align-items: center; gap: 0.5rem; cursor: pointer;
+    list-style: none; user-select: none;
   }
-  .group-name {
+  .subject-acc summary.subject-name::-webkit-details-marker { display: none; }
+  .subject-acc[open] > summary.subject-name { border-radius: 10px 10px 0 0; border-bottom-color: transparent; }
+  .acc-chevron { flex-shrink: 0; width: 10px; height: 10px; transition: transform 0.2s; fill: var(--main); }
+  details[open] > summary .acc-chevron { transform: rotate(90deg); }
+  .subject-count {
+    margin-left: auto; font-size: 0.74rem; font-weight: 700; color: var(--text-sec);
+    background: var(--bg); border-radius: 20px; padding: 0.1rem 0.55rem; flex-shrink: 0;
+  }
+  .subject-body {
+    background: var(--surface); border: 1.5px solid var(--border); border-top: none;
+    border-radius: 0 0 10px 10px; padding: 0.6rem 0.7rem 0.7rem;
+  }
+
+  .group-acc { margin: 0.3rem 0; }
+  .group-acc summary.group-name {
     font-size: 0.85rem; font-weight: 700; color: var(--main);
-    margin: 0.9rem 0 0.4rem; display: flex; align-items: center; gap: 0.35rem;
+    display: flex; align-items: center; gap: 0.4rem; cursor: pointer;
+    padding: 0.55rem 0.6rem; background: var(--bg); border-radius: 8px;
+    list-style: none; user-select: none;
   }
+  .group-acc summary.group-name::-webkit-details-marker { display: none; }
+  .group-body { padding: 0.5rem 0.1rem 0.2rem; }
   .lesson-row {
     display: flex; align-items: center; gap: 0.7rem;
     background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
@@ -190,35 +212,68 @@
     });
   }
 
-  function renderList(lessons) {
+  // 과목/단원 펼침 상태를 기억해서, 검색을 지워도 사용자가 열어둔 상태가 유지되도록 함
+  const openState = {};
+  const CHEVRON = '<svg class="acc-chevron" viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>';
+
+  function lessonRowHtml(p) {
+    return `
+      <a class="lesson-row" href="?path=${encodeURIComponent(p.path)}" onclick="openLesson(event,'${escAttr(p.path)}','${escAttr(p.title)}')">
+        <span class="lesson-emoji">${p.emoji || '📄'}</span>
+        <span style="flex:1; min-width:0;">
+          <div class="lesson-title">${esc(p.title)}</div>
+          ${p.description ? `<div class="lesson-desc">${esc(truncate(p.description, 60))}</div>` : ''}
+        </span>
+        <svg class="lesson-arrow" viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+      </a>`;
+  }
+
+  function renderList(lessons, opts) {
+    const searching = !!(opts && opts.searching);
     const content = document.getElementById('listContent');
     if (lessons.length === 0) {
       content.innerHTML = `<div class="status-box"><div class="icon">📭</div><h3>검색 결과가 없습니다</h3></div>`;
       return;
     }
-    let html = '';
-    let lastSubject = null, lastGroup = null;
+
+    // 과목 → 단원(그룹) → 레슨 순으로 다시 묶는다 (pages.json에 등장하는 순서를 그대로 유지)
+    const subjects = [];
     lessons.forEach(p => {
-      if (p.subjectName !== lastSubject) {
-        html += `<div class="subject-name">${p.subjectEmoji || '📁'} ${esc(p.subjectName)}</div>`;
-        lastSubject = p.subjectName; lastGroup = null;
-      }
-      if (p.groupName && p.groupName !== lastGroup) {
-        html += `<div class="group-name">${p.groupEmoji || '📂'} ${esc(p.groupName)}</div>`;
-        lastGroup = p.groupName;
-      }
-      if (!p.groupName) lastGroup = null;
-      html += `
-        <a class="lesson-row" href="?path=${encodeURIComponent(p.path)}" onclick="openLesson(event,'${escAttr(p.path)}','${escAttr(p.title)}')">
-          <span class="lesson-emoji">${p.emoji || '📄'}</span>
-          <span style="flex:1; min-width:0;">
-            <div class="lesson-title">${esc(p.title)}</div>
-            ${p.description ? `<div class="lesson-desc">${esc(truncate(p.description, 60))}</div>` : ''}
-          </span>
-          <svg class="lesson-arrow" viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
-        </a>`;
+      let subj = subjects.find(s => s.name === p.subjectName);
+      if (!subj) { subj = { name: p.subjectName, emoji: p.subjectEmoji, groups: [] }; subjects.push(subj); }
+      const groupKey = p.groupName || null;
+      let grp = subj.groups.find(g => g.name === groupKey);
+      if (!grp) { grp = { name: groupKey, emoji: p.groupEmoji, lessons: [] }; subj.groups.push(grp); }
+      grp.lessons.push(p);
+    });
+
+    let html = '';
+    subjects.forEach(subj => {
+      const countText = subj.groups.reduce((n, g) => n + g.lessons.length, 0) + '개';
+      const subjKey = 'subject:' + subj.name;
+      const subjOpen = searching || !!openState[subjKey];
+      html += `<details class="subject-acc" data-key="${escAttr(subjKey)}" ${subjOpen ? 'open' : ''}>
+        <summary class="subject-name">${CHEVRON}${subj.emoji || '📁'} ${esc(subj.name)}<span class="subject-count">${countText}</span></summary>
+        <div class="subject-body">`;
+      subj.groups.forEach(grp => {
+        if (grp.name) {
+          const grpKey = 'group:' + subj.name + '||' + grp.name;
+          const grpOpen = searching || !!openState[grpKey];
+          html += `<details class="group-acc" data-key="${escAttr(grpKey)}" ${grpOpen ? 'open' : ''}>
+            <summary class="group-name">${CHEVRON}${grp.emoji || '📂'} ${esc(grp.name)}</summary>
+            <div class="group-body">${grp.lessons.map(lessonRowHtml).join('')}</div>
+          </details>`;
+        } else {
+          html += grp.lessons.map(lessonRowHtml).join('');
+        }
+      });
+      html += `</div></details>`;
     });
     content.innerHTML = html;
+
+    content.querySelectorAll('details[data-key]').forEach(d => {
+      d.addEventListener('toggle', () => { openState[d.dataset.key] = d.open; });
+    });
   }
 
   function filterList() {
@@ -226,7 +281,7 @@
     if (!q) { renderList(allLessons); return; }
     renderList(allLessons.filter(p =>
       (p.title || '').toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q)
-    ));
+    ), { searching: true });
   }
 
   function openLesson(e, path, title) {
