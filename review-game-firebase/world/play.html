@@ -1185,7 +1185,11 @@ async function applySelfItem(key){
   else if(key === 'snowball'){ mySnowballArmed = true; showItemAlert('🌀 눈덩이! 다음 정답에 지금 연속 수만큼 층수 추가'); }
   else if(key === 'vest'){ myVestUntil = serverNow() + ITEM_FX_MS.vest; showItemAlert('🛟 구명조끼! 20초간 틀려도 층수·연속 안전'); }
   else if(key === 'clover'){ myCloverUntil = serverNow() + ITEM_FX_MS.clover; showItemAlert('🍀 네잎클로버! 30초간 정답마다 행운 +1층 찬스'); }
-  else if(key === 'mirror'){ myMirrorUntil = serverNow() + ITEM_FX_MS.mirror; showItemAlert('🪞 반사경! 15초 안에 날아오는 첫 견제를 되돌려요'); }
+  else if(key === 'mirror'){
+    const dur = itemsMode === 'nanta' ? ITEM_FX_MS.mirrorNanta : ITEM_FX_MS.mirror;
+    myMirrorUntil = serverNow() + dur;
+    showItemAlert(`🪞 반사경! ${Math.round(dur/1000)}초 안에 날아오는 첫 견제를 되돌려요`);
+  }
   else if(key === 'magnet'){ await applyMagnet(); }
   else if(key === 'roulette'){
     const d = Math.floor(Math.random() * 8) + 1;   // +1 ~ +8
