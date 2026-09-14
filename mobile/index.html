@@ -157,7 +157,7 @@
   #slideList .photo-frame img { width: 100% !important; height: auto !important; max-height: none !important; }
   #slideList .grid-2, #slideList .grid-3, #slideList .grid-4 { grid-template-columns: 1fr !important; }
   /* 손가락 터치 정확도를 위해 빈칸류 탭 영역을 살짝 키움 */
-  #slideList .blank, #slideList .ox, #slideList .ans-btn { padding: 0.25em 0.6em !important; }
+  #slideList .blank, #slideList .ox, #slideList .ans-btn, #slideList .q-blank, #slideList .ox-reveal, #slideList .answer-reveal { padding: 0.25em 0.6em !important; }
 </style>
 </head>
 <body>
@@ -390,7 +390,7 @@
   // 한국사·한능검 계열은 PageDown 스크립트가 'revealed' 클래스를 토글해서 정답을 보여준다.
   // 모바일에서는 원본 스크립트를 불러오지 않으므로, 두 클래스를 항상 같이 토글해서
   // 어느 쪽 CSS 컨벤션이든 탭 한 번에 정답이 나오도록 통일한다.
-  const REVEAL_SELECTOR = '.blank, .ox, .ans-btn, [data-reveal]';
+  const REVEAL_SELECTOR = '.blank, .ox, .ans-btn, .q-blank, .ox-reveal, .answer-reveal, .reveal-photo, [data-reveal]';
   document.getElementById('slideList').addEventListener('click', e => {
     const el = e.target.closest(REVEAL_SELECTOR);
     if (!el) return;
