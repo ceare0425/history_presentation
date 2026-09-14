@@ -273,9 +273,8 @@ export const ITEMS = {
   goldenbell:{ emoji: '🎯', name: '골든벨',     kind: 'self',    desc: '다음 정답은 ×3! 틀리면 연속 끊김 -2층' },
   clover:   { emoji: '🍀',  name: '네잎클로버', kind: 'self',    desc: '30초간 정답마다 50%로 +1층 더' },
   magnet:   { emoji: '🧲',  name: '추격',       kind: 'self',    desc: '바로 위 등수와의 층 차이를 절반으로' },
-  roulette: { emoji: '🎰',  name: '행운의 룰렛', kind: 'self',    desc: '즉시 -3 ~ +8층 랜덤!' },
+  roulette: { emoji: '🎰',  name: '행운의 룰렛', kind: 'self',    desc: '즉시 +1 ~ +8층 랜덤!' },
   lottery:  { emoji: '🎫',  name: '복권',      kind: 'self',    desc: '즉시 +3 ~ +10층 랜덤! (+10은 4%)' },
-  stock:    { emoji: '📈',  name: '나의 주식',  kind: 'self',    desc: '즉시 -5 ~ +5층 랜덤 (등락 확률 균등)' },
   undo:     { emoji: '🪃',  name: '되돌리기',   kind: 'self',    desc: '방금 틀린 문제를 없던 일로 (오답 -1·연속 복구)' },
   jackpot:  { emoji: '🎲',  name: '인생 한방',  kind: 'self',    desc: '다음 정답 +20층 / 오답 -10층 (개인전·팀전 공통)' },
   snowball: { emoji: '🌀',  name: '눈덩이',    kind: 'self',    desc: '다음 정답에 지금 연속 수만큼 층수 추가' },
@@ -309,7 +308,7 @@ export const ITEM_FX_MS = {
 //   canJackpot  : '인생 한방' 포함 (하위 50%=중하위권 이하일 때만). 난타전에선 안 나옴.
 //   teamMode    : 팀전 여부 — '추격'은 개인전만, '팀 응원가'는 팀전만
 //   teamLeader  : 팀전 1등 팀 — 전체(global: 축제·응원가) 아이템 제외, 개인 향상만 (난타전에선 저격은 그대로 나옴)
-// '반사경'은 견제가 있는 난타전·매운맛에서만 나온다.
+// '반사경'은 견제가 있는 매운맛에서는 누구나, 난타전에서는 저격 대상(상위권=defenseHeavy)에게만 나온다.
 export function itemPool(opts = {}) {
   const { mode = 'nanta', canAttack = false, canComeback = false, teamMode = false, teamLeader = false } = opts;
   const nanta = mode === 'nanta';
@@ -320,7 +319,7 @@ export function itemPool(opts = {}) {
       if (it.kind === 'comeback') return canComeback;
       if (k === 'jackpot') return !!opts.canJackpot && !nanta;   // '인생 한방'은 중하위권 이하만, 난타전 제외
       if (k === 'cure') return !canComeback;             // '해독'은 하위권에겐 안 뜸 (방해는 선두권만 걸리므로 쓸모없음)
-      if (k === 'mirror') return mode === 'spicy' || nanta;
+      if (k === 'mirror') return mode === 'spicy' || (nanta && !!opts.defenseHeavy);   // 난타전 반사경: 저격 대상(상위권)에게만
       if (k === 'magnet') return !teamMode;
       if (k === 'randombox') return !opts.noRandombox;   // '랜덤박스' 재추첨 땐 제외
       return true;
@@ -332,7 +331,8 @@ export function itemPool(opts = {}) {
 //   팀전에서는 이 값이 '뒤처진 정도'라, 팀전이면 '🌈축제' 가중치도 같이 올린다(하위권 팀일수록 축제 자주).
 // opts.jackpotTier(0|1|2): '인생 한방' 가중치 — 1=중하위권(4배), 2=하위권(6배).
 //   ('인생 한방'은 opts.canJackpot 일 때만 풀에 들어오므로 실제로는 tier 1·2에서만 쓰임)
-// comeback 아이템('방구석 축제')은 가중치 8배 — 하위권에게 자주 나오도록.
+// comeback 아이템('방구석 축제')은 가중치 10배 — 하위권에게 자주 나오도록.
+// opts.canComeback(하위권)이면 🎫복권·🚀로켓 점프·🧲추격도 6배로 우대해 역전 기회를 더 준다.
 // 난타전(mode='nanta'): 저격이 주력이라 방해 아이템 가중치를 크게(10배) 준다.
 //   opts.defenseHeavy(난타전 상위권): 저격을 실컷 얻어맞는 자리라 🍵해독·🪞반사경·🛟구명조끼를 훨씬 자주(14배) 주고,
 //   대신 자기가 쏘는 저격 가중치는 3배로 낮춘다.
@@ -351,7 +351,8 @@ export function rollItem(opts = {}) {
     if (k === 'festival') return fw;
     if (dh && (k === 'cure' || k === 'mirror' || k === 'vest')) return 14;   // 난타전 상위권: 방어·해독 위주
     if (kind === 'attack') return aw;
-    if (kind === 'comeback') return 8;
+    if (kind === 'comeback') return 10;
+    if (opts.canComeback && (k === 'lottery' || k === 'rocket' || k === 'magnet')) return 6;   // 하위권 컴백 지원 아이템 우대
     if (nanta && (kind === 'defense' || k === 'vest')) return 3;   // 난타전: 얻어맞는 만큼 반격 수단도 자주
     return 1;
   });
