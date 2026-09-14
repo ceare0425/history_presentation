@@ -442,7 +442,7 @@ function itemsOn(){ return itemsMode !== 'off'; }
 
 // 아이템 추첨 옵션 — 정답 획득·랜덤박스 재추첨에서 공용.
 // 난타전: 누구나 저격 아이템을 뽑을 수 있고, 인생 한방은 안 나온다(방구석 축제는 하위권에게 그대로 나옴).
-//         저격 대상인 상위 3등(개인전)은 방어·해독 아이템이 훨씬 자주 나온다(defenseHeavy).
+//         저격 대상인 상위 3등(팀전 포함, 개인 랭킹 기준)은 방어·해독·반사경이 훨씬 자주 나온다(defenseHeavy).
 function itemRollOpts(){
   const nanta = itemsMode === 'nanta';
   const canAttack = nanta || (itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId)));
@@ -451,7 +451,7 @@ function itemRollOpts(){
   const canJackpot = !nanta && inLowerHalf(allPlayers, playerId);
   const jackpotTier = nanta ? 0 : (inBottomGroup(allPlayers, playerId) ? 2 : canJackpot ? 1 : 0);
   const teamLeader = roundState.team_mode && isTeamLeader(allPlayers, myTeam);
-  const defenseHeavy = nanta && !roundState.team_mode && inTopRanks(allPlayers, playerId, NANTA_TARGET_TOP);
+  const defenseHeavy = nanta && inTopRanks(allPlayers, playerId, NANTA_TARGET_TOP);
   return { mode: itemsMode, canAttack, attackBias: atkBias, canComeback, canJackpot, jackpotTier, teamMode: roundState.team_mode, teamLeader, defenseHeavy };
 }
 
@@ -991,6 +991,14 @@ function renderItemBar(){
     if(!roundState.team_mode && heldItem === 'steal' && itemsMode === 'nanta'){
       desc = `상위권 -5${unitLabel()}, 나 +5${unitLabel()}`;
     }
+    // 안개·얼음은 모드별로 지속시간이 다르므로(난타전 5초·매운맛 10초) 실제 값으로 표시
+    if(heldItem === 'fog'){
+      const s = (itemsMode === 'nanta' ? ITEM_FX_MS.fogNanta : itemsMode === 'spicy' ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog) / 1000;
+      desc = `선두권 문제 화면이 ${s}초간 흐려짐`;
+    } else if(heldItem === 'ice'){
+      const s = (itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : itemsMode === 'spicy' ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) / 1000;
+      desc = `선두권이 ${s}초간 제출 불가`;
+    }
     if(roundState.team_mode){
       const u = unitLabel();
       if(heldItem === 'festival') desc = '20초간 우리 팀 2배';
@@ -1004,9 +1012,8 @@ function renderItemBar(){
       else if(heldItem === 'snowball') desc = `다음 정답에 지금 연속 수만큼 ${u} 추가`;
       else if(heldItem === 'vest') desc = `20초간 틀려도 ${u}·연속 유지 (미끄럼틀·강탈 막음)`;
       else if(heldItem === 'clover') desc = `30초간 정답마다 50%로 +1${u} 더`;
-      else if(heldItem === 'roulette') desc = `즉시 -3 ~ +8${u} 랜덤!`;
+      else if(heldItem === 'roulette') desc = `즉시 +1 ~ +8${u} 랜덤!`;
       else if(heldItem === 'lottery') desc = `즉시 +3 ~ +10${u} 랜덤! (+10은 4%)`;
-      else if(heldItem === 'stock') desc = `즉시 -5 ~ +5${u} 랜덤 (등락 확률 균등)`;
     }
     bar.innerHTML =
       `<button type="button" class="item-btn" id="useItemBtn">${it.emoji} ${it.name} 사용<small>${desc}</small></button>` +
@@ -1155,27 +1162,13 @@ async function applySelfItem(key){
   else if(key === 'mirror'){ myMirrorUntil = serverNow() + ITEM_FX_MS.mirror; showItemAlert('🪞 반사경! 15초 안에 날아오는 첫 견제를 되돌려요'); }
   else if(key === 'magnet'){ await applyMagnet(); }
   else if(key === 'roulette'){
-    const d = Math.floor(Math.random() * 12) - 3;   // -3 ~ +8
-    showItemAlert(d > 0 ? `🎰 룰렛! +${d}${unitLabel()} 잭팟?! 🎉` : d === 0 ? '🎰 룰렛! 이번엔 꽝…' : `🎰 룰렛! ${d}${unitLabel()}… 아이고`);
+    const d = Math.floor(Math.random() * 8) + 1;   // +1 ~ +8
+    showItemAlert(d >= 7 ? `🎰 룰렛! +${d}${unitLabel()} 대박 잭팟! 🎉` : `🎰 룰렛! +${d}${unitLabel()}!`);
     await bumpFloor(d);
   }
   else if(key === 'lottery'){
     const d = rollLottery();   // +3 ~ +10 (+10은 4%)
     showItemAlert(d >= 10 ? `🎫 복권 1등 당첨!! +${d}${unitLabel()} 🎉🎉` : d >= 8 ? `🎫 복권 대박! +${d}${unitLabel()} 🎉` : `🎫 복권 당첨! +${d}${unitLabel()}`);
-    await bumpFloor(d);
-  }
-  else if(key === 'stock'){
-    const d = Math.floor(Math.random() * 11) - 5;   // -5 ~ +5 균등
-    // Windows·삼성에서 📈는 파란 상승선, 📉는 빨간 하락선으로 그려진다.
-    // 한국식(상승=빨강·하락=파랑)에 맞추려고 색이 반대인 아이콘을 좌우반전(scaleX(-1))해서 씀:
-    //   상승 → 빨간 📉를 뒤집어 위로 향하게, 폭락 → 파란 📈를 뒤집어 아래로 향하게.
-    const f = '<span style="display:inline-block;transform:scaleX(-1)">';
-    showItemAlert(
-      d > 0 ? `${f}📉</span> 주식 상승! +${d}${unitLabel()} 🤑`
-      : d === 0 ? '⚪ 주식 보합… 변동 없음'
-      : `${f}📈</span> 주식 폭락… ${d}${unitLabel()} 😭`,
-      true
-    );
     await bumpFloor(d);
   }
   else if(key === 'undo'){ await applyUndo(); }
