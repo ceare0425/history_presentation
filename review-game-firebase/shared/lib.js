@@ -298,7 +298,7 @@ export const ITEM_FX_MS = {
   fog: 8000, ice: 8000, festival: 20000, immunity: 8000,
   fogSpicy: 10000, iceSpicy: 10000, immunitySpicy: 4000,
   fogNanta: 5000, iceNanta: 5000, immunityNanta: 2500,
-  soloFest: 30000, clover: 30000, mirror: 15000, vest: 20000,
+  soloFest: 30000, clover: 30000, mirror: 15000, mirrorNanta: 10000, vest: 20000,
   stealDefenseMs: 5000, stealDefenseAmt: 2,   // 강탈 방어: 피격 직후 이 시간 안에 그 문제를 맞히면 페널티가 이 값으로 줄어듦 (개인전만)
 };
 
