@@ -110,14 +110,24 @@
   .status-box p { font-size: 0.85rem; line-height: 1.7; }
   .status-box code { display: inline-block; background: #F0E8DC; border: 1px solid var(--border); border-radius: 4px; padding: 0.2rem 0.5rem; font-size: 0.8rem; color: var(--main); margin-top: 0.5rem; }
 
-  /* ── 뷰어 화면 ── */
-  #viewerView { display: none; }
+  /* ── 뷰어 화면 ──
+     레슨 원본 CSS(html/body 규칙)는 서로 배경 설계가 달라 신뢰할 수 없으므로 주입하지 않고,
+     대신 모든 레슨에 공통으로 세계사 스타일의 은은한 양피지 질감 배경을 고정으로 적용한다. */
+  #viewerView {
+    display: none;
+    background-color: #F5E6C4;
+    background-image:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(160,120,60,0.04) 2px, rgba(160,120,60,0.04) 4px),
+      repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(140,100,40,0.06) 28px, rgba(140,100,40,0.06) 29px);
+  }
   .viewer-head { padding: 1rem 1rem 0.4rem; max-width: 760px; margin: 0 auto; }
   .viewer-title { font-family: 'Nanum Myeongjo', serif; font-size: 1.15rem; font-weight: 800; }
   .viewer-hint { font-size: 0.78rem; color: var(--text-sec); margin-top: 0.3rem; }
   #slideList { padding: 0.6rem 0.8rem 3rem; max-width: 760px; margin: 0 auto; }
 
-  .mslide { margin-bottom: 1.3rem; }
+  /* position:relative로 지정해, 레슨 원본이 슬라이드 안에 pseudo-element(::before)로 넣은
+     장식용 줄무늬 배경 등이 페이지 전체로 새어나가지 않고 이 슬라이드 박스 안에만 갇히게 함 */
+  .mslide { margin-bottom: 1.3rem; position: relative; }
   .mslide-num {
     display: inline-block; font-size: 0.72rem; font-weight: 700;
     color: #fff; background: var(--main); border-radius: 20px;
