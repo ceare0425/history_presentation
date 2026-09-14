@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한능검 - 고려시대</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --main: #8B4513;
+  --dark: #6B3010;
+  --light: #FFF8E1;
+  --accent: #C5A028;
+  --bg: #F5E6C4;
+  --card-bg: #FDF5E0;
+  --text: #2C1A0E;
+  --text-sub: #5C3D1E;
+  --border: #A07850;
+  --gold: #C5A028;
+  --crisis: #B23A3A;
+  --peak: #1F7A4D;
+  --nav-h: 48px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: min(1.75vw, calc((100vh - 48px) / 28));
+  line-height: 1.6;
+}
+body {
+  background: #1A0D00;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === Presentation container === */
+.presentation {
+  position: relative;
+  width: min(100vw, calc((100vh - 48px) * 16 / 9));
+  height: min(calc(100vw * 9 / 16), calc(100vh - 48px));
+  background: var(--bg);
+  overflow: hidden;
+  border: 2px solid var(--border);
+  outline: 4px solid var(--gold);
+  outline-offset: -8px;
+}
+
+/* === Slides === */
+.slide {
+  display: none;
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+  background: var(--bg);
+  padding: 0.9em 1.4em 0.5em;
+}
+.slide.active { display: flex; }
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 2em, rgba(139,100,20,0.025) 2em, rgba(139,100,20,0.025) calc(2em + 1px));
+  pointer-events: none;
+  z-index: 0;
+}
+.slide > * { position: relative; z-index: 1; }
+
+/* === Slide header === */
+.slide-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.3em;
+  margin-bottom: 0.5em;
+  flex-shrink: 0;
+}
+.slide-chapter {
+  background: var(--main);
+  color: #FFF8E1;
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 0.18em 0.65em;
+  border-radius: 2px;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+}
+.slide-title {
+  font-size: 1.3em;
+  font-weight: 900;
+  color: var(--main);
+  font-family: 'Nanum Myeongjo', serif;
+}
+
+/* === Body === */
+.slide-body {
+  flex: none;
+  height: 52%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+}
+.slide-body.tall { height: 72%; }
+
+/* === Grid === */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5em; flex: 1; min-height: 0; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.45em; flex: 1; min-height: 0; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.4em; flex: 1; min-height: 0; }
+.grid-5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 0.35em; flex: 1; min-height: 0; }
+
+/* === Card === */
+.card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 0.45em 0.7em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  min-height: 0;
+  overflow: hidden;
+}
+.card.crisis { border-left: 4px solid var(--crisis); }
+.card.peak { border-left: 4px solid var(--peak); }
+.card-title {
+  font-size: 0.87em;
+  font-weight: 700;
+  color: var(--main);
+  border-bottom: 1px solid rgba(139,69,19,0.2);
+  padding-bottom: 0.15em;
+  margin-bottom: 0.12em;
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 0.35em;
+}
+.card-body { font-size: 0.79em; color: var(--text); line-height: 1.65; min-height: 0; }
+
+/* === mini tags === */
+.mini-tag {
+  display: inline-block; font-size: 0.68em; font-weight: 700;
+  border-radius: 3px; padding: 0.03em 0.4em; color: #fff; flex-shrink: 0;
+}
+.mini-tag.crisis { background: var(--crisis); }
+.mini-tag.peak { background: var(--peak); }
+
+/* === Info box === */
+.info-box {
+  background: rgba(197,160,40,0.1);
+  border: 1.5px solid var(--gold);
+  border-radius: 4px;
+  padding: 0.35em 0.7em;
+  font-size: 0.77em;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.info-box strong { color: var(--main); }
+
+/* === Source box (사료 제시) === */
+.source-box {
+  background: rgba(139,69,19,0.06);
+  border: 1.5px dashed var(--border);
+  border-left: 4px solid var(--main);
+  border-radius: 4px;
+  padding: 0.3em 0.7em;
+  font-size: 0.75em;
+  color: var(--text-sub);
+  font-style: italic;
+  flex-shrink: 0;
+  line-height: 1.55;
+}
+.source-box .src-tag {
+  display: inline-block;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--main);
+  background: rgba(197,160,40,0.2);
+  border-radius: 3px;
+  padding: 0 0.4em;
+  margin-right: 0.4em;
+  font-size: 0.92em;
+}
+
+/* === Item list === */
+.item-list { list-style: none; display: flex; flex-direction: column; gap: 0.18em; }
+.item-list li {
+  position: relative;
+  padding-left: 1.05em;
+  font-size: 0.84em;
+  color: var(--text);
+  line-height: 1.6;
+}
+.item-list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.88em;
+}
+.item-list li strong { color: var(--main); font-weight: 700; }
+
+/* === Blank mechanic === */
+.blank {
+  display: inline-block;
+  border-bottom: 2px solid var(--main);
+  background: rgba(139,69,19,0.07);
+  border-radius: 3px 3px 0 0;
+  padding: 0.04em 0.4em 0;
+  white-space: nowrap;
+  cursor: default;
+  transition: background 0.35s, border-color 0.35s;
+}
+.blank::after {
+  content: attr(data-answer);
+  font-weight: 700;
+  color: transparent;
+  transition: color 0.35s;
+}
+.blank.revealed { background: rgba(197,160,40,0.2); border-color: var(--gold); }
+.blank.revealed::after { color: var(--main); }
+
+/* === Cover === */
+.slide-cover {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(ellipse at center, #FDF5E0 0%, #F0D9A0 45%, #E8C87A 100%);
+  gap: 0.4em;
+}
+.cover-deco { font-size: 2.4em; }
+.cover-subject { font-size: 0.85em; color: var(--text-sub); letter-spacing: 0.18em; }
+.cover-title { font-size: 2.5em; font-weight: 900; color: var(--main); font-family: 'Nanum Myeongjo', serif; line-height: 1.2; }
+.cover-subtitle { font-size: 0.87em; color: var(--text-sub); }
+.cover-hint {
+  font-size: 0.73em; color: var(--text-sub);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 0.32em 1em;
+  background: rgba(255,248,225,0.5);
+  margin-top: 0.4em;
+}
+
+/* === TOC === */
+.toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4em; flex: 1; }
+.toc-item {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-left: 4px solid var(--main);
+  border-radius: 4px;
+  padding: 0.4em 0.75em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  display: flex; flex-direction: column; gap: 0.08em;
+}
+.toc-item:hover { background: rgba(139,69,19,0.07); transform: translateX(3px); }
+.toc-num { font-size: 1em; font-weight: 900; color: var(--accent); font-family: 'Nanum Myeongjo', serif; }
+.toc-name { font-size: 0.82em; font-weight: 700; color: var(--main); }
+.toc-sub { font-size: 0.66em; color: var(--text-sub); }
+
+/* === Summary table === */
+.sum-table { width: 100%; border-collapse: collapse; font-size: 0.74em; }
+.sum-table th {
+  background: var(--main); color: #FFF8E1;
+  padding: 0.26em 0.45em; font-weight: 700; text-align: center;
+  border: 1px solid var(--border);
+}
+.sum-table td {
+  padding: 0.22em 0.45em;
+  border: 1px solid rgba(139,69,19,0.2);
+  color: var(--text); vertical-align: middle;
+  text-align: center;
+}
+.sum-table tr:nth-child(even) td { background: rgba(139,69,19,0.04); }
+.sum-table td.rowhead { background: rgba(197,160,40,0.18); font-weight: 700; color: var(--main); }
+
+/* === Timeline === */
+.timeline-row { display: flex; align-items: stretch; gap: 0.3em; flex: 1; }
+.tl-item {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-top: 4px solid var(--accent);
+  border-radius: 4px;
+  padding: 0.35em 0.5em;
+  font-size: 0.72em;
+  color: var(--text);
+  display: flex; flex-direction: column; gap: 0.15em;
+}
+.tl-item.crisis { border-top-color: var(--crisis); }
+.tl-item .tl-era { font-weight: 900; color: var(--main); font-size: 0.95em; }
+
+/* === End slide === */
+.slide-end {
+  align-items: center; justify-content: center; text-align: center;
+  background: radial-gradient(ellipse at center, #FDF5E0 0%, #F0D9A0 100%);
+  gap: 0.5em;
+}
+
+/* === Nav bar === */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 48px;
+  background: rgba(253,245,224,0.97);
+  border-top: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.8rem; z-index: 999; font-size: 14px;
+}
+.nav-btn {
+  width: 2rem; height: 2rem;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  background: #FDF5E0;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; padding: 0;
+}
+.nav-btn svg { width: 0.85rem; height: 0.85rem; fill: #8B4513; }
+.nav-btn:hover:not(:disabled) { background: #8B4513; border-color: #8B4513; }
+.nav-btn:hover:not(:disabled) svg { fill: #FFF8E1; }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.nav-label { font-size: 13px; color: #5C3D1E; font-weight: 700; min-width: 4.5rem; text-align: center; }
+.nav-blank-info {
+  font-size: 12px; color: #8B4513;
+  background: rgba(197,160,40,0.15);
+  border: 1px solid rgba(197,160,40,0.5);
+  border-radius: 10px; padding: 0.1em 0.6em;
+  min-width: 5rem; text-align: center;
+}
+.nav-hint { font-size: 11px; color: #A07850; opacity: 0.8; }
+
+/* Progress bar */
+#progressBar {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--main), var(--gold));
+  transition: width 0.3s ease; z-index: 1000; width: 0%;
+}
+
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="progressBar"></div>
+<div class="presentation" id="pres">
+
+<!-- ═══════════════════════ SLIDE 0: Cover ═══════════════════════ -->
+<div class="slide slide-cover active" data-slide="0">
+  <div class="cover-deco">🏛️</div>
+  <div class="cover-subject">한국사능력검정시험 대비 · 필기노트 기반 정리</div>
+  <div class="cover-title">고려시대<br>개념·빈출주제 정리</div>
+  <div class="cover-subtitle">건국·초기정치 · 문벌귀족~무신정변 · 대외관계(거란·여진·몽골) · 원간섭기~공민왕 · 멸망 · 경제·사회·문화</div>
+  <div class="cover-hint">⌨ PageDown / → : 정답 한 개씩 공개 &nbsp;|&nbsp; PageUp / ← : 정답 숨기기 &nbsp;|&nbsp; 터치 스와이프 지원</div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 1: TOC ═══════════════════════ -->
+<div class="slide" data-slide="1">
+  <div class="slide-header">
+    <span class="slide-chapter">목차</span>
+    <span class="slide-title">이 편에서 다루는 내용</span>
+  </div>
+  <div class="slide-body tall">
+    <ul class="toc-list">
+      <li class="toc-item" onclick="goSlide(2)"><span class="toc-num">01</span><span class="toc-name">고려의 건국과 태조의 정책</span><span class="toc-sub">호족 정책, 북진 정책</span></li>
+      <li class="toc-item" onclick="goSlide(3)"><span class="toc-num">02</span><span class="toc-name">광종·경종·성종의 왕권 강화</span><span class="toc-sub">노비안검법, 과거제, 시무 28조</span></li>
+      <li class="toc-item" onclick="goSlide(4)"><span class="toc-num">03</span><span class="toc-name">중앙 통치 체제</span><span class="toc-sub">2성 6부, 도병마사·식목도감</span></li>
+      <li class="toc-item" onclick="goSlide(5)"><span class="toc-num">04</span><span class="toc-name">지방·군사 제도</span><span class="toc-sub">5도 양계, 주현군·주진군</span></li>
+      <li class="toc-item" onclick="goSlide(6)"><span class="toc-num">05</span><span class="toc-name">문벌귀족 사회와 무신정변의 배경</span><span class="toc-sub">이자겸의 난, 묘청의 서경 천도 운동</span></li>
+      <li class="toc-item" onclick="goSlide(7)"><span class="toc-num">06</span><span class="toc-name">무신정권의 전개</span><span class="toc-sub">중방 → 교정도감 → 정방</span></li>
+      <li class="toc-item" onclick="goSlide(8)"><span class="toc-num">07</span><span class="toc-name">무신정권기 사회 동요</span><span class="toc-sub">김보당·조위총, 망이·망소이, 만적의 난</span></li>
+      <li class="toc-item" onclick="goSlide(9)"><span class="toc-num">08</span><span class="toc-name">대외 관계 — 거란의 침입</span><span class="toc-sub">서희·강감찬, 귀주대첩</span></li>
+      <li class="toc-item" onclick="goSlide(10)"><span class="toc-num">09</span><span class="toc-name">대외 관계 — 여진과 몽골</span><span class="toc-sub">별무반, 강화도 천도, 삼별초</span></li>
+      <li class="toc-item" onclick="goSlide(11)"><span class="toc-num">10</span><span class="toc-name">원 간섭기</span><span class="toc-sub">영토 상실, 권문세족</span></li>
+      <li class="toc-item" onclick="goSlide(12)"><span class="toc-num">11</span><span class="toc-name">공민왕의 반원 개혁</span><span class="toc-sub">쌍성총관부 수복, 신진사대부</span></li>
+      <li class="toc-item" onclick="goSlide(13)"><span class="toc-num">12</span><span class="toc-name">고려의 멸망</span><span class="toc-sub">위화도 회군, 과전법, 조선 건국</span></li>
+      <li class="toc-item" onclick="goSlide(14)"><span class="toc-num">13</span><span class="toc-name">경제 — 토지 제도</span><span class="toc-sub">역분전 → 전시과 변화</span></li>
+      <li class="toc-item" onclick="goSlide(15)"><span class="toc-num">14</span><span class="toc-name">경제 — 수취 제도와 상업</span><span class="toc-sub">벽란도, 화폐, 농업 기술</span></li>
+      <li class="toc-item" onclick="goSlide(16)"><span class="toc-num">15</span><span class="toc-name">사회 — 신분 제도</span><span class="toc-sub">귀족·중류층·양민·천민</span></li>
+      <li class="toc-item" onclick="goSlide(17)"><span class="toc-num">16</span><span class="toc-name">사회 — 향도·사회제도·가족제도</span><span class="toc-sub">여성의 지위</span></li>
+      <li class="toc-item" onclick="goSlide(18)"><span class="toc-num">17</span><span class="toc-name">문화 — 유학과 교육, 풍수지리</span><span class="toc-sub">사학 12도, 성리학의 수용</span></li>
+      <li class="toc-item" onclick="goSlide(19)"><span class="toc-num">18</span><span class="toc-name">문화 — 역사서</span><span class="toc-sub">삼국사기 · 삼국유사 · 제왕운기</span></li>
+      <li class="toc-item" onclick="goSlide(20)"><span class="toc-num">19</span><span class="toc-name">문화 — 불교</span><span class="toc-sub">의천의 천태종, 지눌의 조계종</span></li>
+      <li class="toc-item" onclick="goSlide(21)"><span class="toc-num">20</span><span class="toc-name">문화 — 불상·불화·불탑</span><span class="toc-sub">시기별 특징</span></li>
+      <li class="toc-item" onclick="goSlide(22)"><span class="toc-num">21</span><span class="toc-name">문화 — 공예·인쇄·건축</span><span class="toc-sub">고려청자, 팔만대장경, 직지심체요절</span></li>
+      <li class="toc-item" onclick="goSlide(23)"><span class="toc-num">22</span><span class="toc-name">문화 — 과학·의학·무기</span><span class="toc-sub">향약구급방, 화통도감</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 2: 태조의 정책 ═══════════════════════ -->
+<div class="slide" data-slide="2">
+  <div class="slide-header">
+    <span class="slide-chapter">01 고려 초기</span>
+    <span class="slide-title">고려의 건국과 태조의 정책</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🏛 고려의 건국</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>송악의 호족 출신 <span class="blank" data-answer="왕건"></span>이 <span class="blank" data-answer="궁예"></span>를 몰아내고 고려 건국(918)</li>
+            <li>이듬해 <span class="blank" data-answer="개경"></span>(송악)으로 천도</li>
+            <li>935년 신라 <span class="blank" data-answer="경순왕"></span>의 항복, 936년 후백제 멸망 → 후삼국 통일</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">👑 태조의 정책 (왕권 약함)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>민생 안정: 세금 감면(1/10), <span class="blank" data-answer="흑창"></span> 설치(빈민 구제 → 의창으로 계승)</li>
+            <li>호족 포섭: 정략 <span class="blank" data-answer="결혼"></span>, <span class="blank" data-answer="사성"></span> 정책(성씨 하사), 역분전 지급</li>
+            <li>호족 견제: <span class="blank" data-answer="사심관"></span> 제도(연대 책임), <span class="blank" data-answer="기인"></span> 제도(호족 자제를 개경에 머물게 함 — 통일신라 상수리 제도와 유사)</li>
+            <li>북진 정책: <span class="blank" data-answer="발해"></span> 유민 수용, <span class="blank" data-answer="서경"></span>(평양) 중시 → 청천강~영흥까지 영토 확장</li>
+            <li>규범서 저술: <span class="blank" data-answer="정계"></span>·<span class="blank" data-answer="계백료서"></span>(관료 규범), <span class="blank" data-answer="훈요 10조"></span>(후대 왕에 대한 유훈)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 태조 이후 왕규의 난 등 왕위 다툼이 이어지다가, <strong>광종</strong>부터 본격적인 왕권 강화가 시작됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 3: 광종~성종 ═══════════════════════ -->
+<div class="slide" data-slide="3">
+  <div class="slide-header">
+    <span class="slide-chapter">02 고려 초기</span>
+    <span class="slide-title">광종 · 경종 · 성종 — 왕권 강화와 체제 정비</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card peak">
+        <div class="card-title"><span class="mini-tag peak">왕권 강화</span>광종</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="노비안검법"></span>: 억울하게 노비가 된 자를 해방 → 호족의 경제적·군사적 기반 약화</li>
+            <li><span class="blank" data-answer="과거제"></span> 실시(<span class="blank" data-answer="쌍기"></span>의 건의): 신진 세력을 등용해 호족 견제</li>
+            <li>공복 제정, <span class="blank" data-answer="칭제건원"></span>(광덕·준풍 연호 사용), 왕규의 난 진압</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏛 경종 · 성종</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>경종: <span class="blank" data-answer="시정 전시과"></span> 실시(관리에게 수조권 지급 시작)</li>
+            <li>성종: <span class="blank" data-answer="최승로"></span>의 <span class="blank" data-answer="시무 28조"></span> 수용 → 유교 정치 이념 확립</li>
+            <li>중앙 <span class="blank" data-answer="2성 6부"></span> 정비, 지방 <span class="blank" data-answer="12목"></span>에 지방관(목사) 최초 파견</li>
+            <li><span class="blank" data-answer="연등회"></span> 축소, <span class="blank" data-answer="팔관회"></span> 폐지(불교 행사 억제·유교화)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ <strong>흐름:</strong> 왕권 약함(태조) → 왕권 강화(광종, 노비안검법·과거제) → 유교적 체제 정비(성종) — 이 정비 과정을 거치며 <strong>문벌귀족 사회</strong>의 토대가 마련됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 4: 중앙 통치체제 ═══════════════════════ -->
+<div class="slide" data-slide="4">
+  <div class="slide-header">
+    <span class="slide-chapter">03 통치체제</span>
+    <span class="slide-title">중앙 통치 체제 — 2성 6부와 고려의 독자적 기구</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🏛 2성 6부 (당·송 제도 수용)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="중서문하성"></span>: 재신(2품 이상)+낭사(3품 이하), 국정 총괄, 장은 <span class="blank" data-answer="문하시중"></span></li>
+            <li><span class="blank" data-answer="상서성"></span> 아래 <span class="blank" data-answer="6부"></span>(이·병·호·형·예·공)가 실무 담당</li>
+            <li><span class="blank" data-answer="중추원"></span>: 추밀(군국기무)+승선(왕명 출납)</li>
+            <li><span class="blank" data-answer="어사대"></span>(감찰) · 삼사(회계, 언론 기능 없음 — 조선 삼사와 구분)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">⭐ 고려의 독자적 기구 (귀족 연합적 성격)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="도병마사"></span>: 재신+추밀이 모여 국방 문제 논의 → 원 간섭기 <span class="blank" data-answer="도평의사사"></span>(도당)로 개편, 상설 기구화</li>
+            <li><span class="blank" data-answer="식목도감"></span>: 법 제정과 격식 논의</li>
+            <li><span class="blank" data-answer="대간"></span>(중서문하성 낭사+어사대): <span class="blank" data-answer="서경"></span>·간쟁·봉박권 행사 → 언론 기능</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      💡 대간의 언론 기능은 고려·조선 공통이지만, <strong>삼사</strong>는 명칭만 같을 뿐 고려는 회계 담당, 조선은 언론 담당 — 단골 비교 포인트
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 5: 지방 군사제도 ═══════════════════════ -->
+<div class="slide" data-slide="5">
+  <div class="slide-header">
+    <span class="slide-chapter">04 통치체제</span>
+    <span class="slide-title">지방 · 군사 제도 — 5도 양계</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🗺 지방 제도</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>일반 행정: <span class="blank" data-answer="5도"></span>(<span class="blank" data-answer="안찰사"></span> 파견, 상설 기구 아님) → 아래 주·군·현</li>
+            <li>국경 지역: <span class="blank" data-answer="양계"></span>(북계·동계, <span class="blank" data-answer="병마사"></span> 파견) — 군사 행정 구역</li>
+            <li>특수 행정구역: <span class="blank" data-answer="향·부곡·소"></span> — 일반 양민보다 차별(세금 부담↑, 거주 이전 제한)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">⚔ 군사 제도</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>중앙군: <span class="blank" data-answer="2군"></span>(국왕 친위) <span class="blank" data-answer="6위"></span>(수도·국경 방위)</li>
+            <li>지방군: <span class="blank" data-answer="주현군"></span>(5도, 치안·잡역) · <span class="blank" data-answer="주진군"></span>(양계, 국방 전담 상비군)</li>
+            <li><span class="blank" data-answer="천리장성"></span>: 거란·여진 방어 위해 축조(압록강~도련포)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ <strong>5도(일반 행정, 안찰사)</strong> vs <strong>양계(군사 행정, 병마사)</strong> 비교 + 향·부곡·소민 차별 포인트가 자주 출제됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 6: 문벌귀족사회 무신정변 배경 ═══════════════════════ -->
+<div class="slide" data-slide="6">
+  <div class="slide-header">
+    <span class="slide-chapter">05 중기 정치</span>
+    <span class="slide-title">문벌귀족 사회와 무신정변의 배경</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">👑 문벌귀족 사회</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>호족 → <span class="blank" data-answer="문벌귀족"></span>으로 성장(신라 6두품 계열 일부 포함)</li>
+            <li>정치: <span class="blank" data-answer="음서"></span>(5품 이상 자손, 무시험 관직 진출) + 과거</li>
+            <li>경제: <span class="blank" data-answer="공음전"></span>(5품 이상, 세습 가능)</li>
+            <li>사회: 폐쇄적 <span class="blank" data-answer="통혼"></span>(근친혼, 왕실과 혼인)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">⚡ 무신정변의 계기 ①·②</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>① <span class="blank" data-answer="이자겸"></span>의 난(인종): 경원 이씨 외척 세력, <span class="blank" data-answer="척준경"></span>과 함께 일으킨 난 → 실패</li>
+            <li>② <span class="blank" data-answer="묘청"></span>의 <span class="blank" data-answer="서경 천도 운동"></span>: 서경파(묘청·정지상, 풍수지리·고구려 계승·금 정벌) vs 개경파(<span class="blank" data-answer="김부식"></span>, 유학·신라 계승·금 사대) → 진압</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="source-box"><span class="src-tag">사료</span>신채호는 『조선사연구초』에서 묘청의 서경 천도 운동을 "<span class="blank" data-answer="조선 역사상 일천년래 제일대사건"></span>"이라 평가함</div>
+    <div class="info-box">
+      ⚡ ③ <strong><span class="blank" data-answer="김돈중"></span></strong>이 정중부의 수염을 촛불로 태운 사건 등 무신에 대한 문신의 하대가 쌓여 → 정중부·이의방 등이 <span class="blank" data-answer="의종"></span>을 폐위시키는 <strong>무신정변(1170)</strong> 발생
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 7: 무신정권의 전개 ═══════════════════════ -->
+<div class="slide" data-slide="7">
+  <div class="slide-header">
+    <span class="slide-chapter">06 무신집권기</span>
+    <span class="slide-title">무신정권의 전개 — 권력 기구의 이동</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">⚔ 초기 무신정권 (권력 다툼기)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="이의방"></span> → <span class="blank" data-answer="정중부"></span> → <span class="blank" data-answer="경대승"></span>(도방 설치) → <span class="blank" data-answer="이의민"></span> 순으로 집권자 교체</li>
+            <li>이 시기 권력의 중심 기구는 <span class="blank" data-answer="중방"></span>(무신 최고 회의 기구)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏛 최씨 정권 (4대 60여 년)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="최충헌"></span>: 명종에게 <span class="blank" data-answer="봉사 10조"></span> 제시, <span class="blank" data-answer="교정도감"></span>(교정별감이 국정 총괄) 설치</li>
+            <li><span class="blank" data-answer="최우"></span>: <span class="blank" data-answer="정방"></span>(인사권 장악), <span class="blank" data-answer="서방"></span>(문신 자문 기구) 설치</li>
+            <li>군사: 도방(사병 집단) 확대 + <span class="blank" data-answer="삼별초"></span>(좌별초·우별초+신의군) 조직</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 권력 기구의 이동: <strong>중방</strong>(초기 무신 권력) → <strong>교정도감</strong>(최충헌, 최고 권력 기구) → <strong>정방</strong>(최우, 인사권 장악) 순서로 암기
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 8: 무신정권기 사회동요 ═══════════════════════ -->
+<div class="slide" data-slide="8">
+  <div class="slide-header">
+    <span class="slide-chapter">07 무신집권기</span>
+    <span class="slide-title">무신정권기의 사회 동요 — 신분별 저항</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title">👑 귀족의 저항</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="김보당"></span>의 난(개경, 의종 복위 시도)</li>
+            <li><span class="blank" data-answer="조위총"></span>의 난(서경)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🌾 양민의 봉기</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="망이·망소이"></span>의 난 — 공주 <span class="blank" data-answer="명학소"></span>(특수 행정구역 차별에 항거)</li>
+            <li><span class="blank" data-answer="김사미·효심"></span>의 난 — 운문·초전(신라 부흥 표방)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">⛓ 천민의 봉기</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="만적"></span>의 난(개경) — 최충헌의 사노, <span class="blank" data-answer="신분 해방"></span> 도모</li>
+            <li>"장군과 재상이 어찌 씨가 따로 있으랴" — 신분제에 대한 저항 의식</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 무신정권기 사회 동요는 <strong>귀족(김보당·조위총) → 양민(망이망소이·김사미효심) → 천민(만적)</strong> 순서로 신분별 저항이 확대된 흐름으로 정리
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 9: 거란의 침입 ═══════════════════════ -->
+<div class="slide" data-slide="9">
+  <div class="slide-header">
+    <span class="slide-chapter">08 대외관계</span>
+    <span class="slide-title">대외 관계 — 거란(요)의 3차 침입</span>
+  </div>
+  <div class="slide-body tall">
+    <table class="sum-table">
+      <tr><th>차수</th><th>왕</th><th>계기·과정</th><th>결과</th></tr>
+      <tr><td>1차 (993)</td><td>성종</td><td><span class="blank" data-answer="소손녕"></span> 침입</td><td><span class="blank" data-answer="서희"></span>의 외교 담판 → <span class="blank" data-answer="강동 6주"></span> 획득</td></tr>
+      <tr><td>2차 (1010)</td><td>현종</td><td><span class="blank" data-answer="강조"></span>의 정변을 구실로 침입</td><td><span class="blank" data-answer="양규"></span>의 활약으로 격퇴</td></tr>
+      <tr><td>3차 (1019)</td><td>현종</td><td>소배압의 10만 대군</td><td><span class="blank" data-answer="강감찬"></span>의 <span class="blank" data-answer="귀주대첩"></span> 대승</td></tr>
+    </table>
+    <div class="info-box">
+      ⭐ 거란 침입에 앞서 <strong><span class="blank" data-answer="광군"></span></strong>(정종)이라는 예비군을 조직해 대비함. 침입 격퇴를 기원하며 <strong><span class="blank" data-answer="초조대장경"></span></strong> 조판을 시작했고, 개경에 나성, 국경에 <strong>천리장성</strong>을 쌓아 방어를 강화함
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 10: 여진 몽골 ═══════════════════════ -->
+<div class="slide" data-slide="10">
+  <div class="slide-header">
+    <span class="slide-chapter">09 대외관계</span>
+    <span class="slide-title">대외 관계 — 여진 정벌과 몽골의 침입</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🛡 여진 정벌 — 별무반</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="윤관"></span>의 건의로 <span class="blank" data-answer="별무반"></span> 편성(신기군-기병·신보군-보병·항마군-승병)</li>
+            <li>여진 정벌 → <span class="blank" data-answer="동북 9성"></span> 축조 → 방어 어려움으로 여진에 반환</li>
+            <li>12세기 여진이 <span class="blank" data-answer="금"></span> 건국 → 고려에 사대 요구 → <span class="blank" data-answer="이자겸"></span>이 수용(금 사대)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🛡 몽골의 침입과 항쟁</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="최우"></span>, <span class="blank" data-answer="강화도"></span>로 천도(1232) → 이후 몽골과 강화, 개경 환도(원종)</li>
+            <li><span class="blank" data-answer="김윤후"></span>: 처인성에서 몽골 장수 <span class="blank" data-answer="살리타"></span> 사살 / 충주성 항전</li>
+            <li>배중손·<span class="blank" data-answer="김통정"></span>의 <span class="blank" data-answer="삼별초"></span> 항쟁: 강화도 → 진도(용장성) → 제주도(항파두리)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 몽골 침입으로 초조대장경과 <strong>황룡사 9층 목탑</strong>이 소실됨 → 격퇴를 염원하며 <strong><span class="blank" data-answer="팔만대장경"></span></strong>(재조대장경) 조판
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 11: 원간섭기 ═══════════════════════ -->
+<div class="slide" data-slide="11">
+  <div class="slide-header">
+    <span class="slide-chapter">10 원간섭기</span>
+    <span class="slide-title">원 간섭기 — 영토 상실과 권문세족</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">국권 약화</span>영토 상실과 내정 간섭</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>영토 축소: <span class="blank" data-answer="쌍성총관부"></span>(철령 이북) · <span class="blank" data-answer="동녕부"></span>(서경) · <span class="blank" data-answer="탐라총관부"></span>(제주)</li>
+            <li>고려 왕실은 원의 <span class="blank" data-answer="부마국"></span>(원 공주와 결혼), 왕실 호칭 격 낮춤(충~왕)</li>
+            <li>관제 개편: 2성 → <span class="blank" data-answer="첨의부"></span>, 6부 → 4사, 중추원 → <span class="blank" data-answer="밀직사"></span></li>
+            <li>내정 간섭: <span class="blank" data-answer="다루가치"></span>(감찰관) 파견, <span class="blank" data-answer="정동행성"></span> 이문소가 내정 간섭 기구로 변질</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🌀 사회 변화와 권문세족</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="공녀"></span> 징발 → 조혼 풍습 확산</li>
+            <li><span class="blank" data-answer="몽골풍"></span>(변발·호복) 유행, 반대로 <span class="blank" data-answer="고려양"></span>이 원에 전파</li>
+            <li><span class="blank" data-answer="권문세족"></span> 등장: 도평의사사·정방 장악, 음서로 지위 세습, 대농장 소유</li>
+            <li>대표 인물: <span class="blank" data-answer="기철"></span>(기황후의 오빠), <span class="blank" data-answer="신돈"></span>(전민변정도감 운영)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 12: 공민왕 ═══════════════════════ -->
+<div class="slide" data-slide="12">
+  <div class="slide-header">
+    <span class="slide-chapter">11 14세기</span>
+    <span class="slide-title">공민왕의 반원 자주 개혁</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card peak">
+        <div class="card-title"><span class="mini-tag peak">자주 정책</span>반원 개혁</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>친원 세력(<span class="blank" data-answer="기철"></span> 등) 숙청, <span class="blank" data-answer="정동행성"></span> 이문소 폐지</li>
+            <li><span class="blank" data-answer="쌍성총관부"></span> 공격 → 철령 이북 영토 수복</li>
+            <li>관제 복구(원간섭기 이전 2성 6부 체제로), <span class="blank" data-answer="정방"></span> 폐지 시도(인사권 회복)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📚 신진사대부의 성장</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="성리학"></span>을 사상적 기반으로 삼는 신흥 세력</li>
+            <li>성균관 재정비 → 신진사대부 등용</li>
+            <li><span class="blank" data-answer="전민변정도감"></span>(신돈) 운영 지원 — 권문세족의 불법 토지·노비 정리 시도</li>
+            <li>권문세족과 대립하며 이후 조선 건국 세력으로 성장</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      💡 공민왕의 개혁은 14세기 <strong>원·명 교체기</strong>라는 국제 정세 변화를 배경으로 함(부인 노국대장공주와 함께 기억)
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 13: 고려의 멸망 ═══════════════════════ -->
+<div class="slide" data-slide="13">
+  <div class="slide-header">
+    <span class="slide-chapter">12 멸망</span>
+    <span class="slide-title">고려의 멸망 — 위화도 회군과 조선 건국</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">⚔ 홍건적·왜구의 침입과 신흥무인세력</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="홍건적"></span>의 침입 — 공민왕이 안동까지 피난</li>
+            <li>왜구 격퇴: <span class="blank" data-answer="홍산"></span> 대첩(최영), <span class="blank" data-answer="진포"></span> 대첩(최무선 - 화통도감 화포), <span class="blank" data-answer="황산"></span> 대첩(이성계)</li>
+            <li>→ <span class="blank" data-answer="신흥 무인 세력"></span>(최영·이성계 등) 성장</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">왕조 교체</span>위화도 회군과 건국</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>명의 철령위 설치 통보 → 최영·우왕이 <span class="blank" data-answer="요동 정벌"></span> 단행</li>
+            <li>이성계의 <span class="blank" data-answer="4불가론"></span> 주장 → <span class="blank" data-answer="위화도"></span>에서 회군, 최영 제거·우왕 폐위</li>
+            <li><span class="blank" data-answer="과전법"></span> 실시(신진사대부의 경제적 기반 확보)</li>
+            <li>이성계 왕위에 올라 <span class="blank" data-answer="조선"></span> 건국(1392)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 시기 순서: 홍건적·왜구 격퇴(신흥무인세력 성장) → 위화도 회군(1388) → 과전법 실시 → 조선 건국(1392)
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 14: 경제 토지제도 ═══════════════════════ -->
+<div class="slide" data-slide="14">
+  <div class="slide-header">
+    <span class="slide-chapter">13 경제</span>
+    <span class="slide-title">고려의 경제 — 토지 제도의 변화</span>
+  </div>
+  <div class="slide-body tall">
+    <table class="sum-table">
+      <tr><th>제도</th><th>시행 왕</th><th>지급 대상</th><th>지급 기준</th></tr>
+      <tr><td><span class="blank" data-answer="역분전"></span></td><td>태조</td><td>개국 공신</td><td>논공행상(공로에 따라 지급)</td></tr>
+      <tr><td><span class="blank" data-answer="시정 전시과"></span></td><td>경종</td><td>전·현직 관리</td><td>인품 + 관품</td></tr>
+      <tr><td><span class="blank" data-answer="개정 전시과"></span></td><td>목종</td><td>전·현직 관리</td><td>관품만 반영(인품 제외)</td></tr>
+      <tr><td><span class="blank" data-answer="경정 전시과"></span></td><td>문종</td><td><span class="blank" data-answer="현직"></span> 관리만</td><td>토지 부족으로 지급량 감소</td></tr>
+    </table>
+    <div class="info-box">
+      ⭐ 흐름: 지급 대상이 <strong>전·현직 → 현직</strong>으로, 기준이 <strong>인품+관품 → 관품만</strong>으로 점차 축소됨(토지 부족 심화). 전시과는 <span class="blank" data-answer="수조권"></span>만 지급(소유권 아님) — 토지 소유권 자체는 <span class="blank" data-answer="민전"></span>(조선까지 이어짐)
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 15: 경제 수취 상업 ═══════════════════════ -->
+<div class="slide" data-slide="15">
+  <div class="slide-header">
+    <span class="slide-chapter">14 경제</span>
+    <span class="slide-title">고려의 경제 — 수취 제도와 상업</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">💰 수취 제도와 농업</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="양안"></span>(토지 문서) 근거 <span class="blank" data-answer="조세"></span>(토지세), 공납(특산물), 역(요역·군역) 수취</li>
+            <li>향·부곡·소 주민은 일반 양민보다 부담 가중</li>
+            <li>후기 농업: 논에 <span class="blank" data-answer="이앙법"></span>(남부 일부), 이암이 원에서 『<span class="blank" data-answer="농상집요"></span>』 소개</li>
+            <li>밭에 <span class="blank" data-answer="윤작법"></span>(2년 3작), 문익점이 원에서 <span class="blank" data-answer="목화"></span>씨 전래</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏪 상업과 무역</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="벽란도"></span>(예성강 하구): 국제 무역항, 아라비아 상인 왕래 → '코리아' 명칭 전파</li>
+            <li>화폐: 건원중보(성종), <span class="blank" data-answer="삼한통보·해동통보"></span>(숙종) — 유통은 부진, 현물 화폐가 중심</li>
+            <li>관영 상점(서적점·다점·주점), <span class="blank" data-answer="경시서"></span>가 상행위 감독</li>
+            <li><span class="blank" data-answer="상평창"></span>: 물가 조절 기구</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 16: 사회 신분제 ═══════════════════════ -->
+<div class="slide" data-slide="16">
+  <div class="slide-header">
+    <span class="slide-chapter">15 사회</span>
+    <span class="slide-title">고려의 사회 — 신분 제도</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">👑 귀족 · 중류층</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>귀족: 왕족+문벌귀족 → 무신 → <span class="blank" data-answer="권문세족"></span>으로 지배층 변화</li>
+            <li>중류층: 하급 관리, <span class="blank" data-answer="잡류"></span>, 남반, 향리, 군인 등 실무 담당</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🌾 양민 · 천민</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>양민(<span class="blank" data-answer="백정"></span> = 일반 농민): 인구 대다수, 조세·공납·역 부담</li>
+            <li>특수 행정구역민(향·부곡·소): 세금 부담 가중, 거주 이전 자유 없음</li>
+            <li>천민: <span class="blank" data-answer="노비"></span>가 대다수, 매매·상속·증여의 대상(재산으로 취급)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 지배층 변화 흐름: 호족 → 문벌귀족(중기) → 무신(무신집권기) → 권문세족(원간섭기) → 신진사대부(말기)
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 17: 사회 향도 가족제도 ═══════════════════════ -->
+<div class="slide" data-slide="17">
+  <div class="slide-header">
+    <span class="slide-chapter">16 사회</span>
+    <span class="slide-title">농민 조직 · 사회 제도 · 가족 제도</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title">🙏 농민 조직 — 향도</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>전기: <span class="blank" data-answer="불교"></span> 신앙 조직(매향 활동 중심)</li>
+            <li>후기: 마을 공동 조직화(<span class="blank" data-answer="상장 제례"></span> 주도) → 조선의 향약으로 이어짐</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏥 사회 제도</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>구휼: <span class="blank" data-answer="흑창"></span>(태조) → <span class="blank" data-answer="의창"></span>(성종, 확대), 상평창(물가 조절)</li>
+            <li>기구: 동·서 대비원(빈민 구제), <span class="blank" data-answer="혜민국"></span>(의약), 구제도감·구급도감(재해 구제)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">👩 가족 제도 (여성 지위 ↑)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>재산 <span class="blank" data-answer="균분"></span> 상속, 아들 없으면 <span class="blank" data-answer="딸"></span>이 제사 봉행</li>
+            <li>사위·외손자도 음서 혜택, 호적에 <span class="blank" data-answer="나이순"></span> 기재</li>
+            <li>여성의 재혼도 비교적 자유로움(조선과 대비)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 18: 유학 교육 풍수지리 ═══════════════════════ -->
+<div class="slide" data-slide="18">
+  <div class="slide-header">
+    <span class="slide-chapter">17 문화</span>
+    <span class="slide-title">유학과 교육 · 풍수지리설</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📚 유학과 교육 기관</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>성종: <span class="blank" data-answer="국자감"></span>(중앙) 설치, 지방에 <span class="blank" data-answer="향교"></span> 설치</li>
+            <li>문벌귀족기: <span class="blank" data-answer="최충"></span>의 9재 학당(문헌공도) → <span class="blank" data-answer="사학 12도"></span> 융성</li>
+            <li>이에 대응한 관학 진흥책(예종): <span class="blank" data-answer="양현고"></span>(장학 재단), 전문 강좌 7재</li>
+            <li>원간섭기: <span class="blank" data-answer="안향"></span>이 <span class="blank" data-answer="성리학"></span> 최초 소개 → 이제현(만권당) → 이색·정몽주·정도전으로 계승</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🗺 풍수지리설</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>초기: <span class="blank" data-answer="서경"></span> 길지설 — 태조의 북진 정책, 훈요 10조, 묘청의 서경 천도 운동의 사상적 배경</li>
+            <li>후기: <span class="blank" data-answer="남경(한양)"></span> 길지설 등장 → 조선 한양 천도의 사상적 배경이 됨</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 19: 역사서 ═══════════════════════ -->
+<div class="slide" data-slide="19">
+  <div class="slide-header">
+    <span class="slide-chapter">18 문화</span>
+    <span class="slide-title">고려의 역사서</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📖 문벌귀족기 — 삼국사기</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="김부식"></span> 저술, 현존 <span class="blank" data-answer="최고(最古)"></span>의 역사서</li>
+            <li>신라 계승 의식, 기전체, 유교적 합리주의 사관</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📖 무신집권기 ~ 원간섭기 역사서</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="동명왕편"></span>(이규보) — 고구려 계승 의식, 영웅 서사시</li>
+            <li>원간섭기: <span class="blank" data-answer="삼국유사"></span>(일연) — 단군신화 등 민간 설화, 자주 의식</li>
+            <li><span class="blank" data-answer="제왕운기"></span>(이승휴) — 우리 역사를 중국사와 대등하게 서술</li>
+            <li>말기: <span class="blank" data-answer="사략"></span>(이제현) — 성리학적 사관(정통 의식)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ <strong>삼국사기</strong>(신라 계승·유교적) vs <strong>삼국유사·제왕운기</strong>(단군 강조·자주적) — 서술 관점 비교가 단골 출제
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 20: 불교 ═══════════════════════ -->
+<div class="slide" data-slide="20">
+  <div class="slide-header">
+    <span class="slide-chapter">19 문화</span>
+    <span class="slide-title">고려의 불교 — 의천과 지눌의 개혁</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">☯ 의천 — 문벌귀족기</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="대각국사 의천"></span>, 왕자 출신 승려</li>
+            <li><span class="blank" data-answer="천태종"></span> 창시(국청사), 교종 중심으로 선종 통합 시도</li>
+            <li><span class="blank" data-answer="교관겸수"></span> 주장, 『교장』(속장경) 편찬</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">☯ 지눌 — 무신집권기</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="보조국사 지눌"></span>, <span class="blank" data-answer="조계종"></span> 계승</li>
+            <li>선종 중심으로 교종 포용 — <span class="blank" data-answer="정혜쌍수·돈오점수"></span> 주장</li>
+            <li><span class="blank" data-answer="수선사"></span>(순천 송광사) 결사 운동 — 승려 본연의 자세 확립</li>
+            <li>요세의 <span class="blank" data-answer="백련결사"></span>(강진 백련사) — 정토 신앙, 지방민 중심</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 21: 불상 불화 불탑 ═══════════════════════ -->
+<div class="slide" data-slide="21">
+  <div class="slide-header">
+    <span class="slide-chapter">20 문화</span>
+    <span class="slide-title">불상 · 불화 · 불탑 — 시기별 특징</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🗿 불상 · 불화</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>전기: <span class="blank" data-answer="철불"></span> 유행(하남 하사창동 철조 석가여래좌상), 대형 석불(논산 <span class="blank" data-answer="관촉사"></span> 석조 미륵보살입상)</li>
+            <li>중기: 신라 양식 계승(영주 부석사 소조 아미타여래좌상)</li>
+            <li>후기: 왕실 발원 <span class="blank" data-answer="불화"></span> 유행(아미타래영도, 수월관음도) — 지배층의 소원을 담음</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏯 불탑</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>전기: 다각 다층 석탑 — <span class="blank" data-answer="월정사 8각 9층 석탑"></span>(송의 영향)</li>
+            <li>후기: 원의 영향을 받은 <span class="blank" data-answer="경천사지 10층 석탑"></span>(대리석)</li>
+            <li>→ 조선의 <span class="blank" data-answer="원각사지 10층 석탑"></span>으로 양식이 계승됨</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      💡 대형·개성 있는 지방 불상(전기)에서 신라 양식 계승(중기), 왕실 발원 정교한 불화(후기)로 흘러가는 흐름을 기억
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 22: 공예 인쇄 건축 ═══════════════════════ -->
+<div class="slide" data-slide="22">
+  <div class="slide-header">
+    <span class="slide-chapter">21 문화</span>
+    <span class="slide-title">공예 · 인쇄술 · 건축</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title">🏺 공예 — 고려청자</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>순청자 → <span class="blank" data-answer="상감청자"></span>(고려 독자적 기법, 중기 전성)</li>
+            <li>후기: 분청사기·은입사 공예로 변화</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📜 인쇄술</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>목판: 초조대장경(거란 대비, 소실) → <span class="blank" data-answer="팔만대장경"></span>(몽골 대비, 합천 해인사·유네스코 세계기록유산)</li>
+            <li>금속 활자: 『<span class="blank" data-answer="직지심체요절"></span>』(청주 흥덕사) — 현존 세계 최고(最古) 금속 활자본</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏛 건축</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="주심포"></span> 양식: 안동 봉정사 극락전(현존 최고 목조건축물), 영주 부석사 무량수전</li>
+            <li>후기 <span class="blank" data-answer="다포"></span> 양식 등장(황해도 성불사 응진전) → 조선 건축에 영향</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 23: 과학 의학 무기 ═══════════════════════ -->
+<div class="slide" data-slide="23">
+  <div class="slide-header">
+    <span class="slide-chapter">22 문화</span>
+    <span class="slide-title">과학 · 의학 · 무기</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-title">🔬 과학</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="사천대"></span>(서운관): 천문 관측 기구</li>
+            <li>전기 선명력(당) → 후기 <span class="blank" data-answer="수시력"></span>(원) 채택</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">💊 의학</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="향약구급방"></span>: 현존하는 우리나라 최고(最古)의 의학서</li>
+            <li>국산 약재(향약)를 이용한 처방 수록</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔥 무기</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="화통도감"></span>(우왕, <span class="blank" data-answer="최무선"></span> 건의) 설치 → 화포 제작</li>
+            <li><span class="blank" data-answer="진포"></span> 대첩에서 활용 → 황산 대첩으로 이어짐</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      💡 화통도감·진포대첩·황산대첩은 고려 멸망 직전 신흥무인세력 성장과 연결되는 사건 — 앞서 배운 <strong>고려의 멸망</strong> 내용과 시기순으로 함께 기억
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 24: 전체 흐름 정리 ═══════════════════════ -->
+<div class="slide" data-slide="24">
+  <div class="slide-header">
+    <span class="slide-chapter">정리</span>
+    <span class="slide-title">전체 흐름 한눈에 보기</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="timeline-row">
+      <div class="tl-item"><span class="tl-era">건국·초기</span>태조(918, 호족 포섭+북진) → 광종(노비안검법·과거제) → 성종(2성 6부, 12목)</div>
+      <div class="tl-item"><span class="tl-era">중기</span>문벌귀족 사회(음서·공음전) → 이자겸의 난·묘청의 서경 천도 운동 → 무신정변(1170)</div>
+      <div class="tl-item"><span class="tl-era">무신집권기</span>중방→교정도감(최충헌)→정방(최우) → 사회 동요(김보당~만적) → 몽골 침입·강화도 천도·삼별초</div>
+      <div class="tl-item"><span class="tl-era">원간섭기</span>영토 상실(쌍성총관부 등)·권문세족 → 공민왕의 반원 개혁(쌍성총관부 수복) → 신진사대부 성장</div>
+      <div class="tl-item crisis"><span class="tl-era">멸망</span>홍건적·왜구 격퇴(신흥무인세력) → 위화도 회군(1388) → 과전법 → 조선 건국(1392)</div>
+    </div>
+    <div class="info-box">
+      ⭐ <strong>시험 대비 최종 체크:</strong> ① 태조~성종 왕대별 정책 ② 무신정권 권력 기구 순서(중방→교정도감→정방) ③ 대외관계 3단계(거란→여진→몽골) ④ 원간섭기 vs 공민왕 개혁 비교 ⑤ 토지 제도 변화(역분전→전시과→과전법) — 이 다섯 유형이 최다 출제 포인트
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 25: 마무리 ═══════════════════════ -->
+<div class="slide slide-end" data-slide="25">
+  <div style="font-size:2.2em">🎉</div>
+  <div style="font-size:2.2em;font-weight:900;color:var(--main);font-family:'Nanum Myeongjo',serif">수고하셨습니다!</div>
+  <div style="font-size:0.88em;color:var(--text-sub)">한국사능력검정시험 — 고려시대 개념 정리를 모두 마쳤습니다.</div>
+  <div style="background:var(--card-bg);border:1.5px solid var(--gold);border-radius:6px;padding:0.9em 1.5em;max-width:80%;font-size:0.8em;color:var(--text);line-height:1.8">
+    <strong style="color:var(--main);font-size:1.05em">📌 핵심 흐름</strong><br>
+    태조·광종·성종의 체제 정비 → 문벌귀족 사회~무신정변 → 무신정권과 대외 항쟁(거란·여진·몽골) → 원간섭기~공민왕의 개혁 → 고려 멸망과 조선 건국<br>
+    <em style="color:var(--text-sub)">다음 편은 조선시대 전체를 다룰 예정입니다.</em>
+  </div>
+</div>
+
+</div><!-- /.presentation -->
+
+<!-- Navigation Bar -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="pageUp()" title="PageUp / ← : 정답 숨기기">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-label"><span id="curSlide">1</span> / <span id="totSlides">26</span></span>
+  <button class="nav-btn" id="nextBtn" onclick="pageDown()" title="PageDown / → : 정답 공개">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+  <span class="nav-blank-info" id="blankInfo" style="display:none"></span>
+  <span class="nav-hint">PageDown·→ : 정답 공개 &nbsp;|&nbsp; PageUp·← : 숨기기</span>
+</div>
+
+<script>
+(function() {
+  var slides = Array.from(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var cur = 0;
+  var revealed = new Array(total).fill(0);
+
+  document.getElementById('totSlides').textContent = total;
+
+  function getBlanks(i) {
+    return Array.from(slides[i].querySelectorAll('.blank'));
+  }
+
+  function goSlide(i) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(i, total - 1));
+    slides[cur].classList.add('active');
+    updateUI();
+  }
+  window.goSlide = goSlide;
+
+  function pageDown() {
+    var bs = getBlanks(cur);
+    if (revealed[cur] < bs.length) {
+      bs[revealed[cur]].classList.add('revealed');
+      revealed[cur]++;
+      updateUI();
+    } else if (cur < total - 1) {
+      goSlide(cur + 1);
+    }
+  }
+  window.pageDown = pageDown;
+
+  function pageUp() {
+    if (revealed[cur] > 0) {
+      var bs = getBlanks(cur);
+      bs[revealed[cur] - 1].classList.remove('revealed');
+      revealed[cur]--;
+      updateUI();
+    } else if (cur > 0) {
+      goSlide(cur - 1);
+    }
+  }
+  window.pageUp = pageUp;
+
+  function updateUI() {
+    document.getElementById('curSlide').textContent = cur + 1;
+
+    var bs = getBlanks(cur);
+    var bi = document.getElementById('blankInfo');
+    if (bs.length > 0) {
+      bi.textContent = '빈칸 ' + revealed[cur] + ' / ' + bs.length;
+      bi.style.display = '';
+    } else {
+      bi.style.display = 'none';
+    }
+
+    var pct = total > 1 ? (cur / (total - 1)) * 100 : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+
+    document.getElementById('prevBtn').disabled = (cur === 0 && revealed[cur] === 0);
+    document.getElementById('nextBtn').disabled = (cur === total - 1 && revealed[cur] === getBlanks(cur).length);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return;
+    if (e.key === 'PageDown' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault(); pageDown();
+    } else if (e.key === 'PageUp' || e.key === 'ArrowLeft') {
+      e.preventDefault(); pageUp();
+    } else if (e.key === 'Home') {
+      e.preventDefault(); goSlide(0);
+    } else if (e.key === 'End') {
+      e.preventDefault(); goSlide(total - 1);
+    }
+  });
+
+  var tsX = 0, tsY = 0;
+  document.addEventListener('touchstart', function(e) {
+    tsX = e.touches[0].clientX;
+    tsY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - tsX;
+    var dy = e.changedTouches[0].clientY - tsY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) pageDown(); else pageUp();
+    }
+  }, { passive: true });
+
+  updateUI();
+})();
+</script>
+</body>
+</html>
