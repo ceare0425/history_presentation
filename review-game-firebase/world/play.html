@@ -187,12 +187,19 @@
     margin-bottom:.8vh; flex:0 0 auto; animation:bonusPulse 1s ease-in-out infinite;
   }
   .debuff-banner.show{ display:block; }
+  .atk-banner{
+    display:none; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
+    background:linear-gradient(90deg,#7c2d12,#b91c1c); border-radius:12px; padding:8px;
+    margin-bottom:.8vh; flex:0 0 auto; animation:bonusPulse 1s ease-in-out infinite;
+  }
+  .atk-banner.show{ display:block; }
   .item-alert{
     text-align:center; font-weight:800; font-size:1rem; color:#5b3a00;
     background:linear-gradient(90deg,#fff0c8,#ffe08a); border-radius:12px; padding:8px;
-    margin-bottom:.8vh; display:none; flex:0 0 auto;
+    margin-bottom:.8vh; flex:0 0 auto; min-height:2.3em;
+    visibility:hidden; opacity:0; transition:opacity .15s ease;
   }
-  .item-alert.show{ display:block; animation:bonusPulse 1.1s ease-in-out infinite; }
+  .item-alert.show{ visibility:visible; opacity:1; animation:bonusPulse 1.1s ease-in-out infinite; }
   .qbox.fogged .qtext-inner{ filter:blur(7px); transition:filter .4s ease; }
   .choseong-hint{
     text-align:center; font-weight:800; font-size:clamp(1rem,2.2vw,1.35rem); color:#7a3b00;
@@ -307,6 +314,7 @@
       <div class="festival-banner" id="mirrorBanner">🪞 반사경 대기 중 · <span id="mirrorRemain"></span>초 남음</div>
       <div class="debuff-banner" id="fogBanner">🌫️ 안개! 문제가 흐려요 · <span id="fogRemain"></span>초 남음</div>
       <div class="debuff-banner" id="iceBanner">🧊 얼음! 제출 불가 · <span id="iceRemain"></span>초 남음</div>
+      <div class="atk-banner" id="stealAtkBanner">🥷 강탈 공격 중··· <span id="stealAtkRemain"></span>초 후 결과</div>
       <div class="item-alert" id="itemAlert"></div>
       <div class="hud">
         <div class="floor-rank">
@@ -432,7 +440,8 @@ let festivalBy = '';         // '축제'를 쓴 학생 이름 (배너 표시용)
 let myImmuneUntil = 0;       // 방해 피격 후 무적 종료 시각(ms)
 let frozen = false;          // '얼음' 피격 중 입력 잠금
 let iceTimer = null, fogTimer = null, itemAlertTimer = null, stealDefenseTimer = null;
-let myStealDefense = null;   // '강탈' 피격 직후 방어 창: { amt, qid, deadline } — 그 문제를 제시간에 맞히면 경감
+let myStealDefense = null;   // '강탈' 피격 직후 방어 창: { amt, qid, deadline, attackerId } — 그 문제를 제시간에 맞히면 경감
+let myStealAttackUntil = 0;  // 내가 쏜 '강탈'의 결과를 기다리는 중(공격자 화면 타이머용) 종료 시각(ms)
 let fogAlertActive = false, iceAlertActive = false;   // 안개·얼음 알림은 효과가 끝날 때까지 유지
 let myFogUntil = 0, myIceUntil = 0;   // 안개·얼음 피격 종료 시각(ms) — 배너에 남은 시간 표시용
 const seenItemEvents = new Set();
@@ -674,6 +683,7 @@ async function submitAnswer(){
       const reduced = ITEM_FX_MS.stealDefenseAmt;
       p.floor = Math.max(0, p.floor - reduced);
       showItemAlert(`🛡️ 강탈 방어 성공! -${reduced}${unitLabel()}로 경감`);
+      notifyStealResult(myStealDefense.attackerId, 'defended', reduced);
       myStealDefense = null;
     }
     p.correct = (p.correct||0) + 1;
@@ -805,7 +815,7 @@ function tick(){
       fogAlertActive = false; iceAlertActive = false; myFogUntil = 0; myIceUntil = 0;
       myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
       myUndoAvailable = false; myUndoFloorDelta = 0; randomboxOfferPending = false;
-      myStealDefense = null; clearTimeout(stealDefenseTimer);
+      myStealDefense = null; clearTimeout(stealDefenseTimer); myStealAttackUntil = 0;
       clearTimeout(iceTimer); clearTimeout(fogTimer);
       el('qbox').classList.remove('fogged');
       clearChoseongHint();
@@ -878,6 +888,13 @@ function tick(){
       el('iceRemain').textContent = Math.ceil((myIceUntil - serverNow()) / 1000);
     } else {
       icb.classList.remove('show');
+    }
+    const sab = el('stealAtkBanner');
+    if(serverNow() < myStealAttackUntil){
+      sab.classList.add('show');
+      el('stealAtkRemain').textContent = Math.ceil((myStealAttackUntil - serverNow()) / 1000);
+    } else {
+      sab.classList.remove('show');
     }
     showView('playView');
   } else if(effective === 'ended'){
@@ -1304,7 +1321,7 @@ async function useItem(){
     if(key === 'steal'){
       const amt = nanta ? 5 : 4;   // 난타전은 -5층으로 더 세게
       await bumpFloor(amt);
-      showItemAlert(`🥷 강탈! ${tgtLabel} -${amt}${unitLabel()}, 나 +${amt}${unitLabel()}`);
+      myStealAttackUntil = serverNow() + ITEM_FX_MS.stealDefenseMs;   // 결과는 steal_result 이벤트로 나중에 통보됨
     } else {
       showItemAlert(`${it.emoji} ${it.name} → ${tgtLabel}에게 발사!`);
     }
@@ -1353,6 +1370,17 @@ function handleItemEvents(obj){
       }
       return;
     }
+    // 강탈 공격 결과 통보: 공격자에게만 성공/방어 여부를 알려준다
+    if(e.type === 'steal_result'){
+      if(e.target !== playerId) return;
+      myStealAttackUntil = 0;
+      if(e.outcome === 'defended'){
+        showItemAlert(`🛡️ 강탈 실패! 상대가 방어해서 -${e.amt}${unitLabel()}만 들어갔어요`);
+      } else {
+        showItemAlert(`🥷 강탈 성공! 상대에게 -${e.amt}${unitLabel()} 적용됐어요`);
+      }
+      return;
+    }
     // 전체에 영향을 주는 아이템 → 모든 학생에게 "누가 무엇을 써서 어떤 효과" 안내
     const evItem = ITEMS[e.type];
     if(evItem && evItem.kind === 'global'){
@@ -1391,11 +1419,16 @@ function handleItemEvents(obj){
     myImmuneUntil = now + (itemsMode === 'nanta' ? ITEM_FX_MS.immunityNanta
                         : itemsMode === 'spicy' ? ITEM_FX_MS.immunitySpicy : ITEM_FX_MS.immunity);
     update(roomRef(ROOM, 'players', playerId), { immuneUntil: myImmuneUntil });   // 공격자가 무적 여부를 미리 볼 수 있게 동기화
-    applyIncomingFx(e.type);
+    applyIncomingFx(e.type, e.by);
   });
 }
 
-function applyIncomingFx(type){
+function notifyStealResult(attackerId, outcome, amt){
+  if(!attackerId) return;
+  push(roomRef(ROOM, 'item_events'), { type: 'steal_result', target: attackerId, outcome, amt, at: serverNow() });
+}
+
+function applyIncomingFx(type, attackerId){
   const spicy = itemsMode === 'spicy' || itemsMode === 'nanta';   // 난타전도 방해 효과는 세게(매운맛과 동일)
   if(type === 'fog'){
     const box = el('qbox');
@@ -1437,13 +1470,19 @@ function applyIncomingFx(type){
     const amt = roundState.team_mode ? 2 : (itemsMode === 'nanta' ? 5 : 4);   // 개인전 매운맛 -4층·난타전 -5층, 팀전은 팀원 각자 -2층
     if(!roundState.team_mode && currentQid){
       const ms = ITEM_FX_MS.stealDefenseMs, reduced = ITEM_FX_MS.stealDefenseAmt;
-      myStealDefense = { amt, qid: currentQid, deadline: serverNow() + ms };
+      myStealDefense = { amt, qid: currentQid, deadline: serverNow() + ms, attackerId };
       showItemAlert(`🥷 강탈당했다! ${Math.round(ms/1000)}초 안에 이 문제를 맞히면 -${reduced}로 경감!`);
       clearTimeout(stealDefenseTimer);
       stealDefenseTimer = setTimeout(()=>{
-        if(myStealDefense){ bumpFloor(-myStealDefense.amt); myStealDefense = null; }
+        if(myStealDefense){
+          const d = myStealDefense;
+          bumpFloor(-d.amt);
+          notifyStealResult(d.attackerId, 'success', d.amt);
+          myStealDefense = null;
+        }
       }, ms);
     } else {
+      if(!roundState.team_mode) notifyStealResult(attackerId, 'success', amt);
       showItemAlert(`🥷 강탈당했다! -${amt}${unitLabel()}`);
       bumpFloor(-amt);
     }
