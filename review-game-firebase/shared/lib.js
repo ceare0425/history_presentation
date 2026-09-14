@@ -426,14 +426,22 @@ export function inLowerHalf(players, id) {
   return (me.floor || 0) <= medianFloor;
 }
 
-// 꼴찌(동률 포함)인지. 참가 2명 이상일 때만 의미 있음.
-// '방구석 축제'·'콤보 스파크' 지속시간을 꼴찌에게만 늘려주는 데 쓰인다.
-export function isLastPlace(players, id) {
-  if (!players || players.length < 2) return false;
-  const me = players.find((p) => p.id === id);
-  if (!me) return false;
-  const minFloor = Math.min(...players.map((p) => p.floor || 0));
-  return (me.floor || 0) === minFloor;
+// 참가 인원에 따라 '뒤에서 몇 명까지'를 하위권 우대 대상으로 볼지 정한다.
+// 5명 이하: 대상 없음 · 6~10명: 꼴찌 1명 · 11~15명: 3명 · 16~20명: 5명 · 21명 이상: 8명.
+function lastGroupSize(count) {
+  if (count <= 5) return 0;
+  if (count <= 10) return 1;
+  if (count <= 15) return 3;
+  if (count <= 20) return 5;
+  return 8;
+}
+
+// id가 위 기준의 '뒤에서 N명' 안에 드는지. '방구석 축제'·'콤보 스파크' 지속시간을 1분으로 늘려주는 데 쓰인다.
+export function isLastGroup(players, id) {
+  const ranked = rankedPlayers(players);
+  const n = lastGroupSize(ranked.length);
+  if (n <= 0) return false;
+  return ranked.slice(-n).some((p) => p.id === id);
 }
 
 // 방해 대상 후보: 상위 그룹 중 '중위권보다 일정 층 이상 앞선' 사람(자신 제외). 랭킹 순으로 반환.

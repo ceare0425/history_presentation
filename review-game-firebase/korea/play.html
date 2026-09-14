@@ -395,7 +395,7 @@ import {
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   TEAM_OPTIONS, teamInfo, teamStandings, activeBonus,
-  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastPlace, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader, choseongHint
+  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader, choseongHint
 } from '../shared/lib.js';
 
 const ROOM = 'korea';
@@ -1263,7 +1263,7 @@ async function applySelfItem(key){
   else if(key === 'shield'){ myShield = true; showItemAlert('🛡️ 콤보 방패 장착 — 다음 오답에도 연속 유지'); }
   else if(key === 'cure'){ clearIncomingFx(); showItemAlert('🍵 해독! 걸려 있던 방해를 풀었어요'); }
   else if(key === 'soloFest'){
-    const dur = isLastPlace(allPlayers, playerId) ? ITEM_FX_MS.soloFestLast : ITEM_FX_MS.soloFest;
+    const dur = isLastGroup(allPlayers, playerId) ? ITEM_FX_MS.soloFestLast : ITEM_FX_MS.soloFest;
     mySoloFestUntil = serverNow() + dur;
     showItemAlert(`🛋️ 방구석 축제 발동! ${Math.round(dur/1000)}초간 나만 2배 🎉`);
   }
@@ -1278,7 +1278,7 @@ async function applySelfItem(key){
     showItemAlert(`🪞 반사경! ${Math.round(dur/1000)}초 안에 날아오는 첫 견제를 되돌려요`);
   }
   else if(key === 'comboSpark'){
-    const dur = isLastPlace(allPlayers, playerId) ? ITEM_FX_MS.comboSparkLast : ITEM_FX_MS.comboSpark;
+    const dur = isLastGroup(allPlayers, playerId) ? ITEM_FX_MS.comboSparkLast : ITEM_FX_MS.comboSpark;
     myComboSparkUntil = serverNow() + dur;
     showItemAlert(`🎇 콤보 스파크 발동! ${Math.round(dur/1000)}초간 정답마다 카드 뒤집기 찬스, 연속일수록 대박 확률 UP`);
   }
