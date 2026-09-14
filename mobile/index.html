@@ -301,6 +301,22 @@
     window.scrollTo(0, savedListScroll);
   }
 
+  // 레슨 파일마다 만들어진 시기가 달라 원본 CSS 설계가 두 갈래로 갈린다.
+  //   - 세계사 계열: body 배경이 밝은 크림색이라 그대로 주입해도 안전
+  //   - 한국사·한능검 계열: body 배경이 거의 검정(#1A0D00) + body 자체에 flex 중앙정렬을 걸어둠
+  //     (PC 풀스크린 프레젠테이션에서 카드 바깥 여백을 어둡게 칠하기 위한 설계).
+  //     이걸 그대로 주입하면 모바일 페이지 자체의 상단바·제목 영역까지 덮어써서
+  //     어두운 배경에 어두운 글씨가 겹쳐 보이는 문제가 생긴다.
+  // 그래서 어느 계열이든 안전하게 주입되도록, 전역 html/body 규칙은 제거하고
+  // :root 커스텀 변수는 #slideList 범위로 좁혀서 슬라이드 내부 스타일(카드·빈칸 등)만 적용되게 한다.
+  function sanitizeLessonCss(css) {
+    return css
+      .replace(/:root(?![\w-])/g, '#slideList')
+      // 연속된 html{...} body{...} 규칙도 놓치지 않도록, 앞선 규칙의 '}'를 소비하지 않는
+      // 전방탐색(lookbehind)으로 "직전이 문자열 시작 / } / ;" 인 경우만 매치한다.
+      .replace(/(?<=^|\}|;)\s*((?:html|body)(?:\s*,\s*(?:html|body))*)\s*\{[^{}]*\}/g, '');
+  }
+
   async function showViewer(path, title) {
     document.getElementById('listView').style.display = 'none';
     document.getElementById('viewerView').style.display = 'block';
@@ -326,7 +342,7 @@
       if (styleEl) {
         const injected = document.createElement('style');
         injected.id = 'lessonStyle';
-        injected.textContent = styleEl.textContent;
+        injected.textContent = sanitizeLessonCss(styleEl.textContent);
         document.head.appendChild(injected);
       }
 
@@ -360,12 +376,17 @@
   }
   function escAttr(str) { return esc(str).replace(/'/g, '&#39;'); }
 
-  // 레슨 파일마다 빈칸 공개 방식(onclick 인라인 / data-reveal)이 달라도
-  // 항상 동작하도록 공통 위임 클릭 핸들러 하나로 처리한다.
+  // 레슨 파일마다 빈칸 공개 방식이 다름 — 세계사 계열은 onclick으로 'on' 클래스를,
+  // 한국사·한능검 계열은 PageDown 스크립트가 'revealed' 클래스를 토글해서 정답을 보여준다.
+  // 모바일에서는 원본 스크립트를 불러오지 않으므로, 두 클래스를 항상 같이 토글해서
+  // 어느 쪽 CSS 컨벤션이든 탭 한 번에 정답이 나오도록 통일한다.
   const REVEAL_SELECTOR = '.blank, .ox, .ans-btn, [data-reveal]';
   document.getElementById('slideList').addEventListener('click', e => {
     const el = e.target.closest(REVEAL_SELECTOR);
-    if (el) el.classList.toggle('on');
+    if (!el) return;
+    const show = !el.classList.contains('on') && !el.classList.contains('revealed');
+    el.classList.toggle('on', show);
+    el.classList.toggle('revealed', show);
   });
 
   window.addEventListener('popstate', () => {
