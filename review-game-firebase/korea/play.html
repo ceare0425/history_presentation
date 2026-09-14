@@ -431,7 +431,8 @@ let myUndoFloorDelta = 0;    // 되돌리면 복구할 층수(골든벨 실패 -
 let festivalBy = '';         // '축제'를 쓴 학생 이름 (배너 표시용)
 let myImmuneUntil = 0;       // 방해 피격 후 무적 종료 시각(ms)
 let frozen = false;          // '얼음' 피격 중 입력 잠금
-let iceTimer = null, fogTimer = null, itemAlertTimer = null;
+let iceTimer = null, fogTimer = null, itemAlertTimer = null, stealDefenseTimer = null;
+let myStealDefense = null;   // '강탈' 피격 직후 방어 창: { amt, qid, deadline } — 그 문제를 제시간에 맞히면 경감
 let fogAlertActive = false, iceAlertActive = false;   // 안개·얼음 알림은 효과가 끝날 때까지 유지
 let myFogUntil = 0, myIceUntil = 0;   // 안개·얼음 피격 종료 시각(ms) — 배너에 남은 시간 표시용
 const seenItemEvents = new Set();
@@ -668,6 +669,13 @@ async function submitAnswer(){
     if(mySkipFloor){ gain = 0; mySkipFloor = false; }         // '로켓 점프' 반동
     if(myJackpotArmed){ gain = 20; myJackpotArmed = false; showItemAlert(`🎲 인생 한방 대성공! +20${unitLabel()} 🎉`); } // '인생 한방' (다른 배수 무시, 고정 +20)
     p.floor = (p.floor||0) + gain;
+    if(myStealDefense && answeredQid === myStealDefense.qid && serverNow() <= myStealDefense.deadline){
+      clearTimeout(stealDefenseTimer);
+      const reduced = ITEM_FX_MS.stealDefenseAmt;
+      p.floor = Math.max(0, p.floor - reduced);
+      showItemAlert(`🛡️ 강탈 방어 성공! -${reduced}${unitLabel()}로 경감`);
+      myStealDefense = null;
+    }
     p.correct = (p.correct||0) + 1;
     p.streak = (p.streak||0) + 1;
     p.bestStreak = Math.max(p.bestStreak||0, p.streak);
@@ -797,6 +805,7 @@ function tick(){
       fogAlertActive = false; iceAlertActive = false; myFogUntil = 0; myIceUntil = 0;
       myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
       myUndoAvailable = false; myUndoFloorDelta = 0; randomboxOfferPending = false;
+      myStealDefense = null; clearTimeout(stealDefenseTimer);
       clearTimeout(iceTimer); clearTimeout(fogTimer);
       el('qbox').classList.remove('fogged');
       clearChoseongHint();
@@ -1426,8 +1435,18 @@ function applyIncomingFx(type){
     slideDown();
   } else if(type === 'steal'){
     const amt = roundState.team_mode ? 2 : (itemsMode === 'nanta' ? 5 : 4);   // 개인전 매운맛 -4층·난타전 -5층, 팀전은 팀원 각자 -2층
-    showItemAlert(`🥷 강탈당했다! -${amt}${unitLabel()}`);
-    bumpFloor(-amt);
+    if(!roundState.team_mode && currentQid){
+      const ms = ITEM_FX_MS.stealDefenseMs, reduced = ITEM_FX_MS.stealDefenseAmt;
+      myStealDefense = { amt, qid: currentQid, deadline: serverNow() + ms };
+      showItemAlert(`🥷 강탈당했다! ${Math.round(ms/1000)}초 안에 이 문제를 맞히면 -${reduced}로 경감!`);
+      clearTimeout(stealDefenseTimer);
+      stealDefenseTimer = setTimeout(()=>{
+        if(myStealDefense){ bumpFloor(-myStealDefense.amt); myStealDefense = null; }
+      }, ms);
+    } else {
+      showItemAlert(`🥷 강탈당했다! -${amt}${unitLabel()}`);
+      bumpFloor(-amt);
+    }
   }
 }
 
