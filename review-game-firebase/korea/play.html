@@ -1323,9 +1323,7 @@ async function useItem(){
     renderItemBar();
     const tgtLabel = nanta ? (target.name || '상대') : '선두권';
     if(key === 'steal'){
-      const amt = nanta ? 5 : 4;   // 난타전은 -5층으로 더 세게
-      await bumpFloor(amt);
-      myStealAttackUntil = serverNow() + ITEM_FX_MS.stealDefenseMs;   // 결과는 steal_result 이벤트로 나중에 통보됨
+      myStealAttackUntil = serverNow() + ITEM_FX_MS.stealDefenseMs;   // 내가 얻는 층수는 steal_result 이벤트로 결과가 정해진 뒤에 반영됨
     } else {
       showItemAlert(`${it.emoji} ${it.name} → ${tgtLabel}에게 발사!`);
     }
@@ -1383,6 +1381,7 @@ function handleItemEvents(obj){
       } else {
         showItemAlert(`🥷 강탈 성공! ${e.amt}${unitLabel()} 빼앗아왔어요!`);
       }
+      bumpFloor(e.amt);
       return;
     }
     // 전체에 영향을 주는 아이템 → 모든 학생에게 "누가 무엇을 써서 어떤 효과" 안내
@@ -1471,7 +1470,7 @@ function applyIncomingFx(type, attackerId){
     showItemAlert('⬇️ 미끄럼틀! 조금 뒤로 밀렸어요');
     slideDown();
   } else if(type === 'steal'){
-    const amt = roundState.team_mode ? 2 : (itemsMode === 'nanta' ? 5 : 4);   // 개인전 매운맛 -4층·난타전 -5층, 팀전은 팀원 각자 -2층
+    const amt = roundState.team_mode ? 2 : ITEM_FX_MS.stealAmt;   // 개인전은 방어 실패 시 -5층, 팀전은 팀원 각자 -2층
     if(!roundState.team_mode && currentQid){
       const ms = ITEM_FX_MS.stealDefenseMs, reduced = ITEM_FX_MS.stealDefenseAmt;
       myStealDefense = { amt, qid: currentQid, deadline: serverNow() + ms, attackerId };
