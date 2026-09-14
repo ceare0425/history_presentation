@@ -61,6 +61,19 @@
             { "label": "빈칸 학습", "color": "green" }
           ],
           "gradient": "linear-gradient(90deg, #6B3010, #C5A028)"
+        },
+        {
+          "title": "한능검 대비 — 고려시대",
+          "path": "한능검/한능검 고려시대.html",
+          "emoji": "🏛️",
+          "description": "한국사능력검정시험 대비 필기노트 기반 정리. 태조~성종 초기 정치, 중앙·지방 통치체제, 문벌귀족 사회와 무신정변, 무신정권기 사회 동요, 거란·여진·몽골 대외관계, 원간섭기~공민왕 개혁, 고려 멸망(위화도 회군)까지, 경제·사회·문화 총정리 빈칸 학습.",
+          "tags": [
+            { "label": "한능검 대비", "color": "orange" },
+            { "label": "고려시대", "color": "purple" },
+            { "label": "무신정변·대외관계", "color": "blue" },
+            { "label": "빈칸 학습", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
         }
       ]
     },
