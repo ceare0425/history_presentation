@@ -196,7 +196,7 @@
 
   async function loadPages() {
     try {
-      const res = await fetch('../pages.json');
+      const res = await fetch('../pages.json', { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       flattenLessons(data);
@@ -342,7 +342,7 @@
     if (oldStyle) oldStyle.remove();
 
     try {
-      const res = await fetch('../' + path);
+      const res = await fetch('../' + path, { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();
       const doc = new DOMParser().parseFromString(html, 'text/html');
