@@ -443,11 +443,11 @@ export function attackCandidates(players, byId, spicy = false, nanta = false) {
 }
 
 // 후보(랭킹 순) 중 하나를 가중치로 고른다. 1·2·3위에 50/30/20, 그 아래는 완만히 감소.
-// flat=true(난타전): 가중치 없이 후보 전원 균등 추첨 — 공격이 특정인에게 쏠리지 않고 판 전체로 퍼진다.
-export function pickAttackTarget(candidates, flat = false) {
+// 난타전도 매운맛과 동일한 가중치를 써서 1등이 가장 자주 저격당한다.
+export function pickAttackTarget(candidates) {
   if (!candidates.length) return null;
   const W = [50, 30, 20, 12, 8, 5, 3, 2, 1];
-  const weights = candidates.map((_, i) => (flat ? 1 : (W[i] ?? 1)));
+  const weights = candidates.map((_, i) => (W[i] ?? 1));
   const total = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * total;
   for (let i = 0; i < candidates.length; i++) {
