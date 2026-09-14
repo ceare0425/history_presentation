@@ -442,11 +442,11 @@ export function attackCandidates(players, byId, spicy = false, nanta = false) {
       && (p.floor || 0) - medianFloor >= gap);
 }
 
-// 후보(랭킹 순) 중 하나를 가중치로 고른다. 1·2·3위에 50/30/20, 그 아래는 완만히 감소.
-// 난타전도 매운맛과 동일한 가중치를 써서 1등이 가장 자주 저격당한다.
-export function pickAttackTarget(candidates) {
+// 후보(랭킹 순) 중 하나를 가중치로 고른다. 매운맛은 1·2·3위에 50/30/20, 그 아래는 완만히 감소.
+// 난타전(nanta=true)은 후보가 상위 3명뿐이라 1등 70% / 2등·3등 15%씩으로 더 쏠리게 한다.
+export function pickAttackTarget(candidates, nanta = false) {
   if (!candidates.length) return null;
-  const W = [50, 30, 20, 12, 8, 5, 3, 2, 1];
+  const W = nanta ? [70, 15, 15] : [50, 30, 20, 12, 8, 5, 3, 2, 1];
   const weights = candidates.map((_, i) => (W[i] ?? 1));
   const total = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * total;

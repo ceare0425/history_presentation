@@ -1272,7 +1272,7 @@ async function useItem(){
       showItemAlert('선두라서 방해 대신 🪜 사다리!');
       return applySelfItem('ladder');
     }
-    const target = pickAttackTarget(attackCandidates(allPlayers, playerId, itemsMode === 'spicy', nanta));
+    const target = pickAttackTarget(attackCandidates(allPlayers, playerId, itemsMode === 'spicy', nanta), nanta);
     if(!target){
       heldItem = null; await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
       renderItemBar();
