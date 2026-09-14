@@ -295,6 +295,8 @@
     document.getElementById('listView').style.display = 'block';
     document.getElementById('viewerView').style.display = 'none';
     document.getElementById('backBtn').style.display = 'none';
+    // 뷰어에서 스크롤해 내려간 위치가 그대로 남아있으면 목록이 스크롤된 채로 보이므로 맨 위로 복귀
+    window.scrollTo(0, 0);
   }
 
   async function showViewer(path, title) {
@@ -302,6 +304,8 @@
     document.getElementById('viewerView').style.display = 'block';
     document.getElementById('backBtn').style.display = 'inline-flex';
     document.getElementById('viewerTitle').textContent = title || path;
+    // 목록에서 스크롤해 내려간 상태로 레슨을 열면 뷰어도 그 위치에서 시작하므로 맨 위로 복귀
+    window.scrollTo(0, 0);
     const slideList = document.getElementById('slideList');
     slideList.innerHTML = `<div class="status-box"><div class="icon">⏳</div><h3>불러오는 중...</h3></div>`;
 
