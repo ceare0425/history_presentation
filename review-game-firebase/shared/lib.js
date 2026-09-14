@@ -298,7 +298,8 @@ export const ITEM_FX_MS = {
   fog: 8000, ice: 8000, festival: 20000, immunity: 8000,
   fogSpicy: 10000, iceSpicy: 10000, immunitySpicy: 4000,
   fogNanta: 5000, iceNanta: 5000, immunityNanta: 2500,
-  soloFest: 30000, clover: 30000, mirror: 15000, mirrorNanta: 10000, vest: 20000, comboSpark: 30000,
+  soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 15000, mirrorNanta: 10000, vest: 20000,
+  comboSpark: 30000, comboSparkLast: 60000,   // 꼴찌(동률 포함)가 쓰면 1분으로 늘어남
   stealAmt: 5, stealDefenseMs: 5000, stealDefenseAmt: 1,   // 강탈(개인전): 방어 실패 시 5층, 방어 성공(그 문제를 제시간에 맞힘) 시 1층만
 };
 
@@ -423,6 +424,16 @@ export function inLowerHalf(players, id) {
   if (!me) return false;
   const medianFloor = ranked[Math.floor(ranked.length / 2)]?.floor || 0;
   return (me.floor || 0) <= medianFloor;
+}
+
+// 꼴찌(동률 포함)인지. 참가 2명 이상일 때만 의미 있음.
+// '방구석 축제'·'콤보 스파크' 지속시간을 꼴찌에게만 늘려주는 데 쓰인다.
+export function isLastPlace(players, id) {
+  if (!players || players.length < 2) return false;
+  const me = players.find((p) => p.id === id);
+  if (!me) return false;
+  const minFloor = Math.min(...players.map((p) => p.floor || 0));
+  return (me.floor || 0) === minFloor;
 }
 
 // 방해 대상 후보: 상위 그룹 중 '중위권보다 일정 층 이상 앞선' 사람(자신 제외). 랭킹 순으로 반환.
