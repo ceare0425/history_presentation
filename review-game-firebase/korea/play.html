@@ -314,7 +314,7 @@
       <div class="festival-banner" id="mirrorBanner">🪞 반사경 대기 중 · <span id="mirrorRemain"></span>초 남음</div>
       <div class="debuff-banner" id="fogBanner">🌫️ 안개! 문제가 흐려요 · <span id="fogRemain"></span>초 남음</div>
       <div class="debuff-banner" id="iceBanner">🧊 얼음! 제출 불가 · <span id="iceRemain"></span>초 남음</div>
-      <div class="atk-banner" id="stealAtkBanner">🥷 강탈 공격 중··· <span id="stealAtkRemain"></span>초 후 결과</div>
+      <div class="atk-banner" id="stealAtkBanner">🥷⏳ 강탈 공격 중··· <span id="stealAtkRemain"></span>초 후 결과!</div>
       <div class="item-alert" id="itemAlert"></div>
       <div class="hud">
         <div class="floor-rank">
@@ -682,7 +682,7 @@ async function submitAnswer(){
       clearTimeout(stealDefenseTimer);
       const reduced = ITEM_FX_MS.stealDefenseAmt;
       p.floor = Math.max(0, p.floor - reduced);
-      showItemAlert(`🛡️ 강탈 방어 성공! -${reduced}${unitLabel()}로 경감`);
+      showItemAlert(`🛡️✨ 방어 성공! -${reduced}${unitLabel()}만 당했어요`);
       notifyStealResult(myStealDefense.attackerId, 'defended', reduced);
       myStealDefense = null;
     }
@@ -1377,9 +1377,9 @@ function handleItemEvents(obj){
       if(e.target !== playerId) return;
       myStealAttackUntil = 0;
       if(e.outcome === 'defended'){
-        showItemAlert(`🛡️ 상대가 방어! ${e.amt}${unitLabel()}밖에 못 빼앗았어요`);
+        showItemAlert(`😅 상대가 막았어요! ${e.amt}${unitLabel()}밖에 못 빼앗았어요`);
       } else {
-        showItemAlert(`🥷 강탈 성공! ${e.amt}${unitLabel()} 빼앗아왔어요!`);
+        showItemAlert(`🥷💰 강탈 성공! ${e.amt}${unitLabel()} 빼앗아왔어요!`);
       }
       bumpFloor(e.amt);
       return;
@@ -1474,19 +1474,20 @@ function applyIncomingFx(type, attackerId){
     if(!roundState.team_mode && currentQid){
       const ms = ITEM_FX_MS.stealDefenseMs, reduced = ITEM_FX_MS.stealDefenseAmt;
       myStealDefense = { amt, qid: currentQid, deadline: serverNow() + ms, attackerId };
-      showItemAlert(`🥷 강탈당했다! ${Math.round(ms/1000)}초 안에 이 문제를 맞히면 -${reduced}로 경감!`);
+      showItemAlert(`🥷💦 강탈당했다! ${Math.round(ms/1000)}초 안에 이 문제를 맞히면 -${reduced}로 막아요!`);
       clearTimeout(stealDefenseTimer);
       stealDefenseTimer = setTimeout(()=>{
         if(myStealDefense){
           const d = myStealDefense;
           bumpFloor(-d.amt);
+          showItemAlert(`😭 방어 실패! -${d.amt}${unitLabel()} 당했다`);
           notifyStealResult(d.attackerId, 'success', d.amt);
           myStealDefense = null;
         }
       }, ms);
     } else {
       if(!roundState.team_mode) notifyStealResult(attackerId, 'success', amt);
-      showItemAlert(`🥷 강탈당했다! -${amt}${unitLabel()}`);
+      showItemAlert(`🥷💦 강탈당했다! -${amt}${unitLabel()}`);
       bumpFloor(-amt);
     }
   }
