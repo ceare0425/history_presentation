@@ -1281,6 +1281,11 @@ async function useItem(){
     }
     heldItem = null;
     await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
+    if(target.immuneUntil && serverNow() < target.immuneUntil){
+      renderItemBar();
+      showItemAlert('🛡️ 상대방이 무적 상태여서 아이템이 작동하지 않습니다');
+      return;
+    }
     await push(roomRef(ROOM, 'item_events'), {
       type: key, by: playerId, byName: playerName,
       target: target.id, targetRank: target.rank, at: serverNow()
@@ -1376,6 +1381,7 @@ function handleItemEvents(obj){
     if(now < myImmuneUntil){ showItemAlert('🛡️ 방해를 흘려보냈다!'); return; }
     myImmuneUntil = now + (itemsMode === 'nanta' ? ITEM_FX_MS.immunityNanta
                         : itemsMode === 'spicy' ? ITEM_FX_MS.immunitySpicy : ITEM_FX_MS.immunity);
+    update(roomRef(ROOM, 'players', playerId), { immuneUntil: myImmuneUntil });   // 공격자가 무적 여부를 미리 볼 수 있게 동기화
     applyIncomingFx(e.type);
   });
 }
