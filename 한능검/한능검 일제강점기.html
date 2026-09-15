@@ -1057,12 +1057,26 @@ body {
   }
   window.revealAll = revealAll;
 
+  function hideAll(i) {
+    var bs = getBlanks(i);
+    bs.forEach(function(b) { b.classList.remove('revealed'); });
+    revealed[i] = 0;
+    if (i === cur) updateUI();
+  }
+  window.hideAll = hideAll;
+
   document.addEventListener('click', function(e) {
     var btn = e.target.closest('.reveal-all-btn');
     if (!btn) return;
     var slideEl = btn.closest('.slide');
     var idx = slides.indexOf(slideEl);
-    if (idx >= 0) revealAll(idx);
+    if (idx < 0) return;
+    var bs = getBlanks(idx);
+    if (bs.length > 0 && revealed[idx] === bs.length) {
+      hideAll(idx);
+    } else {
+      revealAll(idx);
+    }
   });
 
   function goSlide(i) {
