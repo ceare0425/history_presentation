@@ -351,7 +351,7 @@
         <div class="festival-banner" id="comboSparkBanner">🎇 콤보 스파크! 정답마다 카드 뒤집기 · <span id="comboSparkRemain"></span>초 남음</div>
         <div class="festival-banner" id="goldenbellBanner">🎯 골든벨 문제! 맞히면 ×3 · 틀리면 -2</div>
         <div class="festival-banner" id="jackpotBanner">🎲 인생 한방! 맞히면 +20 · 틀리면 -10</div>
-        <div class="festival-banner" id="snowballBanner">🌀 눈덩이! 다음 정답에 연속 수만큼 추가</div>
+        <div class="festival-banner" id="snowballBanner">🌀 눈덩이! 다음 정답에 연속 수만큼 추가 (최대 10)</div>
         <div class="festival-banner" id="vestBanner">🛟 구명조끼! 틀려도 안전 · <span id="vestRemain"></span>초 남음</div>
         <div class="festival-banner" id="cloverBanner">🍀 네잎클로버! 정답마다 행운 · <span id="cloverRemain"></span>초 남음</div>
         <div class="festival-banner" id="mirrorBanner">🪞 반사경 대기 중 · <span id="mirrorRemain"></span>초 남음</div>
@@ -727,7 +727,7 @@ async function submitAnswer(){
     if(myGoldenbellArmed){ gain *= 3; myGoldenbellArmed = false; showItemAlert(`🎯 골든벨 성공! ×3 → +${gain}${unitLabel()}!`); } // '골든벨'
     if(serverNow() < myCloverUntil && Math.random() < 0.5){ gain += 1; showItemAlert(`🍀 행운! +1${unitLabel()} 더!`); } // '네잎클로버'
     if(serverNow() < myComboSparkUntil){ comboSparkStreak = p.streak || 0; }   // '콤보 스파크' — 카드 뒤집기는 답 처리 후 진행
-    if(mySnowballArmed){ const add = Math.max(1, p.streak || 0); gain += add; mySnowballArmed = false; showItemAlert(`🌀 눈덩이! 연속 ${add} → +${add}${unitLabel()} 추가!`); } // '눈덩이'
+    if(mySnowballArmed){ const streakNow = p.streak || 0; const add = Math.min(ITEM_FX_MS.snowballCap, Math.max(1, streakNow)); gain += add; mySnowballArmed = false; showItemAlert(`🌀 눈덩이! 연속 ${streakNow} → +${add}${unitLabel()} 추가!`); } // '눈덩이' (최대 ITEM_FX_MS.snowballCap층)
     if(mySkipFloor){ gain = 0; mySkipFloor = false; }         // '로켓 점프' 반동
     if(myJackpotArmed){ gain = 20; myJackpotArmed = false; showItemAlert(`🎲 인생 한방 대성공! +20${unitLabel()} 🎉`); } // '인생 한방' (다른 배수 무시, 고정 +20)
     p.floor = (p.floor||0) + gain;
@@ -1070,7 +1070,7 @@ function renderItemBar(){
       else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u} (그 팀 2등 층수 아래로는 안 내려감)`;
       else if(heldItem === 'goldenbell') desc = `다음 정답 ×3! 틀리면 연속 끊김 -2${u}`;
       else if(heldItem === 'jackpot') desc = `다음 정답 +20${u} / 오답 -10${u}`;
-      else if(heldItem === 'snowball') desc = `다음 정답에 지금 연속 수만큼 ${u} 추가`;
+      else if(heldItem === 'snowball') desc = `다음 정답에 지금 연속 수만큼 ${u} 추가 (최대 10)`;
       else if(heldItem === 'vest') desc = `20초간 틀려도 ${u}·연속 유지 (미끄럼틀·강탈 막음)`;
       else if(heldItem === 'clover') desc = `30초간 정답마다 50%로 +1${u} 더`;
       else if(heldItem === 'roulette') desc = `즉시 +1 ~ +8${u} 랜덤!`;
@@ -1264,7 +1264,7 @@ async function applySelfItem(key){
   }
   else if(key === 'goldenbell'){ myGoldenbellArmed = true; showItemAlert('🎯 골든벨! 다음 정답은 ×3, 틀리면 -2층'); }
   else if(key === 'jackpot'){ myJackpotArmed = true; showItemAlert(`🎲 인생 한방! 다음 정답 +20${unitLabel()}, 틀리면 -10${unitLabel()}`); }
-  else if(key === 'snowball'){ mySnowballArmed = true; showItemAlert('🌀 눈덩이! 다음 정답에 지금 연속 수만큼 층수 추가'); }
+  else if(key === 'snowball'){ mySnowballArmed = true; showItemAlert('🌀 눈덩이! 다음 정답에 지금 연속 수만큼 층수 추가 (최대 10층)'); }
   else if(key === 'vest'){ myVestUntil = serverNow() + ITEM_FX_MS.vest; }
   else if(key === 'clover'){ myCloverUntil = serverNow() + ITEM_FX_MS.clover; }
   else if(key === 'mirror'){
