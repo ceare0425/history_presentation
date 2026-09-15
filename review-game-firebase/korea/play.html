@@ -1273,7 +1273,7 @@ async function applySelfItem(key){
   }
   else if(key === 'shield'){ myShield = true; showItemAlert('🛡️ 콤보 방패 장착 — 다음 오답에도 연속 유지'); }
   else if(key === 'cure'){ clearIncomingFx(); showItemAlert('🍵 해독! 걸려 있던 방해를 풀었어요'); }
-  // soloFest·vest·clover·mirror는 tick()이 그리는 자체 카운트다운 배너(festivalBanner 계열)가
+  // soloFest·vest·clover·mirror·comboSpark는 tick()이 그리는 자체 카운트다운 배너(festivalBanner 계열)가
   // 이미 "무슨 효과가 몇 초 남았는지"를 실시간으로 보여주므로, 별도 item-alert 토스트는 띄우지 않는다.
   // (토스트는 '문제가 바뀔 때까지' 유지되는 방식이라 효과가 먼저 끝나도 안 사라진 것처럼 보이는 문제가 있었음)
   else if(key === 'soloFest'){
@@ -1292,7 +1292,6 @@ async function applySelfItem(key){
   else if(key === 'comboSpark'){
     const dur = isLastGroup(allPlayers, playerId) ? ITEM_FX_MS.comboSparkLast : ITEM_FX_MS.comboSpark;
     myComboSparkUntil = serverNow() + dur;
-    showItemAlert(`🎇 콤보 스파크 발동! ${Math.round(dur/1000)}초간 정답마다 카드 뒤집기 찬스, 연속일수록 대박 확률 UP`);
   }
   else if(key === 'roulette'){
     const d = Math.floor(Math.random() * 8) + 1;   // +1 ~ +8
