@@ -114,13 +114,16 @@
     background:var(--tcolor,#999);
   }
 
+  /* 효과 배너 전용 예약 공간: 안에서 뭐가 뜨고 사라지든 이 높이는 늘 고정이라 문제 화면이 밀리지 않음
+     (아주 드물게 2개 이상이 동시에 뜨면 그때만 살짝 커짐) */
+  .fx-slot{ min-height:90px; margin-bottom:.8vh; flex:0 0 auto; }
   .bonus-banner{
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#7a3b00;
     background:linear-gradient(90deg,#ffe08a,#ffc857); border-radius:12px; padding:8px;
     flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
-    transition:max-height .28s ease, margin-bottom .28s ease, opacity .2s ease;
+    transition:max-height .28s ease, opacity .2s ease;
   }
-  .bonus-banner.show{ max-height:90px; margin-bottom:.8vh; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
+  .bonus-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   @keyframes bonusPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.03); } }
 
   .avatar-char{
@@ -144,12 +147,13 @@
     100%{ transform:translateY(3px) rotate(0deg) scale(.97); }
   }
 
+  /* 정답/오답 표시도 늘 같은 자리를 예약해 두고 보이기만 바꿔서, 답을 맞힐 때마다 문제 박스가 밀리지 않게 함 */
   .feedback{
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1.15rem; border-radius:12px; padding:10px;
-    flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
-    transition:max-height .28s ease, margin-bottom .28s ease, opacity .2s ease;
+    flex:0 0 auto; margin-bottom:.8vh; min-height:2.6em;
+    visibility:hidden; opacity:0; transition:opacity .2s ease;
   }
-  .feedback.show{ max-height:90px; margin-bottom:.8vh; opacity:1; }
+  .feedback.show{ visibility:visible; opacity:1; }
   .feedback.correct{ background:#e6f7ec; color:var(--good); }
   .feedback.wrong{ background:#fbeaea; color:var(--bad); }
 
@@ -181,23 +185,23 @@
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#5a3d00;
     background:linear-gradient(90deg,#ffe08a,#a6e8ff,#ffd0f0); border-radius:12px; padding:8px;
     flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
-    transition:max-height .28s ease, margin-bottom .28s ease, opacity .2s ease;
+    transition:max-height .28s ease, opacity .2s ease;
   }
-  .festival-banner.show{ max-height:90px; margin-bottom:.8vh; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
+  .festival-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .debuff-banner{
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
     background:linear-gradient(90deg,#4b5563,#6b7280); border-radius:12px; padding:8px;
     flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
-    transition:max-height .28s ease, margin-bottom .28s ease, opacity .2s ease;
+    transition:max-height .28s ease, opacity .2s ease;
   }
-  .debuff-banner.show{ max-height:90px; margin-bottom:.8vh; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
+  .debuff-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .atk-banner{
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
     background:linear-gradient(90deg,#7c2d12,#b91c1c); border-radius:12px; padding:8px;
     flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
-    transition:max-height .28s ease, margin-bottom .28s ease, opacity .2s ease;
+    transition:max-height .28s ease, opacity .2s ease;
   }
-  .atk-banner.show{ max-height:90px; margin-bottom:.8vh; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
+  .atk-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .item-alert{
     text-align:center; font-weight:800; font-size:1rem; color:#5b3a00;
     background:linear-gradient(90deg,#fff0c8,#ffe08a); border-radius:12px; padding:8px;
@@ -330,19 +334,21 @@
 
   <div id="playView" class="view hidden">
     <div class="play-top">
-      <div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! <span id="bonusRemain"></span>초 남음</div>
-      <div class="festival-banner" id="festivalBanner">🌈 <span id="festivalWho"></span>축제! <span id="festivalScope">모두</span> 2배 · <span id="festivalRemain"></span>초 남음</div>
-      <div class="festival-banner" id="soloFestBanner">🛋️ 방구석 축제! 나만 2배 · <span id="soloFestRemain"></span>초 남음</div>
-      <div class="festival-banner" id="comboSparkBanner">🎇 콤보 스파크! 정답마다 카드 뒤집기 · <span id="comboSparkRemain"></span>초 남음</div>
-      <div class="festival-banner" id="goldenbellBanner">🎯 골든벨 문제! 맞히면 ×3 · 틀리면 -2</div>
-      <div class="festival-banner" id="jackpotBanner">🎲 인생 한방! 맞히면 +20 · 틀리면 -10</div>
-      <div class="festival-banner" id="snowballBanner">🌀 눈덩이! 다음 정답에 연속 수만큼 추가</div>
-      <div class="festival-banner" id="vestBanner">🛟 구명조끼! 틀려도 안전 · <span id="vestRemain"></span>초 남음</div>
-      <div class="festival-banner" id="cloverBanner">🍀 네잎클로버! 정답마다 행운 · <span id="cloverRemain"></span>초 남음</div>
-      <div class="festival-banner" id="mirrorBanner">🪞 반사경 대기 중 · <span id="mirrorRemain"></span>초 남음</div>
-      <div class="debuff-banner" id="fogBanner">🌫️ 안개! 문제가 흐려요 · <span id="fogRemain"></span>초 남음</div>
-      <div class="debuff-banner" id="iceBanner">🧊 얼음! 제출 불가 · <span id="iceRemain"></span>초 남음</div>
-      <div class="atk-banner" id="stealAtkBanner">🥷⏳ 강탈 공격 중··· <span id="stealAtkRemain"></span>초 후 결과!</div>
+      <div class="fx-slot">
+        <div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! <span id="bonusRemain"></span>초 남음</div>
+        <div class="festival-banner" id="festivalBanner">🌈 <span id="festivalWho"></span>축제! <span id="festivalScope">모두</span> 2배 · <span id="festivalRemain"></span>초 남음</div>
+        <div class="festival-banner" id="soloFestBanner">🛋️ 방구석 축제! 나만 2배 · <span id="soloFestRemain"></span>초 남음</div>
+        <div class="festival-banner" id="comboSparkBanner">🎇 콤보 스파크! 정답마다 카드 뒤집기 · <span id="comboSparkRemain"></span>초 남음</div>
+        <div class="festival-banner" id="goldenbellBanner">🎯 골든벨 문제! 맞히면 ×3 · 틀리면 -2</div>
+        <div class="festival-banner" id="jackpotBanner">🎲 인생 한방! 맞히면 +20 · 틀리면 -10</div>
+        <div class="festival-banner" id="snowballBanner">🌀 눈덩이! 다음 정답에 연속 수만큼 추가</div>
+        <div class="festival-banner" id="vestBanner">🛟 구명조끼! 틀려도 안전 · <span id="vestRemain"></span>초 남음</div>
+        <div class="festival-banner" id="cloverBanner">🍀 네잎클로버! 정답마다 행운 · <span id="cloverRemain"></span>초 남음</div>
+        <div class="festival-banner" id="mirrorBanner">🪞 반사경 대기 중 · <span id="mirrorRemain"></span>초 남음</div>
+        <div class="debuff-banner" id="fogBanner">🌫️ 안개! 문제가 흐려요 · <span id="fogRemain"></span>초 남음</div>
+        <div class="debuff-banner" id="iceBanner">🧊 얼음! 제출 불가 · <span id="iceRemain"></span>초 남음</div>
+        <div class="atk-banner" id="stealAtkBanner">🥷⏳ 강탈 공격 중··· <span id="stealAtkRemain"></span>초 후 결과!</div>
+      </div>
       <div class="item-alert" id="itemAlert"></div>
       <div class="hud">
         <div class="floor-rank">
