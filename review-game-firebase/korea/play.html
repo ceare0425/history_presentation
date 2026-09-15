@@ -128,8 +128,7 @@
   @keyframes bonusPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.03); } }
 
   .avatar-char{
-    text-align:center; font-size:2.4rem; line-height:1; margin:.2vh 0 .4vh;
-    flex:0 0 auto; user-select:none;
+    font-size:1.9rem; line-height:1; flex:0 0 auto; user-select:none;
   }
   .avatar-char.happy{ animation:avatarHappy .8s ease; }
   @keyframes avatarHappy{
@@ -358,6 +357,7 @@
       <div class="item-alert" id="itemAlert"></div>
       <div class="hud">
         <div class="floor-rank">
+          <div class="avatar-char" id="avatarChar">🧗</div>
           <div class="floor-badge">🏢 <span id="floorVal">0</span><span class="u-unit">층</span></div>
           <span class="rank-badge" id="rankBadge"></span>
         </div>
@@ -368,8 +368,6 @@
     </div>
 
     <div class="play-scroll">
-      <div class="avatar-char" id="avatarChar">🧗</div>
-
       <div id="feedback" class="feedback"></div>
 
       <div class="unit-tag" id="unitTag"></div>
