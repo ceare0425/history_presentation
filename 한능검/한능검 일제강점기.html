@@ -378,6 +378,25 @@ body {
 }
 .nav-hint { font-size: 11px; color: #A07850; opacity: 0.8; }
 
+/* === Reveal-all button === */
+.reveal-all-btn {
+  margin-left: auto;
+  font-size: 0.6em;
+  font-weight: 700;
+  font-family: 'Noto Serif KR', serif;
+  color: var(--main);
+  background: rgba(197,160,40,0.18);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.22em 0.75em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.reveal-all-btn:hover { background: rgba(197,160,40,0.38); }
+.reveal-all-btn:active { background: rgba(197,160,40,0.55); }
+
 /* Progress bar */
 #progressBar {
   position: fixed; top: 0; left: 0; height: 3px;
@@ -998,6 +1017,28 @@ body {
     return Array.from(slides[i].querySelectorAll('.blank'));
   }
 
+  function revealAll(i) {
+    var bs = getBlanks(i);
+    bs.forEach(function(b) { b.classList.add('revealed'); });
+    revealed[i] = bs.length;
+    if (i === cur) updateUI();
+  }
+  window.revealAll = revealAll;
+
+  function addRevealButtons() {
+    slides.forEach(function(slide, i) {
+      var header = slide.querySelector('.slide-header');
+      if (!header) return;
+      if (getBlanks(i).length === 0) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'reveal-all-btn';
+      btn.textContent = '전체 공개';
+      btn.addEventListener('click', function() { revealAll(i); });
+      header.appendChild(btn);
+    });
+  }
+
   function goSlide(i) {
     slides[cur].classList.remove('active');
     cur = Math.max(0, Math.min(i, total - 1));
@@ -1076,6 +1117,7 @@ body {
     }
   }, { passive: true });
 
+  addRevealButtons();
   updateUI();
 })();
 </script>
