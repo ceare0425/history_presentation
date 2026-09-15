@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한능검 - 일제강점기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --main: #8B4513;
+  --dark: #6B3010;
+  --light: #FFF8E1;
+  --accent: #C5A028;
+  --bg: #F5E6C4;
+  --card-bg: #FDF5E0;
+  --text: #2C1A0E;
+  --text-sub: #5C3D1E;
+  --border: #A07850;
+  --gold: #C5A028;
+  --crisis: #B23A3A;
+  --peak: #1F7A4D;
+  --nav-h: 48px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: min(1.75vw, calc((100vh - 48px) / 28));
+  line-height: 1.6;
+}
+body {
+  background: #1A0D00;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === Presentation container === */
+.presentation {
+  position: relative;
+  width: min(100vw, calc((100vh - 48px) * 16 / 9));
+  height: min(calc(100vw * 9 / 16), calc(100vh - 48px));
+  background: var(--bg);
+  overflow: hidden;
+  border: 2px solid var(--border);
+  outline: 4px solid var(--gold);
+  outline-offset: -8px;
+}
+
+/* === Slides === */
+.slide {
+  display: none;
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+  background: var(--bg);
+  padding: 0.9em 1.4em 0.5em;
+}
+.slide.active { display: flex; }
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 2em, rgba(139,100,20,0.025) 2em, rgba(139,100,20,0.025) calc(2em + 1px));
+  pointer-events: none;
+  z-index: 0;
+}
+.slide > * { position: relative; z-index: 1; }
+
+/* === Slide header === */
+.slide-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.3em;
+  margin-bottom: 0.5em;
+  flex-shrink: 0;
+}
+.slide-chapter {
+  background: var(--main);
+  color: #FFF8E1;
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 0.18em 0.65em;
+  border-radius: 2px;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+}
+.slide-title {
+  font-size: 1.3em;
+  font-weight: 900;
+  color: var(--main);
+  font-family: 'Nanum Myeongjo', serif;
+}
+
+/* === Body === */
+.slide-body {
+  flex: none;
+  height: 52%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+}
+.slide-body.tall { height: 72%; }
+
+/* === Grid === */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5em; flex: 1; min-height: 0; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.45em; flex: 1; min-height: 0; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.4em; flex: 1; min-height: 0; }
+.grid-5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 0.35em; flex: 1; min-height: 0; }
+
+/* === Photo card (사진 자료) === */
+.photo-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4em 0.55em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  min-height: 0;
+  overflow: hidden;
+}
+.photo-card .photo-wrap {
+  flex: 1;
+  min-height: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #00000010;
+}
+.photo-card .photo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photo-card .photo-cap {
+  flex-shrink: 0;
+  font-size: 0.76em;
+  color: var(--text);
+  line-height: 1.5;
+  text-align: center;
+}
+.photo-card .photo-tag {
+  display: inline-block;
+  font-size: 0.66em;
+  font-weight: 700;
+  color: var(--main);
+  background: rgba(197,160,40,0.18);
+  border-radius: 3px;
+  padding: 0.03em 0.4em;
+  margin-bottom: 0.1em;
+}
+.photo-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6em; flex: 1; min-height: 0; }
+.photo-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5em; flex: 1; min-height: 0; }
+.photo-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.45em; flex: 1; min-height: 0; }
+
+/* === Card === */
+.card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 0.45em 0.7em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  min-height: 0;
+  overflow: hidden;
+}
+.card.crisis { border-left: 4px solid var(--crisis); }
+.card.peak { border-left: 4px solid var(--peak); }
+.card-title {
+  font-size: 0.87em;
+  font-weight: 700;
+  color: var(--main);
+  border-bottom: 1px solid rgba(139,69,19,0.2);
+  padding-bottom: 0.15em;
+  margin-bottom: 0.12em;
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 0.35em;
+}
+.card-body { font-size: 0.79em; color: var(--text); line-height: 1.65; min-height: 0; }
+
+/* === mini tags === */
+.mini-tag {
+  display: inline-block; font-size: 0.68em; font-weight: 700;
+  border-radius: 3px; padding: 0.03em 0.4em; color: #fff; flex-shrink: 0;
+}
+.mini-tag.crisis { background: var(--crisis); }
+.mini-tag.peak { background: var(--peak); }
+
+/* === Info box === */
+.info-box {
+  background: rgba(197,160,40,0.1);
+  border: 1.5px solid var(--gold);
+  border-radius: 4px;
+  padding: 0.35em 0.7em;
+  font-size: 0.77em;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.info-box strong { color: var(--main); }
+
+/* === Source box (사료 제시) === */
+.source-box {
+  background: rgba(139,69,19,0.06);
+  border: 1.5px dashed var(--border);
+  border-left: 4px solid var(--main);
+  border-radius: 4px;
+  padding: 0.3em 0.7em;
+  font-size: 0.75em;
+  color: var(--text-sub);
+  font-style: italic;
+  flex-shrink: 0;
+  line-height: 1.55;
+}
+.source-box .src-tag {
+  display: inline-block;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--main);
+  background: rgba(197,160,40,0.2);
+  border-radius: 3px;
+  padding: 0 0.4em;
+  margin-right: 0.4em;
+  font-size: 0.92em;
+}
+
+/* === Item list === */
+.item-list { list-style: none; display: flex; flex-direction: column; gap: 0.18em; }
+.item-list li {
+  position: relative;
+  padding-left: 1.05em;
+  font-size: 0.84em;
+  color: var(--text);
+  line-height: 1.6;
+}
+.item-list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.88em;
+}
+.item-list li strong { color: var(--main); font-weight: 700; }
+
+/* === Blank mechanic === */
+.blank {
+  display: inline-block;
+  border-bottom: 2px solid var(--main);
+  background: rgba(139,69,19,0.07);
+  border-radius: 3px 3px 0 0;
+  padding: 0.04em 0.4em 0;
+  white-space: nowrap;
+  cursor: default;
+  transition: background 0.35s, border-color 0.35s;
+}
+.blank::after {
+  content: attr(data-answer);
+  font-weight: 700;
+  color: transparent;
+  transition: color 0.35s;
+}
+.blank.revealed { background: rgba(197,160,40,0.2); border-color: var(--gold); }
+.blank.revealed::after { color: var(--main); }
+
+/* === Cover === */
+.slide-cover {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(ellipse at center, #FDF5E0 0%, #F0D9A0 45%, #E8C87A 100%);
+  gap: 0.4em;
+}
+.cover-deco { font-size: 2.4em; }
+.cover-subject { font-size: 0.85em; color: var(--text-sub); letter-spacing: 0.18em; }
+.cover-title { font-size: 2.5em; font-weight: 900; color: var(--main); font-family: 'Nanum Myeongjo', serif; line-height: 1.2; }
+.cover-subtitle { font-size: 0.87em; color: var(--text-sub); }
+.cover-hint {
+  font-size: 0.73em; color: var(--text-sub);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 0.32em 1em;
+  background: rgba(255,248,225,0.5);
+  margin-top: 0.4em;
+}
+
+/* === TOC === */
+.toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0.32em; flex: 1; align-content: start; }
+.toc-item {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-left: 4px solid var(--main);
+  border-radius: 4px;
+  padding: 0.28em 0.55em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  display: flex; flex-direction: column; gap: 0.05em;
+}
+.toc-item:hover { background: rgba(139,69,19,0.07); transform: translateX(3px); }
+.toc-num { font-size: 0.85em; font-weight: 900; color: var(--accent); font-family: 'Nanum Myeongjo', serif; }
+.toc-name { font-size: 0.7em; font-weight: 700; color: var(--main); }
+.toc-sub { font-size: 0.58em; color: var(--text-sub); }
+
+/* === Summary table === */
+.sum-table { width: 100%; border-collapse: collapse; font-size: 0.74em; }
+.sum-table th {
+  background: var(--main); color: #FFF8E1;
+  padding: 0.26em 0.45em; font-weight: 700; text-align: center;
+  border: 1px solid var(--border);
+}
+.sum-table td {
+  padding: 0.22em 0.45em;
+  border: 1px solid rgba(139,69,19,0.2);
+  color: var(--text); vertical-align: middle;
+  text-align: center;
+}
+.sum-table tr:nth-child(even) td { background: rgba(139,69,19,0.04); }
+.sum-table td.rowhead { background: rgba(197,160,40,0.18); font-weight: 700; color: var(--main); }
+
+/* === Timeline === */
+.timeline-row { display: flex; align-items: stretch; gap: 0.3em; flex: 1; }
+.tl-item {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-top: 4px solid var(--accent);
+  border-radius: 4px;
+  padding: 0.35em 0.5em;
+  font-size: 0.72em;
+  color: var(--text);
+  display: flex; flex-direction: column; gap: 0.15em;
+}
+.tl-item.crisis { border-top-color: var(--crisis); }
+.tl-item .tl-era { font-weight: 900; color: var(--main); font-size: 0.95em; }
+
+/* === End slide === */
+.slide-end {
+  align-items: center; justify-content: center; text-align: center;
+  background: radial-gradient(ellipse at center, #FDF5E0 0%, #F0D9A0 100%);
+  gap: 0.5em;
+}
+
+/* === Nav bar === */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 48px;
+  background: rgba(253,245,224,0.97);
+  border-top: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.8rem; z-index: 999; font-size: 14px;
+}
+.nav-btn {
+  width: 2rem; height: 2rem;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  background: #FDF5E0;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; padding: 0;
+}
+.nav-btn svg { width: 0.85rem; height: 0.85rem; fill: #8B4513; }
+.nav-btn:hover:not(:disabled) { background: #8B4513; border-color: #8B4513; }
+.nav-btn:hover:not(:disabled) svg { fill: #FFF8E1; }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.nav-label { font-size: 13px; color: #5C3D1E; font-weight: 700; min-width: 4.5rem; text-align: center; }
+.nav-blank-info {
+  font-size: 12px; color: #8B4513;
+  background: rgba(197,160,40,0.15);
+  border: 1px solid rgba(197,160,40,0.5);
+  border-radius: 10px; padding: 0.1em 0.6em;
+  min-width: 5rem; text-align: center;
+}
+.nav-hint { font-size: 11px; color: #A07850; opacity: 0.8; }
+
+/* Progress bar */
+#progressBar {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--main), var(--gold));
+  transition: width 0.3s ease; z-index: 1000; width: 0%;
+}
+
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="progressBar"></div>
+<div class="presentation" id="pres">
+
+<!-- ═══════════════════════ SLIDE 0: Cover ═══════════════════════ -->
+<div class="slide slide-cover active" data-slide="0">
+  <div class="cover-deco">🕊️</div>
+  <div class="cover-subject">한국사능력검정시험 대비 · 필기노트 기반 정리</div>
+  <div class="cover-title">일제강점기<br>개념·빈출주제 정리</div>
+  <div class="cover-subtitle">식민통치 방식의 변화 · 3·1운동과 대한민국 임시정부 · 1920년대 실력양성·대중운동·의열투쟁 · 무장독립전쟁 · 1930~40년대 항일전쟁 · 민족문화수호운동</div>
+  <div class="cover-hint">⌨ PageDown / → : 정답 한 개씩 공개 &nbsp;|&nbsp; PageUp / ← : 정답 숨기기 &nbsp;|&nbsp; 터치 스와이프 지원</div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 1: TOC ═══════════════════════ -->
+<div class="slide" data-slide="1">
+  <div class="slide-header">
+    <span class="slide-chapter">목차</span>
+    <span class="slide-title">이 편에서 다루는 내용</span>
+  </div>
+  <div class="slide-body tall">
+    <ul class="toc-list">
+      <li class="toc-item" onclick="goSlide(2)"><span class="toc-num">01</span><span class="toc-name">식민통치 방식의 변화</span><span class="toc-sub">무단통치 → 문화통치 → 민족말살통치</span></li>
+      <li class="toc-item" onclick="goSlide(3)"><span class="toc-num">02</span><span class="toc-name">경제 수탈의 변화</span><span class="toc-sub">토지조사사업 → 산미증식계획 → 병참기지화</span></li>
+      <li class="toc-item" onclick="goSlide(4)"><span class="toc-num">03</span><span class="toc-name">1910년대 국내외 독립운동</span><span class="toc-sub">비밀결사, 국외 독립운동기지</span></li>
+      <li class="toc-item" onclick="goSlide(5)"><span class="toc-num">04</span><span class="toc-name">3·1운동</span><span class="toc-sub">2·8독립선언, 민족대표 33인</span></li>
+      <li class="toc-item" onclick="goSlide(6)"><span class="toc-num">05</span><span class="toc-name">일제강점기 사진자료 ①</span><span class="toc-sub">유관순</span></li>
+      <li class="toc-item" onclick="goSlide(7)"><span class="toc-num">06</span><span class="toc-name">대한민국 임시정부의 수립</span><span class="toc-sub">삼권분립, 연통제·교통국</span></li>
+      <li class="toc-item" onclick="goSlide(8)"><span class="toc-num">07</span><span class="toc-name">임시정부 체제의 변화</span><span class="toc-sub">국민대표회의, 주석제·건국강령</span></li>
+      <li class="toc-item" onclick="goSlide(9)"><span class="toc-num">08</span><span class="toc-name">실력양성운동과 신간회</span><span class="toc-sub">물산장려운동, 민족유일당</span></li>
+      <li class="toc-item" onclick="goSlide(10)"><span class="toc-num">09</span><span class="toc-name">사회 대중운동</span><span class="toc-sub">6·10만세운동, 광주학생항일운동</span></li>
+      <li class="toc-item" onclick="goSlide(11)"><span class="toc-num">10</span><span class="toc-name">의열단과 한인애국단</span><span class="toc-sub">김원봉, 이봉창·윤봉길</span></li>
+      <li class="toc-item" onclick="goSlide(12)"><span class="toc-num">11</span><span class="toc-name">무장독립전쟁 ①</span><span class="toc-sub">봉오동~청산리~자유시참변</span></li>
+      <li class="toc-item" onclick="goSlide(13)"><span class="toc-num">12</span><span class="toc-name">무장독립전쟁 ②</span><span class="toc-sub">3부 통합운동, 한중연합작전</span></li>
+      <li class="toc-item" onclick="goSlide(14)"><span class="toc-num">13</span><span class="toc-name">민족혁명당과 조선의용대</span><span class="toc-sub">중국 관내 최초 한인 무장부대</span></li>
+      <li class="toc-item" onclick="goSlide(15)"><span class="toc-num">14</span><span class="toc-name">한국광복군과 건국강령</span><span class="toc-sub">대일선전포고, 국내정진군</span></li>
+      <li class="toc-item" onclick="goSlide(16)"><span class="toc-num">15</span><span class="toc-name">일제강점기 사진자료 ②</span><span class="toc-sub">임시정부 요인·한국광복군</span></li>
+      <li class="toc-item" onclick="goSlide(17)"><span class="toc-num">16</span><span class="toc-name">민족문화수호운동</span><span class="toc-sub">조선어학회, 민족주의 사학</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 2: 식민통치 방식의 변화 ═══════════════════════ -->
+<div class="slide" data-slide="2">
+  <div class="slide-header">
+    <span class="slide-chapter">01 식민통치</span>
+    <span class="slide-title">식민통치 방식의 변화</span>
+  </div>
+  <div class="slide-body tall">
+    <table class="sum-table">
+      <tr><th>시기</th><th>통치 방식</th><th>주요 내용</th></tr>
+      <tr><td class="rowhead">1910년대</td><td><span class="blank" data-answer="무단통치"></span></td><td>총독은 현역 <span class="blank" data-answer="군인"></span>만 임명, <span class="blank" data-answer="헌병경찰"></span>제(즉결처분권, 태형은 한국인에게만 적용), 언론·출판·집회·결사의 자유 박탈</td></tr>
+      <tr><td class="rowhead">1920년대</td><td>이른바 '<span class="blank" data-answer="문화통치"></span>'</td><td>보통경찰제로 전환(그러나 경찰 수·예산은 오히려 증가), 조선일보·동아일보 창간 허용(검열은 지속), <span class="blank" data-answer="치안유지법"></span>(1925) 제정</td></tr>
+      <tr><td class="rowhead">1930~40년대</td><td><span class="blank" data-answer="민족말살통치"></span></td><td><span class="blank" data-answer="황국신민서사"></span> 암송, 신사참배·궁성요배 강요, <span class="blank" data-answer="창씨개명"></span>, 조선어·조선사 교육 금지, 신문 강제 폐간(1940)</td></tr>
+    </table>
+    <div class="info-box">
+      ⭐ '문화통치'는 명목상 유화책이지만 실제로는 <strong>민족 분열(친일파 육성)</strong>을 노린 기만적 통치 방식이었다는 점이 핵심 포인트
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 3: 경제 수탈의 변화 ═══════════════════════ -->
+<div class="slide" data-slide="3">
+  <div class="slide-header">
+    <span class="slide-chapter">02 경제 수탈</span>
+    <span class="slide-title">경제 수탈 정책의 변화</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">1910년대</span>토지조사사업</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>기한부 <span class="blank" data-answer="신고주의"></span> — 미신고 토지·왕실땅·공유지 등을 총독부가 차지, 재정 확보 명분</li>
+            <li><span class="blank" data-answer="도지권"></span>(경작권) 부정 → 소작 조건 악화, 많은 농민이 소작농·화전민·해외 이주민으로 전락</li>
+            <li><span class="blank" data-answer="회사령"></span>(허가제) — 민족 자본의 성장 억제</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">1920년대</span>산미증식계획</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>일본 본토의 식량 부족 해결이 목적 — 증산량이 목표 수탈량보다 적었음에도 <span class="blank" data-answer="쌀"></span>을 그대로 수탈해 국내 식량 사정 악화</li>
+            <li>수리시설 개선·개간 비용을 <span class="blank" data-answer="농민"></span>에게 전가 → 농민 몰락 가속화(만주 이주 증가)</li>
+            <li>회사령 폐지(신고제로 전환), 관세 철폐 움직임 → <strong>물산장려운동</strong>의 배경이 됨</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="card crisis">
+      <div class="card-title"><span class="mini-tag crisis">1930~40년대</span>병참기지화 정책</div>
+      <div class="card-body">
+        <ul class="item-list">
+          <li>중화학공업 육성(함경도 등), <span class="blank" data-answer="남면북양"></span>정책(공업 원료 강제 재배)</li>
+          <li><span class="blank" data-answer="국가총동원법"></span>(1938) → 인적 수탈(징용·징병·<span class="blank" data-answer="위안부"></span>), 물적 수탈(공출·배급제)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 4: 1910년대 국내외 독립운동 ═══════════════════════ -->
+<div class="slide" data-slide="4">
+  <div class="slide-header">
+    <span class="slide-chapter">03 1910년대 독립운동</span>
+    <span class="slide-title">1910년대 국내 비밀결사와 국외 독립운동기지</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🤫 국내 비밀결사</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="독립의군부"></span>(임병찬, 고종의 밀명, 복벽주의) — 국권반환요구서 제출 시도</li>
+            <li><span class="blank" data-answer="대한광복회"></span>(박상진, 공화정 지향) — 친일파 처단, 군자금 모금</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🗺 국외 독립운동기지</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>서간도: 경학사·부민단, <span class="blank" data-answer="신흥무관학교"></span>, 서로군정서</li>
+            <li>북간도: 중광단(대종교)→북로군정서, 서전서숙·명동학교</li>
+            <li>연해주: 대한광복군 정부, 대한국민의회 / 상하이: <span class="blank" data-answer="신한청년당"></span></li>
+            <li>미주: 대한인국민회(안창호), 대조선국민군단(박용만, 하와이)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 국내는 비밀결사 형태(일제의 감시 때문), 국외는 만주·연해주·미주에 이주 한인 사회를 기반으로 학교·군정부 설립 — 이 기지들이 이후 무장독립전쟁의 토대가 됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 5: 3.1운동 ═══════════════════════ -->
+<div class="slide" data-slide="5">
+  <div class="slide-header">
+    <span class="slide-chapter">04 3·1운동</span>
+    <span class="slide-title">3·1운동(1919)</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🌍 배경</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>윌슨의 <span class="blank" data-answer="민족자결주의"></span> 제창 → 신한청년당이 파리강화회의에 <span class="blank" data-answer="김규식"></span> 파견</li>
+            <li><span class="blank" data-answer="2·8 독립선언"></span>(도쿄, 유학생) → 고종의 인산일을 계기로 국내 확산</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">탄압</span>전개와 결과</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>민족대표 33인(천도교+기독교+불교) — 비폭력 원칙 → 전국 확산 과정에서 점차 무력 저항으로 발전</li>
+            <li>일제의 무력 탄압(제암리·고주리 학살 등)</li>
+            <li>통치 방식 변화(무단→'문화'통치), 중국 5·4운동에 영향, <strong><span class="blank" data-answer="대한민국 임시정부"></span></strong> 수립의 계기</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="source-box">
+      <span class="src-tag">기미독립선언서</span>"오등(吾等)은 자(玆)에 아(我) 조선의 독립국임과 조선인의 자주민임을 선언하노라..."
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 6: [사진] 유관순 ═══════════════════════ -->
+<div class="slide" data-slide="6">
+  <div class="slide-header">
+    <span class="slide-chapter">05 일제강점기 사진자료</span>
+    <span class="slide-title">일제강점기 사진자료 ① — 유관순</span>
+  </div>
+  <div class="slide-body tall" style="align-items:center">
+    <div class="photo-card" style="width:min(40%,320px); flex:1; min-height:0;">
+      <div class="photo-wrap"><img src="img/유관순.jpg" alt="유관순 인물카드 사진" loading="lazy"></div>
+      <div class="photo-cap"><span class="photo-tag">1920년경 · 감시대상 인물카드</span><br><span class="blank" data-answer="유관순"></span> — 천안 아우내 장터 만세시위 주도, 서대문형무소 옥중에서도 만세운동을 이어가다 순국</div>
+    </div>
+    <div class="info-box">
+      💡 사진 속 저고리에 붙은 종이에 이름 '柳寬順'이 적혀 있음 — 일제가 감시 대상 독립운동가들을 관리하기 위해 만든 인물카드 중 하나
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 7: 대한민국 임시정부 수립 ═══════════════════════ -->
+<div class="slide" data-slide="7">
+  <div class="slide-header">
+    <span class="slide-chapter">06 임시정부 수립</span>
+    <span class="slide-title">대한민국 임시정부의 수립과 초기 활동</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🏛 통합 정부의 수립</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>대한국민의회(연해주)+<span class="blank" data-answer="한성정부"></span>(국내)+상하이 임시정부 → <span class="blank" data-answer="상하이"></span>에서 통합(1919.9, 대통령 이승만)</li>
+            <li>최초의 삼권분립 정부 — <span class="blank" data-answer="임시의정원"></span>(입법)·법원(사법)·국무원(행정), <span class="blank" data-answer="공화정"></span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📡 초기 활동</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="연통제"></span>·교통국 — 국내와의 비밀 행정·통신 연락망 조직</li>
+            <li>독립신문 발행, 임시 사료편찬위원회, <span class="blank" data-answer="구미위원부"></span>(이승만, 외교 활동)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 대한민국 임시정부는 우리 역사상 최초의 민주 공화정 정부 — 연통제·교통국이 일제에 발각되면서 활동이 크게 위축된 점도 기억할 것
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 8: 임시정부 체제의 변화 ═══════════════════════ -->
+<div class="slide" data-slide="8">
+  <div class="slide-header">
+    <span class="slide-chapter">07 임시정부 변천</span>
+    <span class="slide-title">임시정부 체제의 변화</span>
+  </div>
+  <div class="slide-body tall">
+    <table class="sum-table">
+      <tr><th>시기</th><th>사건 · 체제</th><th>내용</th></tr>
+      <tr><td class="rowhead">1923</td><td><span class="blank" data-answer="국민대표회의"></span></td><td><span class="blank" data-answer="창조파"></span>(신채호, 새 정부 수립) vs <span class="blank" data-answer="개조파"></span>(안창호, 임시정부 유지·개혁) 대립 → 결렬, 세력 이탈</td></tr>
+      <tr><td class="rowhead">1925</td><td>이승만 탄핵</td><td>박은식 2대 대통령 → 국무령제(의원내각제)로 개헌</td></tr>
+      <tr><td class="rowhead">1927</td><td>집단지도체제</td><td>국무위원제 채택</td></tr>
+      <tr><td class="rowhead">1940</td><td><span class="blank" data-answer="주석제"></span></td><td>김구 주석 체제, <span class="blank" data-answer="건국강령"></span> 선포(<span class="blank" data-answer="삼균주의"></span> — 조소앙)</td></tr>
+    </table>
+    <div class="info-box">
+      ⭐ 임시정부는 국민대표회의 결렬 이후 세력이 크게 위축되었다가, 1930년대 김구를 중심으로 한인애국단 활동과 함께 다시 활기를 되찾음 — 체제 변화 순서(대통령제→국무령제→집단지도체제→주석제)를 기억할 것
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 9: 실력양성운동과 신간회 ═══════════════════════ -->
+<div class="slide" data-slide="9">
+  <div class="slide-header">
+    <span class="slide-chapter">08 실력양성·신간회</span>
+    <span class="slide-title">1920년대 실력양성운동과 신간회</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">💪 실력양성운동</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="물산장려운동"></span>(1920, 조만식, 평양) — "내 살림 내 것으로" / 사회주의 계열은 자본가만 이롭다고 비판</li>
+            <li><span class="blank" data-answer="민립대학 설립운동"></span>(이상재) — 일제가 <span class="blank" data-answer="경성제국대학"></span> 설립으로 무마시켜 실패</li>
+            <li>문자보급운동(조선일보) — "아는 것이 힘, 배워야 산다"</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card peak">
+        <div class="card-title"><span class="mini-tag peak">민족유일당</span>신간회(1927)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>비타협적 <span class="blank" data-answer="민족주의"></span> 계열 + <span class="blank" data-answer="사회주의"></span> 계열의 연합, 회장 이상재</li>
+            <li>전국에 지회를 둔 최대 규모의 합법 항일 단체</li>
+            <li><span class="blank" data-answer="광주학생항일운동"></span>에 진상조사단 파견 → 민중대회 시도(실패) → 1931 <span class="blank" data-answer="해소"></span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 10: 사회 대중운동 ═══════════════════════ -->
+<div class="slide" data-slide="10">
+  <div class="slide-header">
+    <span class="slide-chapter">09 대중운동</span>
+    <span class="slide-title">사회 대중운동의 확산</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">✊ 학생 항일운동</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="6·10만세운동"></span>(1926, 순종 인산일) — 사회주의+민족주의 계열이 함께 준비</li>
+            <li><span class="blank" data-answer="광주학생항일운동"></span>(1929, 한일 학생 충돌 계기) — 3·1운동 이후 최대 규모의 민족 운동, 신간회가 지원</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 계층별 대중운동</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>청년: 조선청년총동맹(1924) / 소년: <span class="blank" data-answer="방정환"></span>(천도교, 어린이날 제정)</li>
+            <li>여성: <span class="blank" data-answer="근우회"></span>(신간회의 자매단체)</li>
+            <li>백정: <span class="blank" data-answer="형평운동"></span>(조선형평사, 진주에서 시작 — 신분 차별 철폐 주장)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 1920년대는 사회주의 사상이 유입되며 노동·소작 쟁의(원산 총파업 등)와 함께 계층별 대중운동이 폭넓게 전개된 시기
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 11: 의열단과 한인애국단 ═══════════════════════ -->
+<div class="slide" data-slide="11">
+  <div class="slide-header">
+    <span class="slide-chapter">10 의열투쟁</span>
+    <span class="slide-title">의열단과 한인애국단</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">1919</span>의열단</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="김원봉"></span> 조직, 신채호의 『<span class="blank" data-answer="조선혁명선언"></span>』을 행동 강령으로 채택</li>
+            <li>김익상(조선총독부), 김상옥(종로경찰서), <span class="blank" data-answer="나석주"></span>(동양척식주식회사) 의거</li>
+            <li>이후 개별 투쟁의 한계를 느껴 <span class="blank" data-answer="황푸군관학교"></span> 입교 등 조직적 군사 훈련으로 전환</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">1931</span>한인애국단</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="김구"></span>가 임시정부의 침체를 타개하고자 조직</li>
+            <li><span class="blank" data-answer="이봉창"></span> — 도쿄에서 일왕 저격 시도(1932)</li>
+            <li><span class="blank" data-answer="윤봉길"></span> — 상하이 훙커우 공원 의거(1932) → 중국 국민당 정부가 이후 임시정부를 적극 지원하는 계기</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="source-box">
+      <span class="src-tag">조선혁명선언</span>"민중은 우리 혁명의 대본영(大本營)이다... 폭력은 우리 혁명의 유일한 무기이다" — 신채호
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 12: 무장독립전쟁 ① ═══════════════════════ -->
+<div class="slide" data-slide="12">
+  <div class="slide-header">
+    <span class="slide-chapter">11 무장독립전쟁</span>
+    <span class="slide-title">무장독립전쟁 ① — 봉오동~자유시참변</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="timeline-row">
+      <div class="tl-item">
+        <div class="tl-era">1920.6</div>
+        <span class="blank" data-answer="봉오동 전투"></span> — <span class="blank" data-answer="홍범도"></span>(대한독립군)
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1920</div>
+        일본의 <span class="blank" data-answer="훈춘 사건"></span> 조작
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1920.10</div>
+        <span class="blank" data-answer="청산리 전투"></span> — <span class="blank" data-answer="김좌진"></span>(북로군정서)+홍범도 연합
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1920</div>
+        일본군 보복 — <span class="blank" data-answer="간도 참변"></span>(민간인 학살)
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1921</div>
+        <span class="blank" data-answer="자유시 참변"></span> — 러시아 적군의 무장 해제 요구 중 참변
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1923~25</div>
+        독립군 재정비 → <span class="blank" data-answer="3부"></span>(참의부·정의부·신민부) 성립
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 봉오동·청산리 전투는 독립군의 대표적 승전, 이후 간도 참변·자유시 참변이라는 큰 시련을 겪은 뒤 만주에서 자치+군정 기능을 겸한 3부를 결성 — 전체 흐름의 순서가 자주 출제됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 13: 무장독립전쟁 ② ═══════════════════════ -->
+<div class="slide" data-slide="13">
+  <div class="slide-header">
+    <span class="slide-chapter">12 무장독립전쟁</span>
+    <span class="slide-title">무장독립전쟁 ② — 3부 통합운동과 한중연합작전</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🤝 3부 통합운동</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="미쓰야 협정"></span>(1925, 일본-만주 군벌) — 독립군 탄압에 상호 협조</li>
+            <li>이에 대응해 3부를 통합하려는 운동 전개 → <span class="blank" data-answer="혁신의회"></span>(북만주)·<span class="blank" data-answer="국민부"></span>(남만주)로 재편</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card peak">
+        <div class="card-title"><span class="mini-tag peak">1930년대</span>한중연합작전</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="한국독립군"></span>(지청천, 혁신의회 계열, 북만주) — 쌍성보·<span class="blank" data-answer="대전자령"></span> 전투 승리</li>
+            <li><span class="blank" data-answer="조선혁명군"></span>(양세봉, 국민부 계열, 남만주) — 영릉가·흥경성 전투 승리</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 만주사변(1931) 이후 일제에 대한 반감이 커진 중국군과 손잡고 벌인 것이 한중연합작전 — 지청천의 한국독립군, 양세봉의 조선혁명군을 혼동하지 않도록 주의
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 14: 민족혁명당과 조선의용대 ═══════════════════════ -->
+<div class="slide" data-slide="14">
+  <div class="slide-header">
+    <span class="slide-chapter">13 민족혁명당 계열</span>
+    <span class="slide-title">민족혁명당과 조선의용대</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="card">
+      <div class="card-title">⚡ 민족혁명당(1935)</div>
+      <div class="card-body">
+        <ul class="item-list">
+          <li><span class="blank" data-answer="김원봉"></span>(의열단) 중심으로 여러 독립운동 단체가 통합 — 좌우합작 성격, 조소앙 등도 초기 참여했으나 이후 이탈</li>
+          <li><span class="blank" data-answer="조선민족전선연맹"></span>(1937)으로 발전</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card peak">
+      <div class="card-title"><span class="mini-tag peak">1938</span>조선의용대</div>
+      <div class="card-body">
+        <ul class="item-list">
+          <li>중국 관내(關內)에서 결성된 <span class="blank" data-answer="최초"></span>의 한인 무장부대</li>
+          <li>일부는 화북으로 이동해 <span class="blank" data-answer="조선의용군"></span>(옌안 계열)으로 발전, 일부는 <span class="blank" data-answer="한국광복군"></span>에 합류(1942)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 김원봉 계열은 의열단(개별 투쟁) → 민족혁명당(통합·좌우합작) → 조선의용대(무장부대) → 한국광복군 합류(1942)로 이어지는 흐름을 기억할 것
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 15: 한국광복군과 건국강령 ═══════════════════════ -->
+<div class="slide" data-slide="15">
+  <div class="slide-header">
+    <span class="slide-chapter">14 한국광복군</span>
+    <span class="slide-title">한국광복군과 건국강령</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card peak">
+        <div class="card-title"><span class="mini-tag peak">1940</span>한국광복군</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>충칭, 임시정부의 정규군, 총사령관 <span class="blank" data-answer="지청천"></span></li>
+            <li>태평양전쟁 발발 후 <span class="blank" data-answer="대일 선전포고"></span>(1941)</li>
+            <li>영국군 요청으로 <span class="blank" data-answer="인도·미얀마"></span> 전선에 투입</li>
+            <li>김원봉의 조선의용대 합류(1942)로 군사력 강화</li>
+            <li><span class="blank" data-answer="국내정진군"></span> 편성 — 미국 <span class="blank" data-answer="OSS"></span>와 협력해 국내 진공 작전 준비(1945, 일본 항복으로 무산)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📜 건국강령(1941)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="조소앙"></span>의 <span class="blank" data-answer="삼균주의"></span>(정치·경제·교육의 균등)에 기초</li>
+            <li>광복 이후 민주 공화국 수립을 천명</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 16: [사진] 임시정부·광복군 ═══════════════════════ -->
+<div class="slide" data-slide="16">
+  <div class="slide-header">
+    <span class="slide-chapter">15 일제강점기 사진자료</span>
+    <span class="slide-title">일제강점기 사진자료 ② — 임시정부 요인과 한국광복군</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="photo-grid-2">
+      <div class="photo-card">
+        <div class="photo-wrap"><img src="img/대한민국임시정부_요인.jpg" alt="대한민국 임시정부 요인 단체사진 1919" loading="lazy"></div>
+        <div class="photo-cap"><span class="photo-tag">1919.10.11 · 상하이</span><br><span class="blank" data-answer="대한민국 임시정부"></span> 국무원 요인들의 기념사진</div>
+      </div>
+      <div class="photo-card">
+        <div class="photo-wrap"><img src="img/한국광복군_성립전례식.jpg" alt="한국광복군 성립전례식 1940" loading="lazy"></div>
+        <div class="photo-cap"><span class="photo-tag">1940.9.17 · 충칭</span><br><span class="blank" data-answer="한국광복군"></span> 성립 전례식(태극기와 청천백일기가 함께 걸림)</div>
+      </div>
+    </div>
+    <div class="info-box">
+      💡 두 사진은 임시정부의 시작(1919)과 정규군을 갖춘 후반기(1940)를 보여줌 — 27년에 걸친 임시정부 활동의 처음과 절정을 사진으로 비교하며 기억할 것
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 17: 민족문화수호운동 ═══════════════════════ -->
+<div class="slide" data-slide="17">
+  <div class="slide-header">
+    <span class="slide-chapter">16 민족문화수호</span>
+    <span class="slide-title">민족문화수호운동</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🈳 국어 · 국사</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>조선어연구회(가갸날 제정) → <span class="blank" data-answer="조선어학회"></span>(한글 맞춤법 통일안, 『우리말 큰사전』 편찬 시도) → <span class="blank" data-answer="조선어학회 사건"></span>(1942)으로 강제 해산</li>
+            <li><span class="blank" data-answer="신채호"></span>: 『조선상고사』·『조선사연구초』(민족주의 사학, 낭가사상)</li>
+            <li>박은식: 『한국통사』·『한국독립운동지혈사』('혼') / 백남운: <span class="blank" data-answer="사회경제사학"></span>(식민사학의 정체성론 비판)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎬 문학 · 예술 · 종교</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>나운규의 영화 『<span class="blank" data-answer="아리랑"></span>』(1926, 민족의식 고취)</li>
+            <li>심훈 『상록수』(브나로드 운동), 저항 시인 <span class="blank" data-answer="윤동주"></span>·이육사</li>
+            <li>종교: <span class="blank" data-answer="대종교"></span>(중광단 등 무장투쟁과 연계), 원불교(박중빈, 새생활운동)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 민족말살통치기에도 조선어학회·민족주의 사학자들을 중심으로 우리말·우리역사를 지키려는 노력이 끊이지 않았음 — 인물별 저서를 정확히 짝짓는 문제가 자주 출제됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 18: 총정리 ═══════════════════════ -->
+<div class="slide" data-slide="18">
+  <div class="slide-header">
+    <span class="slide-chapter">총정리</span>
+    <span class="slide-title">일제강점기 흐름 한눈에 보기</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="timeline-row">
+      <div class="tl-item crisis">
+        <div class="tl-era">1910s</div>
+        무단통치 · 비밀결사 · 독립운동기지 건설
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1919</div>
+        3·1운동 → 대한민국 임시정부 수립
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1920s</div>
+        실력양성운동·신간회, 봉오동·청산리 전투
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1930s</div>
+        한중연합작전, 한인애국단, 민족말살통치 시작
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1940s</div>
+        한국광복군, 건국강령, 국내진공작전 준비
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ <strong>시험 대비 최종 체크:</strong> ① 통치 방식 3단계(무단→문화→민족말살) ② 경제 수탈 정책 3단계와 순서 ③ 3·1운동의 배경·전개·영향 ④ 임시정부 체제 변화 순서 ⑤ 무장독립전쟁 순서(봉오동→청산리→간도참변→자유시참변→3부) ⑥ 김원봉 계열의 조직 변천(의열단→민족혁명당→조선의용대→광복군 합류) — 이 여섯 유형이 최다 출제 포인트
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 19: 마무리 ═══════════════════════ -->
+<div class="slide slide-end" data-slide="19">
+  <div style="font-size:2.2em">🎉</div>
+  <div style="font-size:2.2em;font-weight:900;color:var(--main);font-family:'Nanum Myeongjo',serif">수고하셨습니다!</div>
+  <div style="font-size:0.88em;color:var(--text-sub)">한국사능력검정시험 — 일제강점기 개념 정리를 모두 마쳤습니다.</div>
+  <div style="background:var(--card-bg);border:1.5px solid var(--gold);border-radius:6px;padding:0.9em 1.5em;max-width:80%;width:fit-content;margin:0 auto;text-align:center;font-size:0.8em;color:var(--text);line-height:1.8">
+    <strong style="color:var(--main);font-size:1.05em">📌 핵심 흐름</strong><br>
+    무단통치 아래 비밀결사·국외 독립기지 건설 → 3·1운동과 임시정부 수립 → 실력양성·대중운동과 신간회 → 의열투쟁과 무장독립전쟁 → 민족말살통치기의 한중연합작전·한국광복군 → 민족문화수호운동<br>
+    <em style="color:var(--text-sub)">다음 편은 현대사(광복~오늘날)를 다룰 예정입니다.</em>
+  </div>
+</div>
+
+</div><!-- /.presentation -->
+
+<!-- Navigation Bar -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="pageUp()" title="PageUp / ← : 정답 숨기기">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-label"><span id="curSlide">1</span> / <span id="totSlides">20</span></span>
+  <button class="nav-btn" id="nextBtn" onclick="pageDown()" title="PageDown / → : 정답 공개">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+  <span class="nav-blank-info" id="blankInfo" style="display:none"></span>
+  <span class="nav-hint">PageDown·→ : 정답 공개 &nbsp;|&nbsp; PageUp·← : 숨기기</span>
+</div>
+
+<script>
+(function() {
+  var slides = Array.from(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var cur = 0;
+  var revealed = new Array(total).fill(0);
+
+  document.getElementById('totSlides').textContent = total;
+
+  function getBlanks(i) {
+    return Array.from(slides[i].querySelectorAll('.blank'));
+  }
+
+  function goSlide(i) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(i, total - 1));
+    slides[cur].classList.add('active');
+    updateUI();
+  }
+  window.goSlide = goSlide;
+
+  function pageDown() {
+    var bs = getBlanks(cur);
+    if (revealed[cur] < bs.length) {
+      bs[revealed[cur]].classList.add('revealed');
+      revealed[cur]++;
+      updateUI();
+    } else if (cur < total - 1) {
+      goSlide(cur + 1);
+    }
+  }
+  window.pageDown = pageDown;
+
+  function pageUp() {
+    if (revealed[cur] > 0) {
+      var bs = getBlanks(cur);
+      bs[revealed[cur] - 1].classList.remove('revealed');
+      revealed[cur]--;
+      updateUI();
+    } else if (cur > 0) {
+      goSlide(cur - 1);
+    }
+  }
+  window.pageUp = pageUp;
+
+  function updateUI() {
+    document.getElementById('curSlide').textContent = cur + 1;
+
+    var bs = getBlanks(cur);
+    var bi = document.getElementById('blankInfo');
+    if (bs.length > 0) {
+      bi.textContent = '빈칸 ' + revealed[cur] + ' / ' + bs.length;
+      bi.style.display = '';
+    } else {
+      bi.style.display = 'none';
+    }
+
+    var pct = total > 1 ? (cur / (total - 1)) * 100 : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+
+    document.getElementById('prevBtn').disabled = (cur === 0 && revealed[cur] === 0);
+    document.getElementById('nextBtn').disabled = (cur === total - 1 && revealed[cur] === getBlanks(cur).length);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return;
+    if (e.key === 'PageDown' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault(); pageDown();
+    } else if (e.key === 'PageUp' || e.key === 'ArrowLeft') {
+      e.preventDefault(); pageUp();
+    } else if (e.key === 'Home') {
+      e.preventDefault(); goSlide(0);
+    } else if (e.key === 'End') {
+      e.preventDefault(); goSlide(total - 1);
+    }
+  });
+
+  var tsX = 0, tsY = 0;
+  document.addEventListener('touchstart', function(e) {
+    tsX = e.touches[0].clientX;
+    tsY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - tsX;
+    var dy = e.changedTouches[0].clientY - tsY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) pageDown(); else pageUp();
+    }
+  }, { passive: true });
+
+  updateUI();
+})();
+</script>
+</body>
+</html>
