@@ -276,7 +276,7 @@ export const ITEMS = {
   lottery:  { emoji: '🎫',  name: '복권',      kind: 'self',    desc: '즉시 +3 ~ +10층 랜덤! (+10은 4%)' },
   undo:     { emoji: '🪃',  name: '되돌리기',   kind: 'self',    desc: '방금 틀린 문제를 없던 일로 (오답 -1·연속 복구)' },
   jackpot:  { emoji: '🎲',  name: '인생 한방',  kind: 'self',    desc: '다음 정답 +20층 / 오답 -10층 (개인전·팀전 공통)' },
-  snowball: { emoji: '🌀',  name: '눈덩이',    kind: 'self',    desc: '다음 정답에 지금 연속 수만큼 층수 추가' },
+  snowball: { emoji: '🌀',  name: '눈덩이',    kind: 'self',    desc: '다음 정답에 지금 연속 수만큼 층수 추가 (최대 10층)' },
   vest:     { emoji: '🛟',  name: '구명조끼',  kind: 'self',    desc: '20초간 틀려도 층수·연속이 안 깎임 (미끄럼틀·강탈도 막음)' },
   randombox:{ emoji: '🎁',  name: '랜덤박스',  kind: 'self',    desc: '즉시 다른 아이템 하나를 뽑아 바로 발동' },
   cure:     { emoji: '🍵',  name: '해독',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
@@ -301,6 +301,7 @@ export const ITEM_FX_MS = {
   soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 10000, mirrorNanta: 10000, vest: 20000,
   comboSpark: 30000, comboSparkLast: 60000,   // 꼴찌(동률 포함)가 쓰면 1분으로 늘어남
   stealAmt: 5, stealDefenseMs: 5000, stealDefenseAmt: 1,   // 강탈(개인전): 방어 실패 시 5층, 방어 성공(그 문제를 제시간에 맞힘) 시 1층만
+  snowballCap: 10,   // 눈덩이: 연속 정답 수만큼 추가되지만, 인생 한방(+20) 등과 밸런스 맞춰 최대 10층까지만
 };
 
 // 이번 판에서 뽑을 수 있는 아이템 key 목록. opts:
