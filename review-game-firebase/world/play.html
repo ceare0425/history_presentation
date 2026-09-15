@@ -1121,11 +1121,11 @@ function renderItemBar(){
   }
 }
 
-// 일회성 사용/피격 알림은 1초 뒤 자동으로 사라진다.
+// 일회성 사용/피격 알림은 2.5초 뒤 자동으로 사라진다.
 // sticky=true인 알림(아이템 획득, 안개·얼음 걸린 직후, 강탈 방어 대기)은 예외적으로
 // 문제가 바뀌거나(renderQuestion) 효과가 끝날 때까지 유지된다.
 // (축제 계열은 별도 — 위 tick()의 festivalBanner가 남은 시간과 함께 효과 지속 동안 계속 표시)
-const ITEM_ALERT_MS = 1000;
+const ITEM_ALERT_MS = 2500;
 function showItemAlert(msg, isHtml, sticky){
   const a = el('itemAlert');
   if(!a) return;
