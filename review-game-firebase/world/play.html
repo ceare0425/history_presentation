@@ -850,6 +850,25 @@ async function showEndedView(){
   showView('endedView');
 }
 
+// fx-slot은 배너가 여러 개 겹치면 세로 목록 안에서 스크롤되는데, 방금 새로 뜬 배너가
+// 목록 아래쪽에 가려져 있으면 학생이 못 보고 지나칠 수 있다. 그래서 배너가 꺼져 있다가
+// 막 켜지는 그 순간에만 그 배너가 보이도록 fx-slot 안을 자동으로 스크롤해 준다.
+const shownBanners = new Set();
+function updateBanner(id, active, onActive){
+  const node = el(id);
+  if(active){
+    node.classList.add('show');
+    if(onActive) onActive();
+    if(!shownBanners.has(id)){
+      shownBanners.add(id);
+      requestAnimationFrame(()=> node.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+    }
+  } else {
+    node.classList.remove('show');
+    shownBanners.delete(id);
+  }
+}
+
 function tick(){
   if(!playerId) return;
   const remaining = roundState.end_time!=null ? Math.max(0, Math.round((roundState.end_time - serverNow())/1000)) : null;
@@ -883,81 +902,23 @@ function tick(){
       assignNextQuestion();
     }
     const bonus = activeBonus(roundState, serverNow());
-    const banner = el('bonusBanner');
-    if(bonus){
-      banner.classList.add('show');
-      el('bonusRemain').textContent = bonus.remaining;
-    } else {
-      banner.classList.remove('show');
-    }
-    const fb = el('festivalBanner');
-    if(serverNow() < festivalUntil){
-      fb.classList.add('show');
+    updateBanner('bonusBanner', !!bonus, ()=> el('bonusRemain').textContent = bonus.remaining);
+    updateBanner('festivalBanner', serverNow() < festivalUntil, ()=>{
       el('festivalWho').textContent = festivalBy ? festivalBy + ' 님의 ' : '';
       el('festivalRemain').textContent = Math.ceil((festivalUntil - serverNow()) / 1000);
-    } else {
-      fb.classList.remove('show');
-      festivalBy = '';
-    }
-    const sfb = el('soloFestBanner');
-    if(serverNow() < mySoloFestUntil){
-      sfb.classList.add('show');
-      el('soloFestRemain').textContent = Math.ceil((mySoloFestUntil - serverNow()) / 1000);
-    } else {
-      sfb.classList.remove('show');
-    }
-    const csb = el('comboSparkBanner');
-    if(serverNow() < myComboSparkUntil){
-      csb.classList.add('show');
-      el('comboSparkRemain').textContent = Math.ceil((myComboSparkUntil - serverNow()) / 1000);
-    } else {
-      csb.classList.remove('show');
-    }
-    el('goldenbellBanner').classList.toggle('show', myGoldenbellArmed);
-    el('jackpotBanner').classList.toggle('show', myJackpotArmed);
-    el('snowballBanner').classList.toggle('show', mySnowballArmed);
-    const vsb = el('vestBanner');
-    if(serverNow() < myVestUntil){
-      vsb.classList.add('show');
-      el('vestRemain').textContent = Math.ceil((myVestUntil - serverNow()) / 1000);
-    } else {
-      vsb.classList.remove('show');
-    }
-    const cvb = el('cloverBanner');
-    if(serverNow() < myCloverUntil){
-      cvb.classList.add('show');
-      el('cloverRemain').textContent = Math.ceil((myCloverUntil - serverNow()) / 1000);
-    } else {
-      cvb.classList.remove('show');
-    }
-    const mrb = el('mirrorBanner');
-    if(serverNow() < myMirrorUntil){
-      mrb.classList.add('show');
-      el('mirrorRemain').textContent = Math.ceil((myMirrorUntil - serverNow()) / 1000);
-    } else {
-      mrb.classList.remove('show');
-    }
-    const fgb = el('fogBanner');
-    if(serverNow() < myFogUntil){
-      fgb.classList.add('show');
-      el('fogRemain').textContent = Math.ceil((myFogUntil - serverNow()) / 1000);
-    } else {
-      fgb.classList.remove('show');
-    }
-    const icb = el('iceBanner');
-    if(serverNow() < myIceUntil){
-      icb.classList.add('show');
-      el('iceRemain').textContent = Math.ceil((myIceUntil - serverNow()) / 1000);
-    } else {
-      icb.classList.remove('show');
-    }
-    const sab = el('stealAtkBanner');
-    if(serverNow() < myStealAttackUntil){
-      sab.classList.add('show');
-      el('stealAtkRemain').textContent = Math.ceil((myStealAttackUntil - serverNow()) / 1000);
-    } else {
-      sab.classList.remove('show');
-    }
+    });
+    if(serverNow() >= festivalUntil) festivalBy = '';
+    updateBanner('soloFestBanner', serverNow() < mySoloFestUntil, ()=> el('soloFestRemain').textContent = Math.ceil((mySoloFestUntil - serverNow()) / 1000));
+    updateBanner('comboSparkBanner', serverNow() < myComboSparkUntil, ()=> el('comboSparkRemain').textContent = Math.ceil((myComboSparkUntil - serverNow()) / 1000));
+    updateBanner('goldenbellBanner', myGoldenbellArmed);
+    updateBanner('jackpotBanner', myJackpotArmed);
+    updateBanner('snowballBanner', mySnowballArmed);
+    updateBanner('vestBanner', serverNow() < myVestUntil, ()=> el('vestRemain').textContent = Math.ceil((myVestUntil - serverNow()) / 1000));
+    updateBanner('cloverBanner', serverNow() < myCloverUntil, ()=> el('cloverRemain').textContent = Math.ceil((myCloverUntil - serverNow()) / 1000));
+    updateBanner('mirrorBanner', serverNow() < myMirrorUntil, ()=> el('mirrorRemain').textContent = Math.ceil((myMirrorUntil - serverNow()) / 1000));
+    updateBanner('fogBanner', serverNow() < myFogUntil, ()=> el('fogRemain').textContent = Math.ceil((myFogUntil - serverNow()) / 1000));
+    updateBanner('iceBanner', serverNow() < myIceUntil, ()=> el('iceRemain').textContent = Math.ceil((myIceUntil - serverNow()) / 1000));
+    updateBanner('stealAtkBanner', serverNow() < myStealAttackUntil, ()=> el('stealAtkRemain').textContent = Math.ceil((myStealAttackUntil - serverNow()) / 1000));
     showView('playView');
   } else if(effective === 'ended'){
     if(!myAnswered){
