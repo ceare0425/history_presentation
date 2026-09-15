@@ -794,7 +794,7 @@ async function submitAnswer(){
   flashFeedback(correct, q.answers[0], gain, bonusApplied, wasRetry);
   playCharacterReaction(correct);
   if(heldItem && heldItem !== heldAtStart && ITEMS[heldItem]){
-    showItemAlert(`${ITEMS[heldItem].emoji} ${ITEMS[heldItem].name} 획득! 아래 버튼으로 사용`);
+    showItemAlert(`${ITEMS[heldItem].emoji} ${ITEMS[heldItem].name} 획득! 아래 버튼으로 사용`, false, true);
   }
   renderItemBar();
 
@@ -1120,14 +1120,18 @@ function renderItemBar(){
   }
 }
 
-// 아이템 사용 알림은 '해당 문제가 끝날 때까지' 유지되고, 문제가 바뀌면(renderQuestion) 사라진다.
-// (축제는 예외 — 아래 tick()의 festivalBanner가 남은 시간과 함께 효과 지속 동안 계속 표시)
-function showItemAlert(msg, isHtml){
+// 일회성 사용/피격 알림은 0.7초 뒤 자동으로 사라진다.
+// sticky=true인 알림(아이템 획득, 안개·얼음 걸린 직후, 강탈 방어 대기)은 예외적으로
+// 문제가 바뀌거나(renderQuestion) 효과가 끝날 때까지 유지된다.
+// (축제 계열은 별도 — 위 tick()의 festivalBanner가 남은 시간과 함께 효과 지속 동안 계속 표시)
+const ITEM_ALERT_MS = 700;
+function showItemAlert(msg, isHtml, sticky){
   const a = el('itemAlert');
   if(!a) return;
   clearTimeout(itemAlertTimer);
   if(isHtml) a.innerHTML = msg; else a.textContent = msg;  // isHtml은 고정 문자열에만 사용 (플레이어 이름 등 입력값 금지)
   a.classList.add('show');
+  if(!sticky) itemAlertTimer = setTimeout(clearItemAlert, ITEM_ALERT_MS);
 }
 function clearItemAlert(){
   const a = el('itemAlert');
@@ -1530,7 +1534,7 @@ function applyIncomingFx(type, attackerId){
     box.classList.add('fogged');
     fogAlertActive = true;
     myFogUntil = serverNow() + dur;
-    showItemAlert('🌫️ 안개에 맞았다! 문제가 흐려요 (알면 그냥 풀 수 있어요)');
+    showItemAlert('🌫️ 안개에 맞았다! 문제가 흐려요 (알면 그냥 풀 수 있어요)', false, true);
     clearTimeout(fogTimer);
     fogTimer = setTimeout(()=>{
       box.classList.remove('fogged');
@@ -1545,7 +1549,7 @@ function applyIncomingFx(type, attackerId){
     myIceUntil = serverNow() + dur;
     el('answerInput').disabled = true;
     el('submitBtn').disabled = true;
-    showItemAlert('🧊 얼음! 잠시 제출할 수 없어요');
+    showItemAlert('🧊 얼음! 잠시 제출할 수 없어요', false, true);
     clearTimeout(iceTimer);
     iceTimer = setTimeout(()=>{
       frozen = false;
@@ -1565,7 +1569,7 @@ function applyIncomingFx(type, attackerId){
     if(!roundState.team_mode && currentQid){
       const ms = ITEM_FX_MS.stealDefenseMs, reduced = ITEM_FX_MS.stealDefenseAmt;
       myStealDefense = { amt, qid: currentQid, deadline: serverNow() + ms, attackerId };
-      showItemAlert(`🥷💦 강탈당했다! ${Math.round(ms/1000)}초 안에 이 문제를 맞히면 -${reduced}로 막아요!`);
+      showItemAlert(`🥷💦 강탈당했다! ${Math.round(ms/1000)}초 안에 이 문제를 맞히면 -${reduced}로 막아요!`, false, true);
       clearTimeout(stealDefenseTimer);
       stealDefenseTimer = setTimeout(()=>{
         if(myStealDefense){
