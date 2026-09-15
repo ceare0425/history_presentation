@@ -114,16 +114,17 @@
     background:var(--tcolor,#999);
   }
 
-  /* 효과 배너 전용 예약 공간: 배너를 절대배치로 겹쳐 놓아서 몇 개가 뜨든, 글자가 길든
-     바깥(fx-slot) 높이는 항상 고정 90px이라 문제 화면이 절대 밀리지 않음 */
-  .fx-slot{ position:relative; height:90px; overflow:hidden; margin-bottom:.8vh; flex:0 0 auto; }
+  /* 효과 배너 전용 예약 공간: 세로로 쌓이는 목록이라 여러 개가 동시에 떠도 다 읽히고,
+     바깥(fx-slot) 높이는 항상 고정이라 문제 화면은 절대 밀리지 않음
+     (난타전처럼 아주 많이 겹치는 극단적인 경우만 안에서 스크롤) */
+  .fx-slot{ height:150px; overflow-y:auto; overflow-x:hidden; margin-bottom:.8vh; flex:0 0 auto; }
   .bonus-banner{
-    position:absolute; inset:0; box-sizing:border-box; display:flex; align-items:center; justify-content:center;
-    text-align:center; font-weight:800; font-size:1.05rem; color:#7a3b00;
+    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#7a3b00;
     background:linear-gradient(90deg,#ffe08a,#ffc857); border-radius:12px; padding:8px;
-    visibility:hidden; opacity:0; transition:opacity .2s ease;
+    max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    transition:max-height .28s ease, opacity .2s ease;
   }
-  .bonus-banner.show{ visibility:visible; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
+  .bonus-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   @keyframes bonusPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.03); } }
 
   .avatar-char{
@@ -183,26 +184,26 @@
 
   /* ── 아이템전 ── */
   .festival-banner{
-    position:absolute; inset:0; box-sizing:border-box; display:flex; align-items:center; justify-content:center;
-    text-align:center; font-weight:800; font-size:1.05rem; color:#5a3d00;
+    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#5a3d00;
     background:linear-gradient(90deg,#ffe08a,#a6e8ff,#ffd0f0); border-radius:12px; padding:8px;
-    visibility:hidden; opacity:0; transition:opacity .2s ease;
+    max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    transition:max-height .28s ease, opacity .2s ease;
   }
-  .festival-banner.show{ visibility:visible; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
+  .festival-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .debuff-banner{
-    position:absolute; inset:0; box-sizing:border-box; display:flex; align-items:center; justify-content:center;
-    text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
+    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
     background:linear-gradient(90deg,#4b5563,#6b7280); border-radius:12px; padding:8px;
-    visibility:hidden; opacity:0; transition:opacity .2s ease;
+    max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    transition:max-height .28s ease, opacity .2s ease;
   }
-  .debuff-banner.show{ visibility:visible; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
+  .debuff-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .atk-banner{
-    position:absolute; inset:0; box-sizing:border-box; display:flex; align-items:center; justify-content:center;
-    text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
+    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
     background:linear-gradient(90deg,#7c2d12,#b91c1c); border-radius:12px; padding:8px;
-    visibility:hidden; opacity:0; transition:opacity .2s ease;
+    max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    transition:max-height .28s ease, opacity .2s ease;
   }
-  .atk-banner.show{ visibility:visible; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
+  .atk-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .item-alert{
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1rem; color:#5b3a00;
     background:linear-gradient(90deg,#fff0c8,#ffe08a); border-radius:12px; padding:8px;
