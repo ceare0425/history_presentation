@@ -114,16 +114,16 @@
     background:var(--tcolor,#999);
   }
 
-  /* 효과 배너 전용 예약 공간: 안에서 뭐가 뜨고 사라지든 이 높이는 늘 고정이라 문제 화면이 밀리지 않음
-     (아주 드물게 2개 이상이 동시에 뜨면 그때만 살짝 커짐) */
-  .fx-slot{ min-height:90px; margin-bottom:.8vh; flex:0 0 auto; }
+  /* 효과 배너 전용 예약 공간: 배너를 절대배치로 겹쳐 놓아서 몇 개가 뜨든, 글자가 길든
+     바깥(fx-slot) 높이는 항상 고정 90px이라 문제 화면이 절대 밀리지 않음 */
+  .fx-slot{ position:relative; height:90px; overflow:hidden; margin-bottom:.8vh; flex:0 0 auto; }
   .bonus-banner{
-    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#7a3b00;
+    position:absolute; inset:0; box-sizing:border-box; display:flex; align-items:center; justify-content:center;
+    text-align:center; font-weight:800; font-size:1.05rem; color:#7a3b00;
     background:linear-gradient(90deg,#ffe08a,#ffc857); border-radius:12px; padding:8px;
-    flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
-    transition:max-height .28s ease, opacity .2s ease;
+    visibility:hidden; opacity:0; transition:opacity .2s ease;
   }
-  .bonus-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
+  .bonus-banner.show{ visibility:visible; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   @keyframes bonusPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.03); } }
 
   .avatar-char{
@@ -150,7 +150,8 @@
   /* 정답/오답 표시도 늘 같은 자리를 예약해 두고 보이기만 바꿔서, 답을 맞힐 때마다 문제 박스가 밀리지 않게 함 */
   .feedback{
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1.15rem; border-radius:12px; padding:10px;
-    flex:0 0 auto; margin-bottom:.8vh; min-height:2.6em;
+    flex:0 0 auto; margin-bottom:.8vh; height:2.6em; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
     visibility:hidden; opacity:0; transition:opacity .2s ease;
   }
   .feedback.show{ visibility:visible; opacity:1; }
@@ -182,30 +183,31 @@
 
   /* ── 아이템전 ── */
   .festival-banner{
-    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#5a3d00;
+    position:absolute; inset:0; box-sizing:border-box; display:flex; align-items:center; justify-content:center;
+    text-align:center; font-weight:800; font-size:1.05rem; color:#5a3d00;
     background:linear-gradient(90deg,#ffe08a,#a6e8ff,#ffd0f0); border-radius:12px; padding:8px;
-    flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
-    transition:max-height .28s ease, opacity .2s ease;
+    visibility:hidden; opacity:0; transition:opacity .2s ease;
   }
-  .festival-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
+  .festival-banner.show{ visibility:visible; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .debuff-banner{
-    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
+    position:absolute; inset:0; box-sizing:border-box; display:flex; align-items:center; justify-content:center;
+    text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
     background:linear-gradient(90deg,#4b5563,#6b7280); border-radius:12px; padding:8px;
-    flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
-    transition:max-height .28s ease, opacity .2s ease;
+    visibility:hidden; opacity:0; transition:opacity .2s ease;
   }
-  .debuff-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
+  .debuff-banner.show{ visibility:visible; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .atk-banner{
-    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
+    position:absolute; inset:0; box-sizing:border-box; display:flex; align-items:center; justify-content:center;
+    text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
     background:linear-gradient(90deg,#7c2d12,#b91c1c); border-radius:12px; padding:8px;
-    flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
-    transition:max-height .28s ease, opacity .2s ease;
+    visibility:hidden; opacity:0; transition:opacity .2s ease;
   }
-  .atk-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
+  .atk-banner.show{ visibility:visible; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .item-alert{
-    text-align:center; font-weight:800; font-size:1rem; color:#5b3a00;
+    box-sizing:border-box; text-align:center; font-weight:800; font-size:1rem; color:#5b3a00;
     background:linear-gradient(90deg,#fff0c8,#ffe08a); border-radius:12px; padding:8px;
-    margin-bottom:.8vh; flex:0 0 auto; min-height:2.3em;
+    margin-bottom:.8vh; flex:0 0 auto; height:2.3em; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
     visibility:hidden; opacity:0; transition:opacity .15s ease;
   }
   .item-alert.show{ visibility:visible; opacity:1; animation:bonusPulse 1.1s ease-in-out infinite; }
@@ -485,7 +487,6 @@ let frozen = false;          // '얼음' 피격 중 입력 잠금
 let iceTimer = null, fogTimer = null, itemAlertTimer = null, stealDefenseTimer = null;
 let myStealDefense = null;   // '강탈' 피격 직후 방어 창: { amt, qid, deadline, attackerId } — 그 문제를 제시간에 맞히면 경감
 let myStealAttackUntil = 0;  // 내가 쏜 '강탈'의 결과를 기다리는 중(공격자 화면 타이머용) 종료 시각(ms)
-let fogAlertActive = false, iceAlertActive = false;   // 안개·얼음 알림은 효과가 끝날 때까지 유지
 let myFogUntil = 0, myIceUntil = 0;   // 안개·얼음 피격 종료 시각(ms) — 배너에 남은 시간 표시용
 const seenItemEvents = new Set();
 
@@ -573,7 +574,7 @@ function popFloorBadge(){
 
 function renderQuestion(q){
   clearChoseongHint();  // 문제가 바뀌면 이전 힌트는 지운다
-  if(!fogAlertActive && !iceAlertActive) clearItemAlert();   // 안개·얼음 알림은 효과가 끝날 때까지 문제가 바뀌어도 유지
+  clearItemAlert();
   if(!q){
     el('qText').textContent = '출제할 문제가 없습니다. 선생님께 문의하세요.';
     el('unitTag').textContent = '';
@@ -861,7 +862,7 @@ function tick(){
       // 아이템 로컬 상태 초기화
       heldItem = null; myBoost = 0; mySkipFloor = false; myHintQid = null; myShield = false;
       mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myComboSparkUntil = 0; myImmuneUntil = 0; frozen = false;
-      fogAlertActive = false; iceAlertActive = false; myFogUntil = 0; myIceUntil = 0;
+      myFogUntil = 0; myIceUntil = 0;
       myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
       myUndoAvailable = false; myUndoFloorDelta = 0; randomboxOfferPending = false;
       myStealDefense = null; clearTimeout(stealDefenseTimer); myStealAttackUntil = 0;
@@ -1259,7 +1260,7 @@ function clearIncomingFx(){
   el('qbox').classList.remove('fogged');
   clearTimeout(fogTimer); clearTimeout(iceTimer);
   frozen = false; mySnailNext = 0;
-  fogAlertActive = false; iceAlertActive = false; myFogUntil = 0; myIceUntil = 0;
+  myFogUntil = 0; myIceUntil = 0;
   if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; }
 }
 
@@ -1528,35 +1529,29 @@ function notifyStealResult(attackerId, outcome, amt){
 
 function applyIncomingFx(type, attackerId){
   const spicy = itemsMode === 'spicy' || itemsMode === 'nanta';   // 난타전도 방해 효과는 세게(매운맛과 동일)
+  // fog·ice는 debuff-banner(fogBanner/iceBanner)가 이미 남은 시간과 함께 계속 표시하므로
+  // item-alert 토스트는 따로 띄우지 않는다 (안 그러면 알림이 2개씩 뜸)
   if(type === 'fog'){
     const box = el('qbox');
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.fogNanta : spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog;
     box.classList.add('fogged');
-    fogAlertActive = true;
     myFogUntil = serverNow() + dur;
-    showItemAlert('🌫️ 안개에 맞았다! 문제가 흐려요 (알면 그냥 풀 수 있어요)', false, true);
     clearTimeout(fogTimer);
     fogTimer = setTimeout(()=>{
       box.classList.remove('fogged');
-      fogAlertActive = false;
       myFogUntil = 0;
-      if(!iceAlertActive) clearItemAlert();
     }, dur);
   } else if(type === 'ice'){
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice;
     frozen = true;
-    iceAlertActive = true;
     myIceUntil = serverNow() + dur;
     el('answerInput').disabled = true;
     el('submitBtn').disabled = true;
-    showItemAlert('🧊 얼음! 잠시 제출할 수 없어요', false, true);
     clearTimeout(iceTimer);
     iceTimer = setTimeout(()=>{
       frozen = false;
-      iceAlertActive = false;
       myIceUntil = 0;
       if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; el('answerInput').focus(); }
-      if(!fogAlertActive) clearItemAlert();
     }, dur);
   } else if(type === 'snail'){
     mySnailNext = spicy ? 2 : 1;
