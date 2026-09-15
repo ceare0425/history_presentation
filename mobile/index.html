@@ -126,8 +126,9 @@
   #slideList { padding: 0.6rem 0.8rem 3rem; max-width: 760px; margin: 0 auto; }
 
   /* position:relative로 지정해, 레슨 원본이 슬라이드 안에 pseudo-element(::before)로 넣은
-     장식용 줄무늬 배경 등이 페이지 전체로 새어나가지 않고 이 슬라이드 박스 안에만 갇히게 함 */
-  .mslide { margin-bottom: 1.3rem; position: relative; }
+     장식용 줄무늬 배경 등이 페이지 전체로 새어나가지 않고 이 슬라이드 박스 안에만 갇히게 함.
+     scroll-margin-top은 목차 탭으로 이동할 때 상단바(sticky)에 안 가리도록 하는 여유값 */
+  .mslide { margin-bottom: 1.3rem; position: relative; scroll-margin-top: 64px; }
   .mslide-num {
     display: inline-block; font-size: 0.72rem; font-weight: 700;
     color: #fff; background: var(--main); border-radius: 20px;
@@ -368,6 +369,13 @@
             img.setAttribute('src', '../' + lessonDir + '/' + raw);
           }
         });
+        // 한능검 목차(toc-item)의 onclick="goSlide(N)"은 원본 페이지 안에서만 쓰던 함수라
+        // 여기선 호출할 수 없다 — 슬라이드 번호(N)만 data-goto-slide로 남겨 두고,
+        // 아래 위임 클릭 핸들러에서 그 번호에 해당하는 .mslide로 직접 스크롤한다.
+        s.querySelectorAll('[onclick^="goSlide("]').forEach(el => {
+          const m = el.getAttribute('onclick').match(/goSlide\((\d+)\)/);
+          if (m) el.dataset.gotoSlide = m[1];
+        });
         // 원본 레슨마다 빈칸 공개 방식이 다름 (onclick 인라인 / data-reveal + 별도 스크립트).
         // 여기서는 원본 스크립트를 불러오지 않으므로, 기존 onclick은 제거하고
         // 아래 REVEAL_SELECTOR에 대한 공통 위임 클릭 핸들러 하나로 통일해서 처리한다.
@@ -392,6 +400,14 @@
   // 어느 쪽 CSS 컨벤션이든 탭 한 번에 정답이 나오도록 통일한다.
   const REVEAL_SELECTOR = '.blank, .ox, .ans-btn, .q-blank, .ox-reveal, .answer-reveal, .reveal-photo, [data-reveal]';
   document.getElementById('slideList').addEventListener('click', e => {
+    // 한능검 목차(toc-item): data-goto-slide에 담아 둔 슬라이드 번호로 스크롤 이동
+    const gotoBtn = e.target.closest('[data-goto-slide]');
+    if (gotoBtn) {
+      const targets = document.querySelectorAll('#slideList .mslide');
+      const target = targets[Number(gotoBtn.dataset.gotoSlide)];
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
     // 한능검 '전체 공개' 버튼: 같은 슬라이드(.mslide) 안의 정답을 한 번에 공개
     const allBtn = e.target.closest('[data-reveal-all]');
     if (allBtn) {
