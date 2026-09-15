@@ -355,7 +355,7 @@
           <span class="cmeta" id="certMeta">2학년 3반 14번</span>
           <span class="cname" id="certName">홍길동</span>
         </div>
-        <div class="cbody">위 학생은 국립중앙박물관 상설전시관의<br>유물 <b id="certN">20</b>점을 모두 찾아 <b>스탬프 투어</b>를<br>완주하였기에 이 수료증을 드립니다.</div>
+        <div class="cbody">위 학생은 국립중앙박물관 상설전시관에서<br>선사시대부터 근현대에 이르는 우리 역사의 발자취를<br>몸소 살피고 유물 <b id="certN">20</b>점을 빠짐없이 찾아내어<br>역사를 보는 안목과 문화·예술적 소양을 기르며<br>스스로 탐구하는 역량을 크게 증진하였기에 이 수료증을 드립니다.</div>
         <div class="cfoot">
           <div class="cdate" id="certDate">2026년 9월 9일</div>
           <div class="cissue">국립중앙박물관 스탬프투어
@@ -1070,22 +1070,25 @@ function drawCert(){
   x.fillText(`${i.grade}학년 ${i.cls}반 ${i.num}번`, W / 2, 278);
   x.fillStyle = "#241A0E"; x.font = "800 74px 'Nanum Myeongjo', serif";
   x.fillText(i.name || "　", W / 2, 366);
-  // 본문
-  x.fillStyle = "#4A3A26"; x.font = "400 27px 'Noto Sans KR', sans-serif";
-  x.fillText("위 학생은 국립중앙박물관 상설전시관의", W / 2, 464);
-  x.fillText(`유물 ${TOTAL}점을 모두 찾아 스탬프 투어를`, W / 2, 508);
-  x.fillText("완주하였기에 이 수료증을 드립니다.", W / 2, 552);
+  // 본문 (역사적 배움·역량 증진·문화예술적 소양을 담아 격식 있게)
+  x.fillStyle = "#4A3A26"; x.font = "400 24px 'Noto Sans KR', sans-serif";
+  x.fillText("위 학생은 국립중앙박물관 상설전시관에서", W / 2, 440);
+  x.fillText("선사시대부터 근현대에 이르는 우리 역사의 발자취를", W / 2, 478);
+  x.fillText(`몸소 살피고 유물 ${TOTAL}점을 빠짐없이 찾아내어`, W / 2, 516);
+  x.fillText("역사를 보는 안목과 문화·예술적 소양을 기르며", W / 2, 554);
+  x.fillText("스스로 탐구하는 역량을 크게 증진하였기에", W / 2, 592);
+  x.fillText("이 수료증을 드립니다.", W / 2, 630);
   x.fillStyle = "#4A3A26"; x.font = "600 30px 'Noto Sans KR', sans-serif";
-  x.fillText(`스탬프 ${TOTAL} / ${TOTAL} 완주`, W / 2, 654);
+  x.fillText(`스탬프 ${TOTAL} / ${TOTAL} 완주`, W / 2, 704);
   const mvpIt = ALL.find(a => a.id === state.mvp);
-  if (mvpIt) x.fillText(`오늘의 MVP 유물 · ${mvpIt.nm}`, W / 2, 700);
+  if (mvpIt) x.fillText(`오늘의 MVP 유물 · ${mvpIt.nm}`, W / 2, 748);
   // 날짜
   x.font = "600 34px 'Nanum Myeongjo', serif"; x.fillStyle = "#4A3A26";
-  x.fillText(certDateStr(), W / 2, 850);
+  x.fillText(certDateStr(), W / 2, 870);
   // 발급 기관명 + 직인 (직인이 기관명 오른쪽에 겹치도록 배치)
   x.font = "800 30px 'Nanum Myeongjo', serif"; x.fillStyle = "#2C1A0E";
   const issueTxt = "국립중앙박물관 스탬프투어";
-  const issueY = 950;
+  const issueY = 970;
   x.fillText(issueTxt, W / 2, issueY);
   const issueW = x.measureText(issueTxt).width;
   x.save();
