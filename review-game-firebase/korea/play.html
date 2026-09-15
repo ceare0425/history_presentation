@@ -74,7 +74,12 @@
     background:linear-gradient(135deg,var(--gold),var(--gold-dark)); color:#3a2c05; font-weight:800;
     border-radius:14px; padding:8px 16px; font-size:1.25rem; box-shadow:0 4px 10px rgba(197,160,40,.4);
   }
-  .rank-badge{ font-size:.82rem; font-weight:700; color:var(--sub); white-space:nowrap; }
+  .rank-badge{
+    background:linear-gradient(135deg,var(--sky2),var(--sky1)); color:#fff; font-weight:800;
+    border-radius:14px; padding:6px 14px; font-size:.95rem; box-shadow:0 4px 10px rgba(30,60,114,.35);
+    white-space:nowrap;
+  }
+  .rank-badge:empty{ display:none; }
   .timer{ font-weight:700; color:var(--sky1); font-variant-numeric:tabular-nums; font-size:1.25rem; }
   .streak{ font-size:.9rem; color:var(--sub); text-align:right; min-height:1.3em; flex:0 0 auto; }
 
