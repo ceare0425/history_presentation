@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한능검 - 현대사</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --main: #8B4513;
+  --dark: #6B3010;
+  --light: #FFF8E1;
+  --accent: #C5A028;
+  --bg: #F5E6C4;
+  --card-bg: #FDF5E0;
+  --text: #2C1A0E;
+  --text-sub: #5C3D1E;
+  --border: #A07850;
+  --gold: #C5A028;
+  --crisis: #B23A3A;
+  --peak: #1F7A4D;
+  --nav-h: 48px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: min(1.75vw, calc((100vh - 48px) / 28));
+  line-height: 1.6;
+}
+body {
+  background: #1A0D00;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === Presentation container === */
+.presentation {
+  position: relative;
+  width: min(100vw, calc((100vh - 48px) * 16 / 9));
+  height: min(calc(100vw * 9 / 16), calc(100vh - 48px));
+  background: var(--bg);
+  overflow: hidden;
+  border: 2px solid var(--border);
+  outline: 4px solid var(--gold);
+  outline-offset: -8px;
+}
+
+/* === Slides === */
+.slide {
+  display: none;
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+  background: var(--bg);
+  padding: 0.9em 1.4em 0.5em;
+}
+.slide.active { display: flex; }
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 2em, rgba(139,100,20,0.025) 2em, rgba(139,100,20,0.025) calc(2em + 1px));
+  pointer-events: none;
+  z-index: 0;
+}
+.slide > * { position: relative; z-index: 1; }
+
+/* === Slide header === */
+.slide-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.3em;
+  margin-bottom: 0.5em;
+  flex-shrink: 0;
+}
+.slide-chapter {
+  background: var(--main);
+  color: #FFF8E1;
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 0.18em 0.65em;
+  border-radius: 2px;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+}
+.slide-title {
+  font-size: 1.3em;
+  font-weight: 900;
+  color: var(--main);
+  font-family: 'Nanum Myeongjo', serif;
+}
+
+/* === Body === */
+.slide-body {
+  flex: none;
+  height: 52%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+}
+.slide-body.tall { height: 72%; }
+
+/* === Grid === */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5em; flex: 1; min-height: 0; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.45em; flex: 1; min-height: 0; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.4em; flex: 1; min-height: 0; }
+.grid-5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 0.35em; flex: 1; min-height: 0; }
+
+/* === Photo card (사진 자료) === */
+.photo-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4em 0.55em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  min-height: 0;
+  overflow: hidden;
+}
+.photo-card .photo-wrap {
+  flex: 1;
+  min-height: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #00000010;
+}
+.photo-card .photo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photo-card .photo-cap {
+  flex-shrink: 0;
+  font-size: 0.76em;
+  color: var(--text);
+  line-height: 1.5;
+  text-align: center;
+}
+.photo-card .photo-tag {
+  display: inline-block;
+  font-size: 0.66em;
+  font-weight: 700;
+  color: var(--main);
+  background: rgba(197,160,40,0.18);
+  border-radius: 3px;
+  padding: 0.03em 0.4em;
+  margin-bottom: 0.1em;
+}
+.photo-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6em; flex: 1; min-height: 0; }
+.photo-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5em; flex: 1; min-height: 0; }
+.photo-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.45em; flex: 1; min-height: 0; }
+
+/* === Card === */
+.card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 0.45em 0.7em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  min-height: 0;
+  overflow: hidden;
+}
+.card.crisis { border-left: 4px solid var(--crisis); }
+.card.peak { border-left: 4px solid var(--peak); }
+.card-title {
+  font-size: 0.87em;
+  font-weight: 700;
+  color: var(--main);
+  border-bottom: 1px solid rgba(139,69,19,0.2);
+  padding-bottom: 0.15em;
+  margin-bottom: 0.12em;
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 0.35em;
+}
+.card-body { font-size: 0.79em; color: var(--text); line-height: 1.65; min-height: 0; }
+
+/* === mini tags === */
+.mini-tag {
+  display: inline-block; font-size: 0.68em; font-weight: 700;
+  border-radius: 3px; padding: 0.03em 0.4em; color: #fff; flex-shrink: 0;
+}
+.mini-tag.crisis { background: var(--crisis); }
+.mini-tag.peak { background: var(--peak); }
+
+/* === Info box === */
+.info-box {
+  background: rgba(197,160,40,0.1);
+  border: 1.5px solid var(--gold);
+  border-radius: 4px;
+  padding: 0.35em 0.7em;
+  font-size: 0.77em;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.info-box strong { color: var(--main); }
+
+/* === Source box (사료 제시) === */
+.source-box {
+  background: rgba(139,69,19,0.06);
+  border: 1.5px dashed var(--border);
+  border-left: 4px solid var(--main);
+  border-radius: 4px;
+  padding: 0.3em 0.7em;
+  font-size: 0.75em;
+  color: var(--text-sub);
+  font-style: italic;
+  flex-shrink: 0;
+  line-height: 1.55;
+}
+.source-box .src-tag {
+  display: inline-block;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--main);
+  background: rgba(197,160,40,0.2);
+  border-radius: 3px;
+  padding: 0 0.4em;
+  margin-right: 0.4em;
+  font-size: 0.92em;
+}
+
+/* === Item list === */
+.item-list { list-style: none; display: flex; flex-direction: column; gap: 0.18em; }
+.item-list li {
+  position: relative;
+  padding-left: 1.05em;
+  font-size: 0.84em;
+  color: var(--text);
+  line-height: 1.6;
+}
+.item-list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.88em;
+}
+.item-list li strong { color: var(--main); font-weight: 700; }
+
+/* === Blank mechanic === */
+.blank {
+  display: inline-block;
+  border-bottom: 2px solid var(--main);
+  background: rgba(139,69,19,0.07);
+  border-radius: 3px 3px 0 0;
+  padding: 0.04em 0.4em 0;
+  white-space: nowrap;
+  cursor: default;
+  transition: background 0.35s, border-color 0.35s;
+}
+.blank::after {
+  content: attr(data-answer);
+  font-weight: 700;
+  color: transparent;
+  transition: color 0.35s;
+}
+.blank.revealed { background: rgba(197,160,40,0.2); border-color: var(--gold); }
+.blank.revealed::after { color: var(--main); }
+
+/* === Cover === */
+.slide-cover {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(ellipse at center, #FDF5E0 0%, #F0D9A0 45%, #E8C87A 100%);
+  gap: 0.4em;
+}
+.cover-deco { font-size: 2.4em; }
+.cover-subject { font-size: 0.85em; color: var(--text-sub); letter-spacing: 0.18em; }
+.cover-title { font-size: 2.5em; font-weight: 900; color: var(--main); font-family: 'Nanum Myeongjo', serif; line-height: 1.2; }
+.cover-subtitle { font-size: 0.87em; color: var(--text-sub); }
+.cover-hint {
+  font-size: 0.73em; color: var(--text-sub);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 0.32em 1em;
+  background: rgba(255,248,225,0.5);
+  margin-top: 0.4em;
+}
+
+/* === TOC === */
+.toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0.32em; flex: 1; align-content: start; }
+.toc-item {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-left: 4px solid var(--main);
+  border-radius: 4px;
+  padding: 0.28em 0.55em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  display: flex; flex-direction: column; gap: 0.05em;
+}
+.toc-item:hover { background: rgba(139,69,19,0.07); transform: translateX(3px); }
+.toc-num { font-size: 0.85em; font-weight: 900; color: var(--accent); font-family: 'Nanum Myeongjo', serif; }
+.toc-name { font-size: 0.7em; font-weight: 700; color: var(--main); }
+.toc-sub { font-size: 0.58em; color: var(--text-sub); }
+
+/* === Summary table === */
+.sum-table { width: 100%; border-collapse: collapse; font-size: 0.74em; }
+.sum-table th {
+  background: var(--main); color: #FFF8E1;
+  padding: 0.26em 0.45em; font-weight: 700; text-align: center;
+  border: 1px solid var(--border);
+}
+.sum-table td {
+  padding: 0.22em 0.45em;
+  border: 1px solid rgba(139,69,19,0.2);
+  color: var(--text); vertical-align: middle;
+  text-align: center;
+}
+.sum-table tr:nth-child(even) td { background: rgba(139,69,19,0.04); }
+.sum-table td.rowhead { background: rgba(197,160,40,0.18); font-weight: 700; color: var(--main); }
+
+/* === Timeline === */
+.timeline-row { display: flex; align-items: stretch; gap: 0.3em; flex: 1; }
+.tl-item {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-top: 4px solid var(--accent);
+  border-radius: 4px;
+  padding: 0.35em 0.5em;
+  font-size: 0.72em;
+  color: var(--text);
+  display: flex; flex-direction: column; gap: 0.15em;
+}
+.tl-item.crisis { border-top-color: var(--crisis); }
+.tl-item .tl-era { font-weight: 900; color: var(--main); font-size: 0.95em; }
+
+/* === End slide === */
+.slide-end {
+  align-items: center; justify-content: center; text-align: center;
+  background: radial-gradient(ellipse at center, #FDF5E0 0%, #F0D9A0 100%);
+  gap: 0.5em;
+}
+
+/* === Nav bar === */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 48px;
+  background: rgba(253,245,224,0.97);
+  border-top: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.8rem; z-index: 999; font-size: 14px;
+}
+.nav-btn {
+  width: 2rem; height: 2rem;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  background: #FDF5E0;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; padding: 0;
+}
+.nav-btn svg { width: 0.85rem; height: 0.85rem; fill: #8B4513; }
+.nav-btn:hover:not(:disabled) { background: #8B4513; border-color: #8B4513; }
+.nav-btn:hover:not(:disabled) svg { fill: #FFF8E1; }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.nav-label { font-size: 13px; color: #5C3D1E; font-weight: 700; min-width: 4.5rem; text-align: center; }
+.nav-blank-info {
+  font-size: 12px; color: #8B4513;
+  background: rgba(197,160,40,0.15);
+  border: 1px solid rgba(197,160,40,0.5);
+  border-radius: 10px; padding: 0.1em 0.6em;
+  min-width: 5rem; text-align: center;
+}
+.nav-hint { font-size: 11px; color: #A07850; opacity: 0.8; }
+
+/* Progress bar */
+#progressBar {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--main), var(--gold));
+  transition: width 0.3s ease; z-index: 1000; width: 0%;
+}
+
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="progressBar"></div>
+<div class="presentation" id="pres">
+
+<!-- ═══════════════════════ SLIDE 0: Cover ═══════════════════════ -->
+<div class="slide slide-cover active" data-slide="0">
+  <div class="cover-deco">🇰🇷</div>
+  <div class="cover-subject">한국사능력검정시험 대비 · 필기노트 기반 정리</div>
+  <div class="cover-title">현대사<br>개념·빈출주제 정리</div>
+  <div class="cover-subtitle">광복과 분단 · 대한민국 정부 수립과 6·25전쟁 · 이승만~노무현 정부의 민주주의 발전 · 경제 발전 · 통일 정책의 전개</div>
+  <div class="cover-hint">⌨ PageDown / → : 정답 한 개씩 공개 &nbsp;|&nbsp; PageUp / ← : 정답 숨기기 &nbsp;|&nbsp; 터치 스와이프 지원</div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 1: TOC ═══════════════════════ -->
+<div class="slide" data-slide="1">
+  <div class="slide-header">
+    <span class="slide-chapter">목차</span>
+    <span class="slide-title">이 편에서 다루는 내용</span>
+  </div>
+  <div class="slide-body tall">
+    <ul class="toc-list">
+      <li class="toc-item" onclick="goSlide(2)"><span class="toc-num">01</span><span class="toc-name">광복과 분단</span><span class="toc-sub">모스크바 3국 외상회의, 신탁통치 논쟁</span></li>
+      <li class="toc-item" onclick="goSlide(3)"><span class="toc-num">02</span><span class="toc-name">좌우합작운동과 남북협상</span><span class="toc-sub">여운형·김규식, 김구, 제주 4·3사건</span></li>
+      <li class="toc-item" onclick="goSlide(4)"><span class="toc-num">03</span><span class="toc-name">대한민국 정부 수립</span><span class="toc-sub">5·10총선거, 제헌헌법, 반민특위</span></li>
+      <li class="toc-item" onclick="goSlide(5)"><span class="toc-num">04</span><span class="toc-name">6·25전쟁</span><span class="toc-sub">인천상륙작전~정전협정</span></li>
+      <li class="toc-item" onclick="goSlide(6)"><span class="toc-num">05</span><span class="toc-name">현대사 사진자료</span><span class="toc-sub">인천상륙작전, 정전협정 조인식</span></li>
+      <li class="toc-item" onclick="goSlide(7)"><span class="toc-num">06</span><span class="toc-name">이승만 정부</span><span class="toc-sub">발췌개헌, 사사오입개헌</span></li>
+      <li class="toc-item" onclick="goSlide(8)"><span class="toc-num">07</span><span class="toc-name">4·19혁명과 장면 정부</span><span class="toc-sub">3·15부정선거, 내각책임제</span></li>
+      <li class="toc-item" onclick="goSlide(9)"><span class="toc-num">08</span><span class="toc-name">박정희 정부 ①</span><span class="toc-sub">한일수교, 베트남 파병, 3선개헌</span></li>
+      <li class="toc-item" onclick="goSlide(10)"><span class="toc-num">09</span><span class="toc-name">박정희 정부 ② 유신체제</span><span class="toc-sub">유신헌법, 부마항쟁, 10·26사태</span></li>
+      <li class="toc-item" onclick="goSlide(11)"><span class="toc-num">10</span><span class="toc-name">전두환 정부</span><span class="toc-sub">5·18민주화운동, 3저호황</span></li>
+      <li class="toc-item" onclick="goSlide(12)"><span class="toc-num">11</span><span class="toc-name">6월 민주항쟁과 노태우 정부</span><span class="toc-sub">6·29선언, 서울올림픽</span></li>
+      <li class="toc-item" onclick="goSlide(13)"><span class="toc-num">12</span><span class="toc-name">김영삼~노무현 정부</span><span class="toc-sub">금융실명제, IMF, 6·15공동선언</span></li>
+      <li class="toc-item" onclick="goSlide(14)"><span class="toc-num">13</span><span class="toc-name">경제 발전 ①</span><span class="toc-sub">농지개혁, 경제개발 5개년계획</span></li>
+      <li class="toc-item" onclick="goSlide(15)"><span class="toc-num">14</span><span class="toc-name">경제 발전 ②</span><span class="toc-sub">3저호황, IMF 사태, FTA</span></li>
+      <li class="toc-item" onclick="goSlide(16)"><span class="toc-num">15</span><span class="toc-name">통일 정책의 전개</span><span class="toc-sub">7·4공동성명~10·4선언</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 2: 광복과 분단 ═══════════════════════ -->
+<div class="slide" data-slide="2">
+  <div class="slide-header">
+    <span class="slide-chapter">01 광복과 분단</span>
+    <span class="slide-title">광복과 국토의 분단</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🌏 광복의 배경과 분단</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="카이로"></span>회담(1943, 한국 독립을 최초로 언급) → <span class="blank" data-answer="얄타"></span>회담(1945, 소련의 대일전 참전 결정)</li>
+            <li>광복(1945.8.15) 직후 <span class="blank" data-answer="38도선"></span>을 경계로 미(남)·소(북)가 분할 점령</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">좌우 대립</span>신탁통치 논쟁</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="모스크바 3국 외상회의"></span>(1945.12) — 임시정부 수립, 최고 5년간 <span class="blank" data-answer="신탁통치"></span> 실시 결정</li>
+            <li>국내에서 좌익(찬탁)과 우익(반탁) 대립 격화</li>
+            <li>1차 <span class="blank" data-answer="미소공동위원회"></span>(1946) 결렬</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 신탁통치 문제는 당초 '독립을 위한 준비 절차'로 제시되었으나 국내에서는 '식민 지배 연장'으로 오인되며 좌우 대립의 핵심 쟁점이 됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 3: 좌우합작운동과 남북협상 ═══════════════════════ -->
+<div class="slide" data-slide="3">
+  <div class="slide-header">
+    <span class="slide-chapter">02 통일정부 수립 노력</span>
+    <span class="slide-title">좌우합작운동과 남북협상</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🤝 좌우합작운동</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>이승만의 <span class="blank" data-answer="정읍발언"></span>(1946, 남한 단독정부 수립 주장)에 대응</li>
+            <li><span class="blank" data-answer="여운형"></span>·김규식이 좌우합작위원회 결성 → <span class="blank" data-answer="좌우합작 7원칙"></span> 발표</li>
+            <li>여운형 암살, 2차 미소공위 결렬로 좌절</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">단독선거 반대</span>남북협상과 4·3사건</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>UN의 남한 단독 선거 결정에 <span class="blank" data-answer="김구"></span>·김규식이 반발</li>
+            <li>평양에서 김일성과 <span class="blank" data-answer="남북협상"></span>(1948) 시도 — 성과 없이 종료</li>
+            <li><span class="blank" data-answer="제주 4·3사건"></span>: 단독선거 반대 봉기 → 진압 과정에서 대규모 민간인 희생</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 통일정부 수립을 위한 좌우합작운동·남북협상은 모두 실패로 끝났고, 결국 남한 단독으로 5·10 총선거가 실시됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 4: 대한민국 정부수립 ═══════════════════════ -->
+<div class="slide" data-slide="4">
+  <div class="slide-header">
+    <span class="slide-chapter">03 정부 수립</span>
+    <span class="slide-title">대한민국 정부 수립</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🗳 정부 수립 과정</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>UN총회: 인구 비례 총선거 결정 → 소련 거부 → UN소총회: 선거 가능 지역만 총선거 결정</li>
+            <li><span class="blank" data-answer="5·10 총선거"></span>(1948, 최초의 보통선거) → 제헌국회(임기 2년, 간선) 구성</li>
+            <li><span class="blank" data-answer="제헌헌법"></span> 공포 → 이승만을 대통령으로 선출, <span class="blank" data-answer="대한민국 정부"></span> 수립(1948.8.15)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">과제와 한계</span>정부 수립 초기 과제</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="반민족행위특별조사위원회"></span>(반민특위) — 친일파 청산 시도, 그러나 <span class="blank" data-answer="국회 프락치 사건"></span>·경찰의 습격 등으로 좌절, 공소시효 단축</li>
+            <li><span class="blank" data-answer="농지개혁"></span>: 유상매입·유상분배 원칙 — 지주제 해체에는 성공</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 5: 6.25전쟁 ═══════════════════════ -->
+<div class="slide" data-slide="5">
+  <div class="slide-header">
+    <span class="slide-chapter">04 6·25전쟁</span>
+    <span class="slide-title">6·25전쟁(1950~1953)</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="timeline-row">
+      <div class="tl-item crisis">
+        <div class="tl-era">1950.6</div>
+        북한 남침 → <span class="blank" data-answer="낙동강"></span> 방어선까지 후퇴
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1950.9</div>
+        <span class="blank" data-answer="인천상륙작전"></span> → 서울 수복, 압록강까지 진격
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1950.10</div>
+        <span class="blank" data-answer="중국군"></span> 개입 → 흥남 철수, 1·4 후퇴
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1951~53</div>
+        38도선 부근 전선 고착 → 휴전 회담(자유 송환 vs 자동 송환 대립)
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1953</div>
+        이승만의 <span class="blank" data-answer="반공포로"></span> 석방 → <span class="blank" data-answer="정전협정"></span>(1953.7.27, 군사분계선=DMZ)
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1953</div>
+        <span class="blank" data-answer="한미상호방위조약"></span> 체결
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 전쟁의 전개: 낙동강 방어선 → 인천상륙작전(반격) → 중국군 개입(재후퇴) → 전선 고착과 휴전회담 → 정전협정 — 국군의 진퇴 방향과 계기를 순서대로 기억할 것
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 6: [사진] 6.25전쟁 ═══════════════════════ -->
+<div class="slide" data-slide="6">
+  <div class="slide-header">
+    <span class="slide-chapter">05 현대사 사진자료</span>
+    <span class="slide-title">현대사 사진자료 — 6·25전쟁</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="photo-grid-2">
+      <div class="photo-card">
+        <div class="photo-wrap"><img src="img/인천상륙작전.jpg" alt="인천상륙작전 1950" loading="lazy"></div>
+        <div class="photo-cap"><span class="photo-tag">1950.9.15 · 미 해군 촬영</span><br><span class="blank" data-answer="인천상륙작전"></span> — 상륙함(LST)이 인천 해안에 병력과 장비를 내리는 장면</div>
+      </div>
+      <div class="photo-card">
+        <div class="photo-wrap"><img src="img/정전협정_조인식.jpg" alt="정전협정 조인식 1953" loading="lazy"></div>
+        <div class="photo-cap"><span class="photo-tag">1953.7.27 · 판문점</span><br><span class="blank" data-answer="정전협정"></span> 조인식 — 유엔군·북한군·중국군 대표가 협정문에 서명</div>
+      </div>
+    </div>
+    <div class="info-box">
+      💡 정전협정에는 남북 당사자인 대한민국 정부는 서명하지 않고, 유엔군 사령관과 북한군·중국군 사령관만 서명했다는 점이 자주 출제됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 7: 이승만 정부 ═══════════════════════ -->
+<div class="slide" data-slide="7">
+  <div class="slide-header">
+    <span class="slide-chapter">06 이승만 정부</span>
+    <span class="slide-title">이승만 정부(자유당)</span>
+  </div>
+  <div class="slide-body tall">
+    <table class="sum-table">
+      <tr><th>개헌</th><th>연도</th><th>내용</th></tr>
+      <tr><td class="rowhead">제헌헌법</td><td>1948</td><td>대통령 <span class="blank" data-answer="간선"></span>(국회에서 선출), 국회 임기 2년</td></tr>
+      <tr><td class="rowhead">1차(<span class="blank" data-answer="발췌개헌"></span>)</td><td>1952</td><td>6·25전쟁 중 부산정치파동을 거쳐 대통령 <span class="blank" data-answer="직선제"></span>로 변경</td></tr>
+      <tr><td class="rowhead">2차(<span class="blank" data-answer="사사오입개헌"></span>)</td><td>1954</td><td>초대 대통령에 한해 <span class="blank" data-answer="중임 제한"></span> 철폐</td></tr>
+    </table>
+    <div class="card crisis">
+      <div class="card-title"><span class="mini-tag crisis">반공체제</span>독재 강화</div>
+      <div class="card-body">
+        <ul class="item-list">
+          <li>신국가보안법 제정, <span class="blank" data-answer="진보당 사건"></span>(조봉암 사형)</li>
+          <li>정부에 비판적인 <span class="blank" data-answer="경향신문"></span> 폐간</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 8: 4.19혁명과 장면 정부 ═══════════════════════ -->
+<div class="slide" data-slide="8">
+  <div class="slide-header">
+    <span class="slide-chapter">07 4·19혁명</span>
+    <span class="slide-title">4·19혁명과 장면 정부</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">1960</span>4·19혁명</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="3·15 부정선거"></span> → 마산에서 <span class="blank" data-answer="김주열"></span> 사망 사건 → 전국적 시위 확산</li>
+            <li><span class="blank" data-answer="이승만"></span> 하야 → 허정 과도내각 구성</li>
+            <li>3차 개헌: <span class="blank" data-answer="내각책임제"></span>, 양원제(민의원+참의원)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏛 장면 정부(민주당)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>혁신계의 중립화 통일론, 학생들의 남북학생회담 요구("가자 북으로, 오라 남으로")</li>
+            <li>거창 양민학살 사건 진상 조사, 4차 개헌(소급입법으로 3·15 부정선거 관련자 처벌)</li>
+            <li>사회 혼란을 명분으로 <span class="blank" data-answer="5·16 군사정변"></span>(1961)이 일어나 붕괴</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 9: 박정희 정부① ═══════════════════════ -->
+<div class="slide" data-slide="9">
+  <div class="slide-header">
+    <span class="slide-chapter">08 박정희 정부①</span>
+    <span class="slide-title">박정희 정부 ① — 3공화국</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">⚔ 집권 과정</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="5·16 군사정변"></span>(1961) → 국가재건최고회의 → 5차 개헌(대통령 <span class="blank" data-answer="직선"></span>, 단원제) → 박정희 정부(3공화국) 출범</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">반발</span>외교·안보 정책</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="한일수교"></span>(1965) 반대 — <span class="blank" data-answer="6·3 시위"></span>(1964, "민족적 민주주의 장례식")에도 불구하고 협정 체결</li>
+            <li><span class="blank" data-answer="베트남 파병"></span> — 브라운 각서로 미국의 경제·군사 지원 확보</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 6차 개헌(<span class="blank" data-answer="3선 개헌"></span>, 1969) — 대통령의 3선을 허용, 이후 유신체제로 이어지는 장기집권의 발판이 됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 10: 박정희 정부② 유신체제 ═══════════════════════ -->
+<div class="slide" data-slide="10">
+  <div class="slide-header">
+    <span class="slide-chapter">09 박정희 정부②</span>
+    <span class="slide-title">박정희 정부 ② — 유신체제</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">1972</span>유신헌법(7차 개헌)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="7·4 남북공동성명"></span> 직후 유신체제 수립</li>
+            <li>대통령 간선(<span class="blank" data-answer="통일주체국민회의"></span>, 임기 6년, 사실상 종신 가능)</li>
+            <li>국회의원 1/3 대통령 임명(유신정우회), <span class="blank" data-answer="긴급조치권"></span>(헌법을 초월하는 권한)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">✊ 유신 반대 운동</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>언론자유수호운동(동아일보 백지광고 사태), 민청학련 사건·<span class="blank" data-answer="인민혁명당"></span> 재건위 사건</li>
+            <li>3·1 민주구국선언(1976), YH무역 사건 → 김영삼 의원직 제명 → <span class="blank" data-answer="부마항쟁"></span>(1979)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 부마항쟁 직후 발생한 <strong><span class="blank" data-answer="10·26 사태"></span></strong>(박정희 피살)로 유신체제가 종말을 맞음
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 11: 전두환 정부 ═══════════════════════ -->
+<div class="slide" data-slide="11">
+  <div class="slide-header">
+    <span class="slide-chapter">10 전두환 정부</span>
+    <span class="slide-title">전두환 정부</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">1980</span>집권 과정과 5·18</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="12·12 사태"></span>(1979, 신군부의 군사 반란)</li>
+            <li><span class="blank" data-answer="5·18 민주화운동"></span>(1980, 광주) — 계엄군과 시민군의 충돌, <span class="blank" data-answer="유네스코 세계기록유산"></span> 등재</li>
+            <li>국가보위비상대책위원회(국보위) → 8차 개헌(간선-대통령선거인단, 7년 단임)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📈 통치 정책</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="3저 호황"></span>(저금리·저유가·저달러)으로 고도 성장</li>
+            <li>강압 통치: 삼청교육대, 언론기본법(언론 통폐합) / 유화책: 교복·두발 자유화, 통행금지 해제, 프로야구 출범</li>
+            <li>민주화 요구 지속: <span class="blank" data-answer="박종철"></span> 고문치사 사건, <span class="blank" data-answer="4·13 호헌조치"></span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 12: 6월 민주항쟁과 노태우 정부 ═══════════════════════ -->
+<div class="slide" data-slide="12">
+  <div class="slide-header">
+    <span class="slide-chapter">11 6월 민주항쟁</span>
+    <span class="slide-title">6월 민주항쟁과 노태우 정부</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">1987</span>6월 민주항쟁</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>박종철 고문치사 사건 + 4·13 호헌조치에 반발 — '호헌철폐·독재타도' 구호</li>
+            <li><span class="blank" data-answer="이한열"></span>의 죽음으로 시위 격화</li>
+            <li><span class="blank" data-answer="6·29 민주화 선언"></span>(노태우, 대통령 직선제 수용) → 9차 개헌(<span class="blank" data-answer="직선제"></span>, 5년 단임, 여야 합의)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card peak">
+        <div class="card-title"><span class="mini-tag peak">민주화 이후</span>노태우 정부</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="서울 올림픽"></span>(1988) 개최</li>
+            <li><span class="blank" data-answer="북방외교"></span> — 소련·중국 등 공산권 국가와 수교</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 9차 개헌은 여야 합의로 이뤄진 현행 헌법 — 이후 대통령 직선제·5년 단임제가 오늘날까지 유지되고 있음
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 13: 김영삼~노무현 정부 ═══════════════════════ -->
+<div class="slide" data-slide="13">
+  <div class="slide-header">
+    <span class="slide-chapter">12 민주화 이후 정부</span>
+    <span class="slide-title">김영삼 · 김대중 · 노무현 정부</span>
+  </div>
+  <div class="slide-body tall">
+    <table class="sum-table">
+      <tr><th>정부</th><th>주요 정책</th></tr>
+      <tr><td class="rowhead">김영삼<br>(문민정부)</td><td><span class="blank" data-answer="금융실명제"></span>(1993), 지방자치제 전면 실시, 역사 바로 세우기, OECD 가입(1996) → 임기 말 <span class="blank" data-answer="IMF"></span> 외환위기(1997)</td></tr>
+      <tr><td class="rowhead">김대중<br>(국민의 정부)</td><td>IMF 위기 극복(금모으기 운동, 노사정위원회), 최초의 평화적 여야 정권 교체, <span class="blank" data-answer="6·15 남북공동선언"></span>, 한·칠레 FTA</td></tr>
+      <tr><td class="rowhead">노무현<br>(참여정부)</td><td>호주제 폐지, <span class="blank" data-answer="한·미 FTA"></span> 추진, <span class="blank" data-answer="10·4 남북공동선언"></span></td></tr>
+    </table>
+    <div class="info-box">
+      ⭐ 김영삼(3당 합당으로 집권, 군사 정부와 차별화되는 '문민정부') → 김대중(첫 여야 정권교체) → 노무현(참여정부) — 정부 명칭과 대표 정책을 정확히 짝지을 것
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 14: 경제발전① ═══════════════════════ -->
+<div class="slide" data-slide="14">
+  <div class="slide-header">
+    <span class="slide-chapter">13 경제 발전①</span>
+    <span class="slide-title">경제 발전 ① — 이승만~박정희 정부</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🌾 이승만 정부</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="농지개혁"></span>(유상매입·유상분배)</li>
+            <li>미국의 <span class="blank" data-answer="원조경제"></span>(잉여 농산물 — 면화·설탕·밀가루) → <span class="blank" data-answer="삼백산업"></span> 발달(제분·제당·면방직)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card peak">
+        <div class="card-title"><span class="mini-tag peak">고도성장</span>박정희 정부</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>1·2차 <span class="blank" data-answer="경제개발 5개년계획"></span>(1962~71) — 경공업 중심, 저임금·저곡가 정책, 한일수교·베트남 파병 자금 활용</li>
+            <li>3·4차 경제개발 5개년계획(1972~81) — <span class="blank" data-answer="중화학공업"></span> 육성(포항제철 등), 수출 100억불 달성(1977)</li>
+            <li><span class="blank" data-answer="새마을운동"></span>(농촌 근대화), 오일쇼크 / <span class="blank" data-answer="전태일"></span> 분신 사건(근로기준법 준수 요구)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 15: 경제발전② ═══════════════════════ -->
+<div class="slide" data-slide="15">
+  <div class="slide-header">
+    <span class="slide-chapter">14 경제 발전②</span>
+    <span class="slide-title">경제 발전 ② — 전두환~노무현 정부</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📈 전두환 · 김영삼 정부</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>전두환: <span class="blank" data-answer="3저 호황"></span>(저금리·저유가·저달러)으로 고도 성장</li>
+            <li>김영삼: 금융실명제, <span class="blank" data-answer="우루과이라운드"></span> 타결(시장 개방)</li>
+            <li>임기 말 <span class="blank" data-answer="IMF 외환위기"></span>(1997, 외환 부족) 발생</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">위기 극복</span>김대중 · 노무현 정부</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>김대중: <span class="blank" data-answer="금모으기 운동"></span>, 노사정위원회 → IMF 조기 극복, <span class="blank" data-answer="한·칠레 FTA"></span>(최초의 FTA)</li>
+            <li>노무현: <span class="blank" data-answer="한·미 FTA"></span> 체결</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 국채보상운동(1907)과 비교되는 <strong>제2의 국채보상운동</strong>이라 불린 '금모으기 운동' — 두 운동을 혼동하지 않도록 시기(대한제국 vs 김대중 정부)를 정확히 구분할 것
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 16: 통일정책의 전개 ═══════════════════════ -->
+<div class="slide" data-slide="16">
+  <div class="slide-header">
+    <span class="slide-chapter">15 통일 정책</span>
+    <span class="slide-title">통일 정책의 전개</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="timeline-row">
+      <div class="tl-item">
+        <div class="tl-era">1972</div>
+        <span class="blank" data-answer="7·4 남북공동성명"></span> — 자주·평화·민족대단결 3원칙, 남북조절위원회
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1991</div>
+        남북한 <span class="blank" data-answer="UN 동시가입"></span>, <span class="blank" data-answer="남북기본합의서"></span>(잠정적 특수관계), 한반도 비핵화 공동선언
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">2000</div>
+        <span class="blank" data-answer="6·15 남북공동선언"></span> — 최초 남북정상회담(김대중·김정일), 연합제-낮은 단계 연방제 공통성 인정
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">2007</div>
+        <span class="blank" data-answer="10·4 남북공동선언"></span> — 2차 정상회담(노무현·김정일)
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 7·4남북공동성명(박정희)은 양측 모두 체제 강화(남 유신, 북 사회주의헌법)에 이용된 한계가 있었다는 점, 6·15선언 이후 개성공단·경의선 연결·금강산 육로관광 등 교류가 확대된 점을 기억할 것
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 17: 총정리 ═══════════════════════ -->
+<div class="slide" data-slide="17">
+  <div class="slide-header">
+    <span class="slide-chapter">총정리</span>
+    <span class="slide-title">현대사 흐름 한눈에 보기</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="timeline-row">
+      <div class="tl-item crisis">
+        <div class="tl-era">1945~48</div>
+        광복·분단 → 정부 수립
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1950~53</div>
+        6·25전쟁
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1960~61</div>
+        4·19혁명 → 5·16군사정변
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1972~79</div>
+        유신체제 → 10·26사태
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1980~87</div>
+        5·18민주화운동 → 6월 민주항쟁
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1993~</div>
+        문민정부 이후 민주화·경제 발전
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ <strong>시험 대비 최종 체크:</strong> ① 정부 수립 전 좌우 대립·통일정부 수립 노력 ② 6·25전쟁 전개 순서 ③ 개헌 순서와 명칭(발췌~사사오입~3차~5차~유신~8차~9차) ④ 각 정부의 대표 사건·정책 짝짓기 ⑤ 경제개발 5개년계획의 단계별 변화 ⑥ 통일정책 4단계(7·4성명~기본합의서~6·15~10·4) — 이 여섯 유형이 최다 출제 포인트
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 18: 마무리 ═══════════════════════ -->
+<div class="slide slide-end" data-slide="18">
+  <div style="font-size:2.2em">🎉</div>
+  <div style="font-size:2.2em;font-weight:900;color:var(--main);font-family:'Nanum Myeongjo',serif">수고하셨습니다!</div>
+  <div style="font-size:0.88em;color:var(--text-sub)">한국사능력검정시험 — 현대사 개념 정리를 모두 마쳤습니다.</div>
+  <div style="background:var(--card-bg);border:1.5px solid var(--gold);border-radius:6px;padding:0.9em 1.5em;max-width:80%;width:fit-content;margin:0 auto;text-align:center;font-size:0.8em;color:var(--text);line-height:1.8">
+    <strong style="color:var(--main);font-size:1.05em">📌 핵심 흐름</strong><br>
+    광복과 분단 → 대한민국 정부 수립과 6·25전쟁 → 이승만~장면 정부의 붕괴 → 박정희 정부의 산업화와 유신체제 → 5·18민주화운동~6월 민주항쟁 → 문민정부 이후의 민주화·경제 발전과 남북 화해<br>
+    <em style="color:var(--text-sub)">이것으로 한능검 대비 시리즈(선사~현대) 전 과정을 모두 마쳤습니다. 수고하셨습니다!</em>
+  </div>
+</div>
+
+</div><!-- /.presentation -->
+
+<!-- Navigation Bar -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="pageUp()" title="PageUp / ← : 정답 숨기기">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-label"><span id="curSlide">1</span> / <span id="totSlides">19</span></span>
+  <button class="nav-btn" id="nextBtn" onclick="pageDown()" title="PageDown / → : 정답 공개">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+  <span class="nav-blank-info" id="blankInfo" style="display:none"></span>
+  <span class="nav-hint">PageDown·→ : 정답 공개 &nbsp;|&nbsp; PageUp·← : 숨기기</span>
+</div>
+
+<script>
+(function() {
+  var slides = Array.from(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var cur = 0;
+  var revealed = new Array(total).fill(0);
+
+  document.getElementById('totSlides').textContent = total;
+
+  function getBlanks(i) {
+    return Array.from(slides[i].querySelectorAll('.blank'));
+  }
+
+  function goSlide(i) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(i, total - 1));
+    slides[cur].classList.add('active');
+    updateUI();
+  }
+  window.goSlide = goSlide;
+
+  function pageDown() {
+    var bs = getBlanks(cur);
+    if (revealed[cur] < bs.length) {
+      bs[revealed[cur]].classList.add('revealed');
+      revealed[cur]++;
+      updateUI();
+    } else if (cur < total - 1) {
+      goSlide(cur + 1);
+    }
+  }
+  window.pageDown = pageDown;
+
+  function pageUp() {
+    if (revealed[cur] > 0) {
+      var bs = getBlanks(cur);
+      bs[revealed[cur] - 1].classList.remove('revealed');
+      revealed[cur]--;
+      updateUI();
+    } else if (cur > 0) {
+      goSlide(cur - 1);
+    }
+  }
+  window.pageUp = pageUp;
+
+  function updateUI() {
+    document.getElementById('curSlide').textContent = cur + 1;
+
+    var bs = getBlanks(cur);
+    var bi = document.getElementById('blankInfo');
+    if (bs.length > 0) {
+      bi.textContent = '빈칸 ' + revealed[cur] + ' / ' + bs.length;
+      bi.style.display = '';
+    } else {
+      bi.style.display = 'none';
+    }
+
+    var pct = total > 1 ? (cur / (total - 1)) * 100 : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+
+    document.getElementById('prevBtn').disabled = (cur === 0 && revealed[cur] === 0);
+    document.getElementById('nextBtn').disabled = (cur === total - 1 && revealed[cur] === getBlanks(cur).length);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return;
+    if (e.key === 'PageDown' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault(); pageDown();
+    } else if (e.key === 'PageUp' || e.key === 'ArrowLeft') {
+      e.preventDefault(); pageUp();
+    } else if (e.key === 'Home') {
+      e.preventDefault(); goSlide(0);
+    } else if (e.key === 'End') {
+      e.preventDefault(); goSlide(total - 1);
+    }
+  });
+
+  var tsX = 0, tsY = 0;
+  document.addEventListener('touchstart', function(e) {
+    tsX = e.touches[0].clientX;
+    tsY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - tsX;
+    var dy = e.changedTouches[0].clientY - tsY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) pageDown(); else pageUp();
+    }
+  }, { passive: true });
+
+  updateUI();
+})();
+</script>
+</body>
+</html>
