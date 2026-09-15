@@ -204,18 +204,17 @@
   .certcard .ct{font-family:'Nanum Myeongjo',serif;font-weight:800;letter-spacing:.35em;font-size:1.15rem;color:var(--main)}
   .certcard .crecip{margin:.75rem .2rem .6rem;text-align:right}
   .certcard .cmeta{display:block;font-size:.74rem;color:var(--ink-sec);letter-spacing:.06em;margin-bottom:.15rem}
-  .certcard .cname{font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1.15rem;color:var(--ink)}
   .certcard .cbody{font-size:.8rem;line-height:1.65;color:#4A3A26;margin:0 .2rem .8rem;word-break:keep-all}
   .certcard .cfoot{display:flex;flex-direction:column;align-items:center;gap:.55rem;margin-top:.3rem}
   .certcard .cdate{font-size:.8rem;color:#4A3A26;font-weight:600}
   .certcard .csign{position:relative;display:inline-block;margin-top:.1rem}
   .certcard .csign-text{font-family:'Nanum Myeongjo',serif;font-weight:600;font-size:.86rem;color:#3A2C1A;white-space:nowrap}
-  /* 네모난 4자 인장: 오른쪽 위부터 시계반대 방향으로 李 → 周 → 印 → 泳 (전통 우→좌, 위→아래 배치) */
+  /* 네모난 4자 인장: 오른쪽 위부터 시계반대 방향으로 李 → 周 → 印 → 泳 (전통 우→좌, 위→아래 배치), 기울임 없이 똑바로 */
   .certcard .cseal{position:absolute;top:50%;left:50%;width:2.5rem;height:2.5rem;
     border:3px double var(--seal);color:var(--seal);background:rgba(255,250,245,.4);
     display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
-    font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:.66rem;
-    transform:translate(-50%,-60%) rotate(-9deg);
+    font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:1.05rem;line-height:1;
+    transform:translate(-50%,-60%);
     box-shadow:0 0 0 1px rgba(181,50,43,.3) inset;pointer-events:none}
   .certcard .cseal span{display:flex;align-items:center;justify-content:center}
   .certbtn{margin-top:.6rem;width:100%;border:none;border-radius:10px;padding:.72rem;
@@ -355,8 +354,9 @@
       <div class="certcard" id="certCard">
         <div class="ct">수 료 증</div>
         <div class="crecip">
+          <span class="cmeta">전주영생고등학교</span>
           <span class="cmeta" id="certMeta">2학년 3반 14번</span>
-          <span class="cname" id="certName">홍길동</span>
+          <span class="cmeta" id="certName">홍길동</span>
         </div>
         <div class="cbody">위 학생은 국립중앙박물관 상설전시관에서<br>선사시대부터 근현대에 이르는 우리 역사의 발자취를<br>몸소 살피고 유물 <b id="certN">20</b>점을 빠짐없이 찾아내어<br>역사를 보는 안목과 문화·예술적 소양을 기르며<br>스스로 탐구하는 역량을 크게 증진하였기에 이 수료증을 드립니다.</div>
         <div class="cfoot">
@@ -1074,10 +1074,10 @@ function positionCertSeal(){
   seal.style.left = (lastRect.left + lastRect.width / 2 - wrapRect.left) + "px";
 }
 window.addEventListener("resize", () => { if (!document.getElementById("certWrap").hidden) positionCertSeal(); });
-/* 네모난 4자 직인(李泳周印): 전통 인장처럼 오른쪽 위 李 → 오른쪽 아래 泳 → 왼쪽 위 周 → 왼쪽 아래 印 순으로 배치 */
-function drawSquareSeal(ctx, cx, cy, size, rotDeg){
+/* 네모난 4자 직인(李泳周印): 전통 인장처럼 오른쪽 위 李 → 오른쪽 아래 泳 → 왼쪽 위 周 → 왼쪽 아래 印 순으로, 기울임 없이 똑바로 배치 */
+function drawSquareSeal(ctx, cx, cy, size){
   ctx.save();
-  ctx.translate(cx, cy); ctx.rotate(rotDeg * Math.PI / 180);
+  ctx.translate(cx, cy);
   const h = size / 2, q = size / 4;
   ctx.fillStyle = "rgba(255,250,245,.4)";
   ctx.fillRect(-h, -h, size, size);
@@ -1086,7 +1086,7 @@ function drawSquareSeal(ctx, cx, cy, size, rotDeg){
   ctx.lineWidth = 1.4;
   ctx.strokeRect(-h + 8, -h + 8, size - 16, size - 16);
   ctx.fillStyle = "#B5322B";
-  ctx.font = `700 ${Math.round(size * 0.32)}px 'Nanum Myeongjo', serif`;
+  ctx.font = `700 ${Math.round(size * 0.44)}px 'Nanum Myeongjo', serif`;
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.fillText("周", -q, -q);
   ctx.fillText("李", q, -q);
@@ -1105,13 +1105,13 @@ function drawCert(){
   x.textAlign = "center"; x.fillStyle = "#8B4513";
   x.font = "800 62px 'Nanum Myeongjo', serif";
   x.fillText("수  료  증", W / 2, 190);
-  // 받는 사람 (표준 상장 순서: 제목 → 소속/이름 → 본문 → 날짜 → 서명/직인). 이름을 과하게 키우지 않고 우측 정렬
+  // 받는 사람 (표준 상장 순서: 제목 → 소속/이름 → 본문 → 날짜 → 서명/직인). 학교·소속·이름을 모두 같은 폰트·크기로 우측 정렬
   const rightX = W - 96;
   x.textAlign = "right";
   x.fillStyle = "#6E5B41"; x.font = "500 28px 'Noto Sans KR', sans-serif";
+  x.fillText("전주영생고등학교", rightX, 246);
   x.fillText(`${i.grade}학년 ${i.cls}반 ${i.num}번`, rightX, 278);
-  x.fillStyle = "#241A0E"; x.font = "800 44px 'Nanum Myeongjo', serif";
-  x.fillText(i.name || "　", rightX, 336);
+  x.fillText(i.name || "　", rightX, 310);
   // 본문 (역사적 배움·역량 증진·문화예술적 소양을 담아 격식 있게)
   x.textAlign = "center";
   x.fillStyle = "#4A3A26"; x.font = "400 24px 'Noto Sans KR', sans-serif";
@@ -1135,7 +1135,7 @@ function drawCert(){
   const totalW = x.measureText(issuerText).width;
   const withoutLastW = x.measureText(issuerText.slice(0, -1)).width;
   const sealCx = (W / 2 - totalW / 2) + withoutLastW + (totalW - withoutLastW) / 2;
-  drawSquareSeal(x, sealCx, issuerY - 8, 124, -9);
+  drawSquareSeal(x, sealCx, issuerY - 8, 124);
   return cv;
 }
 function openCert(){
