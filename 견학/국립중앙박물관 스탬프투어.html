@@ -203,10 +203,10 @@
   .certcard::before{content:"";position:absolute;inset:6px;border:1px solid rgba(154,123,30,.45);border-radius:8px;pointer-events:none}
   .certcard .ct{font-family:'Nanum Myeongjo',serif;font-weight:800;letter-spacing:.35em;font-size:1.15rem;color:var(--main)}
   .certcard .crecip{margin:1.3rem .2rem .6rem;text-align:right}
-  .certcard .cmeta{display:block;font-size:.85rem;color:var(--ink-sec);letter-spacing:.06em;margin-bottom:.15rem}
-  .certcard .cbody{font-size:.9rem;line-height:1.65;color:#4A3A26;margin:0 .2rem .8rem;word-break:keep-all}
+  .certcard .cmeta{display:block;font-family:'Nanum Myeongjo',serif;font-size:.85rem;color:var(--ink-sec);letter-spacing:.06em;margin-bottom:.15rem}
+  .certcard .cbody{font-family:'Nanum Myeongjo',serif;font-size:.9rem;line-height:1.65;color:#4A3A26;margin:0 .2rem .8rem;word-break:keep-all}
   .certcard .cfoot{display:flex;flex-direction:column;align-items:center;gap:.3rem;margin-top:.3rem}
-  .certcard .cdate{font-size:.8rem;color:#4A3A26;font-weight:600}
+  .certcard .cdate{font-family:'Nanum Myeongjo',serif;font-size:.8rem;color:#4A3A26;font-weight:600}
   .certcard .csign{position:relative;display:inline-block;margin-top:.1rem}
   .certcard .csign-text{font-family:'Nanum Myeongjo',serif;font-weight:600;font-size:1rem;color:#3A2C1A;white-space:nowrap}
   /* 네모난 4자 인장: 오른쪽 위부터 시계반대 방향으로 李 → 周 → 印 → 泳 (전통 우→좌, 위→아래 배치), 기울임 없이 똑바로 */
@@ -1109,13 +1109,13 @@ function drawCert(){
   // 받는 사람 (표준 상장 순서: 제목 → 소속/이름 → 본문 → 날짜 → 서명/직인). 학교·소속·이름을 모두 같은 폰트·크기로 우측 정렬
   const rightX = W - 96;
   x.textAlign = "right";
-  x.fillStyle = "#6E5B41"; x.font = "500 32px 'Noto Sans KR', sans-serif";
+  x.fillStyle = "#6E5B41"; x.font = "500 32px 'Nanum Myeongjo', serif";
   x.fillText("전주영생고등학교", rightX, 294);
   x.fillText(`${i.grade}학년 ${i.cls}반 ${i.num}번`, rightX, 330);
   x.fillText(i.name || "　", rightX, 366);
   // 본문 (역사적 배움·역량 증진·문화예술적 소양을 담아 격식 있게)
   x.textAlign = "center";
-  x.fillStyle = "#4A3A26"; x.font = "400 28px 'Noto Sans KR', sans-serif";
+  x.fillStyle = "#4A3A26"; x.font = "400 28px 'Nanum Myeongjo', serif";
   x.fillText("위 학생은 국립중앙박물관 상설전시관에서", W / 2, 472);
   x.fillText("선사시대부터 근현대에 이르는 우리 역사의 발자취를", W / 2, 516);
   x.fillText(`몸소 살피고 유물 ${TOTAL}점을 빠짐없이 찾아내어`, W / 2, 560);
@@ -1124,7 +1124,7 @@ function drawCert(){
   x.fillText("이 수료증을 드립니다.", W / 2, 692);
   const mvpIt = ALL.find(a => a.id === state.mvp);
   if (mvpIt) {
-    x.fillStyle = "#4A3A26"; x.font = "600 28px 'Noto Sans KR', sans-serif";
+    x.fillStyle = "#4A3A26"; x.font = "600 28px 'Nanum Myeongjo', serif";
     x.fillText(`오늘의 MVP 유물 · ${mvpIt.nm}`, W / 2, 744);
   }
   // 발급 날짜
