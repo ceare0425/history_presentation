@@ -1508,7 +1508,7 @@ function handleItemEvents(obj){
 
 function notifyStealResult(attackerId, outcome, amt){
   if(!attackerId) return;
-  push(roomRef(ROOM, 'item_events'), { type: 'steal_result', target: attackerId, outcome, amt, at: serverNow() });
+  push(roomRef(ROOM, 'item_events'), { type: 'steal_result', target: attackerId, outcome, amt, victim: playerId, victimName: playerName, at: serverNow() });
 }
 
 function applyIncomingFx(type, attackerId){

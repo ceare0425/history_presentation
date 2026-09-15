@@ -935,6 +935,19 @@ function showItemEvent(e){
     spawnConfettiBatch(14);
     return;
   }
+  if(e.type === 'steal_result'){
+    const attacker = playersObj[e.target];
+    const attackerName = escapeHtml(attacker?.name || '누군가');
+    const victimName = escapeHtml(e.victimName || '상대');
+    if(e.outcome === 'defended'){
+      itemToast(`🛡️ ${victimName} 님이 ${attackerName} 님의 강탈을 막아냈다! (-${e.amt}${unitLabel()}만)`);
+    } else {
+      itemToast(`🥷💰 ${attackerName} 님 강탈 성공! ${victimName} 님에게서 +${e.amt}${unitLabel()}`);
+      spawnConfettiBatch(10);
+    }
+    if(e.target) flashClimberFx(e.target, 'steal');
+    return;
+  }
   const it = ITEMS[e.type];
   if(!it) return;
   const who = escapeHtml(e.byName || '누군가');
