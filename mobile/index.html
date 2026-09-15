@@ -408,12 +408,15 @@
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
-    // 한능검 '전체 공개' 버튼: 같은 슬라이드(.mslide) 안의 정답을 한 번에 공개
+    // 한능검 '전체 공개' 버튼: 같은 슬라이드(.mslide) 안의 정답을 한 번에 공개/재클릭 시 다시 가림
     const allBtn = e.target.closest('[data-reveal-all]');
     if (allBtn) {
       const scope = allBtn.closest('.mslide') || document;
-      scope.querySelectorAll(REVEAL_SELECTOR).forEach(el => {
-        el.classList.add('on', 'revealed');
+      const items = [...scope.querySelectorAll(REVEAL_SELECTOR)];
+      const allShown = items.length > 0 && items.every(el => el.classList.contains('on') || el.classList.contains('revealed'));
+      items.forEach(el => {
+        el.classList.toggle('on', !allShown);
+        el.classList.toggle('revealed', !allShown);
       });
       return;
     }
