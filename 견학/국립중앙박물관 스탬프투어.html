@@ -210,10 +210,10 @@
   .certcard .csign{position:relative;display:inline-block;margin-top:.1rem}
   .certcard .csign-text{font-family:'Nanum Myeongjo',serif;font-weight:600;font-size:1rem;color:#3A2C1A;white-space:nowrap}
   /* 네모난 4자 인장: 오른쪽 위부터 시계반대 방향으로 李 → 周 → 印 → 泳 (전통 우→좌, 위→아래 배치), 기울임 없이 똑바로 */
-  .certcard .cseal{position:absolute;top:50%;left:50%;width:2.5rem;height:2.5rem;
+  .certcard .cseal{position:absolute;top:50%;left:50%;width:2.15rem;height:2.15rem;
     border:3px double var(--seal);color:var(--seal);background:rgba(255,250,245,.4);
     display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
-    font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:1.05rem;line-height:1;
+    font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:.9rem;line-height:1;
     transform:translate(-50%,-60%);
     box-shadow:0 0 0 1px rgba(181,50,43,.3) inset;pointer-events:none}
   .certcard .cseal span{display:flex;align-items:center;justify-content:center}
@@ -1136,7 +1136,7 @@ function drawCert(){
   x.fillText(issuerText, W / 2, issuerY);
   const totalW = x.measureText(issuerText).width;
   const withoutLastW = x.measureText(issuerText.slice(0, -1)).width;
-  const sealSize = 124;
+  const sealSize = 106;
   const startLastCharX = (W / 2 - totalW / 2) + withoutLastW;
   const sealCx = startLastCharX + sealSize / 2 + 10; // 직인 왼쪽 가장자리가 '영'을 가리지 않고 '주' 시작 지점에서 살짝 떨어지도록
   drawSquareSeal(x, sealCx, issuerY - 8, sealSize);
