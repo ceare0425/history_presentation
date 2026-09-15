@@ -87,6 +87,19 @@
             { "label": "빈칸 학습", "color": "green" }
           ],
           "gradient": "linear-gradient(90deg, #6B3010, #8B4513)"
+        },
+        {
+          "title": "한능검 대비 — 근대(개항기)",
+          "path": "한능검/한능검 근대(개항기).html",
+          "emoji": "⚓",
+          "description": "한국사능력검정시험 대비 필기노트 기반 정리. 흥선대원군의 대내외 정책(병인양요·신미양요), 강화도조약과 개항, 임오군란·갑신정변, 동학농민운동과 갑오·을미개혁, 독립협회와 대한제국(광무개혁), 을사늑약~경술국치의 국권 피탈 과정, 항일 의병운동·애국계몽운동, 개항기 경제·문화까지 총정리 빈칸 학습.",
+          "tags": [
+            { "label": "한능검 대비", "color": "orange" },
+            { "label": "근대·개항기", "color": "purple" },
+            { "label": "국권피탈·의병", "color": "blue" },
+            { "label": "빈칸 학습", "color": "green" }
+          ],
+          "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
         }
       ]
     },

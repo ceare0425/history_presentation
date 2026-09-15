@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한능검 - 근대(개항기)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --main: #8B4513;
+  --dark: #6B3010;
+  --light: #FFF8E1;
+  --accent: #C5A028;
+  --bg: #F5E6C4;
+  --card-bg: #FDF5E0;
+  --text: #2C1A0E;
+  --text-sub: #5C3D1E;
+  --border: #A07850;
+  --gold: #C5A028;
+  --crisis: #B23A3A;
+  --peak: #1F7A4D;
+  --nav-h: 48px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-family: 'Noto Serif KR', 'Nanum Myeongjo', serif;
+  font-size: min(1.75vw, calc((100vh - 48px) / 28));
+  line-height: 1.6;
+}
+body {
+  background: #1A0D00;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === Presentation container === */
+.presentation {
+  position: relative;
+  width: min(100vw, calc((100vh - 48px) * 16 / 9));
+  height: min(calc(100vw * 9 / 16), calc(100vh - 48px));
+  background: var(--bg);
+  overflow: hidden;
+  border: 2px solid var(--border);
+  outline: 4px solid var(--gold);
+  outline-offset: -8px;
+}
+
+/* === Slides === */
+.slide {
+  display: none;
+  position: absolute;
+  inset: 0;
+  flex-direction: column;
+  background: var(--bg);
+  padding: 0.9em 1.4em 0.5em;
+}
+.slide.active { display: flex; }
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 2em, rgba(139,100,20,0.025) 2em, rgba(139,100,20,0.025) calc(2em + 1px));
+  pointer-events: none;
+  z-index: 0;
+}
+.slide > * { position: relative; z-index: 1; }
+
+/* === Slide header === */
+.slide-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 0.3em;
+  margin-bottom: 0.5em;
+  flex-shrink: 0;
+}
+.slide-chapter {
+  background: var(--main);
+  color: #FFF8E1;
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 0.18em 0.65em;
+  border-radius: 2px;
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+}
+.slide-title {
+  font-size: 1.3em;
+  font-weight: 900;
+  color: var(--main);
+  font-family: 'Nanum Myeongjo', serif;
+}
+
+/* === Body === */
+.slide-body {
+  flex: none;
+  height: 52%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+}
+.slide-body.tall { height: 72%; }
+
+/* === Grid === */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5em; flex: 1; min-height: 0; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.45em; flex: 1; min-height: 0; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.4em; flex: 1; min-height: 0; }
+.grid-5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 0.35em; flex: 1; min-height: 0; }
+
+/* === Photo card (사진 자료) === */
+.photo-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4em 0.55em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  min-height: 0;
+  overflow: hidden;
+}
+.photo-card .photo-wrap {
+  flex: 1;
+  min-height: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #00000010;
+}
+.photo-card .photo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photo-card .photo-cap {
+  flex-shrink: 0;
+  font-size: 0.76em;
+  color: var(--text);
+  line-height: 1.5;
+  text-align: center;
+}
+.photo-card .photo-tag {
+  display: inline-block;
+  font-size: 0.66em;
+  font-weight: 700;
+  color: var(--main);
+  background: rgba(197,160,40,0.18);
+  border-radius: 3px;
+  padding: 0.03em 0.4em;
+  margin-bottom: 0.1em;
+}
+.photo-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6em; flex: 1; min-height: 0; }
+.photo-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5em; flex: 1; min-height: 0; }
+.photo-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.45em; flex: 1; min-height: 0; }
+
+/* === Card === */
+.card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 0.45em 0.7em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  min-height: 0;
+  overflow: hidden;
+}
+.card.crisis { border-left: 4px solid var(--crisis); }
+.card.peak { border-left: 4px solid var(--peak); }
+.card-title {
+  font-size: 0.87em;
+  font-weight: 700;
+  color: var(--main);
+  border-bottom: 1px solid rgba(139,69,19,0.2);
+  padding-bottom: 0.15em;
+  margin-bottom: 0.12em;
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 0.35em;
+}
+.card-body { font-size: 0.79em; color: var(--text); line-height: 1.65; min-height: 0; }
+
+/* === mini tags === */
+.mini-tag {
+  display: inline-block; font-size: 0.68em; font-weight: 700;
+  border-radius: 3px; padding: 0.03em 0.4em; color: #fff; flex-shrink: 0;
+}
+.mini-tag.crisis { background: var(--crisis); }
+.mini-tag.peak { background: var(--peak); }
+
+/* === Info box === */
+.info-box {
+  background: rgba(197,160,40,0.1);
+  border: 1.5px solid var(--gold);
+  border-radius: 4px;
+  padding: 0.35em 0.7em;
+  font-size: 0.77em;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.info-box strong { color: var(--main); }
+
+/* === Source box (사료 제시) === */
+.source-box {
+  background: rgba(139,69,19,0.06);
+  border: 1.5px dashed var(--border);
+  border-left: 4px solid var(--main);
+  border-radius: 4px;
+  padding: 0.3em 0.7em;
+  font-size: 0.75em;
+  color: var(--text-sub);
+  font-style: italic;
+  flex-shrink: 0;
+  line-height: 1.55;
+}
+.source-box .src-tag {
+  display: inline-block;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--main);
+  background: rgba(197,160,40,0.2);
+  border-radius: 3px;
+  padding: 0 0.4em;
+  margin-right: 0.4em;
+  font-size: 0.92em;
+}
+
+/* === Item list === */
+.item-list { list-style: none; display: flex; flex-direction: column; gap: 0.18em; }
+.item-list li {
+  position: relative;
+  padding-left: 1.05em;
+  font-size: 0.84em;
+  color: var(--text);
+  line-height: 1.6;
+}
+.item-list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.88em;
+}
+.item-list li strong { color: var(--main); font-weight: 700; }
+
+/* === Blank mechanic === */
+.blank {
+  display: inline-block;
+  border-bottom: 2px solid var(--main);
+  background: rgba(139,69,19,0.07);
+  border-radius: 3px 3px 0 0;
+  padding: 0.04em 0.4em 0;
+  white-space: nowrap;
+  cursor: default;
+  transition: background 0.35s, border-color 0.35s;
+}
+.blank::after {
+  content: attr(data-answer);
+  font-weight: 700;
+  color: transparent;
+  transition: color 0.35s;
+}
+.blank.revealed { background: rgba(197,160,40,0.2); border-color: var(--gold); }
+.blank.revealed::after { color: var(--main); }
+
+/* === Cover === */
+.slide-cover {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(ellipse at center, #FDF5E0 0%, #F0D9A0 45%, #E8C87A 100%);
+  gap: 0.4em;
+}
+.cover-deco { font-size: 2.4em; }
+.cover-subject { font-size: 0.85em; color: var(--text-sub); letter-spacing: 0.18em; }
+.cover-title { font-size: 2.5em; font-weight: 900; color: var(--main); font-family: 'Nanum Myeongjo', serif; line-height: 1.2; }
+.cover-subtitle { font-size: 0.87em; color: var(--text-sub); }
+.cover-hint {
+  font-size: 0.73em; color: var(--text-sub);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 0.32em 1em;
+  background: rgba(255,248,225,0.5);
+  margin-top: 0.4em;
+}
+
+/* === TOC === */
+.toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0.32em; flex: 1; align-content: start; }
+.toc-item {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-left: 4px solid var(--main);
+  border-radius: 4px;
+  padding: 0.28em 0.55em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  display: flex; flex-direction: column; gap: 0.05em;
+}
+.toc-item:hover { background: rgba(139,69,19,0.07); transform: translateX(3px); }
+.toc-num { font-size: 0.85em; font-weight: 900; color: var(--accent); font-family: 'Nanum Myeongjo', serif; }
+.toc-name { font-size: 0.7em; font-weight: 700; color: var(--main); }
+.toc-sub { font-size: 0.58em; color: var(--text-sub); }
+
+/* === Summary table === */
+.sum-table { width: 100%; border-collapse: collapse; font-size: 0.74em; }
+.sum-table th {
+  background: var(--main); color: #FFF8E1;
+  padding: 0.26em 0.45em; font-weight: 700; text-align: center;
+  border: 1px solid var(--border);
+}
+.sum-table td {
+  padding: 0.22em 0.45em;
+  border: 1px solid rgba(139,69,19,0.2);
+  color: var(--text); vertical-align: middle;
+  text-align: center;
+}
+.sum-table tr:nth-child(even) td { background: rgba(139,69,19,0.04); }
+.sum-table td.rowhead { background: rgba(197,160,40,0.18); font-weight: 700; color: var(--main); }
+
+/* === Timeline === */
+.timeline-row { display: flex; align-items: stretch; gap: 0.3em; flex: 1; }
+.tl-item {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-top: 4px solid var(--accent);
+  border-radius: 4px;
+  padding: 0.35em 0.5em;
+  font-size: 0.72em;
+  color: var(--text);
+  display: flex; flex-direction: column; gap: 0.15em;
+}
+.tl-item.crisis { border-top-color: var(--crisis); }
+.tl-item .tl-era { font-weight: 900; color: var(--main); font-size: 0.95em; }
+
+/* === End slide === */
+.slide-end {
+  align-items: center; justify-content: center; text-align: center;
+  background: radial-gradient(ellipse at center, #FDF5E0 0%, #F0D9A0 100%);
+  gap: 0.5em;
+}
+
+/* === Nav bar === */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 48px;
+  background: rgba(253,245,224,0.97);
+  border-top: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.8rem; z-index: 999; font-size: 14px;
+}
+.nav-btn {
+  width: 2rem; height: 2rem;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  background: #FDF5E0;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; padding: 0;
+}
+.nav-btn svg { width: 0.85rem; height: 0.85rem; fill: #8B4513; }
+.nav-btn:hover:not(:disabled) { background: #8B4513; border-color: #8B4513; }
+.nav-btn:hover:not(:disabled) svg { fill: #FFF8E1; }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.nav-label { font-size: 13px; color: #5C3D1E; font-weight: 700; min-width: 4.5rem; text-align: center; }
+.nav-blank-info {
+  font-size: 12px; color: #8B4513;
+  background: rgba(197,160,40,0.15);
+  border: 1px solid rgba(197,160,40,0.5);
+  border-radius: 10px; padding: 0.1em 0.6em;
+  min-width: 5rem; text-align: center;
+}
+.nav-hint { font-size: 11px; color: #A07850; opacity: 0.8; }
+
+/* Progress bar */
+#progressBar {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--main), var(--gold));
+  transition: width 0.3s ease; z-index: 1000; width: 0%;
+}
+
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="progressBar"></div>
+<div class="presentation" id="pres">
+
+<!-- ═══════════════════════ SLIDE 0: Cover ═══════════════════════ -->
+<div class="slide slide-cover active" data-slide="0">
+  <div class="cover-deco">⚓</div>
+  <div class="cover-subject">한국사능력검정시험 대비 · 필기노트 기반 정리</div>
+  <div class="cover-title">근대(개항기)<br>개념·빈출주제 정리</div>
+  <div class="cover-subtitle">흥선대원군의 내정·외교 · 개항과 불평등조약 · 임오군란·갑신정변 · 동학농민운동·갑오을미개혁 · 독립협회·대한제국 · 국권피탈과 항일운동 · 개항기 경제·문화</div>
+  <div class="cover-hint">⌨ PageDown / → : 정답 한 개씩 공개 &nbsp;|&nbsp; PageUp / ← : 정답 숨기기 &nbsp;|&nbsp; 터치 스와이프 지원</div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 1: TOC ═══════════════════════ -->
+<div class="slide" data-slide="1">
+  <div class="slide-header">
+    <span class="slide-chapter">목차</span>
+    <span class="slide-title">이 편에서 다루는 내용</span>
+  </div>
+  <div class="slide-body tall">
+    <ul class="toc-list">
+      <li class="toc-item" onclick="goSlide(2)"><span class="toc-num">01</span><span class="toc-name">흥선대원군의 대내정책</span><span class="toc-sub">왕권강화, 민생안정, 호포제·사창제</span></li>
+      <li class="toc-item" onclick="goSlide(3)"><span class="toc-num">02</span><span class="toc-name">흥선대원군의 대외정책</span><span class="toc-sub">통상수교거부, 병인·신미양요, 척화비</span></li>
+      <li class="toc-item" onclick="goSlide(4)"><span class="toc-num">03</span><span class="toc-name">개항과 강화도조약</span><span class="toc-sub">운요호 사건, 최초의 근대적 불평등조약</span></li>
+      <li class="toc-item" onclick="goSlide(5)"><span class="toc-num">04</span><span class="toc-name">개항기 사진자료 ①</span><span class="toc-sub">강화도조약 체결 장면</span></li>
+      <li class="toc-item" onclick="goSlide(6)"><span class="toc-num">05</span><span class="toc-name">개화 정책과 위정척사파</span><span class="toc-sub">통리기무아문, 별기군, 3사절단</span></li>
+      <li class="toc-item" onclick="goSlide(7)"><span class="toc-num">06</span><span class="toc-name">임오군란</span><span class="toc-sub">구식군인의 차별, 청의 내정간섭 심화</span></li>
+      <li class="toc-item" onclick="goSlide(8)"><span class="toc-num">07</span><span class="toc-name">갑신정변</span><span class="toc-sub">14개조 개혁안, 3일천하</span></li>
+      <li class="toc-item" onclick="goSlide(9)"><span class="toc-num">08</span><span class="toc-name">동학농민운동</span><span class="toc-sub">고부봉기~전주화약~우금치 전투</span></li>
+      <li class="toc-item" onclick="goSlide(10)"><span class="toc-num">09</span><span class="toc-name">갑오개혁 · 을미개혁</span><span class="toc-sub">군국기무처, 홍범 14조, 단발령</span></li>
+      <li class="toc-item" onclick="goSlide(11)"><span class="toc-num">10</span><span class="toc-name">독립협회와 대한제국</span><span class="toc-sub">아관파천, 헌의 6조, 광무개혁</span></li>
+      <li class="toc-item" onclick="goSlide(12)"><span class="toc-num">11</span><span class="toc-name">개항기 사진자료 ②</span><span class="toc-sub">독립문 · 환구단 황궁우</span></li>
+      <li class="toc-item" onclick="goSlide(13)"><span class="toc-num">12</span><span class="toc-name">국권 피탈 과정</span><span class="toc-sub">한일의정서~을사늑약~경술국치</span></li>
+      <li class="toc-item" onclick="goSlide(14)"><span class="toc-num">13</span><span class="toc-name">개항기 사진자료 ③</span><span class="toc-sub">헤이그 특사</span></li>
+      <li class="toc-item" onclick="goSlide(15)"><span class="toc-num">14</span><span class="toc-name">항일 의병운동</span><span class="toc-sub">을미·을사·정미의병, 의열투쟁</span></li>
+      <li class="toc-item" onclick="goSlide(16)"><span class="toc-num">15</span><span class="toc-name">애국계몽운동</span><span class="toc-sub">보안회, 대한자강회, 신민회</span></li>
+      <li class="toc-item" onclick="goSlide(17)"><span class="toc-num">16</span><span class="toc-name">개항기 경제</span><span class="toc-sub">이권침탈, 방곡령, 국채보상운동</span></li>
+      <li class="toc-item" onclick="goSlide(18)"><span class="toc-num">17</span><span class="toc-name">개항기 문화 ①</span><span class="toc-sub">신문의 발달, 근대 시설</span></li>
+      <li class="toc-item" onclick="goSlide(19)"><span class="toc-num">18</span><span class="toc-name">개항기 문화 ②</span><span class="toc-sub">근대 교육기관, 국학·종교</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 2: 흥선대원군 대내정책 ═══════════════════════ -->
+<div class="slide" data-slide="2">
+  <div class="slide-header">
+    <span class="slide-chapter">01 흥선대원군</span>
+    <span class="slide-title">흥선대원군의 대내정책</span>
+  </div>
+  <div class="slide-body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">👑 왕권 강화</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="비변사"></span> 축소·혁파 → 의정부(행정)+삼군부(군사) 기능 부활</li>
+            <li>『<span class="blank" data-answer="대전회통"></span>』·『육전조례』 편찬(법전 정비)</li>
+            <li><span class="blank" data-answer="경복궁"></span> 중건 — 원납전·당백전 발행으로 재정 조달, 백성 부담 가중</li>
+            <li>붕당의 근거지인 <span class="blank" data-answer="서원"></span> 정리(전국 47개소만 존치), <span class="blank" data-answer="만동묘"></span> 철폐</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🌾 민생 안정(삼정 개혁)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>전정: 양전 사업 실시로 은결(누락 토지) 색출 → 재정 확충</li>
+            <li>군정: <span class="blank" data-answer="호포제"></span> 시행 — 양반에게도 군포 징수(상민만 부담하던 방식 개혁)</li>
+            <li>환곡: <span class="blank" data-answer="사창제"></span> 실시 — 민간(마을) 주도 운영으로 관의 수탈 차단</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 흥선대원군은 세도정치로 무너진 왕권을 강화하고 삼정의 문란을 바로잡는 데 주력 — 이후 <strong>최익현의 탄핵 상소</strong>로 하야, 고종의 친정이 시작됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 3: 흥선대원군 대외정책 ═══════════════════════ -->
+<div class="slide" data-slide="3">
+  <div class="slide-header">
+    <span class="slide-chapter">02 흥선대원군</span>
+    <span class="slide-title">흥선대원군의 대외정책 — 통상수교거부</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">1866</span>병인박해 → 병인양요</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="병인박해"></span>(프랑스 선교사 처형) → 프랑스가 구실 삼아 <span class="blank" data-answer="병인양요"></span> 일으킴</li>
+            <li>강화도 침입 — <span class="blank" data-answer="양헌수"></span>(정족산성), 한성근(문수산성)이 격퇴</li>
+            <li>프랑스군이 퇴각하며 <span class="blank" data-answer="외규장각"></span> 도서 약탈(이후 박병선 박사가 존재 확인)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">1871</span>신미양요</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>제너럴셔먼호 사건(1866, 평양, 미국 상선) → 이를 구실로 미국이 <span class="blank" data-answer="신미양요"></span> 일으킴</li>
+            <li>강화도 <span class="blank" data-answer="광성보"></span> 전투 — <span class="blank" data-answer="어재연"></span> 부대가 항전, 수(帥)자기 약탈당함</li>
+            <li>1868 오페르트 도굴 사건(독일 상인, 남연군묘 도굴 시도, 충청도 덕산) — 서양에 대한 반감을 키움</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="source-box">
+      <span class="src-tag">척화비</span>"洋夷侵犯 非戰則和 主和賣國"(양이침범 비전즉화 주화매국) — 서양 오랑캐가 침범하는데 싸우지 않으면 화친하자는 것이요, 화친을 주장함은 나라를 팔아먹는 것이다
+    </div>
+    <div class="info-box">
+      ⭐ 두 차례의 양요를 겪은 뒤 전국에 <strong><span class="blank" data-answer="척화비"></span></strong>를 세워 통상수교거부 의지를 널리 알림 — 이는 이후 개항이 늦어지는 배경이 됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 4: 개항과 강화도조약 ═══════════════════════ -->
+<div class="slide" data-slide="4">
+  <div class="slide-header">
+    <span class="slide-chapter">03 개항</span>
+    <span class="slide-title">개항과 강화도조약</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">⚓ 개항의 배경</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>고종 친정 이후 통상개화론 대두(박규수·오경석·유홍기 등, 『해국도지』·『영환지략』 학습)</li>
+            <li><span class="blank" data-answer="운요호"></span> 사건(1875, 강화도) → 일본이 개항을 압박하는 구실로 이용</li>
+            <li>1876년 <span class="blank" data-answer="강화도조약"></span>(조일수호조규) 체결</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">불평등</span>강화도조약의 내용</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>조선을 <span class="blank" data-answer="자주국"></span>으로 규정(청의 종주권 부인 의도) — 부산+2개 항구(원산 1880, 인천 1883) 개항</li>
+            <li>일본의 <span class="blank" data-answer="해안측량권"></span>, <span class="blank" data-answer="영사재판권"></span>(치외법권) 인정</li>
+            <li>우리나라 최초의 근대적 조약이지만 <span class="blank" data-answer="최혜국대우"></span> 조항은 없는 불평등 조약</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📜 부속 조약</div>
+      <div class="card-body">
+        <ul class="item-list">
+          <li>조일수호조규 부록: 개항장에서 <span class="blank" data-answer="일본 화폐"></span> 유통 허용, 개항장 사방 10리까지 일본 상인 활동 허용(내지 무역은 불허)</li>
+          <li>조일무역규칙(통상장정): '3무(無)' — <span class="blank" data-answer="관세"></span> 없음, 항세 없음, 곡물 유출 제한 없음</li>
+        </ul>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 강화도조약 자체엔 관세 조항이 없었다는 점, 최혜국대우가 없었다는 점이 자주 출제 — 이후 조미수호통상조약(1882)에서 처음으로 관세·최혜국대우가 규정됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 5: [사진] 강화도조약 체결 장면 ═══════════════════════ -->
+<div class="slide" data-slide="5">
+  <div class="slide-header">
+    <span class="slide-chapter">04 개항기 사진자료</span>
+    <span class="slide-title">개항기 사진자료 ① — 강화도조약 체결 장면</span>
+  </div>
+  <div class="slide-body tall" style="align-items:center">
+    <div class="photo-card" style="width:min(55%,440px); flex:1; min-height:0;">
+      <div class="photo-wrap"><img src="img/강화도조약_체결도.jpg" alt="강화도조약 체결 장면을 그린 일본 판화" loading="lazy"></div>
+      <div class="photo-cap"><span class="photo-tag">1876 · 당대 일본 판화</span><br>조선과 일본 대표가 <span class="blank" data-answer="강화도조약(조일수호조규)"></span>을 체결하는 장면을 묘사한 그림</div>
+    </div>
+    <div class="info-box">
+      💡 당시 실제 사진 자료는 남아 있지 않아, 일본에서 제작된 목판화(니시키에)로 그날의 회담 장면이 전해짐 — 조약의 실체보다는 '문호가 열리는 순간'의 상징적 이미지로 이해할 것
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 6: 개화정책과 위정척사파 ═══════════════════════ -->
+<div class="slide" data-slide="6">
+  <div class="slide-header">
+    <span class="slide-chapter">05 개화 정책</span>
+    <span class="slide-title">개화 정책의 추진과 위정척사파</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🏛 개화 정책 추진 기구</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="통리기무아문"></span> 설치(1880, 개화 정책 총괄, 산하 12사)</li>
+            <li>군제 개편: <span class="blank" data-answer="별기군"></span>(신식 군대) 창설, 5군영 → 2영으로 축소</li>
+            <li>사절단: <span class="blank" data-answer="수신사"></span>(일본, 김홍집이 『조선책략』 소개) · <span class="blank" data-answer="조사시찰단"></span>(일본, 암행 파견=신사유람단) · <span class="blank" data-answer="영선사"></span>(청, 무기제조 학습 → <span class="blank" data-answer="기기창"></span> 설치)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">⚡ 개화파의 분화</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="온건개화파"></span>: 청의 양무운동 모델(동도서기), 김홍집 등</li>
+            <li><span class="blank" data-answer="급진개화파"></span>: 일본의 메이지유신 모델(문명개화), 김옥균·박영효 등</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="card crisis">
+      <div class="card-title"><span class="mini-tag crisis">개화 반대</span>위정척사파</div>
+      <div class="card-body">
+        <ul class="item-list">
+          <li>성리학적 질서 수호(위정)·서양 사상 배척(척사) — 이항로(통상수교 반대) → <span class="blank" data-answer="최익현"></span>(개항 반대, 지부복궐척화의소) → <span class="blank" data-answer="이만손"></span> 등의 <span class="blank" data-answer="영남만인소"></span>(『조선책략』 유포에 반발, 개화 반대)</li>
+          <li>이후 을미의병 등 <strong>항일 의병운동</strong>으로 계승됨</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 7: 임오군란 ═══════════════════════ -->
+<div class="slide" data-slide="7">
+  <div class="slide-header">
+    <span class="slide-chapter">06 임오군란</span>
+    <span class="slide-title">임오군란(1882)</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">발발</span>전개 과정</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>구식 군인이 신식 군대(별기군)와의 차별 대우에 불만 폭발</li>
+            <li>구식 군인 + 도시 하층민 봉기 → <span class="blank" data-answer="흥선대원군"></span> 일시 재집권, 명성황후는 궁을 벗어나 피신</li>
+            <li>민씨 정권의 요청으로 <span class="blank" data-answer="청"></span>이 군대를 보내 진압 → 흥선대원군을 청으로 납치</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📌 결과 — 청·일의 개입 심화</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>청: 내정 간섭 강화, <span class="blank" data-answer="묄렌도르프"></span>(독일인) 등을 고문으로 파견</li>
+            <li><span class="blank" data-answer="조청상민수륙무역장정"></span> 체결 — 청 상인의 내지 통상권(치외법권도) 인정</li>
+            <li>일본과는 <span class="blank" data-answer="제물포조약"></span>(배상금 지불, 일본 공사관 경비병 주둔) 체결</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 임오군란 이후 청의 내정간섭이 본격화되면서, 개화파는 청에 대한 태도를 두고 <strong>온건개화파(청 사대관계 유지)</strong>와 <strong>급진개화파(청 사대관계 청산)</strong>로 더욱 갈라짐 → 갑신정변으로 이어짐
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 8: 갑신정변 ═══════════════════════ -->
+<div class="slide" data-slide="8">
+  <div class="slide-header">
+    <span class="slide-chapter">07 갑신정변</span>
+    <span class="slide-title">갑신정변(1884)</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">3일천하</span>전개 과정</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="김옥균"></span>·박영효·서광범·서재필 등 급진개화파가 일본의 군사적 지원을 약속받고 거사</li>
+            <li><span class="blank" data-answer="우정총국"></span> 개국 축하연을 계기로 정변 단행 → 창덕궁으로 국왕 이동</li>
+            <li><span class="blank" data-answer="청"></span>군의 개입으로 3일 만에 실패("3일천하")</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📜 14개조 개혁안</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>정치: 청과의 사대 관계 폐지, 입헌군주제 지향</li>
+            <li>경제: 재정을 <span class="blank" data-answer="호조"></span>로 일원화, 지조법(토지세) 개혁</li>
+            <li>사회: <span class="blank" data-answer="문벌"></span> 폐지·인민평등권 확립, 혜상공국(보부상 특혜 기구) 폐지</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 결과: 일본과 <span class="blank" data-answer="한성조약"></span>(배상금 지불·공사관 신축비 부담), 청과 일본 사이에 <span class="blank" data-answer="톈진조약"></span>(양국 군대 철수, 향후 조선 파병 시 상호 통보) 체결 — 이는 훗날 청일전쟁 발발의 빌미가 됨. '위로부터의 개혁'이라는 한계도 지적됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 9: 동학농민운동 ═══════════════════════ -->
+<div class="slide" data-slide="9">
+  <div class="slide-header">
+    <span class="slide-chapter">08 동학농민운동</span>
+    <span class="slide-title">동학농민운동(1894)</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🚩 1차 봉기 (반봉건)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="고부"></span> 봉기(조병갑의 만석보 수세 수탈) → 백산 봉기(전봉준) → <span class="blank" data-answer="황토현"></span> 전투 승리 → <span class="blank" data-answer="전주성"></span> 점령</li>
+            <li>정부가 청에 원병 요청 → 톈진조약에 따라 일본군도 파병</li>
+            <li><span class="blank" data-answer="전주화약"></span> 체결 — 농민군은 자진 해산, <span class="blank" data-answer="집강소"></span>(자치 기구) 설치해 폐정개혁안 실천</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">반외세</span>2차 봉기</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>일본군의 <span class="blank" data-answer="경복궁"></span> 점령 → 청일전쟁 발발 → 농민군 재봉기(남접+북접 연합)</li>
+            <li><span class="blank" data-answer="우금치"></span> 전투(공주)에서 관군+일본군에 패배</li>
+            <li>전봉준 체포로 동학농민운동 좌절</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 1차 봉기(반봉건 성격 강함) → 청일전쟁 발발 → 2차 봉기(반외세 성격 강화) — 봉기의 성격 변화가 시험에 자주 출제됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 10: 갑오·을미개혁 ═══════════════════════ -->
+<div class="slide" data-slide="10">
+  <div class="slide-header">
+    <span class="slide-chapter">09 갑오·을미개혁</span>
+    <span class="slide-title">갑오개혁과 을미개혁</span>
+  </div>
+  <div class="slide-body tall">
+    <table class="sum-table">
+      <tr><th>구분</th><th>주도 기구</th><th>주요 내용</th></tr>
+      <tr><td class="rowhead">1차 갑오개혁</td><td><span class="blank" data-answer="군국기무처"></span></td><td>8아문, 재정 <span class="blank" data-answer="탁지아문"></span> 일원화, 신분제 폐지, 과부 재가 허용, 과거제 폐지</td></tr>
+      <tr><td class="rowhead">2차 갑오개혁</td><td>김홍집·<span class="blank" data-answer="박영효"></span> 연립내각</td><td><span class="blank" data-answer="홍범 14조"></span> 반포, 8도→23부, 재판소 설치, <span class="blank" data-answer="교육입국조서"></span></td></tr>
+      <tr><td class="rowhead">을미개혁</td><td>친일 내각</td><td>단발령, '<span class="blank" data-answer="건양"></span>' 연호, 태양력, 종두법</td></tr>
+    </table>
+    <div class="card crisis">
+      <div class="card-title"><span class="mini-tag crisis">1895</span>을미사변</div>
+      <div class="card-body">
+        <ul class="item-list">
+          <li><span class="blank" data-answer="삼국간섭"></span>(러·프·독)으로 일본 세력이 위축되자 조선이 친러 정책 도모(인아거일)</li>
+          <li>이에 일본이 경복궁을 침입해 <span class="blank" data-answer="명성황후"></span>를 시해(을미사변) → 을미개혁 단행 → 단발령에 반발해 <strong>을미의병</strong> 발생</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 11: 독립협회와 대한제국 ═══════════════════════ -->
+<div class="slide" data-slide="11">
+  <div class="slide-header">
+    <span class="slide-chapter">10 독립협회 · 대한제국</span>
+    <span class="slide-title">독립협회와 대한제국(광무개혁)</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🏛 독립협회</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="아관파천"></span>(1896, 신변 위협을 느낀 고종이 러시아 공사관으로 피신) → 서재필이 <span class="blank" data-answer="독립신문"></span> 창간, 독립협회 창립</li>
+            <li><span class="blank" data-answer="만민공동회"></span>: 러시아의 절영도 조차 저지, 한러은행 폐쇄 요구(자주국권)</li>
+            <li><span class="blank" data-answer="관민공동회"></span>: 관(박정양)+민(윤치호) 합동 → <span class="blank" data-answer="헌의 6조"></span> 채택(입헌군주제 지향) → 황국협회(보부상)를 동원한 보수파에 의해 강제 해산</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card peak">
+        <div class="card-title"><span class="mini-tag peak">광무개혁</span>대한제국</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>고종이 <span class="blank" data-answer="환구단"></span>에서 황제 즉위식 거행, 대한제국 선포(1897, 연호 '광무')</li>
+            <li>원칙: <span class="blank" data-answer="구본신참"></span>(옛 것을 근본으로 새 것을 참작)</li>
+            <li>정치: 대한국국제(1899, 황제권 절대화), 원수부 설치(군통수권 강화)</li>
+            <li>경제: 양전 사업 → <span class="blank" data-answer="지계"></span>(근대적 토지증서) 발급, 상공업 진흥, <span class="blank" data-answer="경인선"></span> 개통(최초의 철도)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 독립협회의 의회 설립 시도(중추원 관제)는 실패했지만, 대한제국은 이후 재정·군사 근대화를 일부 이룸 — 그러나 국권 자체는 지키지 못함
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 12: [사진] 독립문·환구단 ═══════════════════════ -->
+<div class="slide" data-slide="12">
+  <div class="slide-header">
+    <span class="slide-chapter">11 개항기 사진자료</span>
+    <span class="slide-title">개항기 사진자료 ② — 독립문 · 환구단 황궁우</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="photo-grid-2">
+      <div class="photo-card">
+        <div class="photo-wrap"><img src="img/독립문.jpg" alt="독립문" loading="lazy"></div>
+        <div class="photo-cap"><span class="photo-tag">1897 · 독립협회</span><br><span class="blank" data-answer="독립문"></span> — 청 사신을 맞이하던 영은문 자리 부근에 건립</div>
+      </div>
+      <div class="photo-card">
+        <div class="photo-wrap"><img src="img/환구단_황궁우.jpg" alt="환구단 황궁우" loading="lazy"></div>
+        <div class="photo-cap"><span class="photo-tag">1899 · 대한제국</span><br><span class="blank" data-answer="환구단(황궁우)"></span> — 고종의 황제 즉위식이 거행된 제천 시설</div>
+      </div>
+    </div>
+    <div class="info-box">
+      💡 독립문은 프랑스 개선문을 참고해 서재필이 설계를 주도, 환구단은 하늘에 제사를 지내는 천단(天壇)으로 대한제국 황제국 위상을 상징
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 13: 국권피탈 과정 ═══════════════════════ -->
+<div class="slide" data-slide="13">
+  <div class="slide-header">
+    <span class="slide-chapter">12 국권 피탈</span>
+    <span class="slide-title">일제의 국권 침탈 과정</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="timeline-row">
+      <div class="tl-item">
+        <div class="tl-era">1904</div>
+        <span class="blank" data-answer="한일의정서"></span> — 대한제국 영토를 일본이 군사기지로 자유 사용
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1904</div>
+        1차 한일협약 — 고문통치(<span class="blank" data-answer="스티븐스"></span> 외교, <span class="blank" data-answer="메가타"></span> 재정)
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1905</div>
+        <span class="blank" data-answer="을사늑약"></span>(2차 한일협약) — 외교권 박탈, <span class="blank" data-answer="통감부"></span> 설치(이토 히로부미)
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1907</div>
+        <span class="blank" data-answer="헤이그 특사"></span> 파견(실패) → 고종 강제 퇴위, 순종 즉위
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1907</div>
+        한일신협약(정미7조약) — 차관정치, <span class="blank" data-answer="군대 해산"></span>
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1910</div>
+        기유각서(사법권 박탈) → <span class="blank" data-answer="경술국치"></span>(1910.8.29)
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 흐름: 러일전쟁(1904) → 한일의정서 → 1차 한일협약 → 을사늑약(외교권) → 헤이그특사·고종 퇴위 → 정미7조약(군대해산) → 기유각서(사법권) → 경술국치(주권 상실) — 침탈 순서를 정확히 기억할 것
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 14: [사진] 헤이그특사 ═══════════════════════ -->
+<div class="slide" data-slide="14">
+  <div class="slide-header">
+    <span class="slide-chapter">13 개항기 사진자료</span>
+    <span class="slide-title">개항기 사진자료 ③ — 헤이그 특사</span>
+  </div>
+  <div class="slide-body tall" style="align-items:center">
+    <div class="photo-card" style="width:min(45%,360px); flex:1; min-height:0;">
+      <div class="photo-wrap"><img src="img/헤이그특사.jpg" alt="헤이그 특사 이준 이상설 이위종" loading="lazy"></div>
+      <div class="photo-cap"><span class="photo-tag">1907 · 만국평화회의</span><br>(왼쪽부터) <span class="blank" data-answer="이위종"></span> · <span class="blank" data-answer="이준"></span> · <span class="blank" data-answer="이상설"></span></div>
+    </div>
+    <div class="info-box">
+      💡 고종이 을사늑약의 부당함을 세계에 알리기 위해 네덜란드 헤이그 만국평화회의에 파견한 특사들 — 일본의 방해로 회의장에 들어가지 못했으나 각국 언론을 통해 일제 침략을 알림. 이 사건은 고종 강제 퇴위의 빌미가 됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 15: 항일 의병운동 ═══════════════════════ -->
+<div class="slide" data-slide="15">
+  <div class="slide-header">
+    <span class="slide-chapter">14 항일 의병운동</span>
+    <span class="slide-title">항일 의병운동과 의열투쟁</span>
+  </div>
+  <div class="slide-body tall">
+    <table class="sum-table">
+      <tr><th>의병</th><th>계기</th><th>중심 세력</th><th>특징</th></tr>
+      <tr><td class="rowhead"><span class="blank" data-answer="을미의병"></span></td><td>을미사변, 단발령</td><td><span class="blank" data-answer="유인석"></span>·이소응(양반 유생)</td><td>고종의 해산 권고로 대부분 해산</td></tr>
+      <tr><td class="rowhead"><span class="blank" data-answer="을사의병"></span></td><td>을사늑약</td><td>최익현·민종식, <span class="blank" data-answer="신돌석"></span>(평민 의병장)</td><td>평민 출신 의병장 등장</td></tr>
+      <tr><td class="rowhead"><span class="blank" data-answer="정미의병"></span></td><td>고종 퇴위, <span class="blank" data-answer="군대 해산"></span></td><td>해산 군인 합류, <span class="blank" data-answer="13도 창의군"></span>(이인영·허위)</td><td><span class="blank" data-answer="서울 진공 작전"></span> 시도, 국제법상 교전단체 자처</td></tr>
+    </table>
+    <div class="card">
+      <div class="card-title">💥 의열 투쟁</div>
+      <div class="card-body">
+        <ul class="item-list">
+          <li><span class="blank" data-answer="장인환"></span>·전명운 — 스티븐스 사살(1908, 미국 샌프란시스코)</li>
+          <li><span class="blank" data-answer="안중근"></span> — 이토 히로부미 사살(1909, 하얼빈역)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 16: 애국계몽운동 ═══════════════════════ -->
+<div class="slide" data-slide="16">
+  <div class="slide-header">
+    <span class="slide-chapter">15 애국계몽운동</span>
+    <span class="slide-title">애국계몽운동 — 실력양성을 통한 구국</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📢 초기 단체</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="보안회"></span>(1904): 일본의 <span class="blank" data-answer="황무지 개간권"></span> 요구 저지</li>
+            <li>헌정연구회(1905): 입헌군주제 주장, 을사늑약 반대</li>
+            <li><span class="blank" data-answer="대한자강회"></span>(1906): 전국 지회·월보 발행, 고종 강제 퇴위 반대 → 보안법으로 해산</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card peak">
+        <div class="card-title"><span class="mini-tag peak">대표 단체</span>신민회(1907)</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="안창호"></span>·양기탁 등이 조직한 비밀결사, 공화정 지향</li>
+            <li>교육: 대성학교·오산학교 / 경제: 자기회사·태극서관</li>
+            <li>국외 독립운동기지 건설(서간도 삼원보 → 신흥무관학교로 계승)</li>
+            <li><span class="blank" data-answer="105인 사건"></span>(1911, 총독 암살 미수 조작 사건)으로 조직 와해</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 애국계몽운동은 <strong>사회진화론</strong>에 기반해 교육·언론·산업 진흥으로 실력을 키워 국권을 지키자는 운동 — 의병운동(무력 항쟁)과 함께 항일 운동의 두 축을 이룸
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 17: 개항기 경제 ═══════════════════════ -->
+<div class="slide" data-slide="17">
+  <div class="slide-header">
+    <span class="slide-chapter">16 개항기 경제</span>
+    <span class="slide-title">개항기 경제 — 이권 침탈과 경제적 구국 운동</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card crisis">
+        <div class="card-title"><span class="mini-tag crisis">수탈</span>열강의 이권 침탈</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li>러: 삼림 채벌권, 절영도 조차 시도 / 미: <span class="blank" data-answer="운산 금광"></span> 채굴권, 경인선 부설권(→일본에 전매)</li>
+            <li>일본 상인 vs 청 상인의 상권 경쟁 심화(<span class="blank" data-answer="조청상민수륙무역장정"></span> 이후)</li>
+            <li>무제한 곡물 유출 → 함경도·황해도 등에서 <span class="blank" data-answer="방곡령"></span> 시행(1889) → 일본의 배상금 요구로 철회</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">✊ 경제적 구국 운동</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="독립협회"></span>의 이권수호운동(절영도 조차·한러은행 저지)</li>
+            <li>시전상인 중심의 <span class="blank" data-answer="황국중앙총상회"></span> — 상권수호운동(철시 투쟁)</li>
+            <li><span class="blank" data-answer="국채보상운동"></span>(1907): 나라빚 1,300만 원 갚기 운동, 대구 <span class="blank" data-answer="서상돈"></span> 등이 시작, 대한매일신보(양기탁·베델)가 홍보 → 통감부 방해로 좌절</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ <span class="blank" data-answer="화폐정리사업"></span>(1905, 메가타 주도): 백동화를 일본 제일은행권으로 교환 — 한국 은행·상업 자본에 큰 타격, 일본에 대한 차관 의존 심화(이후 <span class="blank" data-answer="동양척식주식회사"></span> 설립으로 이어짐)
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 18: 개항기 문화1 ═══════════════════════ -->
+<div class="slide" data-slide="18">
+  <div class="slide-header">
+    <span class="slide-chapter">17 개항기 문화</span>
+    <span class="slide-title">개항기 문화 ① — 신문의 발달과 근대 시설</span>
+  </div>
+  <div class="slide-body tall">
+    <table class="sum-table">
+      <tr><th>신문</th><th>연도</th><th>특징</th></tr>
+      <tr><td class="rowhead"><span class="blank" data-answer="한성순보"></span></td><td>1883</td><td>박문국 발행, 최초의 신문, 순한문 관보 성격</td></tr>
+      <tr><td class="rowhead">독립신문</td><td>1896</td><td>서재필, 최초의 민간 신문(한글판+영문판)</td></tr>
+      <tr><td class="rowhead"><span class="blank" data-answer="황성신문"></span></td><td>1898</td><td>국한문 혼용, 장지연의 '시일야방성대곡' 게재</td></tr>
+      <tr><td class="rowhead"><span class="blank" data-answer="대한매일신보"></span></td><td>1904</td><td>양기탁+베델(영국인, 치외법권), 국채보상운동·의병에 호의적</td></tr>
+    </table>
+    <div class="source-box">
+      <span class="src-tag">시일야방성대곡</span>"...오호痛哉라 ... 아 2천만 동포여 ... 이날에 목놓아 통곡하노라" — 장지연, 황성신문(1905), 을사늑약 체결 규탄
+    </div>
+    <div class="card">
+      <div class="card-title">🚊 근대 시설</div>
+      <div class="card-body">
+        <ul class="item-list">
+          <li>통신: <span class="blank" data-answer="전신"></span>(1885), 전화 / 교통: 전차·<span class="blank" data-answer="경인선"></span>(1899, 최초 철도) → 경부선(1905)·경의선(1906)</li>
+          <li>의료: 광혜원(→제중원, 최초 근대식 병원, 알렌) / 화폐: <span class="blank" data-answer="전환국"></span>(백동화 주조)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 19: 개항기 문화2 ═══════════════════════ -->
+<div class="slide" data-slide="19">
+  <div class="slide-header">
+    <span class="slide-chapter">18 개항기 문화</span>
+    <span class="slide-title">개항기 문화 ② — 근대 교육과 국학·종교</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🏫 근대 교육기관</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="원산학사"></span>(1883): 최초의 근대적 학교, 함경도 덕원 지방민이 설립</li>
+            <li><span class="blank" data-answer="육영공원"></span>(1886): 관립, 헐버트 등 외국인 교사가 상류층 자제에게 영어 등 교육</li>
+            <li>배재학당·이화학당(선교사 설립) / 교육입국조서 이후 소학교·사범학교·외국어학교</li>
+            <li>민족지도자 설립: 오산학교(이승훈), 대성학교(안창호)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📚 국학 · 종교</div>
+        <div class="card-body">
+          <ul class="item-list">
+            <li><span class="blank" data-answer="국문연구소"></span>(1907, 주시경·지석영) / 신소설: 이인직 『혈의 누』</li>
+            <li>신채호 『<span class="blank" data-answer="독사신론"></span>』 — 민족주의 사학의 방향 제시</li>
+            <li>종교: <span class="blank" data-answer="천도교"></span>(손병희, 동학 계승) · <span class="blank" data-answer="대종교"></span>(나철, 단군 숭배 → 만주 무장독립운동과 연계)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ 최초 공식 이민: 하와이(1902) · 멕시코(애니깽 농장) 이민 — 개항기 문화 파트는 '최초' 타이틀이 붙은 항목이 특히 자주 출제됨
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 20: 총정리 ═══════════════════════ -->
+<div class="slide" data-slide="20">
+  <div class="slide-header">
+    <span class="slide-chapter">총정리</span>
+    <span class="slide-title">근대(개항기) 흐름 한눈에 보기</span>
+  </div>
+  <div class="slide-body tall">
+    <div class="timeline-row">
+      <div class="tl-item crisis">
+        <div class="tl-era">1866~71</div>
+        통상수교거부 — 병인양요·신미양요
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1876</div>
+        강화도조약 — 개항
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1882~84</div>
+        임오군란 → 갑신정변
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1894~95</div>
+        동학농민운동 → 갑오·을미개혁
+      </div>
+      <div class="tl-item">
+        <div class="tl-era">1896~97</div>
+        독립협회 → 대한제국
+      </div>
+      <div class="tl-item crisis">
+        <div class="tl-era">1904~10</div>
+        국권 침탈 → 경술국치
+      </div>
+    </div>
+    <div class="info-box">
+      ⭐ <strong>시험 대비 최종 체크:</strong> ① 강화도조약과 부속조약의 세부 내용 ② 임오군란·갑신정변의 결과 조약(제물포·톈진·한성) ③ 동학농민운동 1·2차 봉기 성격 차이 ④ 갑오·을미개혁 순서와 내용 ⑤ 국권 침탈 5단계 순서 ⑥ 의병 3단계(을미~을사~정미)와 중심 세력 변화 — 이 여섯 유형이 최다 출제 포인트
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SLIDE 21: 마무리 ═══════════════════════ -->
+<div class="slide slide-end" data-slide="21">
+  <div style="font-size:2.2em">🎉</div>
+  <div style="font-size:2.2em;font-weight:900;color:var(--main);font-family:'Nanum Myeongjo',serif">수고하셨습니다!</div>
+  <div style="font-size:0.88em;color:var(--text-sub)">한국사능력검정시험 — 근대(개항기) 개념 정리를 모두 마쳤습니다.</div>
+  <div style="background:var(--card-bg);border:1.5px solid var(--gold);border-radius:6px;padding:0.9em 1.5em;max-width:80%;width:fit-content;margin:0 auto;text-align:center;font-size:0.8em;color:var(--text);line-height:1.8">
+    <strong style="color:var(--main);font-size:1.05em">📌 핵심 흐름</strong><br>
+    흥선대원군의 내정·외교 → 강화도조약과 개항 → 임오군란·갑신정변 → 동학농민운동과 갑오·을미개혁 → 독립협회·대한제국 → 을사늑약~경술국치의 국권 피탈 → 항일 의병·애국계몽운동<br>
+    <em style="color:var(--text-sub)">다음 편은 일제강점기(1910년대~1945)를 다룰 예정입니다.</em>
+  </div>
+</div>
+
+</div><!-- /.presentation -->
+
+<!-- Navigation Bar -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="pageUp()" title="PageUp / ← : 정답 숨기기">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+  </button>
+  <span class="nav-label"><span id="curSlide">1</span> / <span id="totSlides">22</span></span>
+  <button class="nav-btn" id="nextBtn" onclick="pageDown()" title="PageDown / → : 정답 공개">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+  </button>
+  <span class="nav-blank-info" id="blankInfo" style="display:none"></span>
+  <span class="nav-hint">PageDown·→ : 정답 공개 &nbsp;|&nbsp; PageUp·← : 숨기기</span>
+</div>
+
+<script>
+(function() {
+  var slides = Array.from(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var cur = 0;
+  var revealed = new Array(total).fill(0);
+
+  document.getElementById('totSlides').textContent = total;
+
+  function getBlanks(i) {
+    return Array.from(slides[i].querySelectorAll('.blank'));
+  }
+
+  function goSlide(i) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(i, total - 1));
+    slides[cur].classList.add('active');
+    updateUI();
+  }
+  window.goSlide = goSlide;
+
+  function pageDown() {
+    var bs = getBlanks(cur);
+    if (revealed[cur] < bs.length) {
+      bs[revealed[cur]].classList.add('revealed');
+      revealed[cur]++;
+      updateUI();
+    } else if (cur < total - 1) {
+      goSlide(cur + 1);
+    }
+  }
+  window.pageDown = pageDown;
+
+  function pageUp() {
+    if (revealed[cur] > 0) {
+      var bs = getBlanks(cur);
+      bs[revealed[cur] - 1].classList.remove('revealed');
+      revealed[cur]--;
+      updateUI();
+    } else if (cur > 0) {
+      goSlide(cur - 1);
+    }
+  }
+  window.pageUp = pageUp;
+
+  function updateUI() {
+    document.getElementById('curSlide').textContent = cur + 1;
+
+    var bs = getBlanks(cur);
+    var bi = document.getElementById('blankInfo');
+    if (bs.length > 0) {
+      bi.textContent = '빈칸 ' + revealed[cur] + ' / ' + bs.length;
+      bi.style.display = '';
+    } else {
+      bi.style.display = 'none';
+    }
+
+    var pct = total > 1 ? (cur / (total - 1)) * 100 : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+
+    document.getElementById('prevBtn').disabled = (cur === 0 && revealed[cur] === 0);
+    document.getElementById('nextBtn').disabled = (cur === total - 1 && revealed[cur] === getBlanks(cur).length);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return;
+    if (e.key === 'PageDown' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault(); pageDown();
+    } else if (e.key === 'PageUp' || e.key === 'ArrowLeft') {
+      e.preventDefault(); pageUp();
+    } else if (e.key === 'Home') {
+      e.preventDefault(); goSlide(0);
+    } else if (e.key === 'End') {
+      e.preventDefault(); goSlide(total - 1);
+    }
+  });
+
+  var tsX = 0, tsY = 0;
+  document.addEventListener('touchstart', function(e) {
+    tsX = e.touches[0].clientX;
+    tsY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - tsX;
+    var dy = e.changedTouches[0].clientY - tsY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx < 0) pageDown(); else pageUp();
+    }
+  }, { passive: true });
+
+  updateUI();
+})();
+</script>
+</body>
+</html>
