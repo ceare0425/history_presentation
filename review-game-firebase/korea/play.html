@@ -1273,20 +1273,21 @@ async function applySelfItem(key){
   }
   else if(key === 'shield'){ myShield = true; showItemAlert('🛡️ 콤보 방패 장착 — 다음 오답에도 연속 유지'); }
   else if(key === 'cure'){ clearIncomingFx(); showItemAlert('🍵 해독! 걸려 있던 방해를 풀었어요'); }
+  // soloFest·vest·clover·mirror는 tick()이 그리는 자체 카운트다운 배너(festivalBanner 계열)가
+  // 이미 "무슨 효과가 몇 초 남았는지"를 실시간으로 보여주므로, 별도 item-alert 토스트는 띄우지 않는다.
+  // (토스트는 '문제가 바뀔 때까지' 유지되는 방식이라 효과가 먼저 끝나도 안 사라진 것처럼 보이는 문제가 있었음)
   else if(key === 'soloFest'){
     const dur = isLastGroup(allPlayers, playerId) ? ITEM_FX_MS.soloFestLast : ITEM_FX_MS.soloFest;
     mySoloFestUntil = serverNow() + dur;
-    showItemAlert(`🛋️ 방구석 축제 발동! ${Math.round(dur/1000)}초간 나만 2배 🎉`);
   }
   else if(key === 'goldenbell'){ myGoldenbellArmed = true; showItemAlert('🎯 골든벨! 다음 정답은 ×3, 틀리면 -2층'); }
   else if(key === 'jackpot'){ myJackpotArmed = true; showItemAlert(`🎲 인생 한방! 다음 정답 +20${unitLabel()}, 틀리면 -10${unitLabel()}`); }
   else if(key === 'snowball'){ mySnowballArmed = true; showItemAlert('🌀 눈덩이! 다음 정답에 지금 연속 수만큼 층수 추가'); }
-  else if(key === 'vest'){ myVestUntil = serverNow() + ITEM_FX_MS.vest; showItemAlert('🛟 구명조끼! 20초간 틀려도 층수·연속 안전'); }
-  else if(key === 'clover'){ myCloverUntil = serverNow() + ITEM_FX_MS.clover; showItemAlert('🍀 네잎클로버! 30초간 정답마다 행운 +1층 찬스'); }
+  else if(key === 'vest'){ myVestUntil = serverNow() + ITEM_FX_MS.vest; }
+  else if(key === 'clover'){ myCloverUntil = serverNow() + ITEM_FX_MS.clover; }
   else if(key === 'mirror'){
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.mirrorNanta : ITEM_FX_MS.mirror;
     myMirrorUntil = serverNow() + dur;
-    showItemAlert(`🪞 반사경! ${Math.round(dur/1000)}초 안에 날아오는 첫 견제를 되돌려요`);
   }
   else if(key === 'comboSpark'){
     const dur = isLastGroup(allPlayers, playerId) ? ITEM_FX_MS.comboSparkLast : ITEM_FX_MS.comboSpark;
