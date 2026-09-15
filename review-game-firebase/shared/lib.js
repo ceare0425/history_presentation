@@ -280,7 +280,7 @@ export const ITEMS = {
   vest:     { emoji: '🛟',  name: '구명조끼',  kind: 'self',    desc: '20초간 틀려도 층수·연속이 안 깎임 (미끄럼틀·강탈도 막음)' },
   randombox:{ emoji: '🎁',  name: '랜덤박스',  kind: 'self',    desc: '즉시 다른 아이템 하나를 뽑아 바로 발동' },
   cure:     { emoji: '🍵',  name: '해독',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
-  mirror:   { emoji: '🪞',  name: '반사경',     kind: 'defense', desc: '15초간 날아오는 첫 견제를 쏜 사람에게 반사' },
+  mirror:   { emoji: '🪞',  name: '반사경',     kind: 'defense', desc: '10초간 날아오는 첫 견제를 쏜 사람에게 반사' },
   festival: { emoji: '🌈',  name: '축제',      kind: 'global',  desc: '20초간 모두 2배' },
   anthem:   { emoji: '📣',  name: '팀 응원가',  kind: 'global',  desc: '우리 팀 전원 다음 정답 1개 2배' },
   soloFest: { emoji: '🛋️',  name: '방구석 축제', kind: 'comeback', desc: '30초간 나만 2배' },
@@ -298,7 +298,7 @@ export const ITEM_FX_MS = {
   fog: 8000, ice: 8000, festival: 20000, immunity: 8000,
   fogSpicy: 10000, iceSpicy: 10000, immunitySpicy: 4000,
   fogNanta: 5000, iceNanta: 5000, immunityNanta: 2500,
-  soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 15000, mirrorNanta: 10000, vest: 20000,
+  soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 10000, mirrorNanta: 10000, vest: 20000,
   comboSpark: 30000, comboSparkLast: 60000,   // 꼴찌(동률 포함)가 쓰면 1분으로 늘어남
   stealAmt: 5, stealDefenseMs: 5000, stealDefenseAmt: 1,   // 강탈(개인전): 방어 실패 시 5층, 방어 성공(그 문제를 제시간에 맞힘) 시 1층만
 };
