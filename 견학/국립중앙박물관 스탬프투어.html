@@ -1071,7 +1071,7 @@ function positionCertSeal(){
   const wrapRect = wrap.getBoundingClientRect();
   const lastRect = last.getBoundingClientRect();
   if (!wrapRect.width || !lastRect.width) return;
-  seal.style.left = (lastRect.left + lastRect.width / 2 - wrapRect.left) + "px";
+  seal.style.left = (lastRect.left + lastRect.width / 2 - wrapRect.left + 5) + "px";
 }
 window.addEventListener("resize", () => { if (!document.getElementById("certWrap").hidden) positionCertSeal(); });
 /* 네모난 4자 직인(李泳周印): 전통 인장처럼 오른쪽 위 李 → 오른쪽 아래 泳 → 왼쪽 위 周 → 왼쪽 아래 印 순으로, 기울임 없이 똑바로 배치 */
@@ -1134,7 +1134,7 @@ function drawCert(){
   x.fillText(issuerText, W / 2, issuerY);
   const totalW = x.measureText(issuerText).width;
   const withoutLastW = x.measureText(issuerText.slice(0, -1)).width;
-  const sealCx = (W / 2 - totalW / 2) + withoutLastW + (totalW - withoutLastW) / 2;
+  const sealCx = (W / 2 - totalW / 2) + withoutLastW + (totalW - withoutLastW) / 2 + 15;
   drawSquareSeal(x, sealCx, issuerY - 8, 124);
   return cv;
 }
