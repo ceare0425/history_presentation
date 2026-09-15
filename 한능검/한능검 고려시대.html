@@ -1448,6 +1448,11 @@ body {
       bi.style.display = 'none';
     }
 
+    var revealBtn = slides[cur].querySelector('.reveal-all-btn');
+    if (revealBtn) {
+      revealBtn.textContent = (bs.length > 0 && revealed[cur] === bs.length) ? '전체 가리기' : '전체 공개';
+    }
+
     var pct = total > 1 ? (cur / (total - 1)) * 100 : 0;
     document.getElementById('progressBar').style.width = pct + '%';
 

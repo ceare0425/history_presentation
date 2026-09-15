@@ -418,6 +418,7 @@
         el.classList.toggle('on', !allShown);
         el.classList.toggle('revealed', !allShown);
       });
+      allBtn.textContent = allShown ? '전체 공개' : '전체 가리기';
       return;
     }
     const el = e.target.closest(REVEAL_SELECTOR);
