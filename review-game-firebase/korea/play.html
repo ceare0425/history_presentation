@@ -1116,7 +1116,7 @@ function renderItemBar(){
   } else {
     bar.innerHTML = '';
     hint.textContent = itemsMode !== 'nanta' ? '3연속 정답하면 아이템 획득!'
-      : inTopRanks(allPlayers, playerId, NANTA_TARGET_TOP) ? '상위권! 저격을 많이 받아요 — 🍵해독·🛟구명조끼·🪞반사경으로 버티세요 🛡️'
+      : inTopRanks(allPlayers, playerId, NANTA_TARGET_TOP) ? ''
       : '정답마다 아이템! 상위 3등을 저격하세요 ⚔️';
   }
 }
