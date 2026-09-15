@@ -115,11 +115,12 @@
   }
 
   .bonus-banner{
-    display:none; text-align:center; font-weight:800; font-size:1.05rem; color:#7a3b00;
+    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#7a3b00;
     background:linear-gradient(90deg,#ffe08a,#ffc857); border-radius:12px; padding:8px;
-    margin-bottom:.8vh; flex:0 0 auto; animation:bonusPulse 1s ease-in-out infinite;
+    flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    transition:max-height .28s ease, margin-bottom .28s ease, opacity .2s ease;
   }
-  .bonus-banner.show{ display:block; }
+  .bonus-banner.show{ max-height:90px; margin-bottom:.8vh; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   @keyframes bonusPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.03); } }
 
   .avatar-char{
@@ -144,10 +145,11 @@
   }
 
   .feedback{
-    text-align:center; font-weight:800; font-size:1.15rem; border-radius:12px; padding:10px;
-    margin-bottom:.8vh; display:none; flex:0 0 auto;
+    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.15rem; border-radius:12px; padding:10px;
+    flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    transition:max-height .28s ease, margin-bottom .28s ease, opacity .2s ease;
   }
-  .feedback.show{ display:block; }
+  .feedback.show{ max-height:90px; margin-bottom:.8vh; opacity:1; }
   .feedback.correct{ background:#e6f7ec; color:var(--good); }
   .feedback.wrong{ background:#fbeaea; color:var(--bad); }
 
@@ -176,23 +178,26 @@
 
   /* ── 아이템전 ── */
   .festival-banner{
-    display:none; text-align:center; font-weight:800; font-size:1.05rem; color:#5a3d00;
+    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#5a3d00;
     background:linear-gradient(90deg,#ffe08a,#a6e8ff,#ffd0f0); border-radius:12px; padding:8px;
-    margin-bottom:.8vh; flex:0 0 auto; animation:bonusPulse 1s ease-in-out infinite;
+    flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    transition:max-height .28s ease, margin-bottom .28s ease, opacity .2s ease;
   }
-  .festival-banner.show{ display:block; }
+  .festival-banner.show{ max-height:90px; margin-bottom:.8vh; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .debuff-banner{
-    display:none; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
+    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
     background:linear-gradient(90deg,#4b5563,#6b7280); border-radius:12px; padding:8px;
-    margin-bottom:.8vh; flex:0 0 auto; animation:bonusPulse 1s ease-in-out infinite;
+    flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    transition:max-height .28s ease, margin-bottom .28s ease, opacity .2s ease;
   }
-  .debuff-banner.show{ display:block; }
+  .debuff-banner.show{ max-height:90px; margin-bottom:.8vh; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .atk-banner{
-    display:none; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
+    box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
     background:linear-gradient(90deg,#7c2d12,#b91c1c); border-radius:12px; padding:8px;
-    margin-bottom:.8vh; flex:0 0 auto; animation:bonusPulse 1s ease-in-out infinite;
+    flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    transition:max-height .28s ease, margin-bottom .28s ease, opacity .2s ease;
   }
-  .atk-banner.show{ display:block; }
+  .atk-banner.show{ max-height:90px; margin-bottom:.8vh; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .item-alert{
     text-align:center; font-weight:800; font-size:1rem; color:#5b3a00;
     background:linear-gradient(90deg,#fff0c8,#ffe08a); border-radius:12px; padding:8px;
