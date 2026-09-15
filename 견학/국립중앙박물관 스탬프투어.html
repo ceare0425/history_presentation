@@ -202,14 +202,19 @@
     padding:1.15rem 1rem 1.05rem;text-align:center;overflow:hidden}
   .certcard::before{content:"";position:absolute;inset:6px;border:1px solid rgba(154,123,30,.45);border-radius:8px;pointer-events:none}
   .certcard .ct{font-family:'Nanum Myeongjo',serif;font-weight:800;letter-spacing:.35em;font-size:1.15rem;color:var(--main)}
-  .certcard .cbody{font-size:.8rem;line-height:1.65;color:#4A3A26;margin:.55rem .2rem .5rem;word-break:keep-all}
-  .certcard .cname{font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1.5rem;color:var(--ink);margin:.15rem 0 .05rem}
-  .certcard .cmeta{font-size:.78rem;color:var(--ink-sec)}
-  .certcard .cdate{font-size:.8rem;color:#4A3A26;margin-top:.5rem;font-weight:600}
-  .certcard .cseal{position:absolute;right:.7rem;bottom:.7rem;width:62px;height:62px;border-radius:50%;
+  .certcard .crecip{margin:.75rem 0 .6rem}
+  .certcard .cmeta{display:block;font-size:.76rem;color:var(--ink-sec);letter-spacing:.06em;margin-bottom:.2rem}
+  .certcard .cname{font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:1.55rem;color:var(--ink)}
+  .certcard .cbody{font-size:.8rem;line-height:1.65;color:#4A3A26;margin:0 .2rem .8rem;word-break:keep-all}
+  .certcard .cfoot{display:flex;flex-direction:column;align-items:center;gap:.4rem;margin-top:.3rem}
+  .certcard .cdate{font-size:.8rem;color:#4A3A26;font-weight:600}
+  .certcard .cissue{position:relative;display:inline-flex;align-items:center;padding-right:2.3rem;
+    font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:.9rem;letter-spacing:.05em;color:var(--main)}
+  .certcard .cseal{position:absolute;right:-.4rem;top:50%;width:48px;height:48px;border-radius:50%;
+    transform:translateY(-50%) rotate(-12deg);
     border:2.5px double var(--seal);color:var(--seal);display:flex;align-items:center;justify-content:center;
-    font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:.62rem;text-align:center;line-height:1.2;
-    transform:rotate(-12deg);background:rgba(181,50,43,.06)}
+    font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:.56rem;text-align:center;line-height:1.15;
+    background:rgba(181,50,43,.06)}
   .certbtn{margin-top:.6rem;width:100%;border:none;border-radius:10px;padding:.72rem;
     background:var(--gold-deep);color:#FDF3DE;font-family:'Nanum Myeongjo',serif;font-weight:800;font-size:.98rem;cursor:pointer}
   .certmodal{position:fixed;inset:0;z-index:300;background:rgba(20,11,6,.72);
@@ -346,11 +351,17 @@
     <div class="certwrap" id="certWrap" hidden>
       <div class="certcard" id="certCard">
         <div class="ct">수 료 증</div>
-        <div class="cbody">위 학생은 국립중앙박물관 상설전시관의<br>유물 <b id="certN">20</b>점을 모두 찾아<br><b>스탬프 투어</b>를 완주하였기에 이 증서를 드립니다.</div>
-        <div class="cname" id="certName">홍길동</div>
-        <div class="cmeta" id="certMeta">2학년 3반 14번</div>
-        <div class="cdate" id="certDate">2026년 9월 9일</div>
-        <div class="cseal">국립중앙<br>박물관<br>스탬프투어</div>
+        <div class="crecip">
+          <span class="cmeta" id="certMeta">2학년 3반 14번</span>
+          <span class="cname" id="certName">홍길동</span>
+        </div>
+        <div class="cbody">위 학생은 국립중앙박물관 상설전시관의<br>유물 <b id="certN">20</b>점을 모두 찾아 <b>스탬프 투어</b>를<br>완주하였기에 이 수료증을 드립니다.</div>
+        <div class="cfoot">
+          <div class="cdate" id="certDate">2026년 9월 9일</div>
+          <div class="cissue">국립중앙박물관 스탬프투어
+            <span class="cseal">스탬프<br>투어</span>
+          </div>
+        </div>
       </div>
       <button class="certbtn" id="certSave" type="button">🖼️ 수료증 이미지로 저장</button>
     </div>
@@ -1054,28 +1065,35 @@ function drawCert(){
   x.textAlign = "center"; x.fillStyle = "#8B4513";
   x.font = "800 62px 'Nanum Myeongjo', serif";
   x.fillText("수  료  증", W / 2, 190);
+  // 소속 · 이름 (표준 상장 순서: 제목 → 소속/이름 → 본문 → 날짜 → 직인)
+  x.fillStyle = "#6E5B41"; x.font = "500 30px 'Noto Sans KR', sans-serif";
+  x.fillText(`${i.grade}학년 ${i.cls}반 ${i.num}번`, W / 2, 278);
+  x.fillStyle = "#241A0E"; x.font = "800 74px 'Nanum Myeongjo', serif";
+  x.fillText(i.name || "　", W / 2, 366);
+  // 본문
   x.fillStyle = "#4A3A26"; x.font = "400 27px 'Noto Sans KR', sans-serif";
-  x.fillText("위 학생은 국립중앙박물관 상설전시관의", W / 2, 340);
-  x.fillText(`유물 ${TOTAL}점을 모두 찾아 스탬프 투어를`, W / 2, 384);
-  x.fillText("완주하였기에 이 증서를 드립니다.", W / 2, 428);
-  x.fillStyle = "#241A0E"; x.font = "800 78px 'Nanum Myeongjo', serif";
-  x.fillText(i.name || "　", W / 2, 590);
-  x.fillStyle = "#6E5B41"; x.font = "500 32px 'Noto Sans KR', sans-serif";
-  x.fillText(`${i.grade}학년 ${i.cls}반 ${i.num}번`, W / 2, 648);
+  x.fillText("위 학생은 국립중앙박물관 상설전시관의", W / 2, 464);
+  x.fillText(`유물 ${TOTAL}점을 모두 찾아 스탬프 투어를`, W / 2, 508);
+  x.fillText("완주하였기에 이 수료증을 드립니다.", W / 2, 552);
   x.fillStyle = "#4A3A26"; x.font = "600 30px 'Noto Sans KR', sans-serif";
-  x.fillText(`스탬프 ${TOTAL} / ${TOTAL} 완주`, W / 2, 760);
+  x.fillText(`스탬프 ${TOTAL} / ${TOTAL} 완주`, W / 2, 654);
   const mvpIt = ALL.find(a => a.id === state.mvp);
-  if (mvpIt) x.fillText(`오늘의 MVP 유물 · ${mvpIt.nm}`, W / 2, 806);
+  if (mvpIt) x.fillText(`오늘의 MVP 유물 · ${mvpIt.nm}`, W / 2, 700);
+  // 날짜
   x.font = "600 34px 'Nanum Myeongjo', serif"; x.fillStyle = "#4A3A26";
-  x.fillText(certDateStr(), W / 2, 930);
+  x.fillText(certDateStr(), W / 2, 850);
+  // 발급 기관명 + 직인 (직인이 기관명 오른쪽에 겹치도록 배치)
   x.font = "800 30px 'Nanum Myeongjo', serif"; x.fillStyle = "#2C1A0E";
-  x.fillText("국 립 중 앙 박 물 관", W / 2, 1000);
+  const issueTxt = "국립중앙박물관 스탬프투어";
+  const issueY = 950;
+  x.fillText(issueTxt, W / 2, issueY);
+  const issueW = x.measureText(issueTxt).width;
   x.save();
-  x.translate(W - 150, 990); x.rotate(-12 * Math.PI / 180);
+  x.translate(W / 2 + issueW / 2 + 46, issueY - 10); x.rotate(-12 * Math.PI / 180);
   x.strokeStyle = "#B5322B"; x.lineWidth = 5;
-  x.beginPath(); x.arc(0, 0, 62, 0, Math.PI * 2); x.stroke();
-  x.beginPath(); x.arc(0, 0, 54, 0, Math.PI * 2); x.stroke();
-  x.fillStyle = "#B5322B"; x.font = "800 19px 'Nanum Myeongjo', serif";
+  x.beginPath(); x.arc(0, 0, 58, 0, Math.PI * 2); x.stroke();
+  x.beginPath(); x.arc(0, 0, 50, 0, Math.PI * 2); x.stroke();
+  x.fillStyle = "#B5322B"; x.font = "800 18px 'Nanum Myeongjo', serif";
   x.fillText("스탬프", 0, -6); x.fillText("투어", 0, 20);
   x.restore();
   return cv;
