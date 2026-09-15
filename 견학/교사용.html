@@ -235,11 +235,7 @@ async function setReview(sid, itemId, verdict){
 }
 async function bulkApprove(sid){
   const rec = students[sid] || {};
-  const photos = photosAll[sid] || {}, rvAll = reviews[sid] || {};
-  const todo = Object.keys(photos).filter(id => {
-    const at = (rec.photoAt && rec.photoAt[id]) || 0, rv = rvAll[id];
-    return !(rv && rv.status === "ok" && Number(rv.photoAt || 0) === Number(at));
-  });
+  const todo = pendingPhotoIds(sid, rec);
   if (!todo.length) return;
   if (!confirm(`${rec.name || sid} 학생의 검토 안 된 사진 ${todo.length}장을 모두 승인할까요?\n(썸네일을 먼저 훑어보고 눌러 주세요. 이상한 사진은 개별 [반려]로 되돌릴 수 있습니다.)`)) return;
   try {
@@ -307,7 +303,8 @@ function recProgress(rec){
   const pc = rec.photoCount ?? Object.keys(rec.photoAt||{}).length;
   return { sc, sd, pc, pct: Math.round((sd / STEP_TOTAL) * 100) };
 }
-function waitingPhotoCount(sid, rec){
+// 승인/반려 둘 다 "검토 완료"로 취급 — 반려된 사진은 새로 다시 올리기 전까지 미검토 목록에 다시 끼면 안 됨
+function pendingPhotoIds(sid, rec){
   const photos = photosAll[sid] || {}, rvAll = reviews[sid] || {};
   return Object.keys(photos).filter(id => {
     const at = (rec && rec.photoAt && rec.photoAt[id]) || 0;
@@ -315,7 +312,10 @@ function waitingPhotoCount(sid, rec){
     if (!rv) return true;                                     // 아직 검토 안 함
     if (Number(rv.photoAt || 0) !== Number(at)) return true;  // 새 사진 올림 → 재검토 대기
     return rv.status !== "ok" && rv.status !== "rejected";
-  }).length;
+  });
+}
+function waitingPhotoCount(sid, rec){
+  return pendingPhotoIds(sid, rec).length;
 }
 function statusOf(rec){
   if (!rec) return { k:"none", label:"미참여" };
@@ -478,11 +478,7 @@ function detailHTML(sid, rec){
     </div>`;
   }).join("");
   const mvp = rec.mvp && META[rec.mvp] ? `${META[rec.mvp].e} ${META[rec.mvp].n}` : "—";
-  const rvAll = reviews[sid] || {};
-  const pending = Object.keys(photos).filter(id => {
-    const at = (rec.photoAt && rec.photoAt[id]) || 0, rv = rvAll[id];
-    return !(rv && rv.status === "ok" && Number(rv.photoAt || 0) === Number(at));
-  }).length;
+  const pending = waitingPhotoCount(sid, rec);
   const bulk = pending
     ? `<button class="btn pri" data-bulkok data-sid="${sid}">이 학생 미검토 사진 ${pending}장 한꺼번에 승인</button>`
     : `<span style="font-size:.82rem;color:var(--ok);font-weight:700">✅ 이 학생 사진 전부 승인됨</span>`;
