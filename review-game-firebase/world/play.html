@@ -861,7 +861,16 @@ function updateBanner(id, active, onActive){
     if(onActive) onActive();
     if(!shownBanners.has(id)){
       shownBanners.add(id);
-      requestAnimationFrame(()=> node.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+      // scrollIntoView는 조상(play-top)이 position:sticky일 때 iOS 사파리에서
+      // 스크롤 위치 계산이 틀어져 배너가 잘려 보이는 버그가 있어 쓰지 않는다.
+      // 대신 max-height 전환(.28s)이 끝나길 기다렸다가 fx-slot의 scrollTop을 직접 계산해 맞춘다.
+      setTimeout(()=>{
+        const slot = node.parentElement;
+        if(!slot) return;
+        const top = node.offsetTop, bottom = top + node.offsetHeight;
+        if(top < slot.scrollTop) slot.scrollTop = top;
+        else if(bottom > slot.scrollTop + slot.clientHeight) slot.scrollTop = bottom - slot.clientHeight;
+      }, 300);
     }
   } else {
     node.classList.remove('show');
