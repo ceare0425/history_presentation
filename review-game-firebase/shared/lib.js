@@ -268,7 +268,6 @@ export const ITEMS = {
   ladder:   { emoji: '🪜',  name: '사다리',    kind: 'self',    desc: '즉시 +2층' },
   rocket:   { emoji: '🚀',  name: '로켓 점프',  kind: 'self',    desc: '즉시 +5층' },
   reroll:   { emoji: '🔁',  name: '리롤',      kind: 'self',    desc: '지금 문제를 다른 문제로 교체' },
-  hint:     { emoji: '💡',  name: '힌트',      kind: 'self',    desc: '지금 문제 정답 초성 공개 (이 문제는 +1층)' },
   shield:   { emoji: '🛡️',  name: '콤보 방패',  kind: 'self',    desc: '다음 오답에도 연속이 안 끊김' },
   goldenbell:{ emoji: '🎯', name: '골든벨',     kind: 'self',    desc: '다음 정답은 ×3! 틀리면 연속 끊김 -2층' },
   clover:   { emoji: '🍀',  name: '네잎클로버', kind: 'self',    desc: '30초간 정답마다 50%로 +1층 더' },
@@ -318,7 +317,7 @@ export function itemPool(opts = {}) {
   const nanta = mode === 'nanta';
   return Object.entries(ITEMS)
     .filter(([k, it]) => {
-      if (nanta && (k === 'vest' || k === 'undo' || k === 'reroll')) return false;   // 난타전 제외: 구명조끼·되돌리기·리롤
+      if (nanta && (k === 'vest' || k === 'undo' || k === 'reroll' || k === 'shield')) return false;   // 난타전 제외: 구명조끼·되돌리기·리롤·콤보방패
       if (it.kind === 'attack') return nanta || (mode === 'spicy' && canAttack && !teamLeader);
       if (it.kind === 'global') {
         if (teamLeader) return false;
