@@ -1389,8 +1389,7 @@ async function useItem(){
       renderItemBar();
       const tgtInfo = teamInfo(targetTeam);
       if(key === 'steal'){
-        await bumpFloor(2);
-        showItemAlert(`🥷 강탈! ${tgtInfo ? tgtInfo.label : '상대 팀'} 1등에게서 -2${unitLabel()}, 나 +2${unitLabel()}`);
+        myStealAttackUntil = serverNow() + ITEM_FX_MS.stealDefenseMs;   // 내가 얻는 층수는 steal_result 이벤트로 결과가 정해진 뒤에 반영됨(개인전과 동일)
       } else if(key === 'slide'){
         showItemAlert(`⬇️ 미끄럼틀 → ${tgtInfo ? tgtInfo.label : '상대 팀'} 1등에게 발사!`);
       } else {
@@ -1568,8 +1567,8 @@ function applyIncomingFx(type, attackerId){
     showItemAlert('⬇️ 미끄럼틀! 조금 뒤로 밀렸어요');
     slideDown();
   } else if(type === 'steal'){
-    const amt = roundState.team_mode ? 2 : ITEM_FX_MS.stealAmt;   // 개인전은 방어 실패 시 -5층, 팀전은 상대 팀 1등만 -2층
-    if(!roundState.team_mode && currentQid){
+    const amt = roundState.team_mode ? 2 : ITEM_FX_MS.stealAmt;   // 개인전은 방어 실패 시 -5층, 팀전은 상대 팀 1등만 -2층 (둘 다 5초 방어 창 적용)
+    if(currentQid){
       const ms = ITEM_FX_MS.stealDefenseMs, reduced = ITEM_FX_MS.stealDefenseAmt;
       // 짧은 시간에 여러 명에게 저격당할 수 있어(주로 난타전) 방어 창을 배열에 각자 독립적으로 담는다
       const entry = { amt, qid: currentQid, deadline: serverNow() + ms, attackerId, timer: null };
@@ -1582,7 +1581,7 @@ function applyIncomingFx(type, attackerId){
       myStealDefenses.push(entry);
       showItemAlert(`🥷💦 강탈당했다! ${Math.round(ms/1000)}초 안에 이 문제를 맞히면 -${reduced}로 막아요!`, false, true);
     } else {
-      if(!roundState.team_mode) notifyStealResult(attackerId, 'success', amt);
+      notifyStealResult(attackerId, 'success', amt);
       showItemAlert(`🥷💦 강탈당했다! -${amt}${unitLabel()}`);
       bumpFloor(-amt);
     }
