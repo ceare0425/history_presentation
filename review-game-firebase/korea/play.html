@@ -249,7 +249,7 @@
     word-break:keep-all;
   }
   .item-hint-line{ text-align:center; font-size:.78rem; color:var(--sub); flex:0 0 auto; min-height:1.05em; margin-top:.6vh; }
-  .item-bar{ margin-top:.6vh; flex:0 0 auto; display:flex; gap:8px; }
+  .item-bar{ margin-top:.6vh; flex:0 0 auto; min-height:64px; display:flex; gap:8px; }
   .item-btn{
     flex:1 1 auto; min-width:0; width:auto; padding:11px 14px; font-size:1.02rem; font-weight:800; color:#3a2c05;
     background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border:none; border-radius:12px;
@@ -1308,7 +1308,7 @@ async function applySelfItem(key){
   else if(key === 'clover'){ myCloverUntil = serverNow() + ITEM_FX_MS.clover; }
   else if(key === 'mirror'){
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.mirrorNanta : ITEM_FX_MS.mirror;
-    myMirrorUntil = serverNow() + dur;
+    myMirrorUntil = Math.max(serverNow(), myMirrorUntil) + dur;   // 아직 반사경이 남아있으면 새로 쓴 만큼 이어서 누적
   }
   else if(key === 'comboSpark'){
     const dur = isLastGroup(allPlayers, playerId) ? ITEM_FX_MS.comboSparkLast : ITEM_FX_MS.comboSpark;
