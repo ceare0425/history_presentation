@@ -242,12 +242,6 @@
   .combo-card.chosen{ outline:3px solid #16a34a; }
   .combo-result{ font-weight:800; font-size:1.1rem; color:#5b3a00; min-height:1.4em; }
   .qbox.fogged .qtext-inner{ filter:blur(7px); transition:filter .4s ease; }
-  .choseong-hint{
-    text-align:center; font-weight:800; font-size:clamp(1rem,2.2vw,1.35rem); color:#7a3b00;
-    background:#fff6df; border:2px dashed var(--gold-dark); border-radius:12px;
-    padding:8px 12px; margin:.8vh 0 0; flex:0 0 auto; letter-spacing:.15em;
-    word-break:keep-all;
-  }
   .item-hint-line{ text-align:center; font-size:.78rem; color:var(--sub); flex:0 0 auto; min-height:1.05em; margin-top:.6vh; }
   .item-bar{ margin-top:.6vh; flex:0 0 auto; min-height:64px; display:flex; gap:8px; }
   .item-btn{
@@ -382,7 +376,6 @@
 
       <div class="unit-tag" id="unitTag"></div>
       <div class="qbox" id="qbox"><div class="qtext-inner" id="qText">문제를 불러오는 중...</div></div>
-      <div class="choseong-hint hidden" id="choseongHint"></div>
 
       <div class="answer-row">
         <input type="text" id="answerInput" placeholder="정답 입력 후 Enter" autocomplete="off">
@@ -420,7 +413,7 @@ import {
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   TEAM_OPTIONS, teamInfo, teamStandings, activeBonus,
-  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader, choseongHint
+  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
 } from '../shared/lib.js';
 
 const ROOM = 'korea';
@@ -475,7 +468,6 @@ let myPrevRankMap = null;    // 지난 스냅샷의 { id: 등수 } — 개인전
 let myLastOvertakeAt = 0;    // 마지막 개인 추월 알림 시각
 const MY_OVERTAKE_CD = 4000; // 개인 추월 알림 최소 간격(ms)
 let myBoost = 0;             // 남은 '부스터' 2배 횟수
-let myHintQid = null;        // '힌트' 쓴 문제 — 그 문제 정답은 +1층으로 제한
 let myShield = false;        // '콤보 방패' 활성 — 다음 오답에 연속 유지
 let mySnailNext = 0;         // '느림보' 피격 — 남은 제한 정답 수(각 +1층). 매운맛은 2회
 let festivalUntil = 0;       // '축제' 종료 시각(ms)
@@ -589,7 +581,6 @@ function popFloorBadge(){
 }
 
 function renderQuestion(q){
-  clearChoseongHint();  // 문제가 바뀌면 이전 힌트는 지운다
   clearItemAlert();
   if(!q){
     el('qText').textContent = '출제할 문제가 없습니다. 선생님께 문의하세요.';
@@ -717,6 +708,18 @@ async function submitAnswer(){
   const correct = isCorrect(text, q.answers);
   myUndoAvailable = false;   // 새 답을 제출하면 직전 오답 '되돌리기' 기회는 사라짐
 
+  // 강탈 방어 판정은 정답일 때만 유효하므로 여기서(=제출한 바로 이 순간, 아래 await 전에) 확정해야 한다.
+  // 뒤이은 await(네트워크 왕복) 도중 실제 시간이 흘러 마감을 넘기거나, 독립적으로 돌고 있는 실패
+  // 타이머가 먼저 발동해버려서 "시간 안에 맞혔는데도 방어 실패"로 잘못 뜨는 문제를 막기 위함.
+  let dueDefenses = [];
+  if(correct){
+    dueDefenses = myStealDefenses.filter(d => answeredQid === d.qid && serverNow() <= d.deadline);
+    if(dueDefenses.length){
+      dueDefenses.forEach(d => clearTimeout(d.timer));
+      myStealDefenses = myStealDefenses.filter(d => !dueDefenses.includes(d));
+    }
+  }
+
   const pRef = roomRef(ROOM, 'players', playerId);
   const snap = await get(pRef);
   const existed = snap.exists();
@@ -731,7 +734,6 @@ async function submitAnswer(){
     if(bonus){ gain *= bonus.mult; bonusApplied = true; }
     // ── 아이템 효과 ──
     if(mySnailNext > 0){ gain = 1; mySnailNext--; }           // '느림보' 피격
-    if(myHintQid === answeredQid){ gain = Math.min(gain, 1); myHintQid = null; } // '힌트' 쓴 문제
     if(serverNow() < festivalUntil) gain *= 2;                // '축제'
     if(serverNow() < mySoloFestUntil) gain *= 2;              // '방구석 축제' (나만 2배)
     if(myAnthemNext > 0){ gain *= 2; myAnthemNext--; }        // '팀 응원가'
@@ -743,15 +745,13 @@ async function submitAnswer(){
     if(myJackpotArmed){ gain = 20; myJackpotArmed = false; showItemAlert(`🎲 인생 한방 대성공! +20${unitLabel()} 🎉`); } // '인생 한방' (다른 배수 무시, 고정 +20)
     p.floor = (p.floor||0) + gain;
     // 이 문제가 나오는 동안 저격을 여러 번 당했을 수 있으므로(주로 난타전) 해당되는 방어 건을 모두 처리
-    const dueDefenses = myStealDefenses.filter(d => answeredQid === d.qid && serverNow() <= d.deadline);
+    // (dueDefenses는 위에서 await 전에 이미 확정·타이머 취소까지 끝낸 목록)
     if(dueDefenses.length){
       const reduced = ITEM_FX_MS.stealDefenseAmt;
       dueDefenses.forEach(d=>{
-        clearTimeout(d.timer);
         p.floor = Math.max(0, p.floor - reduced);
         notifyStealResult(d.attackerId, 'defended', reduced);
       });
-      myStealDefenses = myStealDefenses.filter(d => !dueDefenses.includes(d));
       showItemAlert(dueDefenses.length > 1
         ? `🛡️✨ 방어 성공! ${dueDefenses.length}번 저격당했지만 -${reduced*dueDefenses.length}${unitLabel()}만 당했어요`
         : `🛡️✨ 방어 성공! -${reduced}${unitLabel()}만 당했어요`);
@@ -898,7 +898,7 @@ function tick(){
       lastSeenToken = roundState.token;
       queue = []; retryList = []; retryMiss = {}; lastQid = null; currentQid = null; currentQuestion = null; currentStartedAt = null;
       // 아이템 로컬 상태 초기화
-      heldItem = null; myBoost = 0; myHintQid = null; myShield = false;
+      heldItem = null; myBoost = 0; myShield = false;
       mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myComboSparkUntil = 0; myImmuneUntil = 0; frozen = false;
       myFogUntil = 0; myIceUntil = 0;
       myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
@@ -906,7 +906,6 @@ function tick(){
       myStealDefenses.forEach(d=>clearTimeout(d.timer)); myStealDefenses = []; myStealAttackUntil = 0;
       clearTimeout(iceTimer); clearTimeout(fogTimer);
       el('qbox').classList.remove('fogged');
-      clearChoseongHint();
       clearItemAlert();
       seenItemEvents.clear();
       renderItemBar();
@@ -1065,7 +1064,7 @@ function renderItemGuide(){
   const groups = {};
   Object.entries(ITEMS).forEach(([k, it])=>{
     if(k === 'randombox') return;   // 랜덤박스는 스스로 뽑지 못하고 선생님이 뿌릴 때만 받음
-    if(nanta && (k === 'vest' || k === 'undo' || k === 'reroll')) return;   // 난타전엔 없는 아이템
+    if(nanta && (k === 'vest' || k === 'undo' || k === 'reroll' || k === 'shield')) return;   // 난타전엔 없는 아이템
     (groups[it.kind] || (groups[it.kind] = [])).push([k, it]);
   });
   el('itemGuideList').innerHTML = ITEM_KIND_ORDER
@@ -1120,7 +1119,6 @@ function renderItemBar(){
       if(heldItem === 'festival') desc = '20초간 우리 팀 2배';
       else if(heldItem === 'ladder') desc = `즉시 +2${u}`;
       else if(heldItem === 'rocket') desc = `즉시 +5${u}`;
-      else if(heldItem === 'hint') desc = `지금 문제 정답 초성 공개 (이 문제는 +1${u})`;
       else if(heldItem === 'steal') desc = `상대 팀 1등 -3${u}, 나 +3${u}`;
       else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u} (그 팀 2등 층수 아래로는 안 내려감)`;
       else if(heldItem === 'goldenbell') desc = `다음 정답 ×3! 틀리면 연속 끊김 -2${u}`;
@@ -1220,18 +1218,6 @@ async function discardItem(){
   showItemAlert(itemsMode === 'nanta' ? '🗑️ 아이템을 버렸어요 — 정답을 맞히면 새로 받아요' : '🗑️ 아이템을 버렸어요 — 3연속 정답하면 새로 받아요');
 }
 
-// '힌트' 아이템: 초성을 문제 아래에 계속 띄워두고, 다음 문제로 넘어갈 때 지운다
-function showChoseongHint(text){
-  const h = el('choseongHint');
-  if(!h) return;
-  h.textContent = '💡 초성 힌트  ' + text;
-  h.classList.remove('hidden');
-}
-function clearChoseongHint(){
-  const h = el('choseongHint');
-  if(h){ h.textContent = ''; h.classList.add('hidden'); }
-}
-
 async function bumpFloor(n){
   const pRef = roomRef(ROOM, 'players', playerId);
   const snap = await get(pRef);
@@ -1304,13 +1290,6 @@ async function applySelfItem(key){
   else if(key === 'ladder'){ showItemAlert(`🪜 사다리 +2${unitLabel()}!`); await bumpFloor(2); }
   else if(key === 'rocket'){ showItemAlert(`🚀 로켓 +5${unitLabel()}!`); await bumpFloor(5); }
   else if(key === 'reroll'){ rerollQuestion(); showItemAlert('🔁 새 문제로 교체!'); }
-  else if(key === 'hint'){
-    if(currentQuestion && currentQid){
-      myHintQid = currentQid;
-      showChoseongHint(choseongHint(currentQuestion.answers[0]));
-      showItemAlert(`💡 초성 힌트 표시! (이 문제는 +1${unitLabel()})`);
-    }
-  }
   else if(key === 'shield'){ myShield = true; showItemAlert('🛡️ 콤보 방패 장착 — 다음 오답에도 연속 유지'); }
   else if(key === 'cure'){ clearIncomingFx(); showItemAlert('🍵 해독! 걸려 있던 방해를 풀었어요'); }
   // soloFest·vest·clover·mirror·comboSpark·snowball은 tick()이 그리는 자체 카운트다운 배너(festivalBanner 계열)가
@@ -1365,8 +1344,8 @@ async function useItem(){
   const key = heldItem;
   const it = ITEMS[key];
   if(!it){ heldItem = null; renderItemBar(); return; }
-  // 문제가 화면에 없을 때 힌트/리롤/골든벨을 쓰면 낭비되므로 소모하지 않고 되돌린다
-  if((key === 'hint' || key === 'reroll' || key === 'goldenbell' || key === 'jackpot' || key === 'snowball') && !(currentQuestion && currentQid)){
+  // 문제가 화면에 없을 때 리롤/골든벨을 쓰면 낭비되므로 소모하지 않고 되돌린다
+  if((key === 'reroll' || key === 'goldenbell' || key === 'jackpot' || key === 'snowball') && !(currentQuestion && currentQid)){
     renderItemBar();
     showItemAlert('문제가 나온 뒤에 사용하세요');
     return;
