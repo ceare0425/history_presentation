@@ -360,8 +360,8 @@
         <div class="festival-banner" id="vestBanner">🛟 구명조끼! 틀려도 안전 · <span id="vestRemain"></span>초 남음</div>
         <div class="festival-banner" id="cloverBanner">🍀 네잎클로버! 정답마다 행운 · <span id="cloverRemain"></span>초 남음</div>
         <div class="festival-banner" id="mirrorBanner">🪞 반사경 대기 중 · <span id="mirrorRemain"></span>초 남음</div>
-        <div class="debuff-banner" id="fogBanner">🌫️ 안개! 문제가 흐려요 · <span id="fogRemain"></span>초 남음</div>
-        <div class="debuff-banner" id="iceBanner">🧊 얼음! 제출 불가 · <span id="iceRemain"></span>초 남음</div>
+        <div class="debuff-banner" id="fogBanner">🌫️ <span id="fogLabel">안개</span>! 문제가 흐려요 · <span id="fogRemain"></span>초 남음</div>
+        <div class="debuff-banner" id="iceBanner">🧊 <span id="iceLabel">얼음</span>! 제출 불가 · <span id="iceRemain"></span>초 남음</div>
         <div class="atk-banner" id="stealAtkBanner">🥷⏳ 강탈 공격 중··· <span id="stealAtkRemain"></span>초 후 결과!</div>
       </div>
       <div class="item-alert" id="itemAlert"></div>
@@ -711,7 +711,6 @@ async function submitAnswer(){
   const q = currentQuestion;
   const answeredQid = currentQid;
   const wasRetry = currentIsRetry;
-  const heldAtStart = heldItem;
   const elapsed = (serverNow() - currentStartedAt) / 1000;
   const correct = isCorrect(text, q.answers);
   myUndoAvailable = false;   // 새 답을 제출하면 직전 오답 '되돌리기' 기회는 사라짐
@@ -817,9 +816,6 @@ async function submitAnswer(){
   lastFloor = p.floor;
   flashFeedback(correct, q.answers[0], gain, bonusApplied, wasRetry);
   playCharacterReaction(correct);
-  if(heldItem && heldItem !== heldAtStart && ITEMS[heldItem]){
-    showItemAlert(`${ITEMS[heldItem].emoji} ${ITEMS[heldItem].name} 획득! 아래 버튼으로 사용`, false, true);
-  }
   renderItemBar();
 
   const proceedToNext = () => {
@@ -1140,7 +1136,7 @@ function renderItemBar(){
 // sticky=true인 알림(아이템 획득, 안개·얼음 걸린 직후, 강탈 방어 대기)은 예외적으로
 // 문제가 바뀌거나(renderQuestion) 효과가 끝날 때까지 유지된다.
 // (축제 계열은 별도 — 위 tick()의 festivalBanner가 남은 시간과 함께 효과 지속 동안 계속 표시)
-const ITEM_ALERT_MS = 2500;
+const ITEM_ALERT_MS = 2000;
 function showItemAlert(msg, isHtml, sticky){
   const a = el('itemAlert');
   if(!a) return;
@@ -1293,7 +1289,7 @@ async function applySelfItem(key){
   }
   else if(key === 'shield'){ myShield = true; showItemAlert('🛡️ 콤보 방패 장착 — 다음 오답에도 연속 유지'); }
   else if(key === 'cure'){ clearIncomingFx(); showItemAlert('🍵 해독! 걸려 있던 방해를 풀었어요'); }
-  // soloFest·vest·clover·mirror·comboSpark는 tick()이 그리는 자체 카운트다운 배너(festivalBanner 계열)가
+  // soloFest·vest·clover·mirror·comboSpark·snowball은 tick()이 그리는 자체 카운트다운 배너(festivalBanner 계열)가
   // 이미 "무슨 효과가 몇 초 남았는지"를 실시간으로 보여주므로, 별도 item-alert 토스트는 띄우지 않는다.
   // (토스트는 '문제가 바뀔 때까지' 유지되는 방식이라 효과가 먼저 끝나도 안 사라진 것처럼 보이는 문제가 있었음)
   else if(key === 'soloFest'){
@@ -1302,7 +1298,7 @@ async function applySelfItem(key){
   }
   else if(key === 'goldenbell'){ myGoldenbellArmed = true; showItemAlert('🎯 골든벨! 다음 정답은 ×3, 틀리면 -2층'); }
   else if(key === 'jackpot'){ myJackpotArmed = true; showItemAlert(`🎲 인생 한방! 다음 정답 +20${unitLabel()}, 틀리면 -10${unitLabel()}`); }
-  else if(key === 'snowball'){ mySnowballArmed = true; showItemAlert('🌀 눈덩이! 다음 정답에 지금 연속 수만큼 층수 추가 (최대 10층)'); }
+  else if(key === 'snowball'){ mySnowballArmed = true; }
   else if(key === 'vest'){ myVestUntil = serverNow() + ITEM_FX_MS.vest; }
   else if(key === 'clover'){ myCloverUntil = serverNow() + ITEM_FX_MS.clover; }
   else if(key === 'mirror'){
@@ -1537,7 +1533,7 @@ function handleItemEvents(obj){
     myImmuneUntil = now + (itemsMode === 'nanta' ? ITEM_FX_MS.immunityNanta
                         : itemsMode === 'spicy' ? ITEM_FX_MS.immunitySpicy : ITEM_FX_MS.immunity);
     update(roomRef(ROOM, 'players', playerId), { immuneUntil: myImmuneUntil });   // 공격자가 무적 여부를 미리 볼 수 있게 동기화
-    applyIncomingFx(e.type, e.by);
+    applyIncomingFx(e.type, e.by, !!e.reflected);
   });
 }
 
@@ -1546,13 +1542,16 @@ function notifyStealResult(attackerId, outcome, amt){
   push(roomRef(ROOM, 'item_events'), { type: 'steal_result', target: attackerId, outcome, amt, victim: playerId, victimName: playerName, at: serverNow() });
 }
 
-function applyIncomingFx(type, attackerId){
+function applyIncomingFx(type, attackerId, reflected){
   const spicy = itemsMode === 'spicy' || itemsMode === 'nanta';   // 난타전도 방해 효과는 세게(매운맛과 동일)
+  const stealLabel = reflected ? '반사당한 강탈' : '강탈';
+  const stealVerb = reflected ? '반사당한 강탈' : '강탈당했다';
   // fog·ice는 debuff-banner(fogBanner/iceBanner)가 이미 남은 시간과 함께 계속 표시하므로
   // item-alert 토스트는 따로 띄우지 않는다 (안 그러면 알림이 2개씩 뜸)
   if(type === 'fog'){
     const box = el('qbox');
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.fogNanta : spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog;
+    el('fogLabel').textContent = reflected ? '반사당한 안개' : '안개';
     box.classList.add('fogged');
     myFogUntil = serverNow() + dur;
     clearTimeout(fogTimer);
@@ -1562,6 +1561,7 @@ function applyIncomingFx(type, attackerId){
     }, dur);
   } else if(type === 'ice'){
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice;
+    el('iceLabel').textContent = reflected ? '반사당한 얼음' : '얼음';
     frozen = true;
     myIceUntil = serverNow() + dur;
     el('answerInput').disabled = true;
@@ -1574,16 +1574,18 @@ function applyIncomingFx(type, attackerId){
     }, dur);
   } else if(type === 'snail'){
     mySnailNext = spicy ? 2 : 1;
-    showItemAlert(spicy ? `🐌 느림보! 다음 정답 2번은 +1${unitLabel()}만` : `🐌 느림보! 다음 정답은 +1${unitLabel()}만`);
+    const snailLabel = reflected ? '반사당한 느림보' : '느림보';
+    showItemAlert(spicy ? `🐌 ${snailLabel}! 다음 정답 2번은 +1${unitLabel()}만` : `🐌 ${snailLabel}! 다음 정답은 +1${unitLabel()}만`);
   } else if(type === 'slide'){
+    const slideLabel = reflected ? '반사당한 미끄럼틀' : '미끄럼틀';
     // '구명조끼' 보유 중이면 미끄럼틀을 완전히 막는다 (아이템 설명에 명시된 효과)
-    if(serverNow() < myVestUntil){ showItemAlert('🛟 구명조끼! 미끄럼틀을 막았어요'); return; }
-    showItemAlert('⬇️ 미끄럼틀! 조금 뒤로 밀렸어요');
+    if(serverNow() < myVestUntil){ showItemAlert(`🛟 구명조끼! ${slideLabel}을 막았어요`); return; }
+    showItemAlert(`⬇️ ${slideLabel}! 조금 뒤로 밀렸어요`);
     slideDown();
   } else if(type === 'steal'){
     // '구명조끼' 보유 중이면 강탈도 완전히 막는다 (아이템 설명에 명시된 효과) — 공격자에게도 결과 통보
     if(serverNow() < myVestUntil){
-      showItemAlert('🛟 구명조끼! 강탈을 막았어요');
+      showItemAlert(`🛟 구명조끼! ${stealLabel}을 막았어요`);
       notifyStealResult(attackerId, 'vest', 0);
       return;
     }
@@ -1599,10 +1601,10 @@ function applyIncomingFx(type, attackerId){
         notifyStealResult(entry.attackerId, 'success', entry.amt);
       }, ms);
       myStealDefenses.push(entry);
-      showItemAlert(`🥷💦 강탈당했다! ${Math.round(ms/1000)}초 안에 이 문제를 맞히면 -${reduced}로 막아요!`, false, true);
+      showItemAlert(`🥷💦 ${stealVerb}! ${Math.round(ms/1000)}초 안에 이 문제를 맞히면 -${reduced}로 막아요!`, false, true);
     } else {
       notifyStealResult(attackerId, 'success', amt);
-      showItemAlert(`🥷💦 강탈당했다! -${amt}${unitLabel()}`);
+      showItemAlert(`🥷💦 ${stealVerb}! -${amt}${unitLabel()}`);
       bumpFloor(-amt);
     }
   }
