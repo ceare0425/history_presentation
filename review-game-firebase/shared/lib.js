@@ -293,11 +293,11 @@ export const ITEMS = {
 };
 
 // 매운맛(spicy)·난타전(nanta)에서는 방해 효과가 더 오래/세게 간다.
-// 난타전은 피격 후 무적이 아주 짧아서 연달아 얻어맞는다.
+// 피격 후 무적 시간은 아이템전 전체 공통 3초로 통일(모드 무관).
 export const ITEM_FX_MS = {
-  fog: 8000, ice: 8000, festival: 20000, immunity: 8000,
-  fogSpicy: 10000, iceSpicy: 10000, immunitySpicy: 4000,
-  fogNanta: 5000, iceNanta: 5000, immunityNanta: 2500,
+  fog: 8000, ice: 8000, festival: 20000, immunity: 3000,
+  fogSpicy: 10000, iceSpicy: 10000,
+  fogNanta: 5000, iceNanta: 5000,
   soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 10000, mirrorNanta: 10000, vest: 20000,
   comboSpark: 30000, comboSparkLast: 60000,   // 꼴찌(동률 포함)가 쓰면 1분으로 늘어남
   stealAmt: 5, stealDefenseMs: 7000, stealDefenseAmt: 1,   // 강탈(개인전): 방어 실패 시 5층, 방어 성공(그 문제를 제시간에 맞힘) 시 1층만
