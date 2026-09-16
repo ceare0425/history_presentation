@@ -814,6 +814,13 @@ async function submitAnswer(){
 el('submitBtn').onclick = submitAnswer;
 el('answerInput').addEventListener('keydown', e=>{ if(e.key==='Enter') submitAnswer(); });
 
+// Ctrl 키로 아이템 사용 — 노트북에서 답 입력하며 마우스로 아이템 버튼 누르기 번거로운 것 보완
+document.addEventListener('keydown', e=>{
+  if(e.key !== 'Control' || e.repeat) return;
+  const btn = el('useItemBtn');
+  if(btn && !btn.disabled) btn.click();
+});
+
 async function showEndedView(){
   const snap = await get(roomRef(ROOM, 'players'));
   const players = Object.entries(snap.val()||{}).map(([id,p])=>({id, ...p}));
