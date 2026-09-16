@@ -329,7 +329,7 @@ export function itemPool(opts = {}) {
       if (k === 'jackpot') return !!opts.canJackpot && !nanta;   // '인생 한방'은 중하위권 이하만, 난타전 제외
       if (k === 'cure') return !canComeback;             // '해독'은 하위권에겐 안 뜸 (방해는 선두권만 걸리므로 쓸모없음)
       if (k === 'mirror') return mode === 'spicy' || (nanta && !!opts.defenseHeavy);   // 난타전 반사경: 저격 대상(상위권)에게만
-      if (k === 'randombox') return !opts.noRandombox;   // '랜덤박스' 재추첨 땐 제외
+      if (k === 'randombox') return false;   // '랜덤박스'는 학생이 뽑아서 얻지 않음 — 교사가 직접 뿌릴 때만 받음
       return true;
     })
     .map(([k]) => k);
