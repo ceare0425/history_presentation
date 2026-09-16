@@ -509,7 +509,7 @@ function itemsOn(){ return itemsMode !== 'off'; }
 // 아이템 추첨 옵션 — 정답 획득·랜덤박스 재추첨에서 공용.
 // 난타전: 누구나 저격 아이템을 뽑을 수 있고, 인생 한방은 안 나온다(방구석 축제는 하위권에게 그대로 나옴).
 //         저격 대상인 상위 3등(개인 랭킹 기준)은 방어·해독·반사경이 훨씬 자주 나온다(defenseHeavy).
-//         단, 2팀전은 개인 랭킹에 따른 이 편중도 꺼서 모두 동률로 견제 아이템을 뽑는다(twoTeamNanta).
+//         단, 2팀전은 상위 3등도 견제 확률은 다른 사람과 같고 방어류만 그만큼 자주 나오게(견제:방어 동률) 조정된다(twoTeamNanta).
 function itemRollOpts(){
   const nanta = itemsMode === 'nanta';
   const canAttack = nanta || (itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId)));
@@ -521,10 +521,10 @@ function itemRollOpts(){
   const canJackpot = !nanta && inLowerHalf(allPlayers, playerId);
   const jackpotTier = nanta ? 0 : (inBottomGroup(allPlayers, playerId) ? 2 : canJackpot ? 1 : 0);
   const teamLeader = (roundState.team_mode && !twoTeam) && isTeamLeader(allPlayers, myTeam);
-  // 난타전 2팀전은 개인 랭킹(상위 3등)에 따른 견제 아이템 편중(defenseHeavy)도 꺼서 모두 동률로 뽑히게 한다.
-  // 대신 상위 3등 전용이던 반사경은 사라지지 않도록 twoTeamNanta일 때 모두에게 열어준다.
+  // 2팀전: 반사경이 상위 3등 전용에서 모두에게 열리고(twoTeamNanta), 상위 3등의 견제:방어 가중치가
+  // (3배:14배 몰아주기) 대신 (10배:10배 동률)로 바뀐다 — 견제 확률 자체는 다른 사람과 같아짐.
   const twoTeamNanta = nanta && twoTeam;
-  const defenseHeavy = nanta && !twoTeam && inTopRanks(allPlayers, playerId, NANTA_TARGET_TOP);
+  const defenseHeavy = nanta && inTopRanks(allPlayers, playerId, NANTA_TARGET_TOP);
   return { mode: itemsMode, canAttack, attackBias: atkBias, canComeback, canJackpot, jackpotTier, teamMode: roundState.team_mode, teamLeader, defenseHeavy, twoTeamNanta };
 }
 
