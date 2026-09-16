@@ -266,7 +266,7 @@ export function activeBonus(round, nowMs) {
 export const ITEMS = {
   boost:    { emoji: '⚡',  name: '부스터',    kind: 'self',    desc: '다음 정답 3개 2배' },
   ladder:   { emoji: '🪜',  name: '사다리',    kind: 'self',    desc: '즉시 +2층' },
-  rocket:   { emoji: '🚀',  name: '로켓 점프',  kind: 'self',    desc: '즉시 +5층 (다음 정답 1번은 층수 없음)' },
+  rocket:   { emoji: '🚀',  name: '로켓 점프',  kind: 'self',    desc: '즉시 +5층' },
   reroll:   { emoji: '🔁',  name: '리롤',      kind: 'self',    desc: '지금 문제를 다른 문제로 교체' },
   hint:     { emoji: '💡',  name: '힌트',      kind: 'self',    desc: '지금 문제 정답 초성 공개 (이 문제는 +1층)' },
   shield:   { emoji: '🛡️',  name: '콤보 방패',  kind: 'self',    desc: '다음 오답에도 연속이 안 끊김' },
@@ -317,6 +317,7 @@ export function itemPool(opts = {}) {
   const nanta = mode === 'nanta';
   return Object.entries(ITEMS)
     .filter(([k, it]) => {
+      if (nanta && (k === 'vest' || k === 'undo' || k === 'reroll')) return false;   // 난타전 제외: 구명조끼·되돌리기·리롤
       if (it.kind === 'attack') return nanta || (mode === 'spicy' && canAttack && !teamLeader);
       if (it.kind === 'global') {
         if (teamLeader) return false;
@@ -340,8 +341,8 @@ export function itemPool(opts = {}) {
 //   ('인생 한방'은 opts.canJackpot 일 때만 풀에 들어오므로 실제로는 tier 1·2에서만 쓰임)
 // comeback 아이템('방구석 축제'·'콤보 스파크')은 가중치 10배 — 하위권에게 자주 나오도록.
 // opts.canComeback(하위권)이면 🎫복권·🚀로켓 점프도 6배로 우대해 역전 기회를 더 준다.
-// 난타전(mode='nanta'): 저격이 주력이라 방해 아이템 가중치를 크게(10배) 준다.
-//   opts.defenseHeavy(난타전 상위권): 저격을 실컷 얻어맞는 자리라 🍵해독·🪞반사경·🛟구명조끼를 훨씬 자주(14배) 주고,
+// 난타전(mode='nanta'): 저격이 주력이라 방해 아이템 가중치를 크게(10배) 준다. (구명조끼·되돌리기·리롤은 난타전 풀에서 제외됨)
+//   opts.defenseHeavy(난타전 상위권): 저격을 실컷 얻어맞는 자리라 🍵해독·🪞반사경을 훨씬 자주(14배) 주고,
 //   대신 자기가 쏘는 저격 가중치는 3배로 낮춘다.
 export function rollItem(opts = {}) {
   const pool = itemPool(opts);
@@ -356,11 +357,11 @@ export function rollItem(opts = {}) {
     const kind = ITEMS[k] && ITEMS[k].kind;
     if (k === 'jackpot') return jw;
     if (k === 'festival') return fw;
-    if (dh && (k === 'cure' || k === 'mirror' || k === 'vest')) return 14;   // 난타전 상위권: 방어·해독 위주
+    if (dh && (k === 'cure' || k === 'mirror')) return 14;   // 난타전 상위권: 방어·해독 위주
     if (kind === 'attack') return aw;
     if (kind === 'comeback') return 10;
     if (opts.canComeback && (k === 'lottery' || k === 'rocket')) return 6;   // 하위권 컴백 지원 아이템 우대
-    if (nanta && (kind === 'defense' || k === 'vest')) return 3;   // 난타전: 얻어맞는 만큼 반격 수단도 자주
+    if (nanta && kind === 'defense') return 3;   // 난타전: 얻어맞는 만큼 반격 수단도 자주
     return 1;
   });
   let r = Math.random() * weights.reduce((a, b) => a + b, 0);

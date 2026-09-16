@@ -470,7 +470,6 @@ let myPrevRankMap = null;    // 지난 스냅샷의 { id: 등수 } — 개인전
 let myLastOvertakeAt = 0;    // 마지막 개인 추월 알림 시각
 const MY_OVERTAKE_CD = 4000; // 개인 추월 알림 최소 간격(ms)
 let myBoost = 0;             // 남은 '부스터' 2배 횟수
-let mySkipFloor = false;     // '로켓 점프' 반동 — 다음 정답 1회 층수 0
 let myHintQid = null;        // '힌트' 쓴 문제 — 그 문제 정답은 +1층으로 제한
 let myShield = false;        // '콤보 방패' 활성 — 다음 오답에 연속 유지
 let mySnailNext = 0;         // '느림보' 피격 — 남은 제한 정답 수(각 +1층). 매운맛은 2회
@@ -491,8 +490,8 @@ let myUndoFloorDelta = 0;    // 되돌리면 복구할 층수(골든벨 실패 -
 let festivalBy = '';         // '축제'를 쓴 학생 이름 (배너 표시용)
 let myImmuneUntil = 0;       // 방해 피격 후 무적 종료 시각(ms)
 let frozen = false;          // '얼음' 피격 중 입력 잠금
-let iceTimer = null, fogTimer = null, itemAlertTimer = null, stealDefenseTimer = null;
-let myStealDefense = null;   // '강탈' 피격 직후 방어 창: { amt, qid, deadline, attackerId } — 그 문제를 제시간에 맞히면 경감
+let iceTimer = null, fogTimer = null, itemAlertTimer = null;
+let myStealDefenses = [];   // '강탈' 피격 직후 방어 창 목록: { amt, qid, deadline, attackerId, timer } — 짧은 시간에 여러 번 저격당해도 각자 독립적으로 판정되도록 배열로 관리
 let myStealAttackUntil = 0;  // 내가 쏜 '강탈'의 결과를 기다리는 중(공격자 화면 타이머용) 종료 시각(ms)
 let myFogUntil = 0, myIceUntil = 0;   // 안개·얼음 피격 종료 시각(ms) — 배너에 남은 시간 표시용
 const seenItemEvents = new Set();
@@ -728,16 +727,21 @@ async function submitAnswer(){
     if(serverNow() < myCloverUntil && Math.random() < 0.5){ gain += 1; showItemAlert(`🍀 행운! +1${unitLabel()} 더!`); } // '네잎클로버'
     if(serverNow() < myComboSparkUntil){ comboSparkStreak = p.streak || 0; }   // '콤보 스파크' — 카드 뒤집기는 답 처리 후 진행
     if(mySnowballArmed){ const streakNow = p.streak || 0; const add = Math.min(ITEM_FX_MS.snowballCap, Math.max(1, streakNow)); gain += add; mySnowballArmed = false; showItemAlert(`🌀 눈덩이! 연속 ${streakNow} → +${add}${unitLabel()} 추가!`); } // '눈덩이' (최대 ITEM_FX_MS.snowballCap층)
-    if(mySkipFloor){ gain = 0; mySkipFloor = false; }         // '로켓 점프' 반동
     if(myJackpotArmed){ gain = 20; myJackpotArmed = false; showItemAlert(`🎲 인생 한방 대성공! +20${unitLabel()} 🎉`); } // '인생 한방' (다른 배수 무시, 고정 +20)
     p.floor = (p.floor||0) + gain;
-    if(myStealDefense && answeredQid === myStealDefense.qid && serverNow() <= myStealDefense.deadline){
-      clearTimeout(stealDefenseTimer);
+    // 이 문제가 나오는 동안 저격을 여러 번 당했을 수 있으므로(주로 난타전) 해당되는 방어 건을 모두 처리
+    const dueDefenses = myStealDefenses.filter(d => answeredQid === d.qid && serverNow() <= d.deadline);
+    if(dueDefenses.length){
       const reduced = ITEM_FX_MS.stealDefenseAmt;
-      p.floor = Math.max(0, p.floor - reduced);
-      showItemAlert(`🛡️✨ 방어 성공! -${reduced}${unitLabel()}만 당했어요`);
-      notifyStealResult(myStealDefense.attackerId, 'defended', reduced);
-      myStealDefense = null;
+      dueDefenses.forEach(d=>{
+        clearTimeout(d.timer);
+        p.floor = Math.max(0, p.floor - reduced);
+        notifyStealResult(d.attackerId, 'defended', reduced);
+      });
+      myStealDefenses = myStealDefenses.filter(d => !dueDefenses.includes(d));
+      showItemAlert(dueDefenses.length > 1
+        ? `🛡️✨ 방어 성공! ${dueDefenses.length}번 저격당했지만 -${reduced*dueDefenses.length}${unitLabel()}만 당했어요`
+        : `🛡️✨ 방어 성공! -${reduced}${unitLabel()}만 당했어요`);
     }
     p.correct = (p.correct||0) + 1;
     p.streak = (p.streak||0) + 1;
@@ -895,12 +899,12 @@ function tick(){
       lastSeenToken = roundState.token;
       queue = []; retryList = []; retryMiss = {}; lastQid = null; currentQid = null; currentQuestion = null; currentStartedAt = null;
       // 아이템 로컬 상태 초기화
-      heldItem = null; myBoost = 0; mySkipFloor = false; myHintQid = null; myShield = false;
+      heldItem = null; myBoost = 0; myHintQid = null; myShield = false;
       mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myComboSparkUntil = 0; myImmuneUntil = 0; frozen = false;
       myFogUntil = 0; myIceUntil = 0;
       myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
       myUndoAvailable = false; myUndoFloorDelta = 0; randomboxOfferPending = false;
-      myStealDefense = null; clearTimeout(stealDefenseTimer); myStealAttackUntil = 0;
+      myStealDefenses.forEach(d=>clearTimeout(d.timer)); myStealDefenses = []; myStealAttackUntil = 0;
       clearTimeout(iceTimer); clearTimeout(fogTimer);
       el('qbox').classList.remove('fogged');
       clearChoseongHint();
@@ -1064,7 +1068,7 @@ function renderItemBar(){
       const u = unitLabel();
       if(heldItem === 'festival') desc = '20초간 우리 팀 2배';
       else if(heldItem === 'ladder') desc = `즉시 +2${u}`;
-      else if(heldItem === 'rocket') desc = `즉시 +5${u} (다음 정답 1번은 추가 없음)`;
+      else if(heldItem === 'rocket') desc = `즉시 +5${u}`;
       else if(heldItem === 'hint') desc = `지금 문제 정답 초성 공개 (이 문제는 +1${u})`;
       else if(heldItem === 'steal') desc = `상대 팀 전원 -2${u}, 나 +2${u}`;
       else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u} (그 팀 2등 층수 아래로는 안 내려감)`;
@@ -1244,7 +1248,7 @@ function clearIncomingFx(){
 async function applySelfItem(key){
   if(key === 'boost'){ myBoost = 3; showItemAlert('⚡ 부스터! 다음 정답 3개 2배'); }
   else if(key === 'ladder'){ showItemAlert(`🪜 사다리 +2${unitLabel()}!`); await bumpFloor(2); }
-  else if(key === 'rocket'){ showItemAlert(`🚀 로켓 +5${unitLabel()}! (다음 정답 1번은 추가 없음)`); mySkipFloor = true; await bumpFloor(5); }
+  else if(key === 'rocket'){ showItemAlert(`🚀 로켓 +5${unitLabel()}!`); await bumpFloor(5); }
   else if(key === 'reroll'){ rerollQuestion(); showItemAlert('🔁 새 문제로 교체!'); }
   else if(key === 'hint'){
     if(currentQuestion && currentQid){
@@ -1540,18 +1544,16 @@ function applyIncomingFx(type, attackerId){
     const amt = roundState.team_mode ? 2 : ITEM_FX_MS.stealAmt;   // 개인전은 방어 실패 시 -5층, 팀전은 팀원 각자 -2층
     if(!roundState.team_mode && currentQid){
       const ms = ITEM_FX_MS.stealDefenseMs, reduced = ITEM_FX_MS.stealDefenseAmt;
-      myStealDefense = { amt, qid: currentQid, deadline: serverNow() + ms, attackerId };
-      showItemAlert(`🥷💦 강탈당했다! ${Math.round(ms/1000)}초 안에 이 문제를 맞히면 -${reduced}로 막아요!`, false, true);
-      clearTimeout(stealDefenseTimer);
-      stealDefenseTimer = setTimeout(()=>{
-        if(myStealDefense){
-          const d = myStealDefense;
-          bumpFloor(-d.amt);
-          showItemAlert(`😭 방어 실패! -${d.amt}${unitLabel()} 당했다`);
-          notifyStealResult(d.attackerId, 'success', d.amt);
-          myStealDefense = null;
-        }
+      // 짧은 시간에 여러 명에게 저격당할 수 있어(주로 난타전) 방어 창을 배열에 각자 독립적으로 담는다
+      const entry = { amt, qid: currentQid, deadline: serverNow() + ms, attackerId, timer: null };
+      entry.timer = setTimeout(()=>{
+        myStealDefenses = myStealDefenses.filter(d => d !== entry);
+        bumpFloor(-entry.amt);
+        showItemAlert(`😭 방어 실패! -${entry.amt}${unitLabel()} 당했다`);
+        notifyStealResult(entry.attackerId, 'success', entry.amt);
       }, ms);
+      myStealDefenses.push(entry);
+      showItemAlert(`🥷💦 강탈당했다! ${Math.round(ms/1000)}초 안에 이 문제를 맞히면 -${reduced}로 막아요!`, false, true);
     } else {
       if(!roundState.team_mode) notifyStealResult(attackerId, 'success', amt);
       showItemAlert(`🥷💦 강탈당했다! -${amt}${unitLabel()}`);
