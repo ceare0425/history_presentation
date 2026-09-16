@@ -814,11 +814,16 @@ async function submitAnswer(){
 el('submitBtn').onclick = submitAnswer;
 el('answerInput').addEventListener('keydown', e=>{ if(e.key==='Enter') submitAnswer(); });
 
-// Ctrl 키로 아이템 사용 — 노트북에서 답 입력하며 마우스로 아이템 버튼 누르기 번거로운 것 보완
+// Ctrl 키로 아이템 사용, Esc 키로 아이템 버리기 — 노트북에서 답 입력하며 마우스로 버튼 누르기 번거로운 것 보완
 document.addEventListener('keydown', e=>{
-  if(e.key !== 'Control' || e.repeat) return;
-  const btn = el('useItemBtn');
-  if(btn && !btn.disabled) btn.click();
+  if(e.repeat) return;
+  if(e.key === 'Control'){
+    const btn = el('useItemBtn');
+    if(btn && !btn.disabled) btn.click();
+  } else if(e.key === 'Escape'){
+    const btn = el('discardItemBtn');
+    if(btn && !btn.disabled) btn.click();
+  }
 });
 
 async function showEndedView(){
