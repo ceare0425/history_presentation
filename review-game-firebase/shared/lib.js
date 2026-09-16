@@ -289,7 +289,7 @@ export const ITEMS = {
   ice:      { emoji: '🧊',  name: '얼음',      kind: 'attack',  desc: '선두권이 8초간 제출 불가' },
   snail:    { emoji: '🐌',  name: '느림보',    kind: 'attack',  desc: '선두권 다음 정답이 +1층만' },
   slide:    { emoji: '⬇️',  name: '미끄럼틀',  kind: 'attack',  desc: '선두권 -3층 (2등 층수 아래로는 안 내려감)' },
-  steal:    { emoji: '🥷',  name: '강탈',      kind: 'attack',  desc: '선두권 -5층, 나 +5층 (5초 안에 맞히면 방어 · 팀전은 상대 팀 1등만 -3)' },
+  steal:    { emoji: '🥷',  name: '강탈',      kind: 'attack',  desc: '선두권 -5층, 나 +5층 (7초 안에 맞히면 방어 · 팀전은 상대 팀 1등만 -3)' },
 };
 
 // 매운맛(spicy)·난타전(nanta)에서는 방해 효과가 더 오래/세게 간다.
@@ -300,7 +300,7 @@ export const ITEM_FX_MS = {
   fogNanta: 5000, iceNanta: 5000, immunityNanta: 2500,
   soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 10000, mirrorNanta: 10000, vest: 20000,
   comboSpark: 30000, comboSparkLast: 60000,   // 꼴찌(동률 포함)가 쓰면 1분으로 늘어남
-  stealAmt: 5, stealDefenseMs: 5000, stealDefenseAmt: 1,   // 강탈(개인전): 방어 실패 시 5층, 방어 성공(그 문제를 제시간에 맞힘) 시 1층만
+  stealAmt: 5, stealDefenseMs: 7000, stealDefenseAmt: 1,   // 강탈(개인전): 방어 실패 시 5층, 방어 성공(그 문제를 제시간에 맞힘) 시 1층만
   snowballCap: 10,   // 눈덩이: 연속 정답 수만큼 추가되지만, 인생 한방(+20) 등과 밸런스 맞춰 최대 10층까지만
 };
 
