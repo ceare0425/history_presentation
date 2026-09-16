@@ -359,7 +359,8 @@ export function rollItem(opts = {}) {
     const kind = ITEMS[k] && ITEMS[k].kind;
     if (k === 'jackpot') return jw;
     if (k === 'festival') return fw;
-    if (dh && (k === 'cure' || k === 'mirror')) return evenDefense ? 10 : 14;   // 난타전 상위권: 방어·해독 위주(2팀전은 견제와 동률인 10배)
+    if (dh && k === 'mirror') return evenDefense ? 10 : 14;   // 난타전 상위권: 방어·해독 위주(2팀전은 견제와 동률인 10배)
+    if (dh && k === 'cure') return evenDefense ? 5 : 14;   // 2팀전은 반사경의 절반 — 방어류 안에서 반사경이 해독보다 2배 자주
     if (kind === 'attack') return aw;
     if (kind === 'comeback') return 10;
     if (opts.canComeback && (k === 'lottery' || k === 'rocket')) return 6;   // 하위권 컴백 지원 아이템 우대
