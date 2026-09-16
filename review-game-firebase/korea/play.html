@@ -1290,6 +1290,9 @@ function clearIncomingFx(){
   clearTimeout(fogTimer); clearTimeout(iceTimer);
   frozen = false; mySnailNext = 0;
   myFogUntil = 0; myIceUntil = 0;
+  // 진행 중인 강탈 방어 창도 해독으로 완전히 무효화 — 각 공격자에게 결과 통보
+  myStealDefenses.forEach(d=>{ clearTimeout(d.timer); notifyStealResult(d.attackerId, 'cure', 0); });
+  myStealDefenses = [];
   if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; }
 }
 
@@ -1505,6 +1508,8 @@ function handleItemEvents(obj){
       myStealAttackUntil = 0;
       if(e.outcome === 'vest'){
         showItemAlert('🛟 상대가 구명조끼로 강탈을 완전히 막았어요…');
+      } else if(e.outcome === 'cure'){
+        showItemAlert('🍵 상대가 해독으로 강탈을 완전히 막았어요…');
       } else if(e.outcome === 'defended'){
         showItemAlert(`😅 상대가 막았어요! ${e.amt}${unitLabel()}밖에 못 빼앗았어요`);
       } else {
