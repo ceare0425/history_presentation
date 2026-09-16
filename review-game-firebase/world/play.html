@@ -342,6 +342,7 @@
       <details id="itemGuide" class="item-guide hidden">
         <summary>🎒 아이템 설명 보기</summary>
         <div class="item-guide-intro" id="itemGuideIntro"></div>
+        <div class="item-guide-intro">⌨️ 아이템 사용은 <b>Ctrl</b> 키, 버리기는 <b>Esc</b> 키로도 할 수 있어요 (마우스로 버튼을 눌러도 돼요)</div>
         <div class="item-guide-list" id="itemGuideList"></div>
       </details>
     </div>
@@ -1096,7 +1097,7 @@ function renderItemBar(){
       else if(heldItem === 'ladder') desc = `즉시 +2${u}`;
       else if(heldItem === 'rocket') desc = `즉시 +5${u}`;
       else if(heldItem === 'hint') desc = `지금 문제 정답 초성 공개 (이 문제는 +1${u})`;
-      else if(heldItem === 'steal') desc = `상대 팀 전원 -2${u}, 나 +2${u}`;
+      else if(heldItem === 'steal') desc = `상대 팀 1등 -2${u}, 나 +2${u}`;
       else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u} (그 팀 2등 층수 아래로는 안 내려감)`;
       else if(heldItem === 'goldenbell') desc = `다음 정답 ×3! 틀리면 연속 끊김 -2${u}`;
       else if(heldItem === 'jackpot') desc = `다음 정답 +20${u} / 오답 -10${u}`;
@@ -1379,8 +1380,8 @@ async function useItem(){
         type: key, by: playerId, byName: playerName,
         targetTeam, byTeam: myTeam || null, at: serverNow()
       };
-      // 미끄럼틀은 상대 팀 전원이 아니라 그 팀 1등에게만 적용
-      if(key === 'slide'){
+      // 미끄럼틀·강탈은 상대 팀 전원이 아니라 그 팀 1등에게만 적용
+      if(key === 'slide' || key === 'steal'){
         const topMember = rankedPlayers(allPlayers.filter(p=> p.team === targetTeam))[0];
         if(topMember) evt.target = topMember.id;
       }
@@ -1389,7 +1390,7 @@ async function useItem(){
       const tgtInfo = teamInfo(targetTeam);
       if(key === 'steal'){
         await bumpFloor(2);
-        showItemAlert(`🥷 강탈! ${tgtInfo ? tgtInfo.label : '상대 팀'} 전원 -2${unitLabel()}, 나 +2${unitLabel()}`);
+        showItemAlert(`🥷 강탈! ${tgtInfo ? tgtInfo.label : '상대 팀'} 1등에게서 -2${unitLabel()}, 나 +2${unitLabel()}`);
       } else if(key === 'slide'){
         showItemAlert(`⬇️ 미끄럼틀 → ${tgtInfo ? tgtInfo.label : '상대 팀'} 1등에게 발사!`);
       } else {
@@ -1510,8 +1511,8 @@ function handleItemEvents(obj){
     // (반사경으로 되돌아온 공격 e.reflected는 개인 대상이므로 팀전에서도 target으로 판정)
     if(roundState.team_mode){
       if(e.reflected && e.target){ if(e.target !== playerId) return; }
-      // 미끄럼틀은 상대 팀 1등만 대상 (e.target 지정)
-      else if(e.type === 'slide' && e.target){ if(e.target !== playerId) return; }
+      // 미끄럼틀·강탈은 상대 팀 1등만 대상 (e.target 지정)
+      else if((e.type === 'slide' || e.type === 'steal') && e.target){ if(e.target !== playerId) return; }
       else if(!e.targetTeam || e.targetTeam !== myTeam) return;
     } else if(e.target !== playerId) return;
     // '반사경' 활성 중이면 아직 반사 안 된 공격을 쏜 사람에게 그대로 되돌린다
@@ -1567,7 +1568,7 @@ function applyIncomingFx(type, attackerId){
     showItemAlert('⬇️ 미끄럼틀! 조금 뒤로 밀렸어요');
     slideDown();
   } else if(type === 'steal'){
-    const amt = roundState.team_mode ? 2 : ITEM_FX_MS.stealAmt;   // 개인전은 방어 실패 시 -5층, 팀전은 팀원 각자 -2층
+    const amt = roundState.team_mode ? 2 : ITEM_FX_MS.stealAmt;   // 개인전은 방어 실패 시 -5층, 팀전은 상대 팀 1등만 -2층
     if(!roundState.team_mode && currentQid){
       const ms = ITEM_FX_MS.stealDefenseMs, reduced = ITEM_FX_MS.stealDefenseAmt;
       // 짧은 시간에 여러 명에게 저격당할 수 있어(주로 난타전) 방어 창을 배열에 각자 독립적으로 담는다
