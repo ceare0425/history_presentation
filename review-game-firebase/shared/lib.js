@@ -311,7 +311,8 @@ export const ITEM_FX_MS = {
 //   canJackpot  : '인생 한방' 포함 (하위 50%=중하위권 이하일 때만). 난타전에선 안 나옴.
 //   teamMode    : 팀전 여부 — '팀 응원가'는 팀전만
 //   teamLeader  : 팀전 1등 팀 — 전체(global: 축제·응원가) 아이템 제외, 개인 향상만 (난타전에선 저격은 그대로 나옴)
-// '반사경'은 견제가 있는 매운맛에서는 누구나, 난타전에서는 저격 대상(상위권=defenseHeavy)에게만 나온다.
+//   twoTeamNanta: 난타전 + 2팀전 — 개인 랭킹에 따른 defenseHeavy 편중을 꺼서 모두 동률로 대신, 상위 3등 전용이던 반사경을 모두에게 열어줌
+// '반사경'은 견제가 있는 매운맛에서는 누구나, 난타전에서는 저격 대상(상위권=defenseHeavy)에게만(2팀전은 예외로 모두에게) 나온다.
 export function itemPool(opts = {}) {
   const { mode = 'nanta', canAttack = false, canComeback = false, teamMode = false, teamLeader = false } = opts;
   const nanta = mode === 'nanta';
@@ -328,7 +329,7 @@ export function itemPool(opts = {}) {
       if (it.kind === 'comeback') return canComeback;
       if (k === 'jackpot') return !!opts.canJackpot && !nanta;   // '인생 한방'은 중하위권 이하만, 난타전 제외
       if (k === 'cure') return !canComeback;             // '해독'은 하위권에겐 안 뜸 (방해는 선두권만 걸리므로 쓸모없음)
-      if (k === 'mirror') return mode === 'spicy' || (nanta && !!opts.defenseHeavy);   // 난타전 반사경: 저격 대상(상위권)에게만
+      if (k === 'mirror') return mode === 'spicy' || (nanta && (!!opts.twoTeamNanta || !!opts.defenseHeavy));   // 난타전 반사경: 저격 대상(상위권)에게만, 2팀전은 모두에게
       if (k === 'randombox') return false;   // '랜덤박스'는 학생이 뽑아서 얻지 않음 — 교사가 직접 뿌릴 때만 받음
       return true;
     })
