@@ -717,6 +717,7 @@ async function submitAnswer(){
     if(dueDefenses.length){
       dueDefenses.forEach(d => clearTimeout(d.timer));
       myStealDefenses = myStealDefenses.filter(d => !dueDefenses.includes(d));
+      syncStealActive();
     }
   }
 
@@ -904,6 +905,7 @@ function tick(){
       myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
       myUndoAvailable = false; myUndoFloorDelta = 0; randomboxOfferPending = false;
       myStealDefenses.forEach(d=>clearTimeout(d.timer)); myStealDefenses = []; myStealAttackUntil = 0;
+      syncStealActive();
       clearTimeout(iceTimer); clearTimeout(fogTimer);
       el('qbox').classList.remove('fogged');
       clearItemAlert();
@@ -1282,6 +1284,7 @@ function clearIncomingFx(){
   // 진행 중인 강탈 방어 창도 해독으로 완전히 무효화 — 각 공격자에게 결과 통보
   myStealDefenses.forEach(d=>{ clearTimeout(d.timer); notifyStealResult(d.attackerId, 'cure', 0); });
   myStealDefenses = [];
+  syncStealActive();
   if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; }
 }
 
@@ -1380,17 +1383,25 @@ async function useItem(){
         showItemAlert('상대 팀이 없어 견제 대신 🪜 사다리!');
         return applySelfItem('ladder');
       }
+      // 미끄럼틀·강탈은 상대 팀 전원이 아니라 그 팀 1등에게만 적용 — 아이템 소모 전에 먼저 대상을 구한다
+      let topMemberId = null;
+      if(key === 'slide' || key === 'steal'){
+        const topMember = rankedPlayers(allPlayers.filter(p=> p.team === targetTeam))[0];
+        if(topMember) topMemberId = topMember.id;
+        // 이미 다른 학생에게 강탈당해 방어 창이 열려 있는 상대는 또 강탈할 수 없음(아이템은 소모하지 않고 되돌림)
+        if(key === 'steal' && topMember && topMember.stealActive){
+          renderItemBar();
+          showItemAlert('🥷 상대가 이미 강탈당한 상태라 지금은 쓸 수 없어요');
+          return;
+        }
+      }
       heldItem = null;
       await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
       const evt = {
         type: key, by: playerId, byName: playerName,
         targetTeam, byTeam: myTeam || null, at: serverNow()
       };
-      // 미끄럼틀·강탈은 상대 팀 전원이 아니라 그 팀 1등에게만 적용
-      if(key === 'slide' || key === 'steal'){
-        const topMember = rankedPlayers(allPlayers.filter(p=> p.team === targetTeam))[0];
-        if(topMember) evt.target = topMember.id;
-      }
+      if(topMemberId) evt.target = topMemberId;
       await push(roomRef(ROOM, 'item_events'), evt);
       renderItemBar();
       const tgtInfo = teamInfo(targetTeam);
@@ -1420,6 +1431,12 @@ async function useItem(){
       renderItemBar();
       showItemAlert('겨눌 상대가 없어 견제 대신 🪜 사다리!');
       return applySelfItem('ladder');
+    }
+    // 이미 다른 학생에게 강탈당해 방어 창이 열려 있는 상대는 또 강탈할 수 없음(아이템은 소모하지 않고 되돌림)
+    if(key === 'steal' && target.stealActive){
+      renderItemBar();
+      showItemAlert('🥷 상대가 이미 강탈당한 상태라 지금은 쓸 수 없어요');
+      return;
     }
     heldItem = null;
     await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
@@ -1546,6 +1563,12 @@ function notifyStealResult(attackerId, outcome, amt){
   push(roomRef(ROOM, 'item_events'), { type: 'steal_result', target: attackerId, outcome, amt, victim: playerId, victimName: playerName, at: serverNow() });
 }
 
+// 강탈 방어 창이 하나라도 열려 있는지를 내 플레이어 레코드에 동기화 — 다른 학생이 나를
+// 다시 강탈하려 할 때(useItem) 미리 걸러내서 "이미 강탈당한 상태" 안내로 막을 수 있게 함
+function syncStealActive(){
+  update(roomRef(ROOM, 'players', playerId), { stealActive: myStealDefenses.length > 0 });
+}
+
 function applyIncomingFx(type, attackerId, reflected){
   const spicy = itemsMode === 'spicy' || itemsMode === 'nanta';   // 난타전도 방해 효과는 세게(매운맛과 동일)
   const stealLabel = reflected ? '반사당한 강탈' : '강탈';
@@ -1599,11 +1622,13 @@ function applyIncomingFx(type, attackerId, reflected){
       const entry = { amt, qid: currentQid, deadline: serverNow() + ms, attackerId, timer: null };
       entry.timer = setTimeout(()=>{
         myStealDefenses = myStealDefenses.filter(d => d !== entry);
+        syncStealActive();
         bumpFloor(-entry.amt);
         showItemAlert(`😭 방어 실패! -${entry.amt}${unitLabel()} 당했다`);
         notifyStealResult(entry.attackerId, 'success', entry.amt);
       }, ms);
       myStealDefenses.push(entry);
+      syncStealActive();
     } else {
       notifyStealResult(attackerId, 'success', amt);
       showItemAlert(`🥷💦 ${stealVerb}! -${amt}${unitLabel()}`);
