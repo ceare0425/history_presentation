@@ -80,6 +80,23 @@
   .stat-cell .k{ font-size:.72rem; color:var(--sub); margin-bottom:2px; }
   .stat-cell .v{ font-size:1.05rem; font-weight:800; color:var(--sky1); }
   .mini-del{ padding:3px 8px; font-size:.72rem; background:var(--bad); }
+  .trend-row{ display:flex; align-items:flex-end; gap:5px; height:76px; margin:8px 0 4px; padding:10px 10px 6px; background:var(--bg); border-radius:10px; overflow-x:auto; }
+  .trend-bar{ flex:0 0 auto; width:24px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:3px; }
+  .trend-bar .bar{ width:14px; border-radius:3px 3px 0 0; background:var(--gold-dark); min-height:3px; }
+  .trend-bar .bar.low{ background:var(--bad); }
+  .trend-bar .bar.high{ background:var(--good); }
+  .trend-bar .lbl{ font-size:.62rem; color:var(--sub); }
+  .trend-summary{ font-size:.85rem; margin:0 0 14px; }
+  .trend-summary b.up{ color:var(--good); }
+  .trend-summary b.down{ color:var(--bad); }
+  .unit-acc-list{ max-height:220px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; margin:6px 0 14px; }
+  .unit-acc-row{ display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid var(--line); font-size:.82rem; }
+  .unit-acc-row:last-child{ border-bottom:none; }
+  .unit-acc-row .uname{ flex:1; }
+  .unit-acc-row .ubar-track{ width:80px; height:8px; background:#e6e9f0; border-radius:5px; overflow:hidden; flex-shrink:0; }
+  .unit-acc-row .ubar-fill{ height:100%; border-radius:5px; }
+  .unit-acc-row .uacc{ width:44px; text-align:right; flex-shrink:0; font-weight:700; }
+  .unit-acc-row .ucnt{ width:56px; text-align:right; flex-shrink:0; color:var(--sub); font-size:.76rem; }
   input[type=checkbox].solo-pick, #soloPickAll{ width:15px; height:15px; cursor:pointer; }
 
   .team-standings{ display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
@@ -242,6 +259,11 @@
     <h3 id="soloModalTitle">학생 누적 현황</h3>
     <div class="muted" id="soloModalSub" style="font-size:.82rem;"></div>
     <div class="stat-grid" id="soloModalStats"></div>
+    <div class="pool-count"><b>정답률 추이</b> (오래된 → 최근 세션)</div>
+    <div class="trend-row" id="soloModalTrend"></div>
+    <div class="trend-summary" id="soloModalTrendSummary"></div>
+    <div class="pool-count"><b>단원(주제)별 정답률</b> · 어려워하는 단원이 위로 오도록 낮은 순</div>
+    <div class="unit-acc-list" id="soloModalUnitAcc"></div>
     <div class="pool-count" style="display:flex; align-items:center; gap:8px;"><b>세션 기록</b> (최근순)<button type="button" class="bad" id="soloModalDelAll" style="margin-left:auto; padding:3px 9px; font-size:.75rem;">이 학생 기록 전체 삭제</button></div>
     <div style="overflow-x:auto;">
       <table>
@@ -987,6 +1009,55 @@ function renderSoloModal(){
     ['최고 층수', bestFloor + '층'],
     ['평균 층수', avgFloor + '층'],
   ].map(([k,v]) => `<div class="stat-cell"><div class="k">${k}</div><div class="v">${escapeHtml(String(v))}</div></div>`).join('');
+
+  // 정답률 추이: 오래된 → 최근 순으로 세션별 정답률을 막대로 표시하고, 초반/최근 평균을 비교
+  const accOf = (e) => { const t=(e.correct||0)+(e.wrong||0); return t ? Math.round(100*(e.correct||0)/t) : null; };
+  const chrono = [...list].reverse().filter(e => accOf(e) !== null);
+  const trendBox = el('soloModalTrend'), trendSummary = el('soloModalTrendSummary');
+  if(chrono.length < 2){
+    trendBox.innerHTML = '<div class="muted" style="font-size:.8rem; padding:4px 2px;">추이를 보려면 문제를 푼 세션이 2개 이상 필요해요.</div>';
+    trendSummary.innerHTML = '';
+  } else {
+    trendBox.innerHTML = chrono.map(e=>{
+      const a = accOf(e);
+      const barCls = a < 60 ? 'low' : (a >= 85 ? 'high' : '');
+      return `<div class="trend-bar" title="${escapeHtml(fmtSoloTime(e.started_ts || e.ts))} · 정답률 ${a}%">
+        <div class="bar ${barCls}" style="height:${Math.max(3, Math.round(a*0.6))}px;"></div>
+        <div class="lbl">${a}</div>
+      </div>`;
+    }).join('');
+    const half = Math.max(1, Math.floor(chrono.length/2));
+    const avg = (arr) => Math.round(arr.reduce((s,e)=>s+accOf(e),0) / arr.length);
+    const earlyAvg = avg(chrono.slice(0, half)), recentAvg = avg(chrono.slice(-half));
+    const diff = recentAvg - earlyAvg;
+    const dirCls = diff > 3 ? 'up' : (diff < -3 ? 'down' : '');
+    const dirTxt = diff > 3 ? '▲ 향상 중' : (diff < -3 ? '▼ 주의 필요 (정답률 하락)' : '─ 큰 변화 없음');
+    trendSummary.innerHTML = `초반 평균 정답률 <b>${earlyAvg}%</b> → 최근 평균 정답률 <b>${recentAvg}%</b> · <b class="${dirCls}">${dirTxt}</b> (${diff>0?'+':''}${diff}%p)`;
+  }
+
+  // 단원(주제)별 정답률: 세션마다 남긴 unit_stats를 합산해 어떤 단원을 어려워하는지 찾음
+  const unitAgg = new Map();
+  list.forEach(e=>{
+    (Array.isArray(e.unit_stats) ? e.unit_stats : []).forEach(us=>{
+      const g = unitAgg.get(us.u) || { c:0, w:0 };
+      g.c += us.c||0; g.w += us.w||0;
+      unitAgg.set(us.u, g);
+    });
+  });
+  const unitRows = [...unitAgg.entries()]
+    .map(([u,x]) => ({ u, c:x.c, w:x.w, t:x.c+x.w, acc: (x.c+x.w) ? Math.round(100*x.c/(x.c+x.w)) : 0 }))
+    .filter(r => r.t > 0)
+    .sort((a,b) => a.acc - b.acc || b.t - a.t);
+  const unitBox = el('soloModalUnitAcc');
+  unitBox.innerHTML = unitRows.length ? unitRows.map(r=>{
+    const color = r.acc < 60 ? 'var(--bad)' : (r.acc >= 85 ? 'var(--good)' : 'var(--gold-dark)');
+    return `<div class="unit-acc-row">
+      <span class="uname">${escapeHtml(r.u)}</span>
+      <span class="ubar-track"><span class="ubar-fill" style="width:${r.acc}%; background:${color};"></span></span>
+      <span class="uacc" style="color:${color};">${r.acc}%</span>
+      <span class="ucnt">${r.c}/${r.w}</span>
+    </div>`;
+  }).join('') : '<div class="unit-acc-row muted">단원별 기록이 없습니다 (예전 버전 기록만 있을 수 있어요).</div>';
 
   el('soloModalRows').innerHTML = list.map(e=>{
     const t = (e.correct||0)+(e.wrong||0);
