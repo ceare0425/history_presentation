@@ -512,11 +512,14 @@ function itemsOn(){ return itemsMode !== 'off'; }
 function itemRollOpts(){
   const nanta = itemsMode === 'nanta';
   const canAttack = nanta || (itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId)));
-  const atkBias = roundState.team_mode ? teamAttackBias(allPlayers, myTeam) : 0;
+  // 2팀전은 팀이 둘뿐이라 "뒤처진 팀만 견제를 몰아 받고 선두 팀은 아예 못 받는" 편중이
+  // 의미가 없다는 사용자 판단으로, 격차/순위에 따른 편중을 끄고 양 팀에 동률로 견제 아이템이 나오게 한다.
+  const twoTeam = roundState.team_mode && (roundState.team_count || 4) === 2;
+  const atkBias = (roundState.team_mode && !twoTeam) ? teamAttackBias(allPlayers, myTeam) : 0;
   const canComeback = inBottomGroup(allPlayers, playerId);   // 방구석 축제는 난타전에서도 하위권에게 그대로 나옴
   const canJackpot = !nanta && inLowerHalf(allPlayers, playerId);
   const jackpotTier = nanta ? 0 : (inBottomGroup(allPlayers, playerId) ? 2 : canJackpot ? 1 : 0);
-  const teamLeader = roundState.team_mode && isTeamLeader(allPlayers, myTeam);
+  const teamLeader = (roundState.team_mode && !twoTeam) && isTeamLeader(allPlayers, myTeam);
   const defenseHeavy = nanta && inTopRanks(allPlayers, playerId, NANTA_TARGET_TOP);
   return { mode: itemsMode, canAttack, attackBias: atkBias, canComeback, canJackpot, jackpotTier, teamMode: roundState.team_mode, teamLeader, defenseHeavy };
 }
