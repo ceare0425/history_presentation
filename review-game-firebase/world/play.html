@@ -128,11 +128,11 @@
     background:var(--tcolor,#999);
   }
 
-  .fx-slot{ display:flex; flex-direction:column; margin-bottom:.8vh; flex:0 0 auto; }
+  .fx-slot{ display:flex; flex-direction:column; margin-bottom:.8vh; flex:0 0 auto; min-height:0; }
   .bonus-banner{
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#7a3b00;
     background:linear-gradient(90deg,#ffe08a,#ffc857); border-radius:12px; padding:8px;
-    max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    flex:0 0 auto; min-height:0; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
     transition:max-height .28s ease, opacity .2s ease;
   }
   .bonus-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
@@ -160,7 +160,7 @@
 
   .feedback{
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1.15rem; border-radius:12px; padding:10px;
-    flex:0 0 auto; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    flex:0 0 auto; min-height:0; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
     transition:max-height .28s ease, margin-bottom .28s ease, opacity .2s ease;
   }
   .feedback.show{ max-height:90px; margin-bottom:.8vh; opacity:1; }
@@ -194,28 +194,28 @@
   .festival-banner{
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#5a3d00;
     background:linear-gradient(90deg,#ffe08a,#a6e8ff,#ffd0f0); border-radius:12px; padding:8px;
-    max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    flex:0 0 auto; min-height:0; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
     transition:max-height .28s ease, opacity .2s ease;
   }
   .festival-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .debuff-banner{
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
     background:linear-gradient(90deg,#4b5563,#6b7280); border-radius:12px; padding:8px;
-    max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    flex:0 0 auto; min-height:0; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
     transition:max-height .28s ease, opacity .2s ease;
   }
   .debuff-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .atk-banner{
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1.05rem; color:#fff;
     background:linear-gradient(90deg,#7c2d12,#b91c1c); border-radius:12px; padding:8px;
-    max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
+    flex:0 0 auto; min-height:0; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
     transition:max-height .28s ease, opacity .2s ease;
   }
   .atk-banner.show{ max-height:90px; margin-bottom:4px; opacity:1; animation:bonusPulse 1s ease-in-out infinite; }
   .item-alert{
     box-sizing:border-box; text-align:center; font-weight:800; font-size:1rem; color:#5b3a00;
     background:linear-gradient(90deg,#fff0c8,#ffe08a); border-radius:12px; padding:8px;
-    max-height:0; margin-bottom:0; overflow:hidden; opacity:0; flex:0 0 auto;
+    flex:0 0 auto; min-height:0; max-height:0; margin-bottom:0; overflow:hidden; opacity:0;
     transition:max-height .2s ease, margin-bottom .2s ease, opacity .15s ease;
   }
   .item-alert.show{ max-height:90px; margin-bottom:.8vh; opacity:1; animation:bonusPulse 1.1s ease-in-out infinite; }
