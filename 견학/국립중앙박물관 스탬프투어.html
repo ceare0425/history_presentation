@@ -9,7 +9,7 @@
 <title>국립중앙박물관 스탬프 투어</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nanum+Myeongjo:wght@400;700;800&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   [hidden]{display:none !important}
@@ -213,7 +213,7 @@
   .certcard .cseal{position:absolute;top:50%;left:50%;width:2.15rem;height:2.15rem;
     border:3px double var(--seal);color:var(--seal);background:rgba(255,250,245,.4);
     display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
-    font-family:'Nanum Myeongjo',serif;font-weight:700;font-size:.9rem;line-height:1;
+    font-family:'Ma Shan Zheng','Nanum Myeongjo',serif;font-weight:400;font-size:1.05rem;line-height:1;
     transform:translate(-50%,-60%);
     box-shadow:0 0 0 1px rgba(181,50,43,.3) inset;pointer-events:none}
   .certcard .cseal span{display:flex;align-items:center;justify-content:center}
@@ -1087,7 +1087,7 @@ function drawSquareSeal(ctx, cx, cy, size){
   ctx.lineWidth = 1.4;
   ctx.strokeRect(-h + 8, -h + 8, size - 16, size - 16);
   ctx.fillStyle = "#B5322B";
-  ctx.font = `700 ${Math.round(size * 0.44)}px 'Nanum Myeongjo', serif`;
+  ctx.font = `400 ${Math.round(size * 0.5)}px 'Ma Shan Zheng', 'Nanum Myeongjo', serif`;
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.fillText("周", -q, -q);
   ctx.fillText("李", q, -q);
