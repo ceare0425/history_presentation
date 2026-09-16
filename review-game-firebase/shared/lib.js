@@ -311,8 +311,8 @@ export const ITEM_FX_MS = {
 //   canJackpot  : '인생 한방' 포함 (하위 50%=중하위권 이하일 때만). 난타전에선 안 나옴.
 //   teamMode    : 팀전 여부 — '팀 응원가'는 팀전만
 //   teamLeader  : 팀전 1등 팀 — 전체(global: 축제·응원가) 아이템 제외, 개인 향상만 (난타전에선 저격은 그대로 나옴)
-//   twoTeamNanta: 난타전 + 2팀전 — 개인 랭킹에 따른 defenseHeavy 편중을 꺼서 모두 동률로 대신, 상위 3등 전용이던 반사경을 모두에게 열어줌
-// '반사경'은 견제가 있는 매운맛에서는 누구나, 난타전에서는 저격 대상(상위권=defenseHeavy)에게만(2팀전은 예외로 모두에게) 나온다.
+//   defenseHeavy: 난타전 개인 랭킹 1등 — 견제:반사경이 동률로 나오게(2·3등은 편중 없이 다른 등수와 동일)
+// '반사경'은 견제가 있는 매운맛에서는 누구나, 난타전에서는 1등(defenseHeavy)에게만 나온다.
 export function itemPool(opts = {}) {
   const { mode = 'nanta', canAttack = false, canComeback = false, teamMode = false, teamLeader = false } = opts;
   const nanta = mode === 'nanta';
@@ -329,7 +329,7 @@ export function itemPool(opts = {}) {
       if (it.kind === 'comeback') return canComeback;
       if (k === 'jackpot') return !!opts.canJackpot && !nanta;   // '인생 한방'은 중하위권 이하만, 난타전 제외
       if (k === 'cure') return !canComeback;             // '해독'은 하위권에겐 안 뜸 (방해는 선두권만 걸리므로 쓸모없음)
-      if (k === 'mirror') return mode === 'spicy' || (nanta && (!!opts.twoTeamNanta || !!opts.defenseHeavy));   // 난타전 반사경: 저격 대상(상위권)에게만, 2팀전은 모두에게
+      if (k === 'mirror') return mode === 'spicy' || (nanta && !!opts.defenseHeavy);   // 난타전 반사경: 1등에게만
       if (k === 'randombox') return false;   // '랜덤박스'는 학생이 뽑아서 얻지 않음 — 교사가 직접 뿌릴 때만 받음
       return true;
     })
@@ -343,24 +343,23 @@ export function itemPool(opts = {}) {
 // comeback 아이템('방구석 축제'·'콤보 스파크')은 가중치 10배 — 하위권에게 자주 나오도록.
 // opts.canComeback(하위권)이면 🎫복권·🚀로켓 점프도 6배로 우대해 역전 기회를 더 준다.
 // 난타전(mode='nanta'): 저격이 주력이라 방해 아이템 가중치를 크게(10배) 준다. (구명조끼·되돌리기·리롤은 난타전 풀에서 제외됨)
-//   opts.defenseHeavy(난타전 상위권): 저격을 실컷 얻어맞는 자리라 🍵해독·🪞반사경을 훨씬 자주(14배) 주고,
-//   대신 자기가 쏘는 저격 가중치는 3배로 낮춘다. (opts.twoTeamNanta면 이 몰아주기 대신 견제:방어 가중치를 10:10 동률로.)
+//   opts.defenseHeavy(난타전 개인 랭킹 1등): 견제 확률은 다른 등수와 동일한 10배로 두고, 대신 🪞반사경도 10배(견제와 동률)
+//   ·🍵해독은 그 절반인 5배로 자주 나오게 한다. 2등·3등은 defenseHeavy가 아니므로 다른 등수와 완전히 동일하게 뽑힌다.
 export function rollItem(opts = {}) {
   const pool = itemPool(opts);
   if (!pool.length) return null;
   const nanta = opts.mode === 'nanta';
   const dh = nanta && opts.defenseHeavy;
-  const evenDefense = dh && !!opts.twoTeamNanta;   // 2팀전 저격 대상: 견제 확률은 그대로 두고 방어류만 같이 올려 동률
   const bias = opts.attackBias || 0;
-  const aw = nanta ? ((dh && !evenDefense) ? 3 : 10) : (bias > 0 ? 1 + 8 * Math.min(1, bias) : 1);   // 견제 아이템 가중치
+  const aw = nanta ? 10 : (bias > 0 ? 1 + 8 * Math.min(1, bias) : 1);   // 견제 아이템 가중치 (난타전은 랭킹 무관 항상 10배)
   const fw = opts.teamMode && bias > 0 ? 1 + 5 * Math.min(1, bias) : 1;   // 팀전 '🌈축제' 최대 6배
   const jw = opts.jackpotTier === 2 ? 6 : opts.jackpotTier === 1 ? 4 : 1;   // '인생 한방'
   const weights = pool.map((k) => {
     const kind = ITEMS[k] && ITEMS[k].kind;
     if (k === 'jackpot') return jw;
     if (k === 'festival') return fw;
-    if (dh && k === 'mirror') return evenDefense ? 10 : 14;   // 난타전 상위권: 방어·해독 위주(2팀전은 견제와 동률인 10배)
-    if (dh && k === 'cure') return evenDefense ? 5 : 14;   // 2팀전은 반사경의 절반 — 방어류 안에서 반사경이 해독보다 2배 자주
+    if (dh && k === 'mirror') return 10;   // 난타전 1등: 견제와 동률인 10배
+    if (dh && k === 'cure') return 5;   // 반사경의 절반
     if (kind === 'attack') return aw;
     if (kind === 'comeback') return 10;
     if (opts.canComeback && (k === 'lottery' || k === 'rocket')) return 6;   // 하위권 컴백 지원 아이템 우대
