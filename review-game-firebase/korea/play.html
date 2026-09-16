@@ -362,6 +362,7 @@
         <div class="debuff-banner" id="fogBanner">🌫️ <span id="fogLabel">안개</span>! 문제가 흐려요 · <span id="fogRemain"></span>초 남음</div>
         <div class="debuff-banner" id="iceBanner">🧊 <span id="iceLabel">얼음</span>! 제출 불가 · <span id="iceRemain"></span>초 남음</div>
         <div class="atk-banner" id="stealAtkBanner">🥷⏳ 강탈 공격 중··· <span id="stealAtkRemain"></span>초 후 결과!</div>
+        <div class="atk-banner" id="stealDefBanner">🥷⏳ 강탈당했다! <span id="stealDefRemain"></span>초 안에 맞히면 방어!</div>
       </div>
       <div class="item-alert" id="itemAlert"></div>
       <div class="hud">
@@ -930,6 +931,9 @@ function tick(){
     updateBanner('fogBanner', serverNow() < myFogUntil, ()=> el('fogRemain').textContent = Math.ceil((myFogUntil - serverNow()) / 1000));
     updateBanner('iceBanner', serverNow() < myIceUntil, ()=> el('iceRemain').textContent = Math.ceil((myIceUntil - serverNow()) / 1000));
     updateBanner('stealAtkBanner', serverNow() < myStealAttackUntil, ()=> el('stealAtkRemain').textContent = Math.ceil((myStealAttackUntil - serverNow()) / 1000));
+    // 강탈 방어 창: 여러 명에게 동시에 저격당할 수 있어(주로 난타전) 가장 임박한 마감까지 남은 시간을 보여준다
+    const soonestDefDeadline = myStealDefenses.length ? Math.min(...myStealDefenses.map(d => d.deadline)) : 0;
+    updateBanner('stealDefBanner', serverNow() < soonestDefDeadline, ()=> el('stealDefRemain').textContent = Math.max(0, Math.ceil((soonestDefDeadline - serverNow()) / 1000)));
     showView('playView');
   } else if(effective === 'ended'){
     if(!myAnswered){
@@ -1587,7 +1591,7 @@ function applyIncomingFx(type, attackerId, reflected){
     }
     const amt = roundState.team_mode ? 3 : ITEM_FX_MS.stealAmt;   // 개인전은 방어 실패 시 -5층, 팀전은 상대 팀 1등만 -3층 (둘 다 5초 방어 창 적용)
     if(currentQid){
-      const ms = ITEM_FX_MS.stealDefenseMs, reduced = ITEM_FX_MS.stealDefenseAmt;
+      const ms = ITEM_FX_MS.stealDefenseMs;
       // 짧은 시간에 여러 명에게 저격당할 수 있어(주로 난타전) 방어 창을 배열에 각자 독립적으로 담는다
       const entry = { amt, qid: currentQid, deadline: serverNow() + ms, attackerId, timer: null };
       entry.timer = setTimeout(()=>{
@@ -1597,7 +1601,6 @@ function applyIncomingFx(type, attackerId, reflected){
         notifyStealResult(entry.attackerId, 'success', entry.amt);
       }, ms);
       myStealDefenses.push(entry);
-      showItemAlert(`🥷💦 ${stealVerb}! ${Math.round(ms/1000)}초 안에 이 문제를 맞히면 -${reduced}로 막아요!`, false, true);
     } else {
       notifyStealResult(attackerId, 'success', amt);
       showItemAlert(`🥷💦 ${stealVerb}! -${amt}${unitLabel()}`);
