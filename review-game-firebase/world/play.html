@@ -1412,7 +1412,10 @@ async function useItem(){
       showItemAlert('선두라서 방해 대신 🪜 사다리!');
       return applySelfItem('ladder');
     }
-    const target = pickAttackTarget(attackCandidates(allPlayers, playerId, itemsMode === 'spicy', nanta), nanta);
+    const atkCandidates = attackCandidates(allPlayers, playerId, itemsMode === 'spicy', nanta);
+    // 내가 1등이면 견제는 무조건 2등에게 — 후보 목록은 랭킹 순이라 내가 1등일 때 후보[0]이 항상 2등
+    const myAtkRank = rankedPlayers(allPlayers).findIndex(p => p.id === playerId) + 1;
+    const target = myAtkRank === 1 ? (atkCandidates[0] || null) : pickAttackTarget(atkCandidates, nanta);
     if(!target){
       heldItem = null; await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
       renderItemBar();
