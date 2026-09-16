@@ -1580,8 +1580,7 @@ function applyIncomingFx(type, attackerId, reflected){
     const slideLabel = reflected ? '반사당한 미끄럼틀' : '미끄럼틀';
     // '구명조끼' 보유 중이면 미끄럼틀을 완전히 막는다 (아이템 설명에 명시된 효과)
     if(serverNow() < myVestUntil){ showItemAlert(`🛟 구명조끼! ${slideLabel}을 막았어요`); return; }
-    showItemAlert(`⬇️ ${slideLabel}! 조금 뒤로 밀렸어요`);
-    slideDown();
+    slideDown(slideLabel);
   } else if(type === 'steal'){
     // '구명조끼' 보유 중이면 강탈도 완전히 막는다 (아이템 설명에 명시된 효과) — 공격자에게도 결과 통보
     if(serverNow() < myVestUntil){
@@ -1610,7 +1609,7 @@ function applyIncomingFx(type, attackerId, reflected){
   }
 }
 
-async function slideDown(){
+async function slideDown(label){
   const pRef = roomRef(ROOM, 'players', playerId);
   const snap = await get(pRef);
   const cur = snap.val() || {};
@@ -1628,9 +1627,11 @@ async function slideDown(){
   // 가드가 현재 층수보다 높으면(반사 등 예외) 올라가 버리지 않도록 clamp
   const guard = Math.min(floorGuard, cur.floor || 0);
   const nf = Math.max((cur.floor || 0) - drop, guard, 0);
+  const actualDrop = (cur.floor || 0) - nf;
   await update(pRef, { floor: nf, name: cur.name || playerName, lastActive: serverNow() });
   el('floorVal').textContent = nf;
   lastFloor = nf;
+  showItemAlert(`⬇️ ${label || '미끄럼틀'}! -${actualDrop}${unitLabel()} 밀렸어요`);
 }
 
 let teamModeActive = false;
