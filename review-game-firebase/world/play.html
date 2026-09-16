@@ -1033,6 +1033,23 @@ const ITEM_KIND_LABEL = {
   self: '⚡ 자기 강화', comeback: '🔥 하위권 응원', defense: '🛡️ 방어', attack: '🗡️ 견제(방해)', global: '🌐 전체 효과'
 };
 const ITEM_KIND_ORDER = ['self', 'comeback', 'defense', 'attack', 'global'];
+// 안개·얼음·미끄럼틀은 난타전/매운맛/기본 모드마다 지속시간·수치가 달라서(applyIncomingFx·slideDown 참고),
+// ITEMS 카탈로그의 기본 desc(대표값)만 보여주면 난타전 학생에게 실제와 다른 수치가 뜬다 — 모드별로 맞춰 보여준다.
+function itemDescFor(k, it, nanta){
+  if(k === 'fog'){
+    const s = (nanta ? ITEM_FX_MS.fogNanta : itemsMode === 'spicy' ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog) / 1000;
+    return `선두권 문제 화면이 ${s}초간 흐려짐`;
+  }
+  if(k === 'ice'){
+    const s = (nanta ? ITEM_FX_MS.iceNanta : itemsMode === 'spicy' ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) / 1000;
+    return `선두권이 ${s}초간 제출 불가`;
+  }
+  if(k === 'slide'){
+    if(nanta) return '선두권 -5층 (보호 없이 0층까지 내려갈 수 있음)';
+    if(itemsMode === 'spicy') return '선두권 -4층 (2등보다 1층 아래까지만 허용)';
+  }
+  return it.desc;
+}
 function renderItemGuide(){
   const box = el('itemGuide');
   if(!box) return;
@@ -1046,14 +1063,14 @@ function renderItemGuide(){
   Object.entries(ITEMS).forEach(([k, it])=>{
     if(k === 'randombox') return;   // 랜덤박스는 스스로 뽑지 못하고 선생님이 뿌릴 때만 받음
     if(nanta && (k === 'vest' || k === 'undo' || k === 'reroll')) return;   // 난타전엔 없는 아이템
-    (groups[it.kind] || (groups[it.kind] = [])).push(it);
+    (groups[it.kind] || (groups[it.kind] = [])).push([k, it]);
   });
   el('itemGuideList').innerHTML = ITEM_KIND_ORDER
     .filter(kind => groups[kind] && groups[kind].length)
     .map(kind => `
       <div class="item-guide-group">
         <h4>${ITEM_KIND_LABEL[kind]}</h4>
-        ${groups[kind].map(it => `<div class="item-guide-row">${it.emoji} <b>${escapeHtml(it.name)}</b> — ${escapeHtml(it.desc)}</div>`).join('')}
+        ${groups[kind].map(([k, it]) => `<div class="item-guide-row">${it.emoji} <b>${escapeHtml(it.name)}</b> — ${escapeHtml(itemDescFor(k, it, nanta))}</div>`).join('')}
       </div>`).join('');
 }
 
