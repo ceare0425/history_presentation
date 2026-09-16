@@ -1044,6 +1044,7 @@ function renderItemGuide(){
     : '3연속 정답마다 아이템을 1개 받아요 (최대 1개 보유, 버리기도 가능)';
   const groups = {};
   Object.entries(ITEMS).forEach(([k, it])=>{
+    if(k === 'randombox') return;   // 랜덤박스는 스스로 뽑지 못하고 선생님이 뿌릴 때만 받음
     if(nanta && (k === 'vest' || k === 'undo' || k === 'reroll')) return;   // 난타전엔 없는 아이템
     (groups[it.kind] || (groups[it.kind] = [])).push(it);
   });
@@ -1357,7 +1358,7 @@ async function useItem(){
   if(key === 'randombox'){
     heldItem = null;
     await update(roomRef(ROOM, 'players', playerId), { item: null, name: playerName, lastActive: serverNow() });
-    const rolled = rollItem({ ...itemRollOpts(), noRandombox: true });
+    const rolled = rollItem(itemRollOpts());
     if(!rolled){ renderItemBar(); showItemAlert('🎁 랜덤박스가 비었어요…'); return; }
     heldItem = rolled;
     renderItemBar();
