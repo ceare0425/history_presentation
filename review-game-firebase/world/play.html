@@ -1589,7 +1589,7 @@ function applyIncomingFx(type, attackerId, reflected){
       notifyStealResult(attackerId, 'vest', 0);
       return;
     }
-    const amt = roundState.team_mode ? 3 : ITEM_FX_MS.stealAmt;   // 개인전은 방어 실패 시 -5층, 팀전은 상대 팀 1등만 -3층 (둘 다 5초 방어 창 적용)
+    const amt = roundState.team_mode ? 3 : ITEM_FX_MS.stealAmt;   // 개인전은 방어 실패 시 -5층, 팀전은 상대 팀 1등만 -3층 (둘 다 7초 방어 창 적용)
     if(currentQid){
       const ms = ITEM_FX_MS.stealDefenseMs;
       // 짧은 시간에 여러 명에게 저격당할 수 있어(주로 난타전) 방어 창을 배열에 각자 독립적으로 담는다
