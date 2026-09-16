@@ -1097,7 +1097,7 @@ function renderItemBar(){
       else if(heldItem === 'ladder') desc = `즉시 +2${u}`;
       else if(heldItem === 'rocket') desc = `즉시 +5${u}`;
       else if(heldItem === 'hint') desc = `지금 문제 정답 초성 공개 (이 문제는 +1${u})`;
-      else if(heldItem === 'steal') desc = `상대 팀 1등 -2${u}, 나 +2${u}`;
+      else if(heldItem === 'steal') desc = `상대 팀 1등 -3${u}, 나 +3${u}`;
       else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u} (그 팀 2등 층수 아래로는 안 내려감)`;
       else if(heldItem === 'goldenbell') desc = `다음 정답 ×3! 틀리면 연속 끊김 -2${u}`;
       else if(heldItem === 'jackpot') desc = `다음 정답 +20${u} / 오답 -10${u}`;
@@ -1479,7 +1479,9 @@ function handleItemEvents(obj){
     if(e.type === 'steal_result'){
       if(e.target !== playerId) return;
       myStealAttackUntil = 0;
-      if(e.outcome === 'defended'){
+      if(e.outcome === 'vest'){
+        showItemAlert('🛟 상대가 구명조끼로 강탈을 완전히 막았어요…');
+      } else if(e.outcome === 'defended'){
         showItemAlert(`😅 상대가 막았어요! ${e.amt}${unitLabel()}밖에 못 빼앗았어요`);
       } else {
         showItemAlert(`🥷💰 강탈 성공! ${e.amt}${unitLabel()} 빼앗아왔어요!`);
@@ -1564,10 +1566,18 @@ function applyIncomingFx(type, attackerId){
     mySnailNext = spicy ? 2 : 1;
     showItemAlert(spicy ? `🐌 느림보! 다음 정답 2번은 +1${unitLabel()}만` : `🐌 느림보! 다음 정답은 +1${unitLabel()}만`);
   } else if(type === 'slide'){
+    // '구명조끼' 보유 중이면 미끄럼틀을 완전히 막는다 (아이템 설명에 명시된 효과)
+    if(serverNow() < myVestUntil){ showItemAlert('🛟 구명조끼! 미끄럼틀을 막았어요'); return; }
     showItemAlert('⬇️ 미끄럼틀! 조금 뒤로 밀렸어요');
     slideDown();
   } else if(type === 'steal'){
-    const amt = roundState.team_mode ? 2 : ITEM_FX_MS.stealAmt;   // 개인전은 방어 실패 시 -5층, 팀전은 상대 팀 1등만 -2층 (둘 다 5초 방어 창 적용)
+    // '구명조끼' 보유 중이면 강탈도 완전히 막는다 (아이템 설명에 명시된 효과) — 공격자에게도 결과 통보
+    if(serverNow() < myVestUntil){
+      showItemAlert('🛟 구명조끼! 강탈을 막았어요');
+      notifyStealResult(attackerId, 'vest', 0);
+      return;
+    }
+    const amt = roundState.team_mode ? 3 : ITEM_FX_MS.stealAmt;   // 개인전은 방어 실패 시 -5층, 팀전은 상대 팀 1등만 -3층 (둘 다 5초 방어 창 적용)
     if(currentQid){
       const ms = ITEM_FX_MS.stealDefenseMs, reduced = ITEM_FX_MS.stealDefenseAmt;
       // 짧은 시간에 여러 명에게 저격당할 수 있어(주로 난타전) 방어 창을 배열에 각자 독립적으로 담는다
