@@ -213,7 +213,8 @@
   .certcard .cseal{position:absolute;top:50%;left:50%;width:2.15rem;height:2.15rem;
     border:3px double var(--seal);color:var(--seal);background:rgba(255,250,245,.4);
     display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
-    font-family:'Ma Shan Zheng','Nanum Myeongjo',serif;font-weight:400;font-size:1.05rem;line-height:1;
+    font-family:'Ma Shan Zheng','Nanum Myeongjo',serif;font-weight:700;font-size:1.05rem;line-height:1;
+    -webkit-text-stroke:.4px var(--seal);
     transform:translate(-50%,-60%);
     box-shadow:0 0 0 1px rgba(181,50,43,.3) inset;pointer-events:none}
   .certcard .cseal span{display:flex;align-items:center;justify-content:center}
@@ -1087,12 +1088,11 @@ function drawSquareSeal(ctx, cx, cy, size){
   ctx.lineWidth = 1.4;
   ctx.strokeRect(-h + 8, -h + 8, size - 16, size - 16);
   ctx.fillStyle = "#B5322B";
-  ctx.font = `400 ${Math.round(size * 0.5)}px 'Ma Shan Zheng', 'Nanum Myeongjo', serif`;
+  ctx.font = `700 ${Math.round(size * 0.5)}px 'Ma Shan Zheng', 'Nanum Myeongjo', serif`;
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.fillText("周", -q, -q);
-  ctx.fillText("李", q, -q);
-  ctx.fillText("印", -q, q);
-  ctx.fillText("泳", q, q);
+  ctx.strokeStyle = "#B5322B"; ctx.lineWidth = Math.max(1, size * 0.02);
+  const chars = [["周", -q, -q], ["李", q, -q], ["印", -q, q], ["泳", q, q]];
+  chars.forEach(([ch, x, y]) => { ctx.fillText(ch, x, y); ctx.strokeText(ch, x, y); });
   ctx.restore();
 }
 function drawCert(){
