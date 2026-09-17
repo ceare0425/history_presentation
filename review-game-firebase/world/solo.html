@@ -275,6 +275,11 @@
     <div class="inner">
       <p class="sub">원하는 범위를 골라서 언제든 혼자 연습할 수 있어요. 문제는 선생님만 추가/수정할 수 있습니다.</p>
       <button type="button" id="recordTeaser" class="record-teaser hidden"></button>
+      <label>학년</label>
+      <div class="toggle-row" id="gradeRow">
+        <button type="button" data-grade="1">1학년</button>
+        <button type="button" data-grade="2">2학년</button>
+      </div>
       <label>반</label>
       <div class="class-row" id="classRow">
         <button type="button" data-class="1">1반</button>
@@ -290,7 +295,7 @@
       </div>
       <label>이름</label>
       <input type="text" id="nameInput" placeholder="이름 (예: 홍길동)" maxlength="20" autocomplete="off">
-      <div class="muted" style="margin:-6px 0 6px; font-size:.78rem;">반과 이름을 모두 선택·입력해야 연습을 시작할 수 있어요. 연습 기록(반·범위·층수)이 선생님 화면에 표시됩니다.</div>
+      <div class="muted" style="margin:-6px 0 6px; font-size:.78rem;">학년·반·이름을 모두 선택·입력해야 연습을 시작할 수 있어요. 연습 기록(학년·반·범위·층수)이 선생님 화면에 표시됩니다.</div>
       <label>연습 범위</label>
       <div class="units" id="unitList">불러오는 중...</div>
       <div class="pool-count" id="poolCountInfo"></div>
@@ -386,10 +391,14 @@ const ROOM = 'world';
 const STORAGE_BEST_KEY = 'rg_fb_' + ROOM + '_solo_best_floor';
 const STORAGE_NAME_KEY = 'rg_fb_' + ROOM + '_name'; // play.html과 공용 — 참여했던 기기면 이름 자동 입력
 const STORAGE_CLASS_KEY = 'rg_fb_class';            // 세계사/한국사 공용 — 한 번 고르면 다음에도 유지
+const STORAGE_GRADE_KEY = 'rg_fb_grade';            // 세계사/한국사 공용 — 학년은 과목과 무관(1학년도 세계사, 2학년도 한국사를 들을 수 있음)
 
 let selectedClass = localStorage.getItem(STORAGE_CLASS_KEY) || null;
+let selectedGrade = localStorage.getItem(STORAGE_GRADE_KEY) || null;
+// 반 번호(1~10)는 학년이 달라도 겹치므로, 명단·기록은 항상 "학년-반" 합친 키로 구분한다.
+function classKey(){ return (selectedGrade && selectedClass) ? (selectedGrade + '-' + selectedClass) : null; }
 let sessionStartedAt = null, sessionUnits = [], sessionDuration = null, sessionOrder = 'random', sessionWeight = 'even';
-let sessionClass = null;
+let sessionClassKey = null;
 let soloLogged = false;
 let hintCount = 0;      // 이번 세션에서 초성 힌트를 쓴 문제 수
 let unitStats = {};     // 이번 세션 단원별 정답/오답 { 단원명: {c, w} } — 종료 시 solo_log에 배열로 저장
@@ -456,6 +465,17 @@ buildBackground();
 
 // 이 기기로 수업(play.html) 또는 이전 연습에 이름을 넣은 적이 있으면 자동으로 채워줌
 el('nameInput').value = localStorage.getItem(STORAGE_NAME_KEY) || '';
+
+// 학년 선택 버튼 (한 번 고르면 localStorage에 저장돼 다음에도 유지)
+el('gradeRow').querySelectorAll('button').forEach(btn=>{
+  if(btn.dataset.grade === selectedGrade) btn.classList.add('active');
+  btn.onclick = () => {
+    selectedGrade = btn.dataset.grade;
+    localStorage.setItem(STORAGE_GRADE_KEY, selectedGrade);
+    el('gradeRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+    el('setupMsg').textContent = '';
+  };
+});
 
 // 반 선택 버튼 (한 번 고르면 localStorage에 저장돼 다음에도 유지)
 el('classRow').querySelectorAll('button').forEach(btn=>{
@@ -774,7 +794,7 @@ function syncSoloLog(final){
   const name = (el('nameInput').value.trim() || '(이름 없음)').slice(0, 20);
   const data = {
     name,
-    cls: sessionClass || null,
+    cls: sessionClassKey || null,
     ts: serverNow(),
     started_ts: sessionStartedAt || null,
     end_ts: final ? serverNow() : null,
@@ -853,6 +873,10 @@ async function checkRosterAllowed(cls, name){
 
 el('startBtn').onclick = async () => {
   const msg = el('setupMsg');
+  if(!selectedGrade){
+    msg.textContent = '학년을 선택해야 연습을 시작할 수 있어요.';
+    return;
+  }
   if(!selectedClass){
     msg.textContent = '반을 선택해야 연습을 시작할 수 있어요.';
     return;
@@ -864,7 +888,7 @@ el('startBtn').onclick = async () => {
     return;
   }
   el('startBtn').disabled = true;
-  const allowed = await checkRosterAllowed(selectedClass, nameNow);
+  const allowed = await checkRosterAllowed(classKey(), nameNow);
   el('startBtn').disabled = false;
   if(!allowed){
     msg.textContent = '명단에 없는 이름이에요. 이름을 정확히 입력했는지 확인하거나 선생님께 문의하세요.';
@@ -887,7 +911,7 @@ el('startBtn').onclick = async () => {
 
   // 이번 세션 정보 기록용으로 저장 (종료 시 선생님 화면으로 보냄)
   localStorage.setItem(STORAGE_NAME_KEY, nameNow);
-  sessionClass = selectedClass;
+  sessionClassKey = classKey();
   sessionStartedAt = serverNow();
   sessionUnits = units;
   sessionDuration = duration_sec;
@@ -941,10 +965,10 @@ async function loadSoloLog(force){
 function myName(){ return (el('nameInput').value.trim() || '').slice(0, 20); }
 
 function mySessions(obj){
-  const nm = myName(), cl = selectedClass;
-  if(!nm || !cl) return [];
+  const nm = myName(), ck = classKey();
+  if(!nm || !ck) return [];
   return Object.values(obj || {}).filter(e =>
-    e && e.ts && (e.name || '') === nm && String(e.cls ?? '') === String(cl)
+    e && e.ts && (e.name || '') === nm && String(e.cls ?? '') === ck
   );
 }
 
@@ -1024,11 +1048,11 @@ let lastAgg = null;
 
 async function refreshRecord(force){
   const t = el('recordTeaser');
-  const nm = myName(), cl = selectedClass;
+  const nm = myName(), ck = classKey();
   t.classList.remove('hidden');
-  if(!nm || !cl){
+  if(!nm || !ck){
     t.classList.add('empty'); t.disabled = true;
-    t.innerHTML = '<span>반과 이름을 입력하면 내 학습 기록·연속 학습일이 보여요</span>';
+    t.innerHTML = '<span>학년·반과 이름을 입력하면 내 학습 기록·연속 학습일이 보여요</span>';
     return;
   }
   t.disabled = false;
@@ -1060,9 +1084,10 @@ function renderDash(list, soloObj){
   const totQ = agg.c + agg.w;
   const acc = totQ ? Math.round(100 * agg.c / totQ) : 0;
 
+  const classDisplay = (selectedGrade && selectedClass) ? `${selectedGrade}학년 ${selectedClass}반` : '';
   el('dashSub').textContent = list.length
-    ? `${selectedClass}반 · 연습 ${agg.count}회 · 총 ${totQ}문제`
-    : `${selectedClass ? selectedClass + '반 · ' : ''}아직 기록이 없어요`;
+    ? `${classDisplay} · 연습 ${agg.count}회 · 총 ${totQ}문제`
+    : `${classDisplay ? classDisplay + ' · ' : ''}아직 기록이 없어요`;
 
   if(!list.length){
     el('dashBody').innerHTML =
@@ -1086,7 +1111,7 @@ function renderDash(list, soloObj){
 
   // ── 친구들과 비교 ──────────────────────────────
   const totals = allStudentTotals(soloObj);
-  const myKey = myName() + '␟' + String(selectedClass);
+  const myKey = myName() + '␟' + String(classKey());
   const me = totals.get(myKey);
   let peerHtml = '';
   if(me && totals.size >= MIN_PEERS){
@@ -1206,8 +1231,11 @@ el('dashBody').addEventListener('click', (ev)=>{
   el('unitList').scrollIntoView({ block:'center', behavior:'smooth' });
 });
 
-// 이름/반이 바뀌면 요약 스트립 갱신
+// 이름/학년/반이 바뀌면 요약 스트립 갱신
 el('nameInput').addEventListener('change', ()=>refreshRecord(false));
+el('gradeRow').querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click', ()=>refreshRecord(false));
+});
 el('classRow').querySelectorAll('button').forEach(btn=>{
   btn.addEventListener('click', ()=>refreshRecord(false));
 });
