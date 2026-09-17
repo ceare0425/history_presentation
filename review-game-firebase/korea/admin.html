@@ -315,6 +315,19 @@
   </div>
 </div>
 
+<div id="startPwModal" class="modal-back hidden">
+  <div class="modal-box" style="max-width:320px;">
+    <h3>게임 시작 비밀번호</h3>
+    <input type="password" id="startPwInput" autocomplete="off"
+      style="width:100%; margin-top:8px; padding:9px 10px; border:1.5px solid var(--line); border-radius:8px; font-size:1rem; font-family:inherit;">
+    <div id="startPwErr" style="color:var(--bad); font-size:.8rem; min-height:1.2em; margin-top:6px;"></div>
+    <div class="btnrow" style="margin-top:6px;">
+      <button type="button" class="secondary" id="startPwCancel">취소</button>
+      <button type="button" id="startPwOk">확인</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script type="module">
 import {
@@ -497,9 +510,37 @@ function renderUnits(){
 el('selectAllBtn').onclick = () => { selectedUnits = new Set(allUnits.map(u=>u.unit)); renderUnits(); };
 el('selectNoneBtn').onclick = () => { selectedUnits = new Set(); renderUnits(); };
 
+function askStartPassword(){
+  return new Promise((resolve) => {
+    const modal = el('startPwModal');
+    const input = el('startPwInput');
+    const err = el('startPwErr');
+    err.textContent = '';
+    input.value = '';
+    modal.classList.remove('hidden');
+    input.focus();
+    function cleanup(result){
+      modal.classList.add('hidden');
+      input.removeEventListener('keydown', onKey);
+      el('startPwOk').removeEventListener('click', onOk);
+      el('startPwCancel').removeEventListener('click', onCancel);
+      resolve(result);
+    }
+    function onOk(){ cleanup(input.value); }
+    function onCancel(){ cleanup(null); }
+    function onKey(ev){
+      if(ev.key === 'Enter') onOk();
+      else if(ev.key === 'Escape') onCancel();
+    }
+    input.addEventListener('keydown', onKey);
+    el('startPwOk').addEventListener('click', onOk);
+    el('startPwCancel').addEventListener('click', onCancel);
+  });
+}
+
 el('startBtn').onclick = async () => {
   const msg = el('startMsg');
-  const pw = prompt('게임 시작 비밀번호를 입력하세요');
+  const pw = await askStartPassword();
   if(pw === null) return;
   if(pw !== START_PASSWORD){
     msg.className='msg err'; msg.textContent = '비밀번호가 틀렸습니다.';
