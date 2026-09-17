@@ -1220,8 +1220,9 @@ setInterval(renderRoster, 500);
 setInterval(renderSoloStats, 15000); // '연습 중' → '중단' 표시가 시간이 지나면 갱신되도록
 
 // ── ⑥ 학생 명단 관리 (혼자 연습 이름 제한용) ──────────────
-// 같은 반 번호(1~10)가 학년마다 있을 수 있으므로(1학년도 세계사, 2학년도 한국사를 들을 수 있음),
-// 명단은 "학년-반" 합친 키로 방(rooms/korea, rooms/world)마다 저장한다 (solo_log와 같은 방식).
+// "학년-반"은 실제 학교 학급을 가리키는 값이라 과목과 무관하다(같은 1학년 3반이 세계사도
+// 한국사도 듣는 식). 그래서 명단은 방(rooms/<room>)이 아니라 DB 최상위 roster/<학년-반>에
+// 딱 하나만 저장해 두 과목이 함께 쓴다 — 한쪽에서 등록하면 다른 과목에도 바로 적용된다.
 for(let c=1;c<=10;c++){
   const opt = document.createElement('option');
   opt.value = String(c); opt.textContent = c + '반';
@@ -1232,7 +1233,7 @@ function rosterKey(){ return el('rosterGradeSel').value + '-' + el('rosterClassS
 function rosterKeyLabel(){ return el('rosterGradeSel').value + '학년 ' + el('rosterClassSel').value + '반'; }
 
 function loadRosterForClass(){
-  get(roomRef(ROOM, 'roster', rosterKey())).then(snap=>{
+  get(ref(db, 'roster/' + rosterKey())).then(snap=>{
     const obj = snap.val() || {};
     const names = Object.keys(obj).sort((a,b)=>a.localeCompare(b,'ko'));
     el('rosterTextarea').value = names.join('\n');
@@ -1251,7 +1252,7 @@ el('rosterSaveBtn').onclick = async () => {
   uniqueNames.forEach(n=>{ obj[n] = true; });
   el('rosterSaveBtn').disabled = true;
   try{
-    await set(roomRef(ROOM, 'roster', rosterKey()), uniqueNames.length ? obj : null);
+    await set(ref(db, 'roster/' + rosterKey()), uniqueNames.length ? obj : null);
     el('rosterMsg').className = 'msg ok';
     el('rosterMsg').textContent = uniqueNames.length ? `${label} 명단 ${uniqueNames.length}명을 저장했습니다.` : `${label} 명단을 비웠습니다 (제한 해제).`;
     loadRosterForClass();
@@ -1373,7 +1374,7 @@ el('rosterXlsxInput').onchange = async () => {
     for(const cls of classes){
       const obj = {};
       byClass[cls].forEach(n=>{ obj[n] = true; });
-      await set(roomRef(ROOM, 'roster', grade + '-' + cls), obj);
+      await set(ref(db, 'roster/' + grade + '-' + cls), obj);
     }
     msg.className = 'msg ok';
     msg.textContent = `${gradeLabel} ${classes.length}개 반 명단을 등록했습니다 (총 ${totalNames}명).`;
