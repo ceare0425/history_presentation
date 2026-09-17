@@ -242,6 +242,26 @@
     </div>
     <div class="msg" id="soloMsg"></div>
   </div>
+
+  <div class="card" style="grid-column:1 / -1">
+    <h2>⑥ 학생 명단 관리</h2>
+    <div class="sub" style="margin-top:-6px;">반별 학생 명단을 등록해두면 <code>solo.html</code>(혼자 연습하기) 시작 시 명단에 있는 이름만 입력할 수 있어 오타·장난 이름을 막을 수 있습니다. 세계사·한국사 두 게임이 같은 명단을 함께 씁니다. <b>명단을 한 명도 등록하지 않은 반은 제한 없이</b> 누구나 이름을 입력해 연습할 수 있습니다.</div>
+    <div class="row" style="align-items:flex-start; margin-top:10px;">
+      <div style="flex:0 0 150px;">
+        <label>반 선택</label>
+        <select id="rosterClassSel"></select>
+        <div class="muted" id="rosterCount" style="margin-top:8px; font-size:.8rem;"></div>
+      </div>
+      <div style="flex:1;">
+        <label>명단 (한 줄에 이름 하나씩)</label>
+        <textarea id="rosterTextarea" rows="10" placeholder="홍길동&#10;김철수&#10;..."></textarea>
+        <div class="btnrow">
+          <button type="button" id="rosterSaveBtn">저장 (이 반 명단을 이 내용으로 교체)</button>
+        </div>
+        <div class="msg" id="rosterMsg"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="soloModal" class="modal-back hidden">
@@ -265,7 +285,7 @@
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script type="module">
 import {
-  roomRef, ref, onValue, get, update, remove, push, db, serverNow,
+  roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, shuffle,
   recencyWeightFn, weightedSample,
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS
@@ -1158,6 +1178,44 @@ el('soloClearBtn').onclick = async () => {
 
 setInterval(renderRoster, 500);
 setInterval(renderSoloStats, 15000); // '연습 중' → '중단' 표시가 시간이 지나면 갱신되도록
+
+// ── ⑥ 학생 명단 관리 (혼자 연습 이름 제한용) ──────────────
+// 세계사·world/와 한국사·korea/가 같은 학생을 대상으로 하므로, room 구분 없이 DB 최상위 roster/에 반별로 저장해 두 게임이 함께 쓴다.
+for(let c=1;c<=10;c++){
+  const opt = document.createElement('option');
+  opt.value = String(c); opt.textContent = c + '반';
+  el('rosterClassSel').appendChild(opt);
+}
+
+function loadRosterForClass(cls){
+  get(ref(db, 'roster/'+cls)).then(snap=>{
+    const obj = snap.val() || {};
+    const names = Object.keys(obj).sort((a,b)=>a.localeCompare(b,'ko'));
+    el('rosterTextarea').value = names.join('\n');
+    el('rosterCount').textContent = names.length ? `등록된 학생 ${names.length}명 (제한 적용 중)` : '등록된 학생이 없습니다 (이 반은 제한 없음)';
+  }).catch(()=>{ el('rosterCount').textContent = '명단을 불러오지 못했습니다.'; });
+}
+el('rosterClassSel').onchange = () => { el('rosterMsg').textContent = ''; loadRosterForClass(el('rosterClassSel').value); };
+loadRosterForClass(el('rosterClassSel').value);
+
+el('rosterSaveBtn').onclick = async () => {
+  const cls = el('rosterClassSel').value;
+  const names = el('rosterTextarea').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const uniqueNames = [...new Set(names)];
+  const obj = {};
+  uniqueNames.forEach(n=>{ obj[n] = true; });
+  el('rosterSaveBtn').disabled = true;
+  try{
+    await set(ref(db, 'roster/'+cls), uniqueNames.length ? obj : null);
+    el('rosterMsg').className = 'msg ok';
+    el('rosterMsg').textContent = uniqueNames.length ? `${cls}반 명단 ${uniqueNames.length}명을 저장했습니다.` : `${cls}반 명단을 비웠습니다 (제한 해제).`;
+    loadRosterForClass(cls);
+  }catch(err){
+    el('rosterMsg').className = 'msg err'; el('rosterMsg').textContent = '저장 실패: ' + err.message;
+  }finally{
+    el('rosterSaveBtn').disabled = false;
+  }
+};
 </script>
 </body>
 </html>

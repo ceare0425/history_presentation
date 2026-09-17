@@ -33,6 +33,12 @@
         }
       }
     },
+    "roster": {
+      ".read": true,
+      "$cls": {
+        ".write": true
+      }
+    },
     "museum": {
       ".read": true,
       "$tour": {
