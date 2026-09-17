@@ -124,9 +124,41 @@
   .qrow .qunit{ display:inline-block; font-size:.72rem; color:var(--sky1); background:#eef2fb; padding:1px 6px; border-radius:6px; margin-right:6px; }
   .qrow .qans{ color:var(--sub); font-size:.78rem; margin-top:2px; }
   .qrow button{ padding:5px 10px; font-size:.76rem; background:var(--bad); flex-shrink:0; }
+
+  .auth-gate{ position:fixed; inset:0; background:linear-gradient(180deg,var(--sky1),var(--sky2)); display:flex; align-items:center; justify-content:center; z-index:9999; padding:20px; }
+  .auth-box{ background:#fff; border-radius:14px; padding:24px; width:100%; max-width:300px; text-align:center; box-shadow:0 12px 44px rgba(30,60,114,.35); }
+  .auth-msg{ font-weight:800; color:var(--sky1); margin-bottom:14px; }
+  .auth-box input{ width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid var(--line); font-size:1.1rem; text-align:center; letter-spacing:.2em; font-family:inherit; }
+  .auth-box input:focus{ outline:none; border-color:var(--gold-dark); }
+  .auth-err{ color:var(--bad); font-size:.82rem; min-height:1.2em; margin-top:8px; }
+  .auth-box button{ width:100%; margin-top:10px; padding:10px; border:none; border-radius:8px; font-weight:700; cursor:pointer; font-size:.95rem; color:var(--sky1); background:var(--gold); }
 </style>
 </head>
 <body>
+
+<div id="authGate" class="auth-gate">
+  <div class="auth-box">
+    <div class="auth-msg">🧑‍🏫 선생님인지 확인하고 있어요</div>
+    <input type="password" id="authInput" autocomplete="off" placeholder="비밀번호" inputmode="numeric">
+    <div class="auth-err" id="authErr"></div>
+    <button type="button" id="authOk">확인</button>
+  </div>
+</div>
+<script>
+(function(){
+  var PW = ['7328','6845','1000'];
+  var gate = document.getElementById('authGate');
+  var input = document.getElementById('authInput');
+  var err = document.getElementById('authErr');
+  function tryAuth(){
+    if(PW.indexOf(input.value) !== -1){ gate.remove(); }
+    else{ err.textContent = '비밀번호가 틀렸습니다.'; input.value=''; input.focus(); }
+  }
+  document.getElementById('authOk').addEventListener('click', tryAuth);
+  input.addEventListener('keydown', function(ev){ if(ev.key==='Enter') tryAuth(); });
+  input.focus();
+})();
+</script>
 
 <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
   <h1 style="margin:0;">🌍 세계사 탑 오르기 · 관리자</h1>

@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>복습 게임 - 탑 오르기</title>
 <style>
-  *{ box-sizing:border-box; }
   body{
     margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
     font-family:'Malgun Gothic','Pretendard',-apple-system,sans-serif;
@@ -19,98 +18,14 @@
     border:1px solid rgba(255,255,255,.25); text-align:center;
   }
   a:hover{ background:rgba(255,255,255,.22); }
-
-  .pw-back{
-    position:fixed; inset:0; background:rgba(10,16,32,.6); display:flex;
-    align-items:center; justify-content:center; padding:20px; z-index:100;
-  }
-  .pw-box{
-    background:#1e3c72; border:1px solid rgba(255,255,255,.25); border-radius:14px;
-    padding:22px; width:100%; max-width:300px; text-align:center;
-    box-shadow:0 12px 44px rgba(0,0,0,.4);
-  }
-  .pw-msg{ font-weight:700; margin-bottom:14px; }
-  #pwInput{
-    box-sizing:border-box;
-    width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid rgba(255,255,255,.3);
-    background:rgba(255,255,255,.1); color:#fff; font-size:1.1rem; text-align:center;
-    letter-spacing:.2em; font-family:inherit;
-  }
-  #pwInput:focus{ outline:none; border-color:#e8c76f; }
-  #pwInput::placeholder{ color:rgba(255,255,255,.5); letter-spacing:normal; }
-  .pw-err{ color:#ffb4b4; font-size:.82rem; min-height:1.2em; margin-top:8px; }
-  .pw-btns{ display:flex; gap:8px; margin-top:10px; }
-  .pw-btns button{
-    flex:1; padding:10px; border:none; border-radius:8px; font-weight:700; cursor:pointer; font-size:.95rem;
-  }
-  #pwCancel{ background:rgba(255,255,255,.15); color:#fff; }
-  #pwOk{ background:#e8c76f; color:#1e3c72; }
-  .hidden{ display:none !important; }
 </style>
 </head>
 <body>
   <div class="wrap">
     <a href="https://ceare0425.github.io/h">🙋 학생 화면</a>
-    <a href="korea/admin.html" class="admin-link">🏯 한국사 관리자 화면</a>
-    <a href="world/admin.html" class="admin-link">🌍 세계사 관리자 화면</a>
+    <a href="korea/admin.html">🏯 한국사 관리자 화면</a>
+    <a href="world/admin.html">🌍 세계사 관리자 화면</a>
     <a href="https://claude.ai/artifact/STG8TFkrSyexztXfK8iRZJ" target="_blank" rel="noopener">📘 사이트 안내서</a>
   </div>
-
-  <div id="pwModal" class="pw-back hidden">
-    <div class="pw-box">
-      <div class="pw-msg">🧑‍🏫 선생님인지 확인하고 있어요</div>
-      <input type="password" id="pwInput" autocomplete="off" placeholder="비밀번호" inputmode="numeric">
-      <div class="pw-err" id="pwErr"></div>
-      <div class="pw-btns">
-        <button type="button" id="pwCancel">취소</button>
-        <button type="button" id="pwOk">확인</button>
-      </div>
-    </div>
-  </div>
-
-<script>
-  var ADMIN_PASSWORDS = ['7328', '6845', '1000'];
-  var pendingHref = null;
-  var modal = document.getElementById('pwModal');
-  var input = document.getElementById('pwInput');
-  var err = document.getElementById('pwErr');
-
-  function openPwModal(href){
-    pendingHref = href;
-    err.textContent = '';
-    input.value = '';
-    modal.classList.remove('hidden');
-    input.focus();
-  }
-  function closePwModal(){
-    modal.classList.add('hidden');
-    pendingHref = null;
-  }
-  function submitPw(){
-    if(ADMIN_PASSWORDS.indexOf(input.value) !== -1){
-      var href = pendingHref;
-      closePwModal();
-      location.href = href;
-    } else {
-      err.textContent = '비밀번호가 틀렸습니다.';
-      input.value = '';
-      input.focus();
-    }
-  }
-
-  document.querySelectorAll('.admin-link').forEach(function(a){
-    a.addEventListener('click', function(ev){
-      ev.preventDefault();
-      openPwModal(a.getAttribute('href'));
-    });
-  });
-  document.getElementById('pwOk').addEventListener('click', submitPw);
-  document.getElementById('pwCancel').addEventListener('click', closePwModal);
-  input.addEventListener('keydown', function(ev){
-    if(ev.key === 'Enter') submitPw();
-    else if(ev.key === 'Escape') closePwModal();
-  });
-  modal.addEventListener('click', function(ev){ if(ev.target === modal) closePwModal(); });
-</script>
 </body>
 </html>
