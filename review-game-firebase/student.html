@@ -49,6 +49,7 @@
     border-radius:12px; cursor:pointer; background:linear-gradient(90deg,var(--sky1),var(--sky2));
   }
   .next-btn:disabled{ opacity:.45; cursor:default; }
+  .step-msg{ font-size:.85rem; color:#d9534f; min-height:1.2em; margin-top:8px; text-align:center; }
   .back-btn{
     display:inline-block; margin-bottom:14px; color:var(--sub); font-size:.85rem; text-decoration:none;
     cursor:pointer; background:none; border:none; padding:0; font-family:inherit;
@@ -88,6 +89,7 @@
       <label>이름</label>
       <input type="text" id="nameInput" placeholder="이름 (예: 홍길동)" maxlength="20" autocomplete="off">
       <button type="button" class="next-btn" id="step1NextBtn" disabled>다음</button>
+      <div class="step-msg" id="step1Msg"></div>
     </div>
 
     <div class="step" id="step2">
@@ -111,11 +113,23 @@
     <div class="hint">이 페이지를 즐겨찾기(북마크)에 추가해두면 다음부터 주소를 안 쳐도 됩니다.</div>
   </div>
 
-<script>
+<script type="module">
+  import { ref, db, get } from './shared/lib.js';
   const el = (id) => document.getElementById(id);
   // solo.html·play.html과 공유하는 학년·반·이름 저장 위치. 여기서 고르면 두 과목
   // 어디로 가든(혼자 연습이든 수업 참여든) 이미 채워진 채로 시작한다.
   const GRADE_KEY = 'rg_fb_grade', CLASS_KEY = 'rg_fb_class', NAME_KEY = 'rg_fb_name';
+
+  // 선생님이 반별 명단을 등록해 두면, 그 학년·반은 명단에 있는 이름만 다음 단계로 넘어갈 수 있다.
+  // 명단을 한 명도 등록하지 않은 학년·반은 제한 없이 통과시킨다.
+  async function checkRosterAllowed(cls, name){
+    try{
+      const snap = await get(ref(db, 'roster/' + cls));
+      const roster = snap.val();
+      if(roster && Object.keys(roster).length > 0 && !roster[name]) return false;
+    }catch(_e){ /* 명단 조회 실패 시엔 지장 없도록 통과시킨다 */ }
+    return true;
+  }
 
   let grade = localStorage.getItem(GRADE_KEY) || null;
   let cls = localStorage.getItem(CLASS_KEY) || null;
@@ -132,6 +146,7 @@
     btn.onclick = () => {
       grade = btn.dataset.grade;
       el('gradeRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      el('step1Msg').textContent = '';
       updateStep1Btn();
     };
   });
@@ -140,10 +155,11 @@
     btn.onclick = () => {
       cls = btn.dataset.class;
       el('classRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      el('step1Msg').textContent = '';
       updateStep1Btn();
     };
   });
-  el('nameInput').addEventListener('input', updateStep1Btn);
+  el('nameInput').addEventListener('input', () => { el('step1Msg').textContent = ''; updateStep1Btn(); });
   updateStep1Btn();
 
   function showStep(n){
@@ -151,9 +167,18 @@
     el('topSub').style.display = n===1 ? '' : 'none';
   }
 
-  el('step1NextBtn').onclick = () => {
+  el('step1NextBtn').onclick = async () => {
     const name = el('nameInput').value.trim();
     if(!grade || !cls || !name) return;
+    const msg = el('step1Msg');
+    el('step1NextBtn').disabled = true;
+    const allowed = await checkRosterAllowed(`${grade}-${cls}`, name);
+    el('step1NextBtn').disabled = false;
+    if(!allowed){
+      msg.textContent = '명단에 없는 이름이에요. 학년·반·이름을 정확히 입력했는지 확인하거나 선생님께 문의하세요.';
+      return;
+    }
+    msg.textContent = '';
     localStorage.setItem(GRADE_KEY, grade);
     localStorage.setItem(CLASS_KEY, cls);
     localStorage.setItem(NAME_KEY, name);
