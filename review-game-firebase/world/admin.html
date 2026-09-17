@@ -244,7 +244,13 @@
     <div>
       <div class="pool-count"><b>반별 학생 최근 연습</b> · 이름을 누르면 전체 누적 상세 · 왼쪽 체크 후 <b>선택 삭제</b></div>
       <div style="overflow-x:auto;">
-        <table>
+        <table style="table-layout:fixed; min-width:840px;">
+          <colgroup>
+            <col style="width:30px;"><col style="width:100px;"><col style="width:100px;">
+            <col style="width:90px;"><col style="width:60px;"><col style="width:170px;">
+            <col style="width:60px;"><col style="width:60px;"><col style="width:90px;">
+            <col style="width:60px;">
+          </colgroup>
           <thead><tr><th style="width:22px;"><input type="checkbox" id="soloPickAll" title="전체 선택"></th><th>최근 시작</th><th>종료</th><th>이름</th><th>연습</th><th>최근 주제</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
           <tbody id="soloRecent"><tr><td colspan="10" class="muted">아직 기록이 없습니다.</td></tr></tbody>
         </table>
