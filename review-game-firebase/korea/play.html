@@ -122,15 +122,6 @@
     padding:3px 10px; margin-bottom:.8vh; flex:0 0 auto;
   }
 
-  .team-buttons{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
-  .team-buttons button{
-    width:auto; padding:12px; font-size:1rem; border-radius:12px; opacity:.55;
-    box-shadow:none; background:var(--tcolor,#999);
-  }
-  .team-buttons button.selected{ opacity:1; box-shadow:0 0 0 3px rgba(0,0,0,.15) inset, 0 4px 10px rgba(0,0,0,.25); }
-  .team-buttons button:disabled{ opacity:.25; cursor:not-allowed; }
-  .team-buttons button small{ display:block; font-weight:400; font-size:.72rem; opacity:.85; margin-top:2px; }
-
   .team-badge{
     font-size:.85rem; font-weight:800; padding:4px 10px; border-radius:10px; color:#fff;
     background:var(--tcolor,#999);
@@ -346,10 +337,6 @@
       <label>이름</label>
       <input type="text" id="nameInput" placeholder="이름 (예: 홍길동)" maxlength="20">
       <div class="setup-msg" id="joinMsg"></div>
-      <div id="teamPickRow" class="hidden">
-        <p class="sub" style="margin:0 0 8px;">우리 팀을 선택하세요</p>
-        <div class="team-buttons" id="teamButtons"></div>
-      </div>
       <button id="joinBtn">참여하기</button>
     </div>
   </div>
@@ -440,13 +427,12 @@ import {
   roomRef, ref, db, onValue, get, set, update, push, serverNow, escapeHtml,
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
-  TEAM_OPTIONS, teamInfo, teamStandings, activeBonus,
+  teamInfo, teamStandings, activeBonus,
   ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
 } from '../shared/lib.js';
 
 const ROOM = 'korea';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
-const STORAGE_TEAM_KEY = 'rg_fb_' + ROOM + '_team';
 // student.html(학생용 시작 화면)·solo.html과 공유하는 학년·반·이름 — 과목과 무관한 값이라
 // 최상위 roster/<학년-반>과도 그대로 맞춰 쓸 수 있다.
 const SHARED_GRADE_KEY = 'rg_fb_grade';
@@ -468,7 +454,6 @@ async function checkRosterAllowed(cls, name){
   }catch(_e){ /* 명단 조회 실패 시엔 참여에 지장 없도록 통과시킨다 */ }
   return true;
 }
-let selectedTeam = localStorage.getItem(STORAGE_TEAM_KEY) || null;
 
 let questionsObj = {};
 let roundState = { status: 'idle', units: [], duration_sec: 300, end_time: null, token: 0, order: 'random', weight: 'even', qids: [], team_mode:false, team_count:4, bonus:[], items_mode:'off' };
@@ -1741,109 +1726,56 @@ async function slideDown(label){
   showItemAlert(`⬇️ ${label || '미끄럼틀'}! -${actualDrop}${unitLabel()} 밀렸어요`);
 }
 
-let teamModeActive = false;
-let teamCountConfig = 4;
-let joinedAlready = false; // 참여를 마치면 팀 인원수 실시간 갱신을 멈춘다
-let liveTeamCounts = {};
-
-// 팀별 인원이 가장 적은 팀만 고를 수 있게 해서(동률은 모두 허용) 한쪽으로 쏠리는 것을 막는다
-function renderTeamPicker(){
-  if(!teamModeActive) return;
-  const teams = TEAM_OPTIONS.slice(0, teamCountConfig);
-  const counts = teams.map(t=>liveTeamCounts[t.key]||0);
-  const minCount = counts.length ? Math.min(...counts) : 0;
-  const box = el('teamButtons');
-  box.innerHTML = teams.map(t=>{
-    const cnt = liveTeamCounts[t.key]||0;
-    const full = cnt > minCount;
-    return `<button type="button" data-key="${t.key}" style="--tcolor:${t.color}" ${full?'disabled':''}>${t.label}<br><small>${cnt}명${full?' · 가득참':''}</small></button>`;
-  }).join('');
-  box.querySelectorAll('button').forEach(b=>{
-    b.classList.toggle('selected', b.dataset.key === selectedTeam);
-    b.onclick = () => {
-      selectedTeam = b.dataset.key;
-      localStorage.setItem(STORAGE_TEAM_KEY, selectedTeam);
-      box.querySelectorAll('button').forEach(bb=>bb.classList.toggle('selected', bb===b));
-    };
-  });
-}
-
-onValue(roomRef(ROOM,'players'), (snap)=>{
-  if(joinedAlready) return;
-  const players = Object.values(snap.val()||{});
-  liveTeamCounts = {};
-  players.forEach(p=>{ if(p.team) liveTeamCounts[p.team] = (liveTeamCounts[p.team]||0)+1; });
-  renderTeamPicker();
-});
-
-async function refreshTeamMode(){
-  try{
-    const snap = await get(roomRef(ROOM,'round'));
-    const r = snap.val() || {};
-    teamModeActive = !!r.team_mode;
-    teamCountConfig = r.team_count || 4;
-    el('teamPickRow').classList.toggle('hidden', !teamModeActive);
-    if(teamModeActive) renderTeamPicker();
-  } catch(_e){}
-}
-// 팀전 여부를 안 다음에만 자동 참여를 시도한다(팀전이면 학생이 직접 팀을 골라야 하니 자동 참여하지 않는다).
-refreshTeamMode().then(tryAutoJoin);
+let joinedAlready = false;
 
 function handleRemovedFromRoster(){
   if(kicked) return; // 중복 알림 방지
   kicked = true;
   localStorage.removeItem(STORAGE_ID_KEY);
-  localStorage.removeItem(STORAGE_TEAM_KEY);
   playerId = '';
-  selectedTeam = null;
   joinedAlready = false;
-  refreshTeamMode();
   showView('joinView');
   alert('선생님이 참여 목록에서 내보냈어요. 이름을 확인하고 다시 참여해주세요.');
 }
 
-async function join(name, team){
+async function join(name){
   kicked = false;
   joinedAlready = true;
   if(!playerId) playerId = genId();
   playerName = name;
   localStorage.setItem(STORAGE_ID_KEY, playerId);
   localStorage.setItem(SHARED_NAME_KEY, playerName);
-  if(team){ selectedTeam = team; localStorage.setItem(STORAGE_TEAM_KEY, team); }
 
   const pRef = roomRef(ROOM, 'players', playerId);
   const snap = await get(pRef);
   if(snap.exists()){
-    const payload = { name: playerName, lastActive: serverNow() };
-    if(team) payload.team = team;
-    await update(pRef, payload);
+    await update(pRef, { name: playerName, lastActive: serverNow() });
   } else {
     const existingSnap = await get(roomRef(ROOM, 'players'));
     const existingAvatars = Object.values(existingSnap.val()||{}).map(pp=>pp.avatar).filter(Boolean);
     const avatar = pickAvatarEmoji(existingAvatars);
-    const payload = {
+    await set(pRef, {
       name: playerName, avatar, floor:0, correct:0, wrong:0, streak:0, bestStreak:0,
       joinedAt: serverNow(), lastActive: serverNow()
-    };
-    if(team) payload.team = team;
-    await set(pRef, payload);
+    });
   }
   startListening();
 }
 
-// student.html에서 학년·반·이름을 이미 골라 넘어온 경우(팀전이 아닐 때) 참여 화면에서
-// 또 입력받지 않고 곧장 대기 화면으로 들어간다. 명단에 없는 이름이면 자동 참여하지 않고
-// 참여 화면에 남겨 직접 확인/수정하게 한다.
+// student.html에서 학년·반·이름을 이미 골라 넘어온 경우 참여 화면을 또 보여주지 않고
+// 곧장 대기 화면으로 들어간다. 팀 배정은 선생님이 관리자 화면에서 하므로 학생은 고르지 않는다.
+// 명단에 없는 이름이면 자동 참여하지 않고 참여 화면에 남겨 직접 확인/수정하게 한다.
 async function tryAutoJoin(){
-  if(joinedAlready || teamModeActive) return;
+  if(joinedAlready) return;
   if(!selectedGrade || !selectedClass || !playerName) return;
   const allowed = await checkRosterAllowed(classKey(), playerName);
   if(!allowed){
     el('joinMsg').textContent = '명단에 없는 이름이에요. 학년·반·이름을 확인해주세요.';
     return;
   }
-  join(playerName, null).catch(()=>{ joinedAlready = false; });
+  join(playerName).catch(()=>{ joinedAlready = false; });
 }
+tryAutoJoin();
 
 el('joinBtn').onclick = async () => {
   const msg = el('joinMsg');
@@ -1851,7 +1783,6 @@ el('joinBtn').onclick = async () => {
   if(!selectedClass){ msg.textContent = '반을 선택해야 참여할 수 있어요.'; return; }
   const name = el('nameInput').value.trim();
   if(!name){ msg.textContent = '이름을 입력해야 참여할 수 있어요.'; el('nameInput').focus(); return; }
-  if(teamModeActive && !selectedTeam){ alert('참여할 팀을 먼저 선택해주세요.'); return; }
   el('joinBtn').disabled = true;
   const allowed = await checkRosterAllowed(classKey(), name);
   if(!allowed){
@@ -1861,7 +1792,7 @@ el('joinBtn').onclick = async () => {
     return;
   }
   msg.textContent = '';
-  join(name, teamModeActive ? selectedTeam : null).catch(err=>{ joinedAlready = false; alert('참여 실패: '+err.message); }).finally(()=>{ el('joinBtn').disabled=false; });
+  join(name).catch(err=>{ joinedAlready = false; alert('참여 실패: '+err.message); }).finally(()=>{ el('joinBtn').disabled=false; });
 };
 el('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') el('joinBtn').click(); });
 
