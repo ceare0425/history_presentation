@@ -54,6 +54,14 @@
     outline:none; margin-bottom:12px;
   }
   input[type=text]:focus{ border-color:var(--gold-dark); }
+  label{ font-size:.85rem; color:var(--sub); display:block; margin:10px 0 4px; text-align:left; }
+  .toggle-row{ display:flex; gap:8px; margin-bottom:12px; }
+  .toggle-row button{ flex:1; background:#e6e9f0; color:var(--sub); font-weight:700; }
+  .toggle-row button.active{ background:var(--sky1); color:#fff; }
+  .class-row{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:12px; }
+  .class-row button{ width:auto; padding:10px 0; font-size:.95rem; font-weight:700; background:#e6e9f0; color:var(--sub); border:none; border-radius:10px; cursor:pointer; }
+  .class-row button.active{ background:var(--sky1); color:#fff; }
+  .setup-msg{ font-size:.85rem; color:var(--bad); min-height:1.2em; margin-bottom:8px; text-align:left; }
   button{
     width:100%; padding:14px; font-size:1.1rem; font-weight:700; color:#fff; border:none;
     border-radius:12px; cursor:pointer; background:linear-gradient(90deg,var(--sky1),var(--sky2));
@@ -316,8 +324,28 @@
 
   <div id="joinView" class="view center">
     <div class="inner">
-      <p class="sub">이름을 입력하고 참여하세요. 선생님이 게임을 시작하면 자동으로 시작됩니다.</p>
-      <input type="text" id="nameInput" placeholder="이름 (예: 2반 홍길동)" maxlength="20">
+      <p class="sub">학년·반을 고르고 이름을 입력한 뒤 참여하세요. 선생님이 게임을 시작하면 자동으로 시작됩니다.</p>
+      <label>학년</label>
+      <div class="toggle-row" id="gradeRow">
+        <button type="button" data-grade="1">1학년</button>
+        <button type="button" data-grade="2">2학년</button>
+      </div>
+      <label>반</label>
+      <div class="class-row" id="classRow">
+        <button type="button" data-class="1">1반</button>
+        <button type="button" data-class="2">2반</button>
+        <button type="button" data-class="3">3반</button>
+        <button type="button" data-class="4">4반</button>
+        <button type="button" data-class="5">5반</button>
+        <button type="button" data-class="6">6반</button>
+        <button type="button" data-class="7">7반</button>
+        <button type="button" data-class="8">8반</button>
+        <button type="button" data-class="9">9반</button>
+        <button type="button" data-class="10">10반</button>
+      </div>
+      <label>이름</label>
+      <input type="text" id="nameInput" placeholder="이름 (예: 홍길동)" maxlength="20">
+      <div class="setup-msg" id="joinMsg"></div>
       <div id="teamPickRow" class="hidden">
         <p class="sub" style="margin:0 0 8px;">우리 팀을 선택하세요</p>
         <div class="team-buttons" id="teamButtons"></div>
@@ -409,7 +437,7 @@
 
 <script type="module">
 import {
-  roomRef, onValue, get, set, update, push, serverNow, escapeHtml,
+  roomRef, ref, db, onValue, get, set, update, push, serverNow, escapeHtml,
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   TEAM_OPTIONS, teamInfo, teamStandings, activeBonus,
@@ -418,21 +446,27 @@ import {
 
 const ROOM = 'world';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
-const STORAGE_NAME_KEY = 'rg_fb_' + ROOM + '_name'; // 이 방(과목)에 마지막으로 입력했던 전체 이름칸 내용 그대로 기억
 const STORAGE_TEAM_KEY = 'rg_fb_' + ROOM + '_team';
-// student.html(학생용 시작 화면)에서 학년·반·이름을 입력하면 여기 저장되는, 과목과 무관한 공용 값들.
-// solo.html의 학년/반/이름 선택과도 같은 값을 공유한다.
+// student.html(학생용 시작 화면)·solo.html과 공유하는 학년·반·이름 — 과목과 무관한 값이라
+// 최상위 roster/<학년-반>과도 그대로 맞춰 쓸 수 있다.
 const SHARED_GRADE_KEY = 'rg_fb_grade';
 const SHARED_CLASS_KEY = 'rg_fb_class';
 const SHARED_NAME_KEY = 'rg_fb_name';
 
 let playerId = localStorage.getItem(STORAGE_ID_KEY) || '';
-// 이 방에서 전에 쓴 적 있는 전체 이름칸 내용이 있으면 그대로, 없으면 student.html에서 넘어온
-// 학년·반·이름으로 "1학년 3반 홍길동" 형태를 만들어 이름칸 초안으로 제안한다.
-let playerName = localStorage.getItem(STORAGE_NAME_KEY) || '';
-if(!playerName){
-  const sg = localStorage.getItem(SHARED_GRADE_KEY), sc = localStorage.getItem(SHARED_CLASS_KEY), sn = localStorage.getItem(SHARED_NAME_KEY);
-  playerName = (sg && sc && sn) ? `${sg}학년 ${sc}반 ${sn}` : (sn || '');
+let selectedGrade = localStorage.getItem(SHARED_GRADE_KEY) || null;
+let selectedClass = localStorage.getItem(SHARED_CLASS_KEY) || null;
+let playerName = localStorage.getItem(SHARED_NAME_KEY) || '';
+function classKey(){ return (selectedGrade && selectedClass) ? (selectedGrade + '-' + selectedClass) : null; }
+// 선생님이 반별 명단을 등록해 두면, 그 학년·반은 명단에 있는 이름만 참여할 수 있다.
+// 명단을 한 명도 등록하지 않은 학년·반은 제한 없이 통과시킨다.
+async function checkRosterAllowed(cls, name){
+  try{
+    const snap = await get(ref(db, 'roster/' + cls));
+    const roster = snap.val();
+    if(roster && Object.keys(roster).length > 0 && !roster[name]) return false;
+  }catch(_e){ /* 명단 조회 실패 시엔 참여에 지장 없도록 통과시킨다 */ }
+  return true;
 }
 let selectedTeam = localStorage.getItem(STORAGE_TEAM_KEY) || null;
 
@@ -507,6 +541,25 @@ const seenItemEvents = new Set();
 const el = (id) => document.getElementById(id);
 
 el('nameInput').value = playerName;
+
+el('gradeRow').querySelectorAll('button').forEach(btn=>{
+  if(btn.dataset.grade === selectedGrade) btn.classList.add('active');
+  btn.onclick = () => {
+    selectedGrade = btn.dataset.grade;
+    localStorage.setItem(SHARED_GRADE_KEY, selectedGrade);
+    el('gradeRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+    el('joinMsg').textContent = '';
+  };
+});
+el('classRow').querySelectorAll('button').forEach(btn=>{
+  if(btn.dataset.class === selectedClass) btn.classList.add('active');
+  btn.onclick = () => {
+    selectedClass = btn.dataset.class;
+    localStorage.setItem(SHARED_CLASS_KEY, selectedClass);
+    el('classRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+    el('joinMsg').textContent = '';
+  };
+});
 
 function itemsOn(){ return itemsMode !== 'off'; }
 
@@ -1733,21 +1786,20 @@ async function refreshTeamMode(){
     if(teamModeActive) renderTeamPicker();
   } catch(_e){}
 }
-refreshTeamMode();
+// 팀전 여부를 안 다음에만 자동 참여를 시도한다(팀전이면 학생이 직접 팀을 골라야 하니 자동 참여하지 않는다).
+refreshTeamMode().then(tryAutoJoin);
 
 function handleRemovedFromRoster(){
   if(kicked) return; // 중복 알림 방지
   kicked = true;
   localStorage.removeItem(STORAGE_ID_KEY);
-  localStorage.removeItem(STORAGE_NAME_KEY);
   localStorage.removeItem(STORAGE_TEAM_KEY);
   playerId = '';
   selectedTeam = null;
   joinedAlready = false;
-  el('nameInput').value = '';
   refreshTeamMode();
   showView('joinView');
-  alert('선생님이 참여 목록에서 내보냈어요. 이름을 다시 입력하고 참여해주세요.');
+  alert('선생님이 참여 목록에서 내보냈어요. 이름을 확인하고 다시 참여해주세요.');
 }
 
 async function join(name, team){
@@ -1756,7 +1808,7 @@ async function join(name, team){
   if(!playerId) playerId = genId();
   playerName = name;
   localStorage.setItem(STORAGE_ID_KEY, playerId);
-  localStorage.setItem(STORAGE_NAME_KEY, playerName);
+  localStorage.setItem(SHARED_NAME_KEY, playerName);
   if(team){ selectedTeam = team; localStorage.setItem(STORAGE_TEAM_KEY, team); }
 
   const pRef = roomRef(ROOM, 'players', playerId);
@@ -1779,11 +1831,36 @@ async function join(name, team){
   startListening();
 }
 
-el('joinBtn').onclick = () => {
+// student.html에서 학년·반·이름을 이미 골라 넘어온 경우(팀전이 아닐 때) 참여 화면에서
+// 또 입력받지 않고 곧장 대기 화면으로 들어간다. 명단에 없는 이름이면 자동 참여하지 않고
+// 참여 화면에 남겨 직접 확인/수정하게 한다.
+async function tryAutoJoin(){
+  if(joinedAlready || teamModeActive) return;
+  if(!selectedGrade || !selectedClass || !playerName) return;
+  const allowed = await checkRosterAllowed(classKey(), playerName);
+  if(!allowed){
+    el('joinMsg').textContent = '명단에 없는 이름이에요. 학년·반·이름을 확인해주세요.';
+    return;
+  }
+  join(playerName, null).catch(()=>{ joinedAlready = false; });
+}
+
+el('joinBtn').onclick = async () => {
+  const msg = el('joinMsg');
+  if(!selectedGrade){ msg.textContent = '학년을 선택해야 참여할 수 있어요.'; return; }
+  if(!selectedClass){ msg.textContent = '반을 선택해야 참여할 수 있어요.'; return; }
   const name = el('nameInput').value.trim();
-  if(!name){ el('nameInput').focus(); return; }
+  if(!name){ msg.textContent = '이름을 입력해야 참여할 수 있어요.'; el('nameInput').focus(); return; }
   if(teamModeActive && !selectedTeam){ alert('참여할 팀을 먼저 선택해주세요.'); return; }
   el('joinBtn').disabled = true;
+  const allowed = await checkRosterAllowed(classKey(), name);
+  if(!allowed){
+    msg.textContent = '명단에 없는 이름이에요. 정확히 입력했는지 확인하거나 선생님께 문의하세요.';
+    el('joinBtn').disabled = false;
+    el('nameInput').focus();
+    return;
+  }
+  msg.textContent = '';
   join(name, teamModeActive ? selectedTeam : null).catch(err=>{ joinedAlready = false; alert('참여 실패: '+err.message); }).finally(()=>{ el('joinBtn').disabled=false; });
 };
 el('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') el('joinBtn').click(); });

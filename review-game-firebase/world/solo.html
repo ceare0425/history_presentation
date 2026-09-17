@@ -275,27 +275,30 @@
     <div class="inner">
       <p class="sub">원하는 범위를 골라서 언제든 혼자 연습할 수 있어요. 문제는 선생님만 추가/수정할 수 있습니다.</p>
       <button type="button" id="recordTeaser" class="record-teaser hidden"></button>
-      <label>학년</label>
-      <div class="toggle-row" id="gradeRow">
-        <button type="button" data-grade="1">1학년</button>
-        <button type="button" data-grade="2">2학년</button>
+      <button type="button" id="identitySummary" class="record-teaser hidden"></button>
+      <div id="identityFields">
+        <label>학년</label>
+        <div class="toggle-row" id="gradeRow">
+          <button type="button" data-grade="1">1학년</button>
+          <button type="button" data-grade="2">2학년</button>
+        </div>
+        <label>반</label>
+        <div class="class-row" id="classRow">
+          <button type="button" data-class="1">1반</button>
+          <button type="button" data-class="2">2반</button>
+          <button type="button" data-class="3">3반</button>
+          <button type="button" data-class="4">4반</button>
+          <button type="button" data-class="5">5반</button>
+          <button type="button" data-class="6">6반</button>
+          <button type="button" data-class="7">7반</button>
+          <button type="button" data-class="8">8반</button>
+          <button type="button" data-class="9">9반</button>
+          <button type="button" data-class="10">10반</button>
+        </div>
+        <label>이름</label>
+        <input type="text" id="nameInput" placeholder="이름 (예: 홍길동)" maxlength="20" autocomplete="off">
+        <div class="muted" style="margin:-6px 0 6px; font-size:.78rem;">학년·반·이름을 모두 선택·입력해야 연습을 시작할 수 있어요. 연습 기록(학년·반·범위·층수)이 선생님 화면에 표시됩니다.</div>
       </div>
-      <label>반</label>
-      <div class="class-row" id="classRow">
-        <button type="button" data-class="1">1반</button>
-        <button type="button" data-class="2">2반</button>
-        <button type="button" data-class="3">3반</button>
-        <button type="button" data-class="4">4반</button>
-        <button type="button" data-class="5">5반</button>
-        <button type="button" data-class="6">6반</button>
-        <button type="button" data-class="7">7반</button>
-        <button type="button" data-class="8">8반</button>
-        <button type="button" data-class="9">9반</button>
-        <button type="button" data-class="10">10반</button>
-      </div>
-      <label>이름</label>
-      <input type="text" id="nameInput" placeholder="이름 (예: 홍길동)" maxlength="20" autocomplete="off">
-      <div class="muted" style="margin:-6px 0 6px; font-size:.78rem;">학년·반·이름을 모두 선택·입력해야 연습을 시작할 수 있어요. 연습 기록(학년·반·범위·층수)이 선생님 화면에 표시됩니다.</div>
       <label>연습 범위</label>
       <div class="units" id="unitList">불러오는 중...</div>
       <div class="pool-count" id="poolCountInfo"></div>
@@ -487,6 +490,27 @@ el('classRow').querySelectorAll('button').forEach(btn=>{
     el('setupMsg').textContent = '';
   };
 });
+
+// student.html에서 학년·반·이름을 이미 골라 넘어온 경우, 여기서 또 입력받지 않고
+// 요약 한 줄만 보여준다("변경"을 누르면 다시 펼쳐서 고칠 수 있다).
+function showIdentityFields(){
+  el('identityFields').classList.remove('hidden');
+  el('identitySummary').classList.add('hidden');
+}
+function refreshIdentitySummary(){
+  const nm = el('nameInput').value.trim();
+  if(selectedGrade && selectedClass && nm){
+    el('identityFields').classList.add('hidden');
+    el('identitySummary').classList.remove('hidden');
+    el('identitySummary').innerHTML =
+      `<span class="rt-item">🎓 ${escapeHtml(selectedGrade)}학년 ${escapeHtml(selectedClass)}반 · ${escapeHtml(nm)}</span><span class="rt-more">변경 ▸</span>`;
+  } else {
+    showIdentityFields();
+    el('identitySummary').classList.add('hidden');
+  }
+}
+el('identitySummary').onclick = showIdentityFields;
+refreshIdentitySummary();
 
 function updatePoolCountInfo(){
   const totalCount = Object.keys(questionsObj).length;
@@ -891,6 +915,7 @@ el('startBtn').onclick = async () => {
   const allowed = await checkRosterAllowed(classKey(), nameNow);
   el('startBtn').disabled = false;
   if(!allowed){
+    showIdentityFields();
     msg.textContent = '명단에 없는 이름이에요. 이름을 정확히 입력했는지 확인하거나 선생님께 문의하세요.';
     el('nameInput').focus();
     return;
