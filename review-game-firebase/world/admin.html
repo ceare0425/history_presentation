@@ -89,8 +89,8 @@
   .unit-acc-row .uacc{ width:44px; text-align:right; flex-shrink:0; font-weight:700; }
   .unit-acc-row .ucnt{ width:56px; text-align:right; flex-shrink:0; color:var(--sub); font-size:.76rem; }
   input[type=checkbox].solo-pick, #soloPickAll{ width:15px; height:15px; cursor:pointer; }
-  .solo-group-row td{ background:#eef2fb; font-weight:800; color:var(--sky1); padding:7px 8px; cursor:pointer; user-select:none; }
-  .solo-group-row:hover td{ background:#e2e8f7; }
+  .solo-group-row{ background:#eef2fb; font-weight:800; color:var(--sky1); padding:7px 8px; border-radius:6px; margin-top:4px; cursor:pointer; user-select:none; }
+  .solo-group-row:hover{ background:#e2e8f7; }
   .solo-group-arrow{ display:inline-block; width:1em; }
 
   .team-standings{ display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
@@ -242,19 +242,11 @@
       <button type="button" class="secondary" id="soloClearBtn" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;">기록 비우기</button>
     </div>
     <div>
-      <div class="pool-count"><b>반별 학생 최근 연습</b> · 이름을 누르면 전체 누적 상세 · 왼쪽 체크 후 <b>선택 삭제</b></div>
-      <div style="overflow-x:auto;">
-        <table style="table-layout:fixed; min-width:840px;">
-          <colgroup>
-            <col style="width:30px;"><col style="width:100px;"><col style="width:100px;">
-            <col style="width:90px;"><col style="width:60px;"><col style="width:170px;">
-            <col style="width:60px;"><col style="width:60px;"><col style="width:90px;">
-            <col style="width:60px;">
-          </colgroup>
-          <thead><tr><th style="width:22px;"><input type="checkbox" id="soloPickAll" title="전체 선택"></th><th>최근 시작</th><th>종료</th><th>이름</th><th>연습</th><th>최근 주제</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
-          <tbody id="soloRecent"><tr><td colspan="10" class="muted">아직 기록이 없습니다.</td></tr></tbody>
-        </table>
+      <div class="pool-count" style="display:flex; align-items:center; gap:6px;">
+        <label style="display:flex; align-items:center; gap:4px; font-weight:400; cursor:pointer;"><input type="checkbox" id="soloPickAll" title="전체 선택"> 전체 선택</label>
+        <span><b>반별 학생 최근 연습</b> · 이름을 누르면 전체 누적 상세 · 체크 후 <b>선택 삭제</b> · 반을 펼치면 그 반 학생만 표시</span>
       </div>
+      <div id="soloRecent"><div class="muted">아직 기록이 없습니다.</div></div>
     </div>
     <div class="msg" id="soloMsg"></div>
   </div>
@@ -321,18 +313,6 @@
   </div>
 </div>
 
-<div id="startPwModal" class="modal-back hidden">
-  <div class="modal-box" style="max-width:320px;">
-    <h3>게임 시작 비밀번호</h3>
-    <input type="password" id="startPwInput" autocomplete="off"
-      style="width:100%; margin-top:8px; padding:9px 10px; border:1.5px solid var(--line); border-radius:8px; font-size:1rem; font-family:inherit;">
-    <div id="startPwErr" style="color:var(--bad); font-size:.8rem; min-height:1.2em; margin-top:6px;"></div>
-    <div class="btnrow" style="margin-top:6px;">
-      <button type="button" class="secondary" id="startPwCancel">취소</button>
-      <button type="button" id="startPwOk">확인</button>
-    </div>
-  </div>
-</div>
 
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script type="module">
@@ -347,8 +327,6 @@ const ROOM = 'world';
 // 학년+반 구분(명단 관리, 학년별 solo_log 기록)을 넣기 전에는 한국사=1학년, 세계사=2학년만 썼으므로,
 // 그 이전에 쌓인 학년 정보 없는 기록(cls가 "3" 같은 순수 숫자)은 이 학년으로 간주해 표시한다.
 const LEGACY_GRADE_LABEL = '2학년';
-// 학생이 교탁 컴퓨터로 직접 "게임 시작"을 누르는 것을 막기 위한 최소한의 잠금(진짜 보안 아님, 화면에 그대로 노출됨).
-const START_PASSWORDS = ['7328', '6845', '1000'];
 const LEGACY_GRADE_NUM = LEGACY_GRADE_LABEL === '1학년' ? 1 : 2;
 // 학년 정보 없는 옛 기록("6")과 학년 도입 이후 기록("2-6")이 같은 반이어도 다른 값으로
 // 남아있어 통계에서 따로 묶이는 문제를 막기 위해, 항상 "학년-반" 형태로 통일해서 비교한다.
@@ -516,42 +494,8 @@ function renderUnits(){
 el('selectAllBtn').onclick = () => { selectedUnits = new Set(allUnits.map(u=>u.unit)); renderUnits(); };
 el('selectNoneBtn').onclick = () => { selectedUnits = new Set(); renderUnits(); };
 
-function askStartPassword(){
-  return new Promise((resolve) => {
-    const modal = el('startPwModal');
-    const input = el('startPwInput');
-    const err = el('startPwErr');
-    err.textContent = '';
-    input.value = '';
-    modal.classList.remove('hidden');
-    input.focus();
-    function cleanup(result){
-      modal.classList.add('hidden');
-      input.removeEventListener('keydown', onKey);
-      el('startPwOk').removeEventListener('click', onOk);
-      el('startPwCancel').removeEventListener('click', onCancel);
-      resolve(result);
-    }
-    function onOk(){ cleanup(input.value); }
-    function onCancel(){ cleanup(null); }
-    function onKey(ev){
-      if(ev.key === 'Enter') onOk();
-      else if(ev.key === 'Escape') onCancel();
-    }
-    input.addEventListener('keydown', onKey);
-    el('startPwOk').addEventListener('click', onOk);
-    el('startPwCancel').addEventListener('click', onCancel);
-  });
-}
-
 el('startBtn').onclick = async () => {
   const msg = el('startMsg');
-  const pw = await askStartPassword();
-  if(pw === null) return;
-  if(!START_PASSWORDS.includes(pw)){
-    msg.className='msg err'; msg.textContent = '비밀번호가 틀렸습니다.';
-    return;
-  }
   const units = Array.from(selectedUnits);
   const minutes = parseFloat(el('durationInput').value) || 5;
   const duration_sec = Math.max(30, Math.min(3600, Math.round(minutes*60)));
@@ -1087,11 +1031,14 @@ function renderSoloStats(){
     return ga-gb || ca-cb;
   });
 
+  // 반을 펼치기 전에는 표 자체를 만들지 않는다 — 헤더가 항상 떠 있으면서 다른 반을
+  // 펼치고 접을 때마다 열 너비가 다시 계산돼 흔들리는 문제를 막기 위해, 반마다 독립된
+  // 표를 두고 펼쳤을 때만 그 반의 데이터에 맞춰 렌더링한다.
   el('soloRecent').innerHTML = classKeys.length ? classKeys.map(clsRaw=>{
     const rows = byClass.get(clsRaw);
     const collapsed = !soloExpandedClasses.has(clsRaw);
     const hasToday = rows.some(r => (r.e.ts||0) >= todayStart.getTime());
-    const groupRow = `<tr class="solo-group-row" data-cls="${escapeHtml(clsRaw)}"><td colspan="10"><span class="solo-group-arrow">${collapsed?'▸':'▾'}</span> ${clsLabel(clsRaw)} (${rows.length}명)${hasToday ? ' 😎' : ''}</td></tr>`;
+    const groupRow = `<div class="solo-group-row" data-cls="${escapeHtml(clsRaw)}"><span class="solo-group-arrow">${collapsed?'▸':'▾'}</span> ${clsLabel(clsRaw)} (${rows.length}명)${hasToday ? ' 😎' : ''}</div>`;
     if(collapsed) return groupRow;
     const stuRows = rows.map(({ key, e, count })=>{
       const total = (e.correct||0)+(e.wrong||0);
@@ -1110,8 +1057,11 @@ function renderSoloStats(){
         <td class="${(e.hints||0)>0?'':'muted'}">${e.hints||0}회</td>
       </tr>`;
     }).join('');
-    return groupRow + stuRows;
-  }).join('') : '<tr><td colspan="10" class="muted">아직 기록이 없습니다.</td></tr>';
+    return `${groupRow}<div style="overflow-x:auto; margin:2px 0 12px;"><table>
+        <thead><tr><th style="width:22px;"></th><th>최근 시작</th><th>종료</th><th>이름</th><th>연습</th><th>최근 주제</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
+        <tbody>${stuRows}</tbody>
+      </table></div>`;
+  }).join('') : '<div class="muted">아직 기록이 없습니다.</div>';
   updateSoloDelBtn();
 
   if(soloModalSel) renderSoloModal();
