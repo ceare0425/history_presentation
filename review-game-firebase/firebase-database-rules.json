@@ -30,13 +30,13 @@
           "$entry": {
             ".validate": "!newData.exists() || (newData.hasChild('name') && newData.hasChild('ts') && newData.child('name').val().length <= 20)"
           }
+        },
+        "roster": {
+          ".read": true,
+          "$cls": {
+            ".write": true
+          }
         }
-      }
-    },
-    "roster": {
-      ".read": true,
-      "$cls": {
-        ".write": true
       }
     },
     "museum": {
