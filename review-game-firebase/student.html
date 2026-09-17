@@ -2,43 +2,183 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>복습 게임 - 학생용</title>
 <style>
+  :root{ --sky1:#1e3c72; --sky2:#2a5298; --gold:#e8c76f; --gold-dark:#c5a028; --card:#fff; --ink:#22314f; --sub:#5b6a8a; --line:#e3e8f2; }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
   body{
-    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-    font-family:'Malgun Gothic','Pretendard',-apple-system,sans-serif;
-    background:linear-gradient(180deg,#1e3c72,#2a5298 60%,#3a6b8a); color:#fff;
-    padding:24px;
+    margin:0; font-family:'Malgun Gothic','Pretendard',-apple-system,sans-serif;
+    background:linear-gradient(180deg,#0f2447,var(--sky1) 35%,var(--sky2) 65%,#3a6b8a);
+    color:var(--ink); min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:16px;
   }
-  .wrap{ display:flex; gap:32px; flex-wrap:wrap; justify-content:center; }
-  .box{ text-align:center; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.2);
-    border-radius:16px; padding:24px; width:280px; }
-  h1{ font-size:1.3rem; margin:0 0 1.2rem; }
-  a{
-    display:block; margin:10px auto; padding:16px; border-radius:12px;
-    background:rgba(255,255,255,.12); color:#fff; text-decoration:none; font-weight:700; font-size:1rem;
-    border:1px solid rgba(255,255,255,.25);
+  .card{
+    width:min(440px, 94vw); background:var(--card); border-radius:22px;
+    box-shadow:0 20px 50px rgba(0,0,0,.35); padding:30px 24px 24px; position:relative; overflow:hidden;
   }
-  a:hover{ background:rgba(255,255,255,.22); }
-  .hint{ font-size:.78rem; opacity:.7; margin-top:1rem; line-height:1.5; }
+  .card::before{ content:''; position:absolute; top:0; left:0; right:0; height:6px; background:linear-gradient(90deg,var(--gold-dark),var(--gold)); }
+  h1{ font-size:1.25rem; margin:0 0 4px; text-align:center; color:var(--sky1); }
+  .sub{ text-align:center; color:var(--sub); font-size:.85rem; margin-bottom:22px; line-height:1.5; }
+  .step{ display:none; }
+  .step.active{ display:block; }
+  label{ font-size:.85rem; color:var(--sub); display:block; margin:14px 0 6px; }
+  label:first-of-type{ margin-top:0; }
+  input[type=text]{
+    width:100%; padding:14px 16px; font-size:1.1rem; border:2px solid #dfe3ec; border-radius:12px;
+    outline:none; font-family:inherit;
+  }
+  input[type=text]:focus{ border-color:var(--gold-dark); }
+  .grade-row, .class-row{ display:grid; gap:8px; }
+  .grade-row{ grid-template-columns:repeat(2,1fr); }
+  .class-row{ grid-template-columns:repeat(5,1fr); }
+  .grade-row button, .class-row button{
+    padding:12px 0; font-size:1rem; font-weight:700; border:none; border-radius:10px; cursor:pointer;
+    background:#e6e9f0; color:var(--sub);
+  }
+  .grade-row button.active, .class-row button.active{ background:var(--sky1); color:#fff; }
+  .big-choice{ display:flex; flex-direction:column; gap:14px; margin-top:4px; }
+  .big-choice button{
+    padding:20px; font-size:1.1rem; font-weight:800; border:none; border-radius:14px; cursor:pointer;
+    color:#fff; background:linear-gradient(90deg,var(--sky1),var(--sky2));
+  }
+  .big-choice button.alt{ background:linear-gradient(90deg,#8b96ab,#a7b0c2); }
+  .next-btn{
+    width:100%; margin-top:22px; padding:14px; font-size:1.05rem; font-weight:700; color:#fff; border:none;
+    border-radius:12px; cursor:pointer; background:linear-gradient(90deg,var(--sky1),var(--sky2));
+  }
+  .next-btn:disabled{ opacity:.45; cursor:default; }
+  .back-btn{
+    display:inline-block; margin-bottom:14px; color:var(--sub); font-size:.85rem; text-decoration:none;
+    cursor:pointer; background:none; border:none; padding:0; font-family:inherit;
+  }
+  .summary{
+    font-size:.9rem; color:var(--sub); text-align:center; margin-bottom:18px; padding:10px 14px;
+    background:#f4f6fb; border-radius:10px; border:1px solid var(--line);
+  }
+  .summary b{ color:var(--sky1); }
+  .hint{ font-size:.78rem; color:var(--sub); text-align:center; margin-top:18px; line-height:1.5; }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="box">
-      <h1>🏯 세계사 탑 오르기</h1>
-      <a href="world/play.html">🎮 수업 참여하기</a>
-      <a href="world/solo.html">🧗 혼자 연습하기</a>
+  <div class="card">
+    <h1>🏯 탑 오르기 복습 게임</h1>
+    <div class="sub" id="topSub">학년·반·이름을 입력해주세요. 한 번 입력하면 다음부터는 기억해둬요.</div>
+
+    <div class="step active" id="step1">
+      <label>학년</label>
+      <div class="grade-row" id="gradeRow">
+        <button type="button" data-grade="1">1학년</button>
+        <button type="button" data-grade="2">2학년</button>
+      </div>
+      <label>반</label>
+      <div class="class-row" id="classRow">
+        <button type="button" data-class="1">1반</button>
+        <button type="button" data-class="2">2반</button>
+        <button type="button" data-class="3">3반</button>
+        <button type="button" data-class="4">4반</button>
+        <button type="button" data-class="5">5반</button>
+        <button type="button" data-class="6">6반</button>
+        <button type="button" data-class="7">7반</button>
+        <button type="button" data-class="8">8반</button>
+        <button type="button" data-class="9">9반</button>
+        <button type="button" data-class="10">10반</button>
+      </div>
+      <label>이름</label>
+      <input type="text" id="nameInput" placeholder="이름 (예: 홍길동)" maxlength="20" autocomplete="off">
+      <button type="button" class="next-btn" id="step1NextBtn" disabled>다음</button>
     </div>
-    <div class="box">
-      <h1>🏯 한국사 탑 오르기</h1>
-      <a href="korea/play.html">🎮 수업 참여하기</a>
-      <a href="korea/solo.html">🧗 혼자 연습하기</a>
+
+    <div class="step" id="step2">
+      <button type="button" class="back-btn" id="step2BackBtn">‹ 뒤로 (학년·반·이름 다시 고르기)</button>
+      <div class="summary" id="step2Summary"></div>
+      <div class="big-choice">
+        <button type="button" id="modeJoinBtn">🎮 수업 참여하기</button>
+        <button type="button" class="alt" id="modeSoloBtn">🧗 혼자 연습하기</button>
+      </div>
     </div>
+
+    <div class="step" id="step3">
+      <button type="button" class="back-btn" id="step3BackBtn">‹ 뒤로 (참여 방식 다시 고르기)</button>
+      <div class="summary" id="step3Summary"></div>
+      <div class="big-choice">
+        <button type="button" id="subjectWorldBtn">🏯 세계사</button>
+        <button type="button" id="subjectKoreaBtn">🏯 한국사</button>
+      </div>
+    </div>
+
+    <div class="hint">이 페이지를 즐겨찾기(북마크)에 추가해두면 다음부터 주소를 안 쳐도 됩니다.</div>
   </div>
-  <div class="hint" style="position:fixed; bottom:16px; left:0; right:0; text-align:center;">
-    이 페이지를 즐겨찾기(북마크)에 추가해두면 다음부터 주소를 안 쳐도 됩니다.
-  </div>
+
+<script>
+  const el = (id) => document.getElementById(id);
+  // solo.html·play.html과 공유하는 학년·반·이름 저장 위치. 여기서 고르면 두 과목
+  // 어디로 가든(혼자 연습이든 수업 참여든) 이미 채워진 채로 시작한다.
+  const GRADE_KEY = 'rg_fb_grade', CLASS_KEY = 'rg_fb_class', NAME_KEY = 'rg_fb_name';
+
+  let grade = localStorage.getItem(GRADE_KEY) || null;
+  let cls = localStorage.getItem(CLASS_KEY) || null;
+  let mode = null; // 'join' | 'solo'
+
+  el('nameInput').value = localStorage.getItem(NAME_KEY) || '';
+
+  function updateStep1Btn(){
+    el('step1NextBtn').disabled = !(grade && cls && el('nameInput').value.trim());
+  }
+
+  el('gradeRow').querySelectorAll('button').forEach(btn=>{
+    if(btn.dataset.grade === grade) btn.classList.add('active');
+    btn.onclick = () => {
+      grade = btn.dataset.grade;
+      el('gradeRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      updateStep1Btn();
+    };
+  });
+  el('classRow').querySelectorAll('button').forEach(btn=>{
+    if(btn.dataset.class === cls) btn.classList.add('active');
+    btn.onclick = () => {
+      cls = btn.dataset.class;
+      el('classRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      updateStep1Btn();
+    };
+  });
+  el('nameInput').addEventListener('input', updateStep1Btn);
+  updateStep1Btn();
+
+  function showStep(n){
+    ['step1','step2','step3'].forEach((id,i)=> el(id).classList.toggle('active', i===n-1));
+    el('topSub').style.display = n===1 ? '' : 'none';
+  }
+
+  el('step1NextBtn').onclick = () => {
+    const name = el('nameInput').value.trim();
+    if(!grade || !cls || !name) return;
+    localStorage.setItem(GRADE_KEY, grade);
+    localStorage.setItem(CLASS_KEY, cls);
+    localStorage.setItem(NAME_KEY, name);
+    el('step2Summary').innerHTML = `<b>${grade}학년 ${cls}반 ${name}</b>님, 어떻게 참여할까요?`;
+    showStep(2);
+  };
+  el('step2BackBtn').onclick = () => showStep(1);
+
+  function goStep3(m){
+    mode = m;
+    const name = localStorage.getItem(NAME_KEY) || '';
+    const modeLabel = m === 'join' ? '수업 참여' : '혼자 연습';
+    el('step3Summary').innerHTML = `<b>${grade}학년 ${cls}반 ${name}</b> · ${modeLabel} — 어느 과목인가요?`;
+    showStep(3);
+  }
+  el('modeJoinBtn').onclick = () => goStep3('join');
+  el('modeSoloBtn').onclick = () => goStep3('solo');
+  el('step3BackBtn').onclick = () => showStep(2);
+
+  function goSubject(subject){
+    const page = mode === 'join' ? 'play.html' : 'solo.html';
+    location.href = subject + '/' + page;
+  }
+  el('subjectWorldBtn').onclick = () => goSubject('world');
+  el('subjectKoreaBtn').onclick = () => goSubject('korea');
+</script>
 </body>
 </html>

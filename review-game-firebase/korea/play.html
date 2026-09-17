@@ -418,11 +418,22 @@ import {
 
 const ROOM = 'korea';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
-const STORAGE_NAME_KEY = 'rg_fb_' + ROOM + '_name';
+const STORAGE_NAME_KEY = 'rg_fb_' + ROOM + '_name'; // 이 방(과목)에 마지막으로 입력했던 전체 이름칸 내용 그대로 기억
 const STORAGE_TEAM_KEY = 'rg_fb_' + ROOM + '_team';
+// student.html(학생용 시작 화면)에서 학년·반·이름을 입력하면 여기 저장되는, 과목과 무관한 공용 값들.
+// solo.html의 학년/반/이름 선택과도 같은 값을 공유한다.
+const SHARED_GRADE_KEY = 'rg_fb_grade';
+const SHARED_CLASS_KEY = 'rg_fb_class';
+const SHARED_NAME_KEY = 'rg_fb_name';
 
 let playerId = localStorage.getItem(STORAGE_ID_KEY) || '';
+// 이 방에서 전에 쓴 적 있는 전체 이름칸 내용이 있으면 그대로, 없으면 student.html에서 넘어온
+// 학년·반·이름으로 "1학년 3반 홍길동" 형태를 만들어 이름칸 초안으로 제안한다.
 let playerName = localStorage.getItem(STORAGE_NAME_KEY) || '';
+if(!playerName){
+  const sg = localStorage.getItem(SHARED_GRADE_KEY), sc = localStorage.getItem(SHARED_CLASS_KEY), sn = localStorage.getItem(SHARED_NAME_KEY);
+  playerName = (sg && sc && sn) ? `${sg}학년 ${sc}반 ${sn}` : (sn || '');
+}
 let selectedTeam = localStorage.getItem(STORAGE_TEAM_KEY) || null;
 
 let questionsObj = {};
@@ -494,6 +505,8 @@ let myFogUntil = 0, myIceUntil = 0;   // 안개·얼음 피격 종료 시각(ms)
 const seenItemEvents = new Set();
 
 const el = (id) => document.getElementById(id);
+
+el('nameInput').value = playerName;
 
 function itemsOn(){ return itemsMode !== 'off'; }
 
@@ -1778,10 +1791,8 @@ el('nameInput').addEventListener('keydown', e=>{ if(e.key==='Enter') el('joinBtn
 window.addEventListener('offline', ()=> el('connWarn').classList.add('show'));
 window.addEventListener('online', ()=> el('connWarn').classList.remove('show'));
 
-// 이전에 이 기기(브라우저)로 참여한 기록이 있어도 자동으로 다시 들어가지 않는다.
-// 학생용 기기를 여러 명이 돌려 쓰는 교실 환경에서, 이전 학생 이름으로 조용히
-// 자동 참여되어 버리는 문제를 막기 위함 — 항상 이름을 직접 입력/확인하고
-// "참여하기"를 눌러야 들어가진다.
+// 이름칸은 이전 기록으로 미리 채워주지만, 자동으로 참여시키지는 않는다 — 학생이 이름을
+// 확인/수정한 뒤 "참여하기"를 직접 눌러야 들어가진다(기기를 여러 명이 돌려 쓸 때도 안전).
 </script>
 </body>
 </html>
