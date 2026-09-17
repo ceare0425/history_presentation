@@ -328,6 +328,15 @@ const ROOM = 'world';
 // 학년+반 구분(명단 관리, 학년별 solo_log 기록)을 넣기 전에는 한국사=1학년, 세계사=2학년만 썼으므로,
 // 그 이전에 쌓인 학년 정보 없는 기록(cls가 "3" 같은 순수 숫자)은 이 학년으로 간주해 표시한다.
 const LEGACY_GRADE_LABEL = '2학년';
+const LEGACY_GRADE_NUM = LEGACY_GRADE_LABEL === '1학년' ? 1 : 2;
+// 학년 정보 없는 옛 기록("6")과 학년 도입 이후 기록("2-6")이 같은 반이어도 다른 값으로
+// 남아있어 통계에서 따로 묶이는 문제를 막기 위해, 항상 "학년-반" 형태로 통일해서 비교한다.
+function normCls(c){
+  if(c === undefined || c === null || c === '' || c === '-') return '';
+  const s = String(c);
+  if(/^\d+-\d+$/.test(s)) return s;
+  return `${LEGACY_GRADE_NUM}-${s}`;
+}
 const el = (id) => document.getElementById(id);
 
 let questionsObj = {};
@@ -987,18 +996,17 @@ function renderSoloStats(){
     ? `총 <b>${entries.length}</b>회 · 오늘 <b>${todayCount}</b>회 · 최근 7일 <b>${weekCount}</b>회 · 연습한 학생 <b>${students.size}</b>명`
     : '아직 혼자 연습 기록이 없습니다.';
 
-  const clsLabel = (c) => {
-    if(c === undefined || c === null || c === '' || c === '-') return '-';
-    const s = String(c);
-    const m = s.match(/^(\d+)-(\d+)$/); // "1-3" → 1학년 3반 (학년+반 도입 이후 기록)
-    if(m) return `${m[1]}학년 ${escapeHtml(m[2])}반`;
-    return `${LEGACY_GRADE_LABEL} ${escapeHtml(s)}반`; // 학년 정보 없는 옛 기록
+  const clsLabel = (normC) => {
+    if(normC === '') return '-';
+    const m = normC.match(/^(\d+)-(\d+)$/);
+    return m ? `${m[1]}학년 ${escapeHtml(m[2])}반` : escapeHtml(normC);
   };
 
   // 학생(이름+반)별로 묶어 가장 최근 세션 한 줄만 — entries는 이미 ts 내림차순
+  // 반은 normCls로 통일해서 비교 — 학년 도입 전/후 기록이 같은 반이면 한 학생으로 합쳐진다.
   const byStu = new Map();
   for(const e of entries){
-    const key = (e.name || '(이름 없음)') + '␟' + String(e.cls ?? '');
+    const key = (e.name || '(이름 없음)') + '␟' + normCls(e.cls);
     const g = byStu.get(key);
     if(g) g.count++;
     else byStu.set(key, { e, count: 1 });
@@ -1007,9 +1015,9 @@ function renderSoloStats(){
   for(const gk of [...soloPicked]) if(!byStu.has(gk)) soloPicked.delete(gk); // 사라진 학생은 선택 해제
 
   // 반별로 묶어서 보여준다 — 학년·반 오름차순, 반 안에서는 최근 활동순(byStu 순서 그대로)
-  const byClass = new Map(); // 반 원본값(e.cls) -> [{key, e, count}, ...]
+  const byClass = new Map(); // 정규화된 "학년-반" -> [{key, e, count}, ...]
   for(const [key, val] of byStu.entries()){
-    const clsRaw = String(val.e.cls ?? '');
+    const clsRaw = normCls(val.e.cls);
     if(!byClass.has(clsRaw)) byClass.set(clsRaw, []);
     byClass.get(clsRaw).push({ key, ...val });
   }
@@ -1038,7 +1046,7 @@ function renderSoloStats(){
         <td><input type="checkbox" class="solo-pick" data-gk="${escapeHtml(key)}"${soloPicked.has(key)?' checked':''}></td>
         <td class="muted">${fmtSoloTime(e.started_ts || e.ts)}</td>
         <td class="muted">${soloEndLabel(e)}</td>
-        <td><span class="name-link" data-name="${escapeHtml(e.name || '(이름 없음)')}" data-cls="${escapeHtml(String(e.cls ?? ''))}">${escapeHtml(e.name || '(이름 없음)')}</span></td>
+        <td><span class="name-link" data-name="${escapeHtml(e.name || '(이름 없음)')}" data-cls="${escapeHtml(normCls(e.cls))}">${escapeHtml(e.name || '(이름 없음)')}</span></td>
         <td class="${count>1?'acc-ok':'muted'}">${count}회</td>
         <td>${escapeHtml(soloRangeLabel(e.units))}</td>
         <td class="muted">${soloDurLabel(e.duration_sec)}</td>
@@ -1062,7 +1070,7 @@ function renderSoloModal(){
   const { name, cls } = soloModalSel;
   const list = Object.entries(soloLogObj)
     .map(([k, v]) => ({ ...v, _k: k }))
-    .filter(e => e && e.ts && (e.name || '(이름 없음)') === name && String(e.cls ?? '') === cls)
+    .filter(e => e && e.ts && (e.name || '(이름 없음)') === name && normCls(e.cls) === cls)
     .sort((a,b)=>(b.ts||0)-(a.ts||0));
   if(!list.length){ closeSoloModal(); return; }
 
@@ -1073,10 +1081,8 @@ function renderSoloModal(){
   const avgFloor = Math.round(list.reduce((s,e)=>s+(e.floor||0), 0) / list.length);
   const first = list[list.length-1], last = list[0];
   const clsPrefix = (() => {
-    if(cls === '' || cls === '-') return '';
-    const m = String(cls).match(/^(\d+)-(\d+)$/);
-    if(m) return `${m[1]}학년 ${m[2]}반 · `;
-    return `${LEGACY_GRADE_LABEL} ${cls}반 · `;
+    const m = String(cls || '').match(/^(\d+)-(\d+)$/);
+    return m ? `${m[1]}학년 ${m[2]}반 · ` : '';
   })();
 
   el('soloModalTitle').textContent = `${name} · 누적 현황`;
@@ -1161,7 +1167,7 @@ const soloPicked = new Set(); // 학생 그룹 key = "이름␟반"
 
 function soloKeysFor(nm, cl){ // 한 학생(이름+반)의 solo_log push 키들
   return Object.entries(soloLogObj)
-    .filter(([,v]) => v && v.ts && (v.name || '(이름 없음)') === nm && String(v.cls ?? '') === String(cl ?? ''))
+    .filter(([,v]) => v && v.ts && (v.name || '(이름 없음)') === nm && normCls(v.cls) === normCls(cl))
     .map(([k]) => k);
 }
 function updateSoloDelBtn(){
