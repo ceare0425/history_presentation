@@ -89,6 +89,7 @@
   .unit-acc-row .uacc{ width:44px; text-align:right; flex-shrink:0; font-weight:700; }
   .unit-acc-row .ucnt{ width:56px; text-align:right; flex-shrink:0; color:var(--sub); font-size:.76rem; }
   input[type=checkbox].solo-pick, #soloPickAll{ width:15px; height:15px; cursor:pointer; }
+  .solo-group-row td{ background:#eef2fb; font-weight:800; color:var(--sky1); padding:7px 8px; }
 
   .team-standings{ display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
   .team-bar-row{ display:flex; align-items:center; gap:8px; font-size:.82rem; }
@@ -239,11 +240,11 @@
       <button type="button" class="secondary" id="soloClearBtn" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;">기록 비우기</button>
     </div>
     <div>
-      <div class="pool-count"><b>학생별 최근 연습</b> · 이름을 누르면 전체 누적 상세 · 왼쪽 체크 후 <b>선택 삭제</b></div>
+      <div class="pool-count"><b>반별 학생 최근 연습</b> · 이름을 누르면 전체 누적 상세 · 왼쪽 체크 후 <b>선택 삭제</b></div>
       <div style="overflow-x:auto;">
         <table>
-          <thead><tr><th style="width:22px;"><input type="checkbox" id="soloPickAll" title="전체 선택"></th><th>최근 시작</th><th>종료</th><th>학년/반</th><th>이름</th><th>연습</th><th>최근 주제</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
-          <tbody id="soloRecent"><tr><td colspan="11" class="muted">아직 기록이 없습니다.</td></tr></tbody>
+          <thead><tr><th style="width:22px;"><input type="checkbox" id="soloPickAll" title="전체 선택"></th><th>최근 시작</th><th>종료</th><th>이름</th><th>연습</th><th>최근 주제</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
+          <tbody id="soloRecent"><tr><td colspan="10" class="muted">아직 기록이 없습니다.</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -1002,24 +1003,46 @@ function renderSoloStats(){
 
   for(const gk of [...soloPicked]) if(!byStu.has(gk)) soloPicked.delete(gk); // 사라진 학생은 선택 해제
 
-  el('soloRecent').innerHTML = byStu.size ? [...byStu.entries()].map(([key, { e, count }])=>{
-    const total = (e.correct||0)+(e.wrong||0);
-    const acc = total ? Math.round(100*(e.correct||0)/total) : null;
-    const accClass = acc===null ? 'muted' : (acc>=70 ? 'acc-ok' : 'acc-bad');
-    return `<tr>
-      <td><input type="checkbox" class="solo-pick" data-gk="${escapeHtml(key)}"${soloPicked.has(key)?' checked':''}></td>
-      <td class="muted">${fmtSoloTime(e.started_ts || e.ts)}</td>
-      <td class="muted">${soloEndLabel(e)}</td>
-      <td>${clsLabel(e.cls)}</td>
-      <td><span class="name-link" data-name="${escapeHtml(e.name || '(이름 없음)')}" data-cls="${escapeHtml(String(e.cls ?? ''))}">${escapeHtml(e.name || '(이름 없음)')}</span></td>
-      <td class="${count>1?'acc-ok':'muted'}">${count}회</td>
-      <td>${escapeHtml(soloRangeLabel(e.units))}</td>
-      <td class="muted">${soloDurLabel(e.duration_sec)}</td>
-      <td>${e.floor||0}층</td>
-      <td class="${accClass}">${e.correct||0}/${e.wrong||0}${acc===null?'':` (${acc}%)`}</td>
-      <td class="${(e.hints||0)>0?'':'muted'}">${e.hints||0}회</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="11" class="muted">아직 기록이 없습니다.</td></tr>';
+  // 반별로 묶어서 보여준다 — 학년·반 오름차순, 반 안에서는 최근 활동순(byStu 순서 그대로)
+  const byClass = new Map(); // 반 원본값(e.cls) -> [{key, e, count}, ...]
+  for(const [key, val] of byStu.entries()){
+    const clsRaw = String(val.e.cls ?? '');
+    if(!byClass.has(clsRaw)) byClass.set(clsRaw, []);
+    byClass.get(clsRaw).push({ key, ...val });
+  }
+  const classSortKey = (clsRaw) => {
+    const m = clsRaw.match(/^(\d+)-(\d+)$/);
+    if(m) return [Number(m[1]), Number(m[2])];
+    const n = Number(clsRaw);
+    return [LEGACY_GRADE_LABEL === '1학년' ? 1 : 2, Number.isNaN(n) ? 0 : n];
+  };
+  const classKeys = [...byClass.keys()].sort((a,b)=>{
+    const [ga,ca] = classSortKey(a), [gb,cb] = classSortKey(b);
+    return ga-gb || ca-cb;
+  });
+
+  el('soloRecent').innerHTML = classKeys.length ? classKeys.map(clsRaw=>{
+    const rows = byClass.get(clsRaw);
+    const groupRow = `<tr class="solo-group-row"><td colspan="10">${clsLabel(clsRaw)} (${rows.length}명)</td></tr>`;
+    const stuRows = rows.map(({ key, e, count })=>{
+      const total = (e.correct||0)+(e.wrong||0);
+      const acc = total ? Math.round(100*(e.correct||0)/total) : null;
+      const accClass = acc===null ? 'muted' : (acc>=70 ? 'acc-ok' : 'acc-bad');
+      return `<tr>
+        <td><input type="checkbox" class="solo-pick" data-gk="${escapeHtml(key)}"${soloPicked.has(key)?' checked':''}></td>
+        <td class="muted">${fmtSoloTime(e.started_ts || e.ts)}</td>
+        <td class="muted">${soloEndLabel(e)}</td>
+        <td><span class="name-link" data-name="${escapeHtml(e.name || '(이름 없음)')}" data-cls="${escapeHtml(String(e.cls ?? ''))}">${escapeHtml(e.name || '(이름 없음)')}</span></td>
+        <td class="${count>1?'acc-ok':'muted'}">${count}회</td>
+        <td>${escapeHtml(soloRangeLabel(e.units))}</td>
+        <td class="muted">${soloDurLabel(e.duration_sec)}</td>
+        <td>${e.floor||0}층</td>
+        <td class="${accClass}">${e.correct||0}/${e.wrong||0}${acc===null?'':` (${acc}%)`}</td>
+        <td class="${(e.hints||0)>0?'':'muted'}">${e.hints||0}회</td>
+      </tr>`;
+    }).join('');
+    return groupRow + stuRows;
+  }).join('') : '<tr><td colspan="10" class="muted">아직 기록이 없습니다.</td></tr>';
   updateSoloDelBtn();
 
   if(soloModalSel) renderSoloModal();
