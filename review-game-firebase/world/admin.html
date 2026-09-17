@@ -261,6 +261,18 @@
         <div class="msg" id="rosterMsg"></div>
       </div>
     </div>
+    <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
+      <label>엑셀(xlsx)로 전체 반 명단 한번에 등록</label>
+      <div class="muted" style="margin:-2px 0 8px; font-size:.78rem;">
+        시트가 여러 개면 <b>시트 이름에 들어있는 숫자</b>(예: "1반", "3-2"→3반)를 반 번호로 인식하고, 시트 안의 <b>이름/성명 열</b>을 읽습니다.<br>
+        시트가 하나뿐이면 그 안에 <b>반</b> 열과 <b>이름/성명</b> 열이 함께 있어야 합니다. 업로드하면 인식된 반의 기존 명단을 파일 내용으로 <b>교체</b>합니다(다른 반은 그대로 유지).
+      </div>
+      <input type="file" id="rosterXlsxInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+      <div class="btnrow">
+        <button type="button" class="secondary" id="rosterXlsxTemplateBtn">명단 양식 다운로드</button>
+      </div>
+      <div class="msg" id="rosterXlsxMsg"></div>
+    </div>
   </div>
 </div>
 
@@ -1215,6 +1227,128 @@ el('rosterSaveBtn').onclick = async () => {
     el('rosterMsg').className = 'msg err'; el('rosterMsg').textContent = '저장 실패: ' + err.message;
   }finally{
     el('rosterSaveBtn').disabled = false;
+  }
+};
+
+// ── 엑셀로 전체 반 명단 한번에 등록 ──────────────────────
+const ROSTER_XLSX_TEMPLATE_ROWS = [
+  ['반', '이름'],
+  ['1', '홍길동'],
+  ['1', '김철수'],
+  ['2', '이영희'],
+];
+const ROSTER_XLSX_GUIDE_ROWS = [
+  ['학생 명단 엑셀 양식 사용법'],
+  [''],
+  ["1. '명단' 시트에 반 / 이름 순서로 한 행에 학생 한 명씩 입력하세요."],
+  ['2. 이미 반별로 시트가 나뉜 파일(예: 시트 이름이 "1반", "2반"...)이 있다면 그대로 업로드해도 됩니다.'],
+  ['   이때는 시트 안에 이름(또는 성명) 열만 있으면 되고, 반 열은 없어도 됩니다.'],
+  ['3. 업로드하면 파일에서 인식된 반의 기존 명단을 이 내용으로 교체합니다.'],
+];
+el('rosterXlsxTemplateBtn').onclick = () => {
+  const ws = XLSX.utils.aoa_to_sheet(ROSTER_XLSX_TEMPLATE_ROWS);
+  ws['!cols'] = [{ wch: 8 }, { wch: 20 }];
+  const guideWs = XLSX.utils.aoa_to_sheet(ROSTER_XLSX_GUIDE_ROWS);
+  guideWs['!cols'] = [{ wch: 60 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '명단');
+  XLSX.utils.book_append_sheet(wb, guideWs, '안내');
+  XLSX.writeFile(wb, '학생명단_양식.xlsx');
+};
+
+function rosterCellText(v){ return String(v ?? '').trim(); }
+function rosterExtractClassNum(text){
+  const m = rosterCellText(text).match(/\d+/);
+  return m ? String(Number(m[0])) : null; // '01' -> '1'
+}
+function rosterFindCol(headerRow, aliases){
+  for(let i=0;i<headerRow.length;i++){
+    if(aliases.includes(rosterCellText(headerRow[i]))) return i;
+  }
+  return -1;
+}
+// 시트 안에서 '이름'/'성명' 열이 있는 머리글 행을 찾아 그 아래 이름들을 뽑는다. 못 찾으면 null.
+function rosterNamesFromSheetRows(rows){
+  const headerIdx = rows.findIndex(r => rosterFindCol(r, ['이름','성명']) !== -1);
+  if(headerIdx === -1) return null;
+  const nameCol = rosterFindCol(rows[headerIdx], ['이름','성명']);
+  const names = [];
+  for(let i=headerIdx+1;i<rows.length;i++){
+    const v = rosterCellText(rows[i][nameCol]);
+    if(v) names.push(v);
+  }
+  return names;
+}
+
+el('rosterXlsxInput').onchange = async () => {
+  const file = el('rosterXlsxInput').files[0];
+  const msg = el('rosterXlsxMsg');
+  if(!file) return;
+  try{
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data, { type: 'array' });
+    const byClass = {}; // cls -> Set(names)
+
+    if(wb.SheetNames.length > 1){
+      for(const sn of wb.SheetNames){
+        const cls = rosterExtractClassNum(sn);
+        if(!cls) continue;
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: '' });
+        const names = rosterNamesFromSheetRows(rows);
+        if(!names || !names.length) continue;
+        const set_ = byClass[cls] || (byClass[cls] = new Set());
+        names.forEach(n=>set_.add(n));
+      }
+    }
+
+    if(Object.keys(byClass).length === 0){
+      // 시트가 하나뿐이거나, 여러 시트여도 반 번호를 못 찾았다면: 한 시트 안에 '반'+'이름' 열이 함께 있는 형식으로 다시 시도
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
+      const headerIdx = rows.findIndex(r =>
+        rosterFindCol(r, ['이름','성명']) !== -1 && rosterFindCol(r, ['반','학급']) !== -1);
+      if(headerIdx === -1){
+        msg.className = 'msg err';
+        msg.textContent = '파일에서 반·이름 정보를 찾지 못했습니다. "명단 양식 다운로드"를 참고해 형식을 맞추거나, 반별로 시트를 나누고 시트 이름에 반 번호(예: "1반")를 넣어주세요.';
+        return;
+      }
+      const header = rows[headerIdx];
+      const clsCol = rosterFindCol(header, ['반','학급']);
+      const nameCol = rosterFindCol(header, ['이름','성명']);
+      for(let i=headerIdx+1;i<rows.length;i++){
+        const cls = rosterExtractClassNum(rows[i][clsCol]);
+        const name = rosterCellText(rows[i][nameCol]);
+        if(!cls || !name) continue;
+        const set_ = byClass[cls] || (byClass[cls] = new Set());
+        set_.add(name);
+      }
+    }
+
+    const classes = Object.keys(byClass).sort((a,b)=>Number(a)-Number(b));
+    if(!classes.length){
+      msg.className = 'msg err';
+      msg.textContent = '파일에서 학생 명단을 찾지 못했습니다.';
+      return;
+    }
+    const totalNames = classes.reduce((s,c)=>s+byClass[c].size, 0);
+    const summary = classes.map(c=>`${c}반 ${byClass[c].size}명`).join(', ');
+    if(!confirm(`"${file.name}"에서 ${classes.length}개 반, 총 ${totalNames}명을 찾았습니다.\n(${summary})\n\n각 반의 기존 명단을 이 내용으로 교체합니다(다른 반은 그대로 유지). 계속할까요?`)){
+      return;
+    }
+
+    el('rosterXlsxInput').disabled = true;
+    for(const cls of classes){
+      const obj = {};
+      byClass[cls].forEach(n=>{ obj[n] = true; });
+      await set(ref(db, 'roster/'+cls), obj);
+    }
+    msg.className = 'msg ok';
+    msg.textContent = `${classes.length}개 반 명단을 등록했습니다 (총 ${totalNames}명).`;
+    loadRosterForClass(el('rosterClassSel').value);
+  }catch(err){
+    msg.className = 'msg err'; msg.textContent = '엑셀 파일을 읽지 못했습니다: ' + err.message;
+  }finally{
+    el('rosterXlsxInput').value = '';
+    el('rosterXlsxInput').disabled = false;
   }
 };
 </script>
