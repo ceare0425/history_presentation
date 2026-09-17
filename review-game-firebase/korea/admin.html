@@ -932,7 +932,7 @@ onValue(roomRef(ROOM,'players'), (snap)=>{
 
 // ── ⑤ 혼자 연습 현황 ──────────────────────────────
 let soloLogObj = {};
-const soloCollapsedClasses = new Set(); // 접어둔 반(원본 cls값) — 재렌더링 돼도 접힌 상태 유지
+const soloExpandedClasses = new Set(); // 펼쳐둔 반(원본 cls값) — 기본은 접힘, 재렌더링 돼도 상태 유지
 
 function fmtSoloTime(ts){
   if(!ts) return '-';
@@ -1025,8 +1025,9 @@ function renderSoloStats(){
 
   el('soloRecent').innerHTML = classKeys.length ? classKeys.map(clsRaw=>{
     const rows = byClass.get(clsRaw);
-    const collapsed = soloCollapsedClasses.has(clsRaw);
-    const groupRow = `<tr class="solo-group-row" data-cls="${escapeHtml(clsRaw)}"><td colspan="10"><span class="solo-group-arrow">${collapsed?'▸':'▾'}</span> ${clsLabel(clsRaw)} (${rows.length}명)</td></tr>`;
+    const collapsed = !soloExpandedClasses.has(clsRaw);
+    const hasToday = rows.some(r => (r.e.ts||0) >= todayStart.getTime());
+    const groupRow = `<tr class="solo-group-row" data-cls="${escapeHtml(clsRaw)}"><td colspan="10"><span class="solo-group-arrow">${collapsed?'▸':'▾'}</span> ${clsLabel(clsRaw)} (${rows.length}명)${hasToday ? ' 😎' : ''}</td></tr>`;
     if(collapsed) return groupRow;
     const stuRows = rows.map(({ key, e, count })=>{
       const total = (e.correct||0)+(e.wrong||0);
@@ -1140,8 +1141,8 @@ el('soloRecent').addEventListener('click', (ev)=>{
   const groupRow = ev.target.closest('.solo-group-row');
   if(groupRow){
     const cls = groupRow.dataset.cls;
-    if(soloCollapsedClasses.has(cls)) soloCollapsedClasses.delete(cls);
-    else soloCollapsedClasses.add(cls);
+    if(soloExpandedClasses.has(cls)) soloExpandedClasses.delete(cls);
+    else soloExpandedClasses.add(cls);
     renderSoloStats();
     return;
   }
