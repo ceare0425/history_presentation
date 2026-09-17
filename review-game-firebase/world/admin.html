@@ -235,7 +235,7 @@
       <div class="pool-count"><b>학생별 최근 연습</b> · 이름을 누르면 전체 누적 상세 · 왼쪽 체크 후 <b>선택 삭제</b></div>
       <div style="overflow-x:auto;">
         <table>
-          <thead><tr><th style="width:22px;"><input type="checkbox" id="soloPickAll" title="전체 선택"></th><th>최근 시작</th><th>종료</th><th>반</th><th>이름</th><th>연습</th><th>최근 주제</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
+          <thead><tr><th style="width:22px;"><input type="checkbox" id="soloPickAll" title="전체 선택"></th><th>최근 시작</th><th>종료</th><th>학년/반</th><th>이름</th><th>연습</th><th>최근 주제</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
           <tbody id="soloRecent"><tr><td colspan="11" class="muted">아직 기록이 없습니다.</td></tr></tbody>
         </table>
       </div>
@@ -244,8 +244,8 @@
   </div>
 
   <div class="card" style="grid-column:1 / -1">
-    <h2>⑥ 학생 명단 관리</h2>
-    <div class="sub" style="margin-top:-6px;">반별 학생 명단을 등록해두면 <code>solo.html</code>(혼자 연습하기) 시작 시 명단에 있는 이름만 입력할 수 있어 오타·장난 이름을 막을 수 있습니다. 세계사·한국사 두 게임이 같은 명단을 함께 씁니다. <b>명단을 한 명도 등록하지 않은 반은 제한 없이</b> 누구나 이름을 입력해 연습할 수 있습니다.</div>
+    <h2>⑥ 학생 명단 관리 (2학년)</h2>
+    <div class="sub" style="margin-top:-6px;">이 명단은 세계사(2학년) 학생 기준입니다 — 한국사(1학년) 명단과는 따로 관리됩니다. 반별 학생 명단을 등록해두면 <code>solo.html</code>(혼자 연습하기) 시작 시 명단에 있는 이름만 입력할 수 있어 오타·장난 이름을 막을 수 있습니다. <b>명단을 한 명도 등록하지 않은 반은 제한 없이</b> 누구나 이름을 입력해 연습할 수 있습니다.</div>
     <div class="row" style="align-items:flex-start; margin-top:10px;">
       <div style="flex:0 0 150px;">
         <label>반 선택</label>
@@ -304,6 +304,7 @@ import {
 } from '../shared/lib.js';
 
 const ROOM = 'world';
+const GRADE_LABEL = '2학년'; // 이 게임(세계사)은 2학년 학생만 사용 — 한국사(1학년)와 반 번호가 겹쳐도 섞이지 않도록 구분해 표시
 const el = (id) => document.getElementById(id);
 
 let questionsObj = {};
@@ -962,7 +963,7 @@ function renderSoloStats(){
     ? `총 <b>${entries.length}</b>회 · 오늘 <b>${todayCount}</b>회 · 최근 7일 <b>${weekCount}</b>회 · 연습한 학생 <b>${students.size}</b>명`
     : '아직 혼자 연습 기록이 없습니다.';
 
-  const clsLabel = (c) => (c === undefined || c === null || c === '' || c === '-') ? '-' : escapeHtml(String(c)) + '반';
+  const clsLabel = (c) => (c === undefined || c === null || c === '' || c === '-') ? '-' : GRADE_LABEL + ' ' + escapeHtml(String(c)) + '반';
 
   // 학생(이름+반)별로 묶어 가장 최근 세션 한 줄만 — entries는 이미 ts 내림차순
   const byStu = new Map();
@@ -1016,7 +1017,7 @@ function renderSoloModal(){
   const bestFloor = Math.max(...list.map(e=>e.floor||0));
   const avgFloor = Math.round(list.reduce((s,e)=>s+(e.floor||0), 0) / list.length);
   const first = list[list.length-1], last = list[0];
-  const clsPrefix = (cls === '' || cls === '-') ? '' : cls + '반 · ';
+  const clsPrefix = (cls === '' || cls === '-') ? '' : GRADE_LABEL + ' ' + cls + '반 · ';
 
   el('soloModalTitle').textContent = `${name} · 누적 현황`;
   el('soloModalSub').textContent =
@@ -1193,15 +1194,16 @@ setInterval(renderRoster, 500);
 setInterval(renderSoloStats, 15000); // '연습 중' → '중단' 표시가 시간이 지나면 갱신되도록
 
 // ── ⑥ 학생 명단 관리 (혼자 연습 이름 제한용) ──────────────
-// 세계사·world/와 한국사·korea/가 같은 학생을 대상으로 하므로, room 구분 없이 DB 최상위 roster/에 반별로 저장해 두 게임이 함께 쓴다.
+// 한국사=1학년, 세계사=2학년으로 학년이 다르고 반 번호(1~10)는 겹칠 수 있으므로,
+// 명단은 방(rooms/korea, rooms/world)마다 따로 저장한다 (solo_log와 같은 방식).
 for(let c=1;c<=10;c++){
   const opt = document.createElement('option');
-  opt.value = String(c); opt.textContent = c + '반';
+  opt.value = String(c); opt.textContent = GRADE_LABEL + ' ' + c + '반';
   el('rosterClassSel').appendChild(opt);
 }
 
 function loadRosterForClass(cls){
-  get(ref(db, 'roster/'+cls)).then(snap=>{
+  get(roomRef(ROOM, 'roster', cls)).then(snap=>{
     const obj = snap.val() || {};
     const names = Object.keys(obj).sort((a,b)=>a.localeCompare(b,'ko'));
     el('rosterTextarea').value = names.join('\n');
@@ -1219,9 +1221,9 @@ el('rosterSaveBtn').onclick = async () => {
   uniqueNames.forEach(n=>{ obj[n] = true; });
   el('rosterSaveBtn').disabled = true;
   try{
-    await set(ref(db, 'roster/'+cls), uniqueNames.length ? obj : null);
+    await set(roomRef(ROOM, 'roster', cls), uniqueNames.length ? obj : null);
     el('rosterMsg').className = 'msg ok';
-    el('rosterMsg').textContent = uniqueNames.length ? `${cls}반 명단 ${uniqueNames.length}명을 저장했습니다.` : `${cls}반 명단을 비웠습니다 (제한 해제).`;
+    el('rosterMsg').textContent = uniqueNames.length ? `${GRADE_LABEL} ${cls}반 명단 ${uniqueNames.length}명을 저장했습니다.` : `${GRADE_LABEL} ${cls}반 명단을 비웠습니다 (제한 해제).`;
     loadRosterForClass(cls);
   }catch(err){
     el('rosterMsg').className = 'msg err'; el('rosterMsg').textContent = '저장 실패: ' + err.message;
@@ -1330,8 +1332,8 @@ el('rosterXlsxInput').onchange = async () => {
       return;
     }
     const totalNames = classes.reduce((s,c)=>s+byClass[c].size, 0);
-    const summary = classes.map(c=>`${c}반 ${byClass[c].size}명`).join(', ');
-    if(!confirm(`"${file.name}"에서 ${classes.length}개 반, 총 ${totalNames}명을 찾았습니다.\n(${summary})\n\n각 반의 기존 명단을 이 내용으로 교체합니다(다른 반은 그대로 유지). 계속할까요?`)){
+    const summary = classes.map(c=>`${GRADE_LABEL} ${c}반 ${byClass[c].size}명`).join(', ');
+    if(!confirm(`"${file.name}"에서 ${GRADE_LABEL} ${classes.length}개 반, 총 ${totalNames}명을 찾았습니다.\n(${summary})\n\n각 반의 기존 명단을 이 내용으로 교체합니다(다른 반은 그대로 유지). 계속할까요?`)){
       return;
     }
 
@@ -1339,10 +1341,10 @@ el('rosterXlsxInput').onchange = async () => {
     for(const cls of classes){
       const obj = {};
       byClass[cls].forEach(n=>{ obj[n] = true; });
-      await set(ref(db, 'roster/'+cls), obj);
+      await set(roomRef(ROOM, 'roster', cls), obj);
     }
     msg.className = 'msg ok';
-    msg.textContent = `${classes.length}개 반 명단을 등록했습니다 (총 ${totalNames}명).`;
+    msg.textContent = `${GRADE_LABEL} ${classes.length}개 반 명단을 등록했습니다 (총 ${totalNames}명).`;
     loadRosterForClass(el('rosterClassSel').value);
   }catch(err){
     msg.className = 'msg err'; msg.textContent = '엑셀 파일을 읽지 못했습니다: ' + err.message;
