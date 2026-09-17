@@ -183,7 +183,7 @@ python tools/import_questions.py ../review-game-korea/data/questions.txt korea
 
 ```
 review-game-firebase/
-  index.html              메인 페이지 (교사용 - 관리자 화면 링크 + 학생 화면(student.html) 바로가기, 대형 화면은 admin.html의 버튼으로 엶)
+  index.html              메인 페이지 (교사용 - 학생 화면·한국사 관리자·세계사 관리자 버튼 3개만, 대형 화면은 admin.html의 버튼으로 엶)
   student.html            학생용 시작 화면 (학년·반·이름 → 수업참여/혼자연습 → 과목 선택 3단계)
   shared/lib.js          채점 로직, Firebase 연결, 시간 동기화 (world/korea 공용)
   world/play.html         세계사 - 학생 화면 (수업용, 선생님이 시작)

@@ -11,36 +11,20 @@
     background:linear-gradient(180deg,#1e3c72,#2a5298 60%,#3a6b8a); color:#fff;
     padding:24px;
   }
-  .wrap{ display:flex; gap:32px; flex-wrap:wrap; justify-content:center; }
-  .box{ text-align:center; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.2);
-    border-radius:16px; padding:24px; width:280px; }
-  h1{ font-size:1.3rem; margin:0 0 1.2rem; }
+  .wrap{ display:flex; flex-direction:column; gap:14px; width:min(320px, 90vw); }
   a{
-    display:block; margin:10px auto; padding:16px; border-radius:12px;
-    background:rgba(255,255,255,.12); color:#fff; text-decoration:none; font-weight:700; font-size:1rem;
-    border:1px solid rgba(255,255,255,.25);
+    display:block; padding:18px; border-radius:12px;
+    background:rgba(255,255,255,.12); color:#fff; text-decoration:none; font-weight:700; font-size:1.05rem;
+    border:1px solid rgba(255,255,255,.25); text-align:center;
   }
   a:hover{ background:rgba(255,255,255,.22); }
-  .hint{ font-size:.78rem; opacity:.7; margin-top:1rem; line-height:1.5; }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="box">
-      <h1>🙋 학생 화면</h1>
-      <a href="https://ceare0425.github.io/h">🧑‍🎓 학생 화면 열기</a>
-    </div>
-    <div class="box">
-      <h1>🌍 세계사 탑 오르기</h1>
-      <a href="world/admin.html">🛠 관리자 화면</a>
-    </div>
-    <div class="box">
-      <h1>🏯 한국사 탑 오르기</h1>
-      <a href="korea/admin.html">🛠 관리자 화면</a>
-    </div>
-  </div>
-  <div class="hint" style="position:fixed; bottom:16px; left:0; right:0; text-align:center;">
-    이 페이지를 즐겨찾기(북마크)에 추가해두면 다음부터 주소를 안 쳐도 됩니다.
+    <a href="https://ceare0425.github.io/h">🙋 학생 화면</a>
+    <a href="korea/admin.html">🏯 한국사 관리자 화면</a>
+    <a href="world/admin.html">🌍 세계사 관리자 화면</a>
   </div>
 </body>
 </html>
