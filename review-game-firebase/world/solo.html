@@ -382,7 +382,7 @@
 
 <script type="module">
 import {
-  roomRef, onValue, get, push, update, serverNow,
+  roomRef, ref, db, onValue, get, push, update, serverNow,
   isCorrect, computeGain, fmtTime, escapeHtml, shuffle, choseongHint,
   unitsFromQuestions, poolFromQuestions, recencyWeightFn, weightedQueue
 } from '../shared/lib.js';
@@ -864,7 +864,7 @@ let tickHandle = null;
 // 이름만 입력해 연습을 시작할 수 있다. 명단을 한 명도 등록하지 않은 반은 제한 없이 통과시킨다.
 async function checkRosterAllowed(cls, name){
   try{
-    const snap = await get(roomRef(ROOM, 'roster', cls));
+    const snap = await get(ref(db, 'roster/' + cls));
     const roster = snap.val();
     if(roster && Object.keys(roster).length > 0 && !roster[name]) return false;
   }catch(_e){ /* 명단 조회 실패 시엔 연습에 지장 없도록 통과시킨다 */ }
