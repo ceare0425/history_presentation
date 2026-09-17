@@ -105,6 +105,10 @@
   .msg.ok{ color:var(--good); }
   details{ margin-top:10px; }
   summary{ cursor:pointer; font-size:.85rem; color:var(--sub); }
+  details.card{ margin-top:0; }
+  details.card summary.card-h2{ font-size:1rem; font-weight:700; color:var(--sky1); cursor:pointer; }
+  details.card summary.card-h2::marker{ color:var(--sky1); }
+  details.card[open] summary.card-h2{ margin-bottom:12px; }
 
   select{
     width:100%; padding:9px 10px; border:1.5px solid var(--line); border-radius:8px; font-size:.92rem;
@@ -246,8 +250,8 @@
     <div class="msg" id="soloMsg"></div>
   </div>
 
-  <div class="card" style="grid-column:1 / -1">
-    <h2>⑥ 학생 명단 관리</h2>
+  <details class="card" style="grid-column:1 / -1">
+    <summary class="card-h2">⑥ 학생 명단 관리</summary>
     <div class="sub" style="margin-top:-6px;">반별 학생 명단을 등록해두면 <code>solo.html</code>(혼자 연습하기) 시작 시 명단에 있는 이름만 입력할 수 있어 오타·장난 이름을 막을 수 있습니다. 학년마다 같은 반 번호(1~10)가 있을 수 있어 <b>학년+반</b>을 함께 골라 등록합니다(예: 1학년 3반과 2학년 3반은 다른 명단). <b>명단을 한 명도 등록하지 않은 학년·반은 제한 없이</b> 누구나 이름을 입력해 연습할 수 있습니다.</div>
     <div class="row" style="align-items:flex-start; margin-top:10px;">
       <div style="flex:0 0 150px;">
@@ -287,7 +291,7 @@
       </div>
       <div class="msg" id="rosterXlsxMsg"></div>
     </div>
-  </div>
+  </details>
 </div>
 
 <div id="soloModal" class="modal-back hidden">
