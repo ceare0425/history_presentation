@@ -328,6 +328,8 @@ const ROOM = 'world';
 // 학년+반 구분(명단 관리, 학년별 solo_log 기록)을 넣기 전에는 한국사=1학년, 세계사=2학년만 썼으므로,
 // 그 이전에 쌓인 학년 정보 없는 기록(cls가 "3" 같은 순수 숫자)은 이 학년으로 간주해 표시한다.
 const LEGACY_GRADE_LABEL = '2학년';
+// 학생이 교탁 컴퓨터로 직접 "게임 시작"을 누르는 것을 막기 위한 최소한의 잠금(진짜 보안 아님, 화면에 그대로 노출됨).
+const START_PASSWORD = '7328';
 const LEGACY_GRADE_NUM = LEGACY_GRADE_LABEL === '1학년' ? 1 : 2;
 // 학년 정보 없는 옛 기록("6")과 학년 도입 이후 기록("2-6")이 같은 반이어도 다른 값으로
 // 남아있어 통계에서 따로 묶이는 문제를 막기 위해, 항상 "학년-반" 형태로 통일해서 비교한다.
@@ -497,6 +499,12 @@ el('selectNoneBtn').onclick = () => { selectedUnits = new Set(); renderUnits(); 
 
 el('startBtn').onclick = async () => {
   const msg = el('startMsg');
+  const pw = prompt('게임 시작 비밀번호를 입력하세요');
+  if(pw === null) return;
+  if(pw !== START_PASSWORD){
+    msg.className='msg err'; msg.textContent = '비밀번호가 틀렸습니다.';
+    return;
+  }
   const units = Array.from(selectedUnits);
   const minutes = parseFloat(el('durationInput').value) || 5;
   const duration_sec = Math.max(30, Math.min(3600, Math.round(minutes*60)));
