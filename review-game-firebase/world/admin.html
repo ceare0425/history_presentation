@@ -89,7 +89,9 @@
   .unit-acc-row .uacc{ width:44px; text-align:right; flex-shrink:0; font-weight:700; }
   .unit-acc-row .ucnt{ width:56px; text-align:right; flex-shrink:0; color:var(--sub); font-size:.76rem; }
   input[type=checkbox].solo-pick, #soloPickAll{ width:15px; height:15px; cursor:pointer; }
-  .solo-group-row td{ background:#eef2fb; font-weight:800; color:var(--sky1); padding:7px 8px; }
+  .solo-group-row td{ background:#eef2fb; font-weight:800; color:var(--sky1); padding:7px 8px; cursor:pointer; user-select:none; }
+  .solo-group-row:hover td{ background:#e2e8f7; }
+  .solo-group-arrow{ display:inline-block; width:1em; }
 
   .team-standings{ display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
   .team-bar-row{ display:flex; align-items:center; gap:8px; font-size:.82rem; }
@@ -931,6 +933,7 @@ onValue(roomRef(ROOM,'players'), (snap)=>{
 
 // ── ⑤ 혼자 연습 현황 ──────────────────────────────
 let soloLogObj = {};
+const soloCollapsedClasses = new Set(); // 접어둔 반(원본 cls값) — 재렌더링 돼도 접힌 상태 유지
 
 function fmtSoloTime(ts){
   if(!ts) return '-';
@@ -1023,7 +1026,9 @@ function renderSoloStats(){
 
   el('soloRecent').innerHTML = classKeys.length ? classKeys.map(clsRaw=>{
     const rows = byClass.get(clsRaw);
-    const groupRow = `<tr class="solo-group-row"><td colspan="10">${clsLabel(clsRaw)} (${rows.length}명)</td></tr>`;
+    const collapsed = soloCollapsedClasses.has(clsRaw);
+    const groupRow = `<tr class="solo-group-row" data-cls="${escapeHtml(clsRaw)}"><td colspan="10"><span class="solo-group-arrow">${collapsed?'▸':'▾'}</span> ${clsLabel(clsRaw)} (${rows.length}명)</td></tr>`;
+    if(collapsed) return groupRow;
     const stuRows = rows.map(({ key, e, count })=>{
       const total = (e.correct||0)+(e.wrong||0);
       const acc = total ? Math.round(100*(e.correct||0)/total) : null;
@@ -1133,6 +1138,14 @@ function closeSoloModal(){
 }
 
 el('soloRecent').addEventListener('click', (ev)=>{
+  const groupRow = ev.target.closest('.solo-group-row');
+  if(groupRow){
+    const cls = groupRow.dataset.cls;
+    if(soloCollapsedClasses.has(cls)) soloCollapsedClasses.delete(cls);
+    else soloCollapsedClasses.add(cls);
+    renderSoloStats();
+    return;
+  }
   const sp = ev.target.closest('.name-link');
   if(!sp) return;
   soloModalSel = { name: sp.dataset.name, cls: sp.dataset.cls || '' };
