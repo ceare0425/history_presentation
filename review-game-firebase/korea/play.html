@@ -313,7 +313,7 @@
 <div class="card">
   <h1>🏯 한국사 탑 오르기</h1>
 
-  <div id="joinView" class="view center">
+  <div id="joinView" class="view center hidden">
     <div class="inner">
       <p class="sub">학년·반을 고르고 이름을 입력한 뒤 참여하세요. 선생님이 게임을 시작하면 자동으로 시작됩니다.</p>
       <label>학년</label>
@@ -1767,13 +1767,14 @@ async function join(name){
 // 명단에 없는 이름이면 자동 참여하지 않고 참여 화면에 남겨 직접 확인/수정하게 한다.
 async function tryAutoJoin(){
   if(joinedAlready) return;
-  if(!selectedGrade || !selectedClass || !playerName) return;
+  if(!selectedGrade || !selectedClass || !playerName){ showView('joinView'); return; }
   const allowed = await checkRosterAllowed(classKey(), playerName);
   if(!allowed){
     el('joinMsg').textContent = '명단에 없는 이름이에요. 학년·반·이름을 확인해주세요.';
+    showView('joinView');
     return;
   }
-  join(playerName).catch(()=>{ joinedAlready = false; });
+  join(playerName).catch(()=>{ joinedAlready = false; showView('joinView'); });
 }
 tryAutoJoin();
 
