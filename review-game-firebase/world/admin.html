@@ -188,8 +188,6 @@
         <button type="button" class="active" data-weight="even">⚖️ 동률</button>
         <button type="button" data-weight="recent" title="주제 번호가 큰(최근) 주제일수록 더 자주 출제 (순서대로에서는 무시됨)">🆕 최근 우선</button>
       </div>
-      <label>출제 문항 수 (비워두면 선택 범위 전체 사용)</label>
-      <input type="number" id="questionCountInput" min="1" placeholder="전체 사용">
       <label>팀전 모드 (학생이 참여 화면에서 팀을 고릅니다)</label>
       <div class="toggle-row" id="teamModeToggle">
         <button type="button" class="active" data-mode="off">개인전</button>
@@ -351,7 +349,6 @@
 import {
   roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, shuffle,
-  recencyWeightFn, weightedSample,
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS
 } from '../shared/lib.js';
 
@@ -497,9 +494,6 @@ function updatePoolCountInfo(){
   const selectedCount = poolFromQuestions(questionsObj, Array.from(selectedUnits)).length;
   el('poolCountInfo').innerHTML = totalCount===0 ? '' :
     `전체 등록 문제 <b>${totalCount}</b>개 · 선택한 범위 <b>${selectedCount}</b>개`;
-  const countInput = el('questionCountInput');
-  countInput.max = selectedCount || '';
-  countInput.placeholder = selectedCount ? `전체 사용 (${selectedCount}개)` : '전체 사용';
 }
 
 function renderUnits(){
@@ -535,15 +529,7 @@ el('startBtn').onclick = async () => {
   const pool = poolFromQuestions(questionsObj, units);
   if(pool.length===0){ msg.className='msg err'; msg.textContent = '선택한 범위에 문제가 없습니다.'; return; }
 
-  const countRaw = el('questionCountInput').value.trim();
-  const desiredCount = countRaw ? Math.max(1, Math.round(parseFloat(countRaw))) : null;
-  const useRecent = questionOrder !== 'sequential' && questionWeight === 'recent';
-  let qids = pool.map(([qid])=>qid);
-  if(desiredCount && desiredCount < qids.length){
-    qids = useRecent
-      ? weightedSample(pool, recencyWeightFn(pool.map(([,q])=>q.unit)), desiredCount)
-      : shuffle(qids).slice(0, desiredCount);
-  }
+  const qids = pool.map(([qid])=>qid);
 
   el('startBtn').disabled = true;
   try{
