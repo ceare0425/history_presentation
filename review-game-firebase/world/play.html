@@ -1918,7 +1918,7 @@ function applyIncomingFx(type, attackerId, reflected){
     const box = el('qbox');
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.beeNanta : spicy ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee;
     el('beeLabel').textContent = reflected ? '반사당한 벌떼' : '벌떼';
-    spawnBeeSwarm(el('beeLayer'), 600);
+    spawnBeeSwarm(el('beeLayer'), 900);
     box.classList.add('beeswarm');
     myBeeUntil = serverNow() + dur;
     clearTimeout(beeTimer);
