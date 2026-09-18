@@ -1612,16 +1612,16 @@ async function useItem(){
           return;
         }
       }
-      heldItem = null;
-      await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
-      if(key === 'steal' && topMemberId){
+      if(topMemberId){
         const topMember = allPlayers.find(p=> p.id === topMemberId);
         if(topMember && topMember.immuneUntil && serverNow() < topMember.immuneUntil){
           renderItemBar();
-          showItemAlert('🛡️ 상대방이 무적 상태여서 아이템이 작동하지 않습니다');
+          showItemAlert('🛡️ 상대방이 무적 상태여서 아이템이 작동하지 않습니다 (아이템은 그대로 있어요)');
           return;
         }
       }
+      heldItem = null;
+      await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
       const evt = {
         type: key, by: playerId, byName: playerName,
         targetTeam, byTeam: myTeam || null, at: serverNow()
@@ -1667,13 +1667,13 @@ async function useItem(){
       showItemAlert('🥷 상대가 이미 강탈당한 상태라 지금은 쓸 수 없어요');
       return;
     }
-    heldItem = null;
-    await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
-    if((key === 'ice' || key === 'fog' || key === 'waterballoon' || key === 'steal') && target.immuneUntil && serverNow() < target.immuneUntil){
+    if(target.immuneUntil && serverNow() < target.immuneUntil){
       renderItemBar();
-      showItemAlert('🛡️ 상대방이 무적 상태여서 아이템이 작동하지 않습니다');
+      showItemAlert('🛡️ 상대방이 무적 상태여서 아이템이 작동하지 않습니다 (아이템은 그대로 있어요)');
       return;
     }
+    heldItem = null;
+    await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
     await push(roomRef(ROOM, 'item_events'), {
       type: key, by: playerId, byName: playerName,
       target: target.id, targetRank: target.rank, at: serverNow()
