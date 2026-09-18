@@ -542,7 +542,7 @@ let myLastOvertakeAt = 0;    // 마지막 개인 추월 알림 시각
 const MY_OVERTAKE_CD = 4000; // 개인 추월 알림 최소 간격(ms)
 let myBoost = 0;             // 남은 '부스터' 2배 횟수
 let myShield = false;        // '콤보 방패' 활성 — 다음 오답에 연속 유지
-let mySnailNext = 0;         // '느림보' 피격 — 남은 제한 정답 수(각 +1층). 매운맛은 2회
+let mySnailNext = 0;         // '느림보' 피격 — 남은 제한 정답 수(각 +1층). 매운맛·난타전 모두 2회
 let festivalUntil = 0;       // '축제' 종료 시각(ms)
 let mySoloFestUntil = 0;     // '방구석 축제' — 나만 2배 종료 시각(ms)
 let myComboSparkUntil = 0;   // '콤보 스파크' — 정답마다 카드 뒤집기 보너스 종료 시각(ms)
@@ -1937,9 +1937,9 @@ function applyIncomingFx(type, attackerId, reflected){
       myBeeUntil = 0;
     }, dur);
   } else if(type === 'snail'){
-    mySnailNext = spicy ? 2 : 1;
+    mySnailNext = 2;
     const snailLabel = reflected ? '반사당한 느림보' : '느림보';
-    showItemAlert(spicy ? `🐌 ${snailLabel}! 다음 정답 2번은 +1${unitLabel()}만` : `🐌 ${snailLabel}! 다음 정답은 +1${unitLabel()}만`);
+    showItemAlert(`🐌 ${snailLabel}! 다음 정답 2번은 +1${unitLabel()}만`);
   } else if(type === 'slide'){
     const slideLabel = reflected ? '반사당한 미끄럼틀' : '미끄럼틀';
     slideDown(slideLabel);
