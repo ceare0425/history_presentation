@@ -253,7 +253,7 @@
   .bee-layer{ position:absolute; inset:0; overflow:hidden; border-radius:16px; pointer-events:none; display:none; }
   .qbox.beeswarm .bee-layer{ display:block; }
   .bee-layer span{
-    position:absolute; left:0; top:0; opacity:.9; will-change:transform;
+    position:absolute; left:0; top:0; opacity:.96; will-change:transform;
     animation-name:beeSwarm; animation-timing-function:linear; animation-iteration-count:infinite;
   }
   @keyframes beeSwarm{
@@ -571,7 +571,7 @@ function spawnBeeSwarm(layer, count){
   for(let i = 0; i < count; i++){
     const pts = [edgePoint(), insidePoint(), insidePoint(), insidePoint(), edgePoint()];
     const vars = pts.map((p, idx) => `--x${idx}:${p.x.toFixed(1)}px;--y${idx}:${p.y.toFixed(1)}px;`).join('');
-    const size = (0.85 + Math.random() * 0.7).toFixed(2);
+    const size = (1.0 + Math.random() * 0.9).toFixed(2);
     const dur = (1.5 + Math.random() * 2.3).toFixed(2);
     const delay = (Math.random() * -4).toFixed(2);
     html += `<span style="${vars}font-size:${size}rem;animation-duration:${dur}s;animation-delay:${delay}s;">🐝</span>`;
@@ -1799,7 +1799,7 @@ function applyIncomingFx(type, attackerId, reflected){
     const box = el('qbox');
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.beeNanta : spicy ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee;
     el('beeLabel').textContent = reflected ? '반사당한 벌떼' : '벌떼';
-    spawnBeeSwarm(el('beeLayer'), 240);
+    spawnBeeSwarm(el('beeLayer'), 600);
     box.classList.add('beeswarm');
     myBeeUntil = serverNow() + dur;
     clearTimeout(beeTimer);
