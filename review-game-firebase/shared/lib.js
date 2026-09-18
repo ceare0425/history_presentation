@@ -318,8 +318,8 @@ export const ITEM_FX_MS = {
 //   canJackpot  : '인생 한방' 포함 (하위 50%=중하위권 이하일 때만). 난타전에선 안 나옴.
 //   teamMode    : 팀전 여부 — '팀 응원가'는 팀전만
 //   teamLeader  : 팀전 1등 팀 — 전체(global: 축제·응원가) 아이템 제외, 개인 향상만 (난타전에선 저격은 그대로 나옴)
-//   defenseHeavy: 난타전 개인 랭킹 1등 — 방어 계열(해독·천사·쉴드·반사경·사이렌)이 이 등수에게만 나옴(2·3등은 못 받음)
-// 방어 계열 아이템('해독'·'천사'·'쉴드'·'반사경'·'사이렌')은 매운맛에서는 하위권을 제외한 나머지에게, 난타전에서는 1등(defenseHeavy)에게만 나온다.
+//   defenseHeavy: 난타전 개인 랭킹(1~3, 저격 후보 밖이면 0) — 방어 계열(해독·천사·쉴드·반사경·사이렌)이 이 상위 3명에게만 나옴
+// 방어 계열 아이템('해독'·'천사'·'쉴드'·'반사경'·'사이렌')은 매운맛에서는 하위권을 제외한 나머지에게, 난타전에서는 저격 후보인 상위 3등(defenseHeavy)에게만 나온다.
 export function itemPool(opts = {}) {
   const { mode = 'nanta', canAttack = false, canComeback = false, teamMode = false, teamLeader = false } = opts;
   const nanta = mode === 'nanta';
@@ -336,7 +336,7 @@ export function itemPool(opts = {}) {
       if (it.kind === 'comeback') return canComeback;
       if (k === 'jackpot') return !!opts.canJackpot && !nanta;   // '인생 한방'은 중하위권 이하만, 난타전 제외
       if (k === 'cure' || k === 'angel' || k === 'barrier' || k === 'mirror' || k === 'siren') {
-        // '해독'·'천사'·'쉴드'·'반사경'·'사이렌'(모두 방어 계열) — 매운맛은 하위권 제외 누구나, 난타전은 1등(defenseHeavy)에게만
+        // '해독'·'천사'·'쉴드'·'반사경'·'사이렌'(모두 방어 계열) — 매운맛은 하위권 제외 누구나, 난타전은 저격 후보 상위 3등(defenseHeavy)에게만
         return (mode === 'spicy' && !canComeback) || (nanta && !!opts.defenseHeavy);
       }
       if (k === 'randombox') return false;   // '랜덤박스'는 학생이 뽑아서 얻지 않음 — 교사가 직접 뿌릴 때만 받음
@@ -352,14 +352,15 @@ export function itemPool(opts = {}) {
 // comeback 아이템('방구석 축제'·'콤보 스파크')은 가중치 10배 — 하위권에게 자주 나오도록.
 // opts.canComeback(하위권)이면 🎫복권·🚀로켓 점프도 6배로 우대해 역전 기회를 더 준다.
 // 난타전(mode='nanta'): 저격이 주력이라 방해 아이템 가중치를 크게(10배) 준다. (구명조끼·되돌리기·리롤은 난타전 풀에서 제외됨)
-//   opts.defenseHeavy(난타전 개인 랭킹 1등)만 방어 계열(해독·천사·쉴드·반사경·사이렌)을 받을 수 있다: 🪞반사경·🚨사이렌은
-//   견제와 동률인 10배, 🍵해독·👼천사·🔰쉴드는 그 절반인 5배로 자주 나오게 한다. 2등·3등은 defenseHeavy가 아니므로
-//   방어 계열 자체를 받지 못한다.
+//   opts.defenseHeavy(난타전 개인 랭킹 1~3, 그 밖은 0)만 방어 계열(해독·천사·쉴드·반사경·사이렌)을 받을 수 있고,
+//   그 안에서도 맞을 확률(NANTA_TARGET_WEIGHTS = 80/15/5)에 비례해 1등이 가장 자주, 3등은 아주 가끔 받는다.
+//   1등 기준 🪞반사경·🚨사이렌은 견제와 동률인 10배, 🍵해독·👼천사·🔰쉴드는 그 절반인 5배.
 export function rollItem(opts = {}) {
   const pool = itemPool(opts);
   if (!pool.length) return null;
   const nanta = opts.mode === 'nanta';
-  const dh = nanta && opts.defenseHeavy;
+  const dh = nanta && opts.defenseHeavy;   // 1~3등 랭크(방어 계열 우대) 또는 0/false
+  const dw = dh ? NANTA_TARGET_WEIGHTS[dh - 1] / NANTA_TARGET_WEIGHTS[0] : 0;   // 1등 기준 상대 비율(1 / 0.1875 / 0.0625)
   const bias = opts.attackBias || 0;
   const aw = nanta ? 10 : (bias > 0 ? 1 + 8 * Math.min(1, bias) : 1);   // 견제 아이템 가중치 (난타전은 랭킹 무관 항상 10배)
   const fw = opts.teamMode && bias > 0 ? 1 + 5 * Math.min(1, bias) : 1;   // 팀전 '🌈축제' 최대 6배
@@ -368,8 +369,8 @@ export function rollItem(opts = {}) {
     const kind = ITEMS[k] && ITEMS[k].kind;
     if (k === 'jackpot') return jw;
     if (k === 'festival') return fw;
-    if (dh && (k === 'mirror' || k === 'siren')) return 10;   // 난타전 1등: 견제와 동률인 10배
-    if (dh && (k === 'cure' || k === 'angel' || k === 'barrier')) return 5;   // 해독·천사·쉴드는 반사경의 절반
+    if (dh && (k === 'mirror' || k === 'siren')) return 10 * dw;   // 1등 10배, 2등 1.875배, 3등 0.625배
+    if (dh && (k === 'cure' || k === 'angel' || k === 'barrier')) return 5 * dw;   // 반사경·사이렌의 절반
     if (kind === 'attack') return aw;
     if (kind === 'comeback') return 10;
     if (opts.canComeback && (k === 'lottery' || k === 'rocket')) return 6;   // 하위권 컴백 지원 아이템 우대
@@ -409,6 +410,9 @@ export function inTopGroup(players, id) {
 
 // 난타전 저격 대상 = 상위 몇 등까지인지.
 export const NANTA_TARGET_TOP = 3;
+
+// 난타전 저격 확률(1·2·3등 순): 80% / 15% / 5%. 방어 계열 아이템 우대도 같은 비율로 맞춘다(맞을 확률이 높을수록 방어도 자주).
+export const NANTA_TARGET_WEIGHTS = [80, 15, 5];
 
 // id가 상위 n등 안에 드는지 (난타전에서 '상위권 = 방어 아이템 우대' 판정용).
 export function inTopRanks(players, id, n) {
@@ -483,7 +487,7 @@ export function attackCandidates(players, byId, spicy = false, nanta = false) {
 // 난타전(nanta=true)은 후보가 상위 3명뿐이라 1등 80% / 2등 15% / 3등 5%로 더 쏠리게 한다.
 export function pickAttackTarget(candidates, nanta = false) {
   if (!candidates.length) return null;
-  const W = nanta ? [80, 15, 5] : [50, 30, 20, 12, 8, 5, 3, 2, 1];
+  const W = nanta ? NANTA_TARGET_WEIGHTS : [50, 30, 20, 12, 8, 5, 3, 2, 1];
   const weights = candidates.map((_, i) => (W[i] ?? 1));
   const total = weights.reduce((a, b) => a + b, 0);
   let r = Math.random() * total;
