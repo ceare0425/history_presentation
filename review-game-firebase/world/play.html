@@ -253,15 +253,15 @@
   .bee-layer{ position:absolute; inset:0; overflow:hidden; border-radius:16px; pointer-events:none; display:none; }
   .qbox.beeswarm .bee-layer{ display:block; }
   .bee-layer span{
-    position:absolute; left:-15%; opacity:.9;
-    animation-name:beeFly; animation-timing-function:linear; animation-iteration-count:infinite;
+    position:absolute; left:0; top:0; opacity:.9; will-change:transform;
+    animation-name:beeSwarm; animation-timing-function:linear; animation-iteration-count:infinite;
   }
-  @keyframes beeFly{
-    0%{ left:-15%; transform:translateY(0) rotate(0deg); }
-    25%{ transform:translateY(-14px) rotate(12deg); }
-    50%{ transform:translateY(10px) rotate(-10deg); }
-    75%{ transform:translateY(-10px) rotate(10deg); }
-    100%{ left:115%; transform:translateY(0) rotate(0deg); }
+  @keyframes beeSwarm{
+    0%{ transform:translate(var(--x0),var(--y0)) rotate(0deg); }
+    25%{ transform:translate(var(--x1),var(--y1)) rotate(-16deg); }
+    50%{ transform:translate(var(--x2),var(--y2)) rotate(10deg); }
+    75%{ transform:translate(var(--x3),var(--y3)) rotate(-8deg); }
+    100%{ transform:translate(var(--x4),var(--y4)) rotate(4deg); }
   }
   .item-hint-line{ text-align:center; font-size:.78rem; color:var(--sub); flex:0 0 auto; min-height:1.05em; margin-top:.6vh; }
   .item-bar{ margin-top:.6vh; flex:0 0 auto; min-height:64px; display:flex; gap:8px; }
@@ -551,19 +551,33 @@ const seenItemEvents = new Set();
 
 const el = (id) => document.getElementById(id);
 
-// 🐝 벌떼: 개수·크기·속도·시작 딜레이를 무작위로 흩뿌려서 빽빽한 무리처럼 보이게 한다
-(function buildBeeSwarm(count){
-  const layer = el('beeLayer');
+// 🐝 벌떼: 사방에서 제각각 날아드는 것처럼 피격 때마다 새로 흩뿌린다 (좌→우 한 방향이 아니라 임의의 방향·경로)
+function spawnBeeSwarm(layer, count){
+  layer.innerHTML = '';
+  const w = layer.clientWidth || 300;
+  const h = layer.clientHeight || 150;
+  const margin = Math.max(30, w * 0.18);
+  const edgePoint = () => {
+    const side = Math.floor(Math.random() * 4);   // 0위 1오른쪽 2아래 3왼쪽 — 어느 방향에서든 들어올 수 있게
+    if(side === 0) return { x: Math.random() * w, y: -margin };
+    if(side === 1) return { x: w + margin, y: Math.random() * h };
+    if(side === 2) return { x: Math.random() * w, y: h + margin };
+    return { x: -margin, y: Math.random() * h };
+  };
+  const insidePoint = () => ({ x: Math.random() * w, y: Math.random() * h });
   for(let i = 0; i < count; i++){
     const b = document.createElement('span');
     b.textContent = '🐝';
-    b.style.top = (Math.random() * 88) + '%';
-    b.style.fontSize = (1.0 + Math.random() * 0.7) + 'rem';
-    b.style.animationDuration = (1.6 + Math.random() * 1.6) + 's';
-    b.style.animationDelay = (Math.random() * -3) + 's';
+    [edgePoint(), insidePoint(), insidePoint(), insidePoint(), edgePoint()].forEach((p, idx) => {
+      b.style.setProperty(`--x${idx}`, p.x + 'px');
+      b.style.setProperty(`--y${idx}`, p.y + 'px');
+    });
+    b.style.fontSize = (0.85 + Math.random() * 0.7) + 'rem';
+    b.style.animationDuration = (1.5 + Math.random() * 2.3) + 's';
+    b.style.animationDelay = (Math.random() * -4) + 's';
     layer.appendChild(b);
   }
-})(24);
+}
 
 // 📳 지진: 문제 텍스트를 한 글자씩 span으로 쪼갠 뒤 계속 순서를 뒤섞는다 (빈칸 표시는 통째로 한 조각 취급)
 let scrambleTokens = null;
@@ -1044,6 +1058,7 @@ function tick(){
       syncStealActive();
       clearTimeout(iceTimer); clearTimeout(fogTimer); clearTimeout(earthquakeTimer); clearTimeout(beeTimer);
       el('qbox').classList.remove('fogged', 'shaking', 'beeswarm');
+      el('beeLayer').innerHTML = '';
       stopScramble();
       clearItemAlert();
       seenItemEvents.clear();
@@ -1431,6 +1446,7 @@ function rerollQuestion(){
 
 function clearIncomingFx(){
   el('qbox').classList.remove('fogged', 'shaking', 'beeswarm');
+  el('beeLayer').innerHTML = '';
   stopScramble();
   clearTimeout(fogTimer); clearTimeout(iceTimer); clearTimeout(earthquakeTimer); clearTimeout(beeTimer);
   frozen = false; mySnailNext = 0;
@@ -1783,11 +1799,13 @@ function applyIncomingFx(type, attackerId, reflected){
     const box = el('qbox');
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.beeNanta : spicy ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee;
     el('beeLabel').textContent = reflected ? '반사당한 벌떼' : '벌떼';
+    spawnBeeSwarm(el('beeLayer'), 240);
     box.classList.add('beeswarm');
     myBeeUntil = serverNow() + dur;
     clearTimeout(beeTimer);
     beeTimer = setTimeout(()=>{
       box.classList.remove('beeswarm');
+      el('beeLayer').innerHTML = '';
       myBeeUntil = 0;
     }, dur);
   } else if(type === 'snail'){
