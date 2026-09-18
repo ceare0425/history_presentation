@@ -283,7 +283,7 @@ export const ITEMS = {
   angel:    { emoji: '👼',  name: '천사',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
   mirror:   { emoji: '🪞',  name: '반사경',     kind: 'defense', desc: '10초간 날아오는 첫 견제를 쏜 사람에게 반사' },
   siren:    { emoji: '🚨',  name: '사이렌',    kind: 'defense', desc: '10초간 날아오는 첫 견제를 쏜 사람에게 반사' },
-  festival: { emoji: '🌈',  name: '축제',      kind: 'global',  desc: '20초간 모두 2배' },
+  festival: { emoji: '🌈',  name: '축제',      kind: 'global',  desc: '20초간 우리 팀 전원 2배' },
   anthem:   { emoji: '📣',  name: '팀 응원가',  kind: 'global',  desc: '우리 팀 전원 다음 정답 1개 2배' },
   soloFest: { emoji: '🛋️',  name: '방구석 축제', kind: 'comeback', desc: '30초간 나만 2배' },
   comboSpark:{ emoji: '🎇', name: '콤보 스파크', kind: 'comeback', desc: '30초간 정답마다 카드 뒤집기 보너스! 연속 정답 2번마다 대박 확률 UP' },
@@ -330,7 +330,7 @@ export function itemPool(opts = {}) {
       if (it.kind === 'global') {
         if (teamLeader) return false;
         if (k === 'anthem') return teamMode;
-        if (k === 'festival') return !nanta;   // 난타전은 '전체 2배' 축제 제외 (저격 위주 밸런스 유지)
+        if (k === 'festival') return !nanta && teamMode;   // '축제'는 팀전 전용(개인전 제외) + 난타전은 저격 위주 밸런스 유지를 위해 제외
         return true;
       }
       if (it.kind === 'comeback') return canComeback;

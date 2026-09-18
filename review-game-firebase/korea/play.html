@@ -1330,8 +1330,7 @@ function renderItemBar(){
     }
     if(roundState.team_mode){
       const u = unitLabel();
-      if(heldItem === 'festival') desc = '20초간 우리 팀 2배';
-      else if(heldItem === 'ladder') desc = `즉시 +2${u}`;
+      if(heldItem === 'ladder') desc = `즉시 +2${u}`;
       else if(heldItem === 'rocket') desc = `즉시 +5${u}`;
       else if(heldItem === 'steal') desc = `상대 팀 1등 -3${u}, 나 +3${u}`;
       else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u} (그 팀 2등 층수 아래로는 안 내려감)`;
