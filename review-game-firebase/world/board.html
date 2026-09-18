@@ -913,6 +913,7 @@ function flashClimberFx(pid, type){
   const spicy = roundState.items_mode === 'spicy' || nanta;
   const dur = type==='fog' ? (nanta ? ITEM_FX_MS.fogNanta : spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog)
             : type==='ice' ? (nanta ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice)
+            : type==='waterballoon' ? (nanta ? ITEM_FX_MS.waterballoonNanta : spicy ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon)
             : type==='earthquake' ? (nanta ? ITEM_FX_MS.earthquakeNanta : spicy ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake)
             : type==='bee' ? (nanta ? ITEM_FX_MS.beeNanta : spicy ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee) : 2600;
   setTimeout(()=>{ if(badge) badge.remove(); node.classList.remove('fx-fog', 'fx-earthquake'); }, dur);

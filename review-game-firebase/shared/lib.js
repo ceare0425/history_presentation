@@ -280,12 +280,14 @@ export const ITEMS = {
   randombox:{ emoji: '🎁',  name: '랜덤박스',  kind: 'self',    desc: '즉시 다른 아이템 하나를 뽑아 바로 발동' },
   cure:     { emoji: '🍵',  name: '해독',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
   mirror:   { emoji: '🪞',  name: '반사경',     kind: 'defense', desc: '10초간 날아오는 첫 견제를 쏜 사람에게 반사' },
+  siren:    { emoji: '🚨',  name: '사이렌',    kind: 'defense', desc: '10초간 날아오는 첫 견제를 쏜 사람에게 반사' },
   festival: { emoji: '🌈',  name: '축제',      kind: 'global',  desc: '20초간 모두 2배' },
   anthem:   { emoji: '📣',  name: '팀 응원가',  kind: 'global',  desc: '우리 팀 전원 다음 정답 1개 2배' },
   soloFest: { emoji: '🛋️',  name: '방구석 축제', kind: 'comeback', desc: '30초간 나만 2배' },
   comboSpark:{ emoji: '🎇', name: '콤보 스파크', kind: 'comeback', desc: '30초간 정답마다 카드 뒤집기 보너스! 연속 정답 2번마다 대박 확률 UP' },
   fog:      { emoji: '🌫️',  name: '안개',      kind: 'attack',  desc: '선두권 문제 화면이 8초간 흐려짐' },
   ice:      { emoji: '🧊',  name: '얼음',      kind: 'attack',  desc: '선두권이 8초간 제출 불가' },
+  waterballoon:{ emoji: '💧', name: '물풍선',   kind: 'attack',  desc: '선두권이 물기가 마를 때까지 8초간 제출 불가' },
   earthquake:{ emoji: '📳', name: '지진',      kind: 'attack',  desc: '선두권 문제 화면이 흔들리고 글자가 8초간 뒤섞임' },
   bee:      { emoji: '🐝',  name: '벌떼',      kind: 'attack',  desc: '선두권 문제가 8초간 벌떼에 가려짐' },
   snail:    { emoji: '🐌',  name: '느림보',    kind: 'attack',  desc: '선두권 다음 정답이 +1층만' },
@@ -296,10 +298,10 @@ export const ITEMS = {
 // 매운맛(spicy)·난타전(nanta)에서는 방해 효과가 더 오래/세게 간다.
 // 피격 후 무적 시간은 아이템전 전체 공통 3초로 통일(모드 무관).
 export const ITEM_FX_MS = {
-  fog: 8000, ice: 8000, earthquake: 8000, bee: 8000, festival: 20000, immunity: 3000,
-  fogSpicy: 10000, iceSpicy: 10000, earthquakeSpicy: 10000, beeSpicy: 10000,
-  fogNanta: 5000, iceNanta: 5000, earthquakeNanta: 5000, beeNanta: 5000,
-  soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 10000, mirrorNanta: 10000, vest: 20000,
+  fog: 8000, ice: 8000, waterballoon: 8000, earthquake: 8000, bee: 8000, festival: 20000, immunity: 3000,
+  fogSpicy: 10000, iceSpicy: 10000, waterballoonSpicy: 10000, earthquakeSpicy: 10000, beeSpicy: 10000,
+  fogNanta: 5000, iceNanta: 5000, waterballoonNanta: 5000, earthquakeNanta: 5000, beeNanta: 5000,
+  soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 10000, mirrorNanta: 10000, siren: 10000, sirenNanta: 10000, vest: 20000,
   comboSpark: 30000, comboSparkLast: 60000,   // 꼴찌(동률 포함)가 쓰면 1분으로 늘어남
   stealAmt: 5, stealDefenseMs: 7000, stealDefenseAmt: 1,   // 강탈(개인전): 방어 실패 시 5층, 방어 성공(그 문제를 제시간에 맞힘) 시 1층만
   snowballCap: 10,   // 눈덩이: 연속 정답 수만큼 추가되지만, 인생 한방(+20) 등과 밸런스 맞춰 최대 10층까지만
@@ -312,8 +314,8 @@ export const ITEM_FX_MS = {
 //   canJackpot  : '인생 한방' 포함 (하위 50%=중하위권 이하일 때만). 난타전에선 안 나옴.
 //   teamMode    : 팀전 여부 — '팀 응원가'는 팀전만
 //   teamLeader  : 팀전 1등 팀 — 전체(global: 축제·응원가) 아이템 제외, 개인 향상만 (난타전에선 저격은 그대로 나옴)
-//   defenseHeavy: 난타전 개인 랭킹 1등 — 견제:반사경이 동률로 나오게(2·3등은 편중 없이 다른 등수와 동일)
-// '반사경'은 견제가 있는 매운맛에서는 누구나, 난타전에서는 1등(defenseHeavy)에게만 나온다.
+//   defenseHeavy: 난타전 개인 랭킹 1등 — 견제:반사경·사이렌이 동률로 나오게(2·3등은 편중 없이 다른 등수와 동일)
+// '반사경'·'사이렌'(기능은 동일, 이름만 다른 반사 아이템)은 견제가 있는 매운맛에서는 누구나, 난타전에서는 1등(defenseHeavy)에게만 나온다.
 export function itemPool(opts = {}) {
   const { mode = 'nanta', canAttack = false, canComeback = false, teamMode = false, teamLeader = false } = opts;
   const nanta = mode === 'nanta';
@@ -330,7 +332,7 @@ export function itemPool(opts = {}) {
       if (it.kind === 'comeback') return canComeback;
       if (k === 'jackpot') return !!opts.canJackpot && !nanta;   // '인생 한방'은 중하위권 이하만, 난타전 제외
       if (k === 'cure') return !canComeback;             // '해독'은 하위권에겐 안 뜸 (방해는 선두권만 걸리므로 쓸모없음)
-      if (k === 'mirror') return mode === 'spicy' || (nanta && !!opts.defenseHeavy);   // 난타전 반사경: 1등에게만
+      if (k === 'mirror' || k === 'siren') return mode === 'spicy' || (nanta && !!opts.defenseHeavy);   // 난타전 반사경·사이렌: 1등에게만
       if (k === 'randombox') return false;   // '랜덤박스'는 학생이 뽑아서 얻지 않음 — 교사가 직접 뿌릴 때만 받음
       return true;
     })
@@ -359,7 +361,7 @@ export function rollItem(opts = {}) {
     const kind = ITEMS[k] && ITEMS[k].kind;
     if (k === 'jackpot') return jw;
     if (k === 'festival') return fw;
-    if (dh && k === 'mirror') return 10;   // 난타전 1등: 견제와 동률인 10배
+    if (dh && (k === 'mirror' || k === 'siren')) return 10;   // 난타전 1등: 견제와 동률인 10배
     if (dh && k === 'cure') return 5;   // 반사경의 절반
     if (kind === 'attack') return aw;
     if (kind === 'comeback') return 10;
