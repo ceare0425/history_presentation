@@ -390,8 +390,10 @@
         <div class="festival-banner" id="vestBanner">🛟 구명조끼! 틀려도 안전 · <span id="vestRemain"></span>초 남음</div>
         <div class="festival-banner" id="cloverBanner">🍀 네잎클로버! 정답마다 행운 · <span id="cloverRemain"></span>초 남음</div>
         <div class="festival-banner" id="mirrorBanner">🪞 반사경 대기 중 · <span id="mirrorRemain"></span>초 남음</div>
+        <div class="festival-banner" id="sirenBanner">🚨 사이렌 대기 중 · <span id="sirenRemain"></span>초 남음</div>
         <div class="debuff-banner" id="fogBanner">🌫️ <span id="fogLabel">안개</span>! 문제가 흐려요 · <span id="fogRemain"></span>초 남음</div>
         <div class="debuff-banner" id="iceBanner">🧊 <span id="iceLabel">얼음</span>! 제출 불가 · <span id="iceRemain"></span>초 남음</div>
+        <div class="debuff-banner" id="waterballoonBanner">💧 <span id="waterballoonLabel">물풍선</span>! 물기가 마를 때까지 제출 불가 · <span id="waterballoonRemain"></span>초 남음</div>
         <div class="debuff-banner" id="earthquakeBanner">📳 <span id="earthquakeLabel">지진</span>! 화면이 흔들려요 · <span id="earthquakeRemain"></span>초 남음</div>
         <div class="debuff-banner" id="beeBanner">🐝 <span id="beeLabel">벌떼</span>! 문제가 가려져요 · <span id="beeRemain"></span>초 남음</div>
         <div class="atk-banner" id="stealAtkBanner">🥷⏳ 강탈 공격 중··· <span id="stealAtkRemain"></span>초 후 결과!</div>
@@ -535,18 +537,22 @@ let randomboxOfferPending = false; // 교사가 뿌린 '랜덤박스' 제안 —
 let myCloverUntil = 0;       // '네잎클로버' — 30초간 정답마다 50% +1층
 let myAnthemNext = 0;        // '팀 응원가' — 남은 2배 정답 수(팀 전체 각자)
 let myMirrorUntil = 0;       // '반사경' — 10초간 첫 견제 반사
+let mySirenUntil = 0;        // '사이렌' — 반사경과 동일(이름만 다름), 10초간 첫 견제 반사
 let myUndoAvailable = false; // '되돌리기' 가능 (방금 오답 직후, 다음 제출 전까지)
 let myUndoStreak = 0;        // 되돌리면 복구할 연속 수
 let myUndoFloorDelta = 0;    // 되돌리면 복구할 층수(골든벨 실패 -2 등)
 let festivalBy = '';         // '축제'를 쓴 학생 이름 (배너 표시용)
 let myImmuneUntil = 0;       // 방해 피격 후 무적 종료 시각(ms)
-let frozen = false;          // '얼음' 피격 중 입력 잠금
 let iceTimer = null, fogTimer = null, itemAlertTimer = null;
-let earthquakeTimer = null, beeTimer = null;
+let earthquakeTimer = null, beeTimer = null, waterballoonTimer = null;
 let myStealDefenses = [];   // '강탈' 피격 직후 방어 창 목록: { amt, qid, deadline, attackerId, timer } — 짧은 시간에 여러 번 저격당해도 각자 독립적으로 판정되도록 배열로 관리
 let myStealAttackUntil = 0;  // 내가 쏜 '강탈'의 결과를 기다리는 중(공격자 화면 타이머용) 종료 시각(ms)
 let myFogUntil = 0, myIceUntil = 0;   // 안개·얼음 피격 종료 시각(ms) — 배너에 남은 시간 표시용
 let myEarthquakeUntil = 0, myBeeUntil = 0;   // 지진·벌떼 피격 종료 시각(ms)
+let myWaterballoonUntil = 0;   // '물풍선' — 얼음과 동일(이름만 다름) 피격 종료 시각(ms)
+// '얼음'·'물풍선'은 효과가 같은 "제출 불가" 디버프라, 둘 중 하나라도 남아있으면 입력을 잠근다
+// (겹쳐 맞아도 먼저 끝난 쪽이 나중 것까지 풀어버리지 않도록 별도 플래그 대신 남은 시간으로 판정)
+function isFrozen(){ return serverNow() < myIceUntil || serverNow() < myWaterballoonUntil; }
 const seenItemEvents = new Set();
 
 const el = (id) => document.getElementById(id);
@@ -740,9 +746,9 @@ function renderQuestion(q){
   el('qText').innerHTML = q.text.replace(/____/g, '<span class="blank-mark"></span>');
   if(serverNow() < myEarthquakeUntil) startScramble();   // 지진 피격 중 새 문제가 나와도 계속 뒤섞이게 재적용
   el('answerInput').value = '';
-  // '얼음' 피격 중이면 새 문제가 나와도 입력을 풀어주면 안 됨 — 재도전 큐·리롤 등 여러 경로가
-  // 여기로 모이므로 각 호출부가 아니라 이 함수 자체에서 얼음 상태를 지켜야 빠짐없이 막힘
-  if(!frozen){
+  // '얼음'·'물풍선' 피격 중이면 새 문제가 나와도 입력을 풀어주면 안 됨 — 재도전 큐·리롤 등 여러 경로가
+  // 여기로 모이므로 각 호출부가 아니라 이 함수 자체에서 상태를 지켜야 빠짐없이 막힘
+  if(!isFrozen()){
     el('answerInput').disabled = false;
     el('submitBtn').disabled = false;
     el('answerInput').focus();
@@ -845,7 +851,7 @@ function flashFeedback(correct, correctAnswer, gain, bonusApplied, wasRetry){
 }
 
 async function submitAnswer(){
-  if(frozen) return; // '얼음' 피격 중
+  if(isFrozen()) return; // '얼음'·'물풍선' 피격 중
   const text = el('answerInput').value.trim();
   if(!text || !currentQid || !currentQuestion) return;
   el('submitBtn').disabled = true;
@@ -973,7 +979,7 @@ async function submitAnswer(){
 
   const proceedToNext = () => {
     setTimeout(()=>{
-      assignNextQuestion();   // 입력창 재활성화는 renderQuestion()이 frozen 여부를 보고 알아서 처리
+      assignNextQuestion();   // 입력창 재활성화는 renderQuestion()이 isFrozen() 여부를 보고 알아서 처리
     }, correct ? 700 : 1500);
   };
   if(comboSparkStreak !== null) openComboSparkPicker(comboSparkStreak, proceedToNext);
@@ -1050,13 +1056,13 @@ function tick(){
       queue = []; retryList = []; retryMiss = {}; lastQid = null; currentQid = null; currentQuestion = null; currentStartedAt = null;
       // 아이템 로컬 상태 초기화
       heldItem = null; myBoost = 0; myShield = false;
-      mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myComboSparkUntil = 0; myImmuneUntil = 0; frozen = false;
-      myFogUntil = 0; myIceUntil = 0; myEarthquakeUntil = 0; myBeeUntil = 0;
-      myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
+      mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myComboSparkUntil = 0; myImmuneUntil = 0;
+      myFogUntil = 0; myIceUntil = 0; myEarthquakeUntil = 0; myBeeUntil = 0; myWaterballoonUntil = 0;
+      myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0; mySirenUntil = 0;
       myUndoAvailable = false; myUndoFloorDelta = 0; randomboxOfferPending = false;
       myStealDefenses.forEach(d=>clearTimeout(d.timer)); myStealDefenses = []; myStealAttackUntil = 0;
       syncStealActive();
-      clearTimeout(iceTimer); clearTimeout(fogTimer); clearTimeout(earthquakeTimer); clearTimeout(beeTimer);
+      clearTimeout(iceTimer); clearTimeout(fogTimer); clearTimeout(earthquakeTimer); clearTimeout(beeTimer); clearTimeout(waterballoonTimer);
       el('qbox').classList.remove('fogged', 'shaking', 'beeswarm');
       el('beeLayer').innerHTML = '';
       stopScramble();
@@ -1084,8 +1090,10 @@ function tick(){
     updateBanner('vestBanner', serverNow() < myVestUntil, ()=> el('vestRemain').textContent = Math.ceil((myVestUntil - serverNow()) / 1000));
     updateBanner('cloverBanner', serverNow() < myCloverUntil, ()=> el('cloverRemain').textContent = Math.ceil((myCloverUntil - serverNow()) / 1000));
     updateBanner('mirrorBanner', serverNow() < myMirrorUntil, ()=> el('mirrorRemain').textContent = Math.ceil((myMirrorUntil - serverNow()) / 1000));
+    updateBanner('sirenBanner', serverNow() < mySirenUntil, ()=> el('sirenRemain').textContent = Math.ceil((mySirenUntil - serverNow()) / 1000));
     updateBanner('fogBanner', serverNow() < myFogUntil, ()=> el('fogRemain').textContent = Math.ceil((myFogUntil - serverNow()) / 1000));
     updateBanner('iceBanner', serverNow() < myIceUntil, ()=> el('iceRemain').textContent = Math.ceil((myIceUntil - serverNow()) / 1000));
+    updateBanner('waterballoonBanner', serverNow() < myWaterballoonUntil, ()=> el('waterballoonRemain').textContent = Math.ceil((myWaterballoonUntil - serverNow()) / 1000));
     updateBanner('earthquakeBanner', serverNow() < myEarthquakeUntil, ()=> el('earthquakeRemain').textContent = Math.ceil((myEarthquakeUntil - serverNow()) / 1000));
     updateBanner('beeBanner', serverNow() < myBeeUntil, ()=> el('beeRemain').textContent = Math.ceil((myBeeUntil - serverNow()) / 1000));
     updateBanner('stealAtkBanner', serverNow() < myStealAttackUntil, ()=> el('stealAtkRemain').textContent = Math.ceil((myStealAttackUntil - serverNow()) / 1000));
@@ -1202,6 +1210,10 @@ function itemDescFor(k, it, nanta){
     const s = (nanta ? ITEM_FX_MS.iceNanta : itemsMode === 'spicy' ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) / 1000;
     return `선두권이 ${s}초간 제출 불가`;
   }
+  if(k === 'waterballoon'){
+    const s = (nanta ? ITEM_FX_MS.waterballoonNanta : itemsMode === 'spicy' ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon) / 1000;
+    return `선두권이 물기가 마를 때까지 ${s}초간 제출 불가`;
+  }
   if(k === 'earthquake'){
     const s = (nanta ? ITEM_FX_MS.earthquakeNanta : itemsMode === 'spicy' ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake) / 1000;
     return `선두권 문제 화면이 흔들리고 글자가 ${s}초간 뒤섞임`;
@@ -1277,6 +1289,9 @@ function renderItemBar(){
     } else if(heldItem === 'ice'){
       const s = (itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : itemsMode === 'spicy' ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) / 1000;
       desc = `선두권이 ${s}초간 제출 불가`;
+    } else if(heldItem === 'waterballoon'){
+      const s = (itemsMode === 'nanta' ? ITEM_FX_MS.waterballoonNanta : itemsMode === 'spicy' ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon) / 1000;
+      desc = `선두권이 물기가 마를 때까지 ${s}초간 제출 불가`;
     } else if(heldItem === 'earthquake'){
       const s = (itemsMode === 'nanta' ? ITEM_FX_MS.earthquakeNanta : itemsMode === 'spicy' ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake) / 1000;
       desc = `선두권 문제 화면이 흔들리고 글자가 ${s}초간 뒤섞임`;
@@ -1448,9 +1463,9 @@ function clearIncomingFx(){
   el('qbox').classList.remove('fogged', 'shaking', 'beeswarm');
   el('beeLayer').innerHTML = '';
   stopScramble();
-  clearTimeout(fogTimer); clearTimeout(iceTimer); clearTimeout(earthquakeTimer); clearTimeout(beeTimer);
-  frozen = false; mySnailNext = 0;
-  myFogUntil = 0; myIceUntil = 0; myEarthquakeUntil = 0; myBeeUntil = 0;
+  clearTimeout(fogTimer); clearTimeout(iceTimer); clearTimeout(earthquakeTimer); clearTimeout(beeTimer); clearTimeout(waterballoonTimer);
+  mySnailNext = 0;
+  myFogUntil = 0; myIceUntil = 0; myEarthquakeUntil = 0; myBeeUntil = 0; myWaterballoonUntil = 0;
   // 진행 중인 강탈 방어 창도 해독으로 완전히 무효화 — 각 공격자에게 결과 통보
   myStealDefenses.forEach(d=>{ clearTimeout(d.timer); notifyStealResult(d.attackerId, 'cure', 0); });
   myStealDefenses = [];
@@ -1480,6 +1495,10 @@ async function applySelfItem(key){
   else if(key === 'mirror'){
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.mirrorNanta : ITEM_FX_MS.mirror;
     myMirrorUntil = Math.max(serverNow(), myMirrorUntil) + dur;   // 아직 반사경이 남아있으면 새로 쓴 만큼 이어서 누적
+  }
+  else if(key === 'siren'){   // 반사경과 완전히 동일(이름만 다름)
+    const dur = itemsMode === 'nanta' ? ITEM_FX_MS.sirenNanta : ITEM_FX_MS.siren;
+    mySirenUntil = Math.max(serverNow(), mySirenUntil) + dur;
   }
   else if(key === 'comboSpark'){
     const dur = isLastGroup(allPlayers, playerId) ? ITEM_FX_MS.comboSparkLast : ITEM_FX_MS.comboSpark;
@@ -1618,7 +1637,7 @@ async function useItem(){
     }
     heldItem = null;
     await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
-    if((key === 'ice' || key === 'fog' || key === 'steal') && target.immuneUntil && serverNow() < target.immuneUntil){
+    if((key === 'ice' || key === 'fog' || key === 'waterballoon' || key === 'steal') && target.immuneUntil && serverNow() < target.immuneUntil){
       renderItemBar();
       showItemAlert('🛡️ 상대방이 무적 상태여서 아이템이 작동하지 않습니다');
       return;
@@ -1722,11 +1741,17 @@ function handleItemEvents(obj){
       else if((e.type === 'slide' || e.type === 'steal') && e.target){ if(e.target !== playerId) return; }
       else if(!e.targetTeam || e.targetTeam !== myTeam) return;
     } else if(e.target !== playerId) return;
-    // '반사경' 활성 중이면 아직 반사 안 된 공격을 쏜 사람에게 그대로 되돌린다
+    // '반사경'·'사이렌' 활성 중이면 아직 반사 안 된 공격을 쏜 사람에게 그대로 되돌린다
     if(now < myMirrorUntil && !e.reflected){
       myMirrorUntil = 0;
       push(roomRef(ROOM, 'item_events'), { type: e.type, by: playerId, byName: playerName, target: e.by, reflected: true, at: now });
       showItemAlert('🪞 반사! 공격을 쏜 사람에게 되돌려보냈다');
+      return;
+    }
+    if(now < mySirenUntil && !e.reflected){
+      mySirenUntil = 0;
+      push(roomRef(ROOM, 'item_events'), { type: e.type, by: playerId, byName: playerName, target: e.by, reflected: true, at: now });
+      showItemAlert('🚨 사이렌! 공격을 쏜 사람에게 되돌려보냈다');
       return;
     }
     if(now < myImmuneUntil){
@@ -1772,15 +1797,24 @@ function applyIncomingFx(type, attackerId, reflected){
   } else if(type === 'ice'){
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice;
     el('iceLabel').textContent = reflected ? '반사당한 얼음' : '얼음';
-    frozen = true;
     myIceUntil = serverNow() + dur;
     el('answerInput').disabled = true;
     el('submitBtn').disabled = true;
     clearTimeout(iceTimer);
     iceTimer = setTimeout(()=>{
-      frozen = false;
       myIceUntil = 0;
-      if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; el('answerInput').focus(); }
+      if(!roundEnded() && !isFrozen()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; el('answerInput').focus(); }
+    }, dur);
+  } else if(type === 'waterballoon'){   // 얼음과 완전히 동일한 효과(이름·멘트만 다름)
+    const dur = itemsMode === 'nanta' ? ITEM_FX_MS.waterballoonNanta : spicy ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon;
+    el('waterballoonLabel').textContent = reflected ? '반사당한 물풍선' : '물풍선';
+    myWaterballoonUntil = serverNow() + dur;
+    el('answerInput').disabled = true;
+    el('submitBtn').disabled = true;
+    clearTimeout(waterballoonTimer);
+    waterballoonTimer = setTimeout(()=>{
+      myWaterballoonUntil = 0;
+      if(!roundEnded() && !isFrozen()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; el('answerInput').focus(); }
     }, dur);
   } else if(type === 'earthquake'){
     const box = el('qbox');
