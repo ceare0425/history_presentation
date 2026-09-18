@@ -446,6 +446,14 @@
   </div>
 </div>
 
+<div class="combo-overlay hidden" id="mineOverlay">
+  <div class="combo-modal">
+    <div class="combo-title" id="mineTitle">💣 지뢰! 카드를 한 장 골라보세요</div>
+    <div class="combo-cards" id="mineCards"></div>
+    <div class="combo-result" id="mineResult"></div>
+  </div>
+</div>
+
 <div class="conn-warn" id="connWarn">인터넷 연결을 확인해주세요</div>
 
 <script type="module">
@@ -1070,6 +1078,7 @@ function tick(){
       seenItemEvents.clear();
       renderItemBar();
       el('comboOverlay').classList.add('hidden');
+      el('mineOverlay').classList.add('hidden');
     }
     el('timerVal').textContent = fmtTime(remaining);
     if(currentQid === null && Object.keys(questionsObj).length>0){
@@ -1306,10 +1315,12 @@ function renderItemBar(){
       else if(heldItem === 'rocket') desc = `즉시 +5${u}`;
       else if(heldItem === 'steal') desc = `상대 팀 1등 -3${u}, 나 +3${u}`;
       else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u} (그 팀 2등 층수 아래로는 안 내려감)`;
+      else if(heldItem === 'banana') desc = `상대 팀 1등이 바나나를 밟아 즉시 -2${u}`;
+      else if(heldItem === 'mine') desc = `상대 팀 1등에게 설치 — 카드 3장 중 1장만 생존, 나머지는 -1~-4${u}`;
       else if(heldItem === 'goldenbell') desc = `다음 정답 ×3! 틀리면 연속 끊김 -2${u}`;
       else if(heldItem === 'jackpot') desc = `다음 정답 +20${u} / 오답 -10${u}`;
       else if(heldItem === 'snowball') desc = `다음 정답에 지금 연속 수만큼 ${u} 추가 (최대 10)`;
-      else if(heldItem === 'vest') desc = `20초간 틀려도 ${u}·연속 유지 (미끄럼틀·강탈 막음)`;
+      else if(heldItem === 'vest') desc = `20초간 틀려도 ${u}·연속 유지 (미끄럼틀·강탈·바나나·지뢰 막음)`;
       else if(heldItem === 'clover') desc = `30초간 정답마다 50%로 +1${u} 더`;
       else if(heldItem === 'roulette') desc = `즉시 +1 ~ +8${u} 랜덤!`;
       else if(heldItem === 'lottery') desc = `즉시 +3 ~ +10${u} 랜덤! (+10은 4%)`;
@@ -1572,9 +1583,9 @@ async function useItem(){
         showItemAlert('상대 팀이 없어 견제 대신 🪜 사다리!');
         return applySelfItem('ladder');
       }
-      // 미끄럼틀·강탈은 상대 팀 전원이 아니라 그 팀 1등에게만 적용 — 아이템 소모 전에 먼저 대상을 구한다
+      // 미끄럼틀·강탈·바나나·지뢰는 상대 팀 전원이 아니라 그 팀 1등에게만 적용 — 아이템 소모 전에 먼저 대상을 구한다
       let topMemberId = null;
-      if(key === 'slide' || key === 'steal'){
+      if(key === 'slide' || key === 'steal' || key === 'banana' || key === 'mine'){
         const topMember = rankedPlayers(allPlayers.filter(p=> p.team === targetTeam))[0];
         if(topMember) topMemberId = topMember.id;
         // 이미 다른 학생에게 강탈당해 방어 창이 열려 있는 상대는 또 강탈할 수 없음(아이템은 소모하지 않고 되돌림)
@@ -1606,6 +1617,10 @@ async function useItem(){
         myStealAttackUntil = serverNow() + ITEM_FX_MS.stealDefenseMs;   // 내가 얻는 층수는 steal_result 이벤트로 결과가 정해진 뒤에 반영됨(개인전과 동일)
       } else if(key === 'slide'){
         showItemAlert(`⬇️ 미끄럼틀 → ${tgtInfo ? tgtInfo.label : '상대 팀'} 1등에게 발사!`);
+      } else if(key === 'banana'){
+        showItemAlert(`🍌 바나나 → ${tgtInfo ? tgtInfo.label : '상대 팀'} 1등에게 던짐!`);
+      } else if(key === 'mine'){
+        showItemAlert(`💣 지뢰 → ${tgtInfo ? tgtInfo.label : '상대 팀'} 1등에게 설치!`);
       } else {
         showItemAlert(`${it.emoji} ${it.name} → ${tgtInfo ? tgtInfo.label : '상대 팀'} 전원에게 발사!`);
       }
@@ -1650,6 +1665,10 @@ async function useItem(){
     const tgtLabel = nanta ? (target.name || '상대') : '선두권';
     if(key === 'steal'){
       myStealAttackUntil = serverNow() + ITEM_FX_MS.stealDefenseMs;   // 내가 얻는 층수는 steal_result 이벤트로 결과가 정해진 뒤에 반영됨
+    } else if(key === 'mine'){
+      showItemAlert(`💣 지뢰 → ${tgtLabel}에게 설치!`);
+    } else if(key === 'banana'){
+      showItemAlert(`🍌 바나나 → ${tgtLabel}에게 던짐!`);
     } else {
       showItemAlert(`${it.emoji} ${it.name} → ${tgtLabel}에게 발사!`);
     }
@@ -1714,6 +1733,12 @@ function handleItemEvents(obj){
       bumpFloor(e.amt);
       return;
     }
+    // 지뢰 결과 통보: 상대가 카드를 고른 뒤 설치자에게만 성공/실패 여부를 알려준다
+    if(e.type === 'mine_result'){
+      if(e.target !== playerId) return;
+      showItemAlert(e.survived ? '💣 지뢰 설치가 실패했습니다…' : '💣 지뢰 설치가 성공하였습니다!');
+      return;
+    }
     // 전체에 영향을 주는 아이템 → 모든 학생에게 "누가 무엇을 써서 어떤 효과" 안내
     const evItem = ITEMS[e.type];
     if(evItem && evItem.kind === 'global'){
@@ -1738,7 +1763,7 @@ function handleItemEvents(obj){
     if(roundState.team_mode){
       if(e.reflected && e.target){ if(e.target !== playerId) return; }
       // 미끄럼틀·강탈은 상대 팀 1등만 대상 (e.target 지정)
-      else if((e.type === 'slide' || e.type === 'steal') && e.target){ if(e.target !== playerId) return; }
+      else if((e.type === 'slide' || e.type === 'steal' || e.type === 'banana' || e.type === 'mine') && e.target){ if(e.target !== playerId) return; }
       else if(!e.targetTeam || e.targetTeam !== myTeam) return;
     } else if(e.target !== playerId) return;
     // '반사경'·'사이렌' 활성 중이면 아직 반사 안 된 공격을 쏜 사람에게 그대로 되돌린다
@@ -1769,6 +1794,49 @@ function handleItemEvents(obj){
 function notifyStealResult(attackerId, outcome, amt){
   if(!attackerId) return;
   push(roomRef(ROOM, 'item_events'), { type: 'steal_result', target: attackerId, outcome, amt, victim: playerId, victimName: playerName, at: serverNow() });
+}
+
+function notifyMineResult(attackerId, survived){
+  if(!attackerId) return;
+  push(roomRef(ROOM, 'item_events'), { type: 'mine_result', target: attackerId, survived, at: serverNow() });
+}
+
+// 💣 지뢰: 카드 3장 중 1장만 생존, 나머지 2장은 -1~-4층 중 무작위(중복 가능)로 배정.
+// 콤보 스파크 카드 뒤집기와 같은 방식으로 클라이언트에서 직접 뽑되, 상대(설치자)에게는 결과만 통보한다.
+function openMineOverlay(attackerId, mineLabel){
+  const survivorIdx = Math.floor(Math.random() * 3);
+  const cards = [0, 1, 2].map(i => i === survivorIdx ? { survive: true } : { survive: false, amt: Math.floor(Math.random() * 4) + 1 });
+  const cardsEl = el('mineCards');
+  el('mineTitle').textContent = `💣 ${mineLabel}! 카드를 한 장 골라보세요`;
+  cardsEl.innerHTML = cards.map((c, i) => `<button type="button" class="combo-card" data-i="${i}">💣</button>`).join('');
+  el('mineResult').textContent = '';
+  el('mineOverlay').classList.remove('hidden');
+  const btns = Array.from(cardsEl.querySelectorAll('.combo-card'));
+  const reveal = (btn, c) => {
+    btn.classList.add('flipped');
+    btn.textContent = c.survive ? '🍀' : '💥';
+  };
+  btns.forEach((btn, i) => {
+    btn.onclick = () => {
+      btns.forEach((b) => { b.onclick = null; });
+      const c = cards[i];
+      btn.classList.add('chosen');
+      reveal(btn, c);
+      setTimeout(() => {
+        btns.forEach((b, j) => { if(j !== i) reveal(b, cards[j]); });
+        if(c.survive){
+          el('mineResult').textContent = '🍀 생존하였습니다!';
+          showItemAlert('🍀 지뢰밭에서 생존하였습니다!');
+        } else {
+          el('mineResult').textContent = `💥 지뢰를 밟았다! -${c.amt}${unitLabel()}`;
+          showItemAlert(`💥 지뢰를 밟았다! -${c.amt}${unitLabel()}`);
+          bumpFloor(-c.amt);
+        }
+        notifyMineResult(attackerId, c.survive);
+      }, 500);
+      setTimeout(() => { el('mineOverlay').classList.add('hidden'); }, 1200);
+    };
+  });
 }
 
 // 강탈 방어 창이 하나라도 열려 있는지를 내 플레이어 레코드에 동기화 — 다른 학생이 나를
@@ -1877,6 +1945,20 @@ function applyIncomingFx(type, attackerId, reflected){
       showItemAlert(`🥷💦 ${stealVerb}! -${amt}${unitLabel()}`);
       bumpFloor(-amt);
     }
+  } else if(type === 'banana'){
+    const bananaLabel = reflected ? '반사당한 바나나' : '바나나';
+    if(serverNow() < myVestUntil){ showItemAlert(`🛟 구명조끼! ${bananaLabel}을 막았어요`); return; }
+    showItemAlert(`🍌 으악! ${bananaLabel}를 밟았다! -2${unitLabel()}`);
+    bumpFloor(-2);
+  } else if(type === 'mine'){
+    const mineLabel = reflected ? '반사당한 지뢰' : '지뢰';
+    // '구명조끼' 보유 중이면 지뢰도 완전히 막는다 — 설치자에게는 실패로 통보
+    if(serverNow() < myVestUntil){
+      showItemAlert(`🛟 구명조끼! ${mineLabel}를 막았어요`);
+      notifyMineResult(attackerId, true);
+      return;
+    }
+    openMineOverlay(attackerId, mineLabel);
   }
 }
 
