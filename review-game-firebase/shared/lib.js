@@ -276,9 +276,11 @@ export const ITEMS = {
   undo:     { emoji: '🪃',  name: '되돌리기',   kind: 'self',    desc: '방금 틀린 문제를 없던 일로 (오답 -1·연속 복구)' },
   jackpot:  { emoji: '🎲',  name: '인생 한방',  kind: 'self',    desc: '다음 정답 +20층 / 오답 -10층 (개인전·팀전 공통)' },
   snowball: { emoji: '🌀',  name: '눈덩이',    kind: 'self',    desc: '다음 정답에 지금 연속 수만큼 층수 추가 (최대 10층)' },
-  vest:     { emoji: '🛟',  name: '구명조끼',  kind: 'self',    desc: '20초간 틀려도 층수·연속이 안 깎임 (미끄럼틀·강탈·바나나·지뢰도 막음)' },
+  vest:     { emoji: '🛟',  name: '구명조끼',  kind: 'self',    desc: '20초간 틀려도 층수·연속이 안 깎임' },
+  barrier:  { emoji: '🔰',  name: '쉴드',      kind: 'self',    desc: '10초간 모든 방해 공격에 무적 (그 사이 나를 노린 공격 아이템은 그대로 사라짐)' },
   randombox:{ emoji: '🎁',  name: '랜덤박스',  kind: 'self',    desc: '즉시 다른 아이템 하나를 뽑아 바로 발동' },
   cure:     { emoji: '🍵',  name: '해독',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
+  angel:    { emoji: '👼',  name: '천사',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
   mirror:   { emoji: '🪞',  name: '반사경',     kind: 'defense', desc: '10초간 날아오는 첫 견제를 쏜 사람에게 반사' },
   siren:    { emoji: '🚨',  name: '사이렌',    kind: 'defense', desc: '10초간 날아오는 첫 견제를 쏜 사람에게 반사' },
   festival: { emoji: '🌈',  name: '축제',      kind: 'global',  desc: '20초간 모두 2배' },
@@ -303,7 +305,7 @@ export const ITEM_FX_MS = {
   fog: 8000, ice: 8000, waterballoon: 8000, earthquake: 8000, bee: 8000, festival: 20000, immunity: 3000,
   fogSpicy: 10000, iceSpicy: 10000, waterballoonSpicy: 10000, earthquakeSpicy: 10000, beeSpicy: 10000,
   fogNanta: 5000, iceNanta: 5000, waterballoonNanta: 5000, earthquakeNanta: 5000, beeNanta: 5000,
-  soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 10000, mirrorNanta: 10000, siren: 10000, sirenNanta: 10000, vest: 20000,
+  soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 10000, mirrorNanta: 10000, siren: 10000, sirenNanta: 10000, vest: 20000, barrier: 10000,
   comboSpark: 30000, comboSparkLast: 60000,   // 꼴찌(동률 포함)가 쓰면 1분으로 늘어남
   stealAmt: 5, stealDefenseMs: 7000, stealDefenseAmt: 1,   // 강탈(개인전): 방어 실패 시 5층, 방어 성공(그 문제를 제시간에 맞힘) 시 1층만
   snowballCap: 10,   // 눈덩이: 연속 정답 수만큼 추가되지만, 인생 한방(+20) 등과 밸런스 맞춰 최대 10층까지만
@@ -333,7 +335,7 @@ export function itemPool(opts = {}) {
       }
       if (it.kind === 'comeback') return canComeback;
       if (k === 'jackpot') return !!opts.canJackpot && !nanta;   // '인생 한방'은 중하위권 이하만, 난타전 제외
-      if (k === 'cure') return !canComeback;             // '해독'은 하위권에겐 안 뜸 (방해는 선두권만 걸리므로 쓸모없음)
+      if (k === 'cure' || k === 'angel') return !canComeback;   // '해독'·'천사'(기능 동일, 이름만 다름)는 하위권에겐 안 뜸 (방해는 선두권만 걸리므로 쓸모없음)
       if (k === 'mirror' || k === 'siren') return mode === 'spicy' || (nanta && !!opts.defenseHeavy);   // 난타전 반사경·사이렌: 1등에게만
       if (k === 'randombox') return false;   // '랜덤박스'는 학생이 뽑아서 얻지 않음 — 교사가 직접 뿌릴 때만 받음
       return true;
