@@ -286,7 +286,7 @@ export const ITEMS = {
   comboSpark:{ emoji: '🎇', name: '콤보 스파크', kind: 'comeback', desc: '30초간 정답마다 카드 뒤집기 보너스! 연속 정답 2번마다 대박 확률 UP' },
   fog:      { emoji: '🌫️',  name: '안개',      kind: 'attack',  desc: '선두권 문제 화면이 8초간 흐려짐' },
   ice:      { emoji: '🧊',  name: '얼음',      kind: 'attack',  desc: '선두권이 8초간 제출 불가' },
-  earthquake:{ emoji: '📳', name: '지진',      kind: 'attack',  desc: '선두권 문제 화면이 8초간 흔들림' },
+  earthquake:{ emoji: '📳', name: '지진',      kind: 'attack',  desc: '선두권 문제 화면이 흔들리고 글자가 8초간 뒤섞임' },
   bee:      { emoji: '🐝',  name: '벌떼',      kind: 'attack',  desc: '선두권 문제가 8초간 벌떼에 가려짐' },
   snail:    { emoji: '🐌',  name: '느림보',    kind: 'attack',  desc: '선두권 다음 정답이 +1층만' },
   slide:    { emoji: '⬇️',  name: '미끄럼틀',  kind: 'attack',  desc: '선두권 -3층 (2등 층수 아래로는 안 내려감)' },
