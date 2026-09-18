@@ -286,6 +286,8 @@ export const ITEMS = {
   comboSpark:{ emoji: '🎇', name: '콤보 스파크', kind: 'comeback', desc: '30초간 정답마다 카드 뒤집기 보너스! 연속 정답 2번마다 대박 확률 UP' },
   fog:      { emoji: '🌫️',  name: '안개',      kind: 'attack',  desc: '선두권 문제 화면이 8초간 흐려짐' },
   ice:      { emoji: '🧊',  name: '얼음',      kind: 'attack',  desc: '선두권이 8초간 제출 불가' },
+  earthquake:{ emoji: '📳', name: '지진',      kind: 'attack',  desc: '선두권 문제 화면이 8초간 흔들림' },
+  bee:      { emoji: '🐝',  name: '벌떼',      kind: 'attack',  desc: '선두권 문제가 8초간 벌떼에 가려짐' },
   snail:    { emoji: '🐌',  name: '느림보',    kind: 'attack',  desc: '선두권 다음 정답이 +1층만' },
   slide:    { emoji: '⬇️',  name: '미끄럼틀',  kind: 'attack',  desc: '선두권 -3층 (2등 층수 아래로는 안 내려감)' },
   steal:    { emoji: '🥷',  name: '강탈',      kind: 'attack',  desc: '선두권 -5층, 나 +5층 (7초 안에 맞히면 방어 · 팀전은 상대 팀 1등만 -3)' },
@@ -294,9 +296,9 @@ export const ITEMS = {
 // 매운맛(spicy)·난타전(nanta)에서는 방해 효과가 더 오래/세게 간다.
 // 피격 후 무적 시간은 아이템전 전체 공통 3초로 통일(모드 무관).
 export const ITEM_FX_MS = {
-  fog: 8000, ice: 8000, festival: 20000, immunity: 3000,
-  fogSpicy: 10000, iceSpicy: 10000,
-  fogNanta: 5000, iceNanta: 5000,
+  fog: 8000, ice: 8000, earthquake: 8000, bee: 8000, festival: 20000, immunity: 3000,
+  fogSpicy: 10000, iceSpicy: 10000, earthquakeSpicy: 10000, beeSpicy: 10000,
+  fogNanta: 5000, iceNanta: 5000, earthquakeNanta: 5000, beeNanta: 5000,
   soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 10000, mirrorNanta: 10000, vest: 20000,
   comboSpark: 30000, comboSparkLast: 60000,   // 꼴찌(동률 포함)가 쓰면 1분으로 늘어남
   stealAmt: 5, stealDefenseMs: 7000, stealDefenseAmt: 1,   // 강탈(개인전): 방어 실패 시 5층, 방어 성공(그 문제를 제시간에 맞힘) 시 1층만

@@ -179,6 +179,13 @@
   }
   @keyframes fxBadge{ 0%,100%{ transform:translateX(-50%) translateY(0); } 50%{ transform:translateX(-50%) translateY(-6px); } }
   .climber.fx-fog .avatar{ filter:blur(3px); }
+  .climber.fx-earthquake .avatar{ animation:eqShakeBoard .3s ease-in-out infinite; }
+  @keyframes eqShakeBoard{
+    0%,100%{ transform:translate(0,0); }
+    25%{ transform:translate(-3px,2px); }
+    50%{ transform:translate(3px,-2px); }
+    75%{ transform:translate(-2px,-2px); }
+  }
   .team-fx{ position:relative; animation:teamFxShake .5s ease-in-out 0s 4; }
   @keyframes teamFxShake{ 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-7px); } 75%{ transform:translateX(7px); } }
   .team-fx-badge{ position:absolute; top:8px; left:50%; transform:translateX(-50%); font-size:2.2rem; z-index:6; pointer-events:none; animation:fxBadge 1s ease-in-out infinite; }
@@ -896,21 +903,24 @@ function itemToast(text){
 function flashClimberFx(pid, type){
   const node = climberEls[pid];
   if(!node) return;
-  const emoji = type==='fog' ? '🌫️' : type==='ice' ? '🧊' : type==='snail' ? '🐌' : type==='steal' ? '🥷' : '⬇️';
+  const emoji = (ITEMS[type] && ITEMS[type].emoji) || '⬇️';
   let badge = node.querySelector('.fx-badge');
   if(!badge){ badge = document.createElement('div'); badge.className = 'fx-badge'; node.appendChild(badge); }
   badge.textContent = emoji;
   if(type==='fog') node.classList.add('fx-fog');
+  if(type==='earthquake') node.classList.add('fx-earthquake');
   const nanta = roundState.items_mode === 'nanta';
   const spicy = roundState.items_mode === 'spicy' || nanta;
   const dur = type==='fog' ? (nanta ? ITEM_FX_MS.fogNanta : spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog)
-            : type==='ice' ? (nanta ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) : 2600;
-  setTimeout(()=>{ if(badge) badge.remove(); node.classList.remove('fx-fog'); }, dur);
+            : type==='ice' ? (nanta ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice)
+            : type==='earthquake' ? (nanta ? ITEM_FX_MS.earthquakeNanta : spicy ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake)
+            : type==='bee' ? (nanta ? ITEM_FX_MS.beeNanta : spicy ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee) : 2600;
+  setTimeout(()=>{ if(badge) badge.remove(); node.classList.remove('fx-fog', 'fx-earthquake'); }, dur);
 }
 
 // 팀전: 팀 아레나에서 피격 팀 구역을 잠깐 흔든다 (땅따먹기 terr-seg / 줄다리기 tug-end)
 function flashTeamFx(teamKey, type){
-  const emoji = type==='fog' ? '🌫️' : type==='ice' ? '🧊' : type==='snail' ? '🐌' : type==='steal' ? '🥷' : '⬇️';
+  const emoji = (ITEMS[type] && ITEMS[type].emoji) || '⬇️';
   const keys = TEAM_OPTIONS.slice(0, roundState.team_count || 4).map(t=>t.key);
   const ti = keys.indexOf(teamKey);
   const nodes = [];

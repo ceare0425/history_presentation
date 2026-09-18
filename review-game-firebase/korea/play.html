@@ -101,6 +101,7 @@
   .streak{ font-size:.9rem; color:var(--sub); text-align:right; min-height:1.3em; flex:0 0 auto; }
 
   .qbox{
+    position:relative;
     background:#f4f6fb; border:2px solid #e3e8f2; border-radius:16px; padding:3vh 3vw; margin:1vh 0;
     flex:1; min-height:0; display:flex; align-items:center; justify-content:center;
     overflow-y:auto;
@@ -241,6 +242,27 @@
   .combo-card.chosen{ outline:3px solid #16a34a; }
   .combo-result{ font-weight:800; font-size:1.1rem; color:#5b3a00; min-height:1.4em; }
   .qbox.fogged .qtext-inner{ filter:blur(7px); transition:filter .4s ease; }
+  .qbox.shaking .qtext-inner{ animation:eqShake .35s ease-in-out infinite; }
+  @keyframes eqShake{
+    0%,100%{ transform:translate(0,0) rotate(0deg); }
+    25%{ transform:translate(-4px,2px) rotate(-1deg); }
+    50%{ transform:translate(4px,-2px) rotate(1deg); }
+    75%{ transform:translate(-3px,-3px) rotate(-1deg); }
+  }
+  .bee-layer{ position:absolute; inset:0; overflow:hidden; border-radius:16px; pointer-events:none; display:none; }
+  .qbox.beeswarm .bee-layer{ display:block; }
+  .bee-layer span{ position:absolute; top:0; left:-15%; font-size:1.5rem; opacity:.92; animation:beeFly 2.4s linear infinite; }
+  .bee-layer span:nth-child(1){ top:12%; animation-delay:0s; }
+  .bee-layer span:nth-child(2){ top:40%; animation-delay:.6s; }
+  .bee-layer span:nth-child(3){ top:68%; animation-delay:1.2s; }
+  .bee-layer span:nth-child(4){ top:85%; animation-delay:1.8s; }
+  @keyframes beeFly{
+    0%{ left:-15%; transform:translateY(0) rotate(0deg); }
+    25%{ transform:translateY(-14px) rotate(12deg); }
+    50%{ transform:translateY(10px) rotate(-10deg); }
+    75%{ transform:translateY(-10px) rotate(10deg); }
+    100%{ left:115%; transform:translateY(0) rotate(0deg); }
+  }
   .item-hint-line{ text-align:center; font-size:.78rem; color:var(--sub); flex:0 0 auto; min-height:1.05em; margin-top:.6vh; }
   .item-bar{ margin-top:.6vh; flex:0 0 auto; min-height:64px; display:flex; gap:8px; }
   .item-btn{
@@ -370,6 +392,8 @@
         <div class="festival-banner" id="mirrorBanner">🪞 반사경 대기 중 · <span id="mirrorRemain"></span>초 남음</div>
         <div class="debuff-banner" id="fogBanner">🌫️ <span id="fogLabel">안개</span>! 문제가 흐려요 · <span id="fogRemain"></span>초 남음</div>
         <div class="debuff-banner" id="iceBanner">🧊 <span id="iceLabel">얼음</span>! 제출 불가 · <span id="iceRemain"></span>초 남음</div>
+        <div class="debuff-banner" id="earthquakeBanner">📳 <span id="earthquakeLabel">지진</span>! 화면이 흔들려요 · <span id="earthquakeRemain"></span>초 남음</div>
+        <div class="debuff-banner" id="beeBanner">🐝 <span id="beeLabel">벌떼</span>! 문제가 가려져요 · <span id="beeRemain"></span>초 남음</div>
         <div class="atk-banner" id="stealAtkBanner">🥷⏳ 강탈 공격 중··· <span id="stealAtkRemain"></span>초 후 결과!</div>
         <div class="atk-banner" id="stealDefBanner">🥷⏳ 강탈당했다! <span id="stealDefRemain"></span>초 안에 맞히면 방어!</div>
       </div>
@@ -390,7 +414,7 @@
       <div id="feedback" class="feedback"></div>
 
       <div class="unit-tag" id="unitTag"></div>
-      <div class="qbox" id="qbox"><div class="qtext-inner" id="qText">문제를 불러오는 중...</div></div>
+      <div class="qbox" id="qbox"><div class="qtext-inner" id="qText">문제를 불러오는 중...</div><div class="bee-layer" id="beeLayer"><span>🐝</span><span>🐝</span><span>🐝</span><span>🐝</span></div></div>
 
       <div class="answer-row">
         <input type="text" id="answerInput" placeholder="정답 입력 후 Enter" autocomplete="off">
@@ -518,9 +542,11 @@ let festivalBy = '';         // '축제'를 쓴 학생 이름 (배너 표시용)
 let myImmuneUntil = 0;       // 방해 피격 후 무적 종료 시각(ms)
 let frozen = false;          // '얼음' 피격 중 입력 잠금
 let iceTimer = null, fogTimer = null, itemAlertTimer = null;
+let earthquakeTimer = null, beeTimer = null;
 let myStealDefenses = [];   // '강탈' 피격 직후 방어 창 목록: { amt, qid, deadline, attackerId, timer } — 짧은 시간에 여러 번 저격당해도 각자 독립적으로 판정되도록 배열로 관리
 let myStealAttackUntil = 0;  // 내가 쏜 '강탈'의 결과를 기다리는 중(공격자 화면 타이머용) 종료 시각(ms)
 let myFogUntil = 0, myIceUntil = 0;   // 안개·얼음 피격 종료 시각(ms) — 배너에 남은 시간 표시용
+let myEarthquakeUntil = 0, myBeeUntil = 0;   // 지진·벌떼 피격 종료 시각(ms)
 const seenItemEvents = new Set();
 
 const el = (id) => document.getElementById(id);
@@ -952,13 +978,13 @@ function tick(){
       // 아이템 로컬 상태 초기화
       heldItem = null; myBoost = 0; myShield = false;
       mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myComboSparkUntil = 0; myImmuneUntil = 0; frozen = false;
-      myFogUntil = 0; myIceUntil = 0;
+      myFogUntil = 0; myIceUntil = 0; myEarthquakeUntil = 0; myBeeUntil = 0;
       myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0;
       myUndoAvailable = false; myUndoFloorDelta = 0; randomboxOfferPending = false;
       myStealDefenses.forEach(d=>clearTimeout(d.timer)); myStealDefenses = []; myStealAttackUntil = 0;
       syncStealActive();
-      clearTimeout(iceTimer); clearTimeout(fogTimer);
-      el('qbox').classList.remove('fogged');
+      clearTimeout(iceTimer); clearTimeout(fogTimer); clearTimeout(earthquakeTimer); clearTimeout(beeTimer);
+      el('qbox').classList.remove('fogged', 'shaking', 'beeswarm');
       clearItemAlert();
       seenItemEvents.clear();
       renderItemBar();
@@ -985,6 +1011,8 @@ function tick(){
     updateBanner('mirrorBanner', serverNow() < myMirrorUntil, ()=> el('mirrorRemain').textContent = Math.ceil((myMirrorUntil - serverNow()) / 1000));
     updateBanner('fogBanner', serverNow() < myFogUntil, ()=> el('fogRemain').textContent = Math.ceil((myFogUntil - serverNow()) / 1000));
     updateBanner('iceBanner', serverNow() < myIceUntil, ()=> el('iceRemain').textContent = Math.ceil((myIceUntil - serverNow()) / 1000));
+    updateBanner('earthquakeBanner', serverNow() < myEarthquakeUntil, ()=> el('earthquakeRemain').textContent = Math.ceil((myEarthquakeUntil - serverNow()) / 1000));
+    updateBanner('beeBanner', serverNow() < myBeeUntil, ()=> el('beeRemain').textContent = Math.ceil((myBeeUntil - serverNow()) / 1000));
     updateBanner('stealAtkBanner', serverNow() < myStealAttackUntil, ()=> el('stealAtkRemain').textContent = Math.ceil((myStealAttackUntil - serverNow()) / 1000));
     // 강탈 방어 창: 여러 명에게 동시에 저격당할 수 있어(주로 난타전) 가장 임박한 마감까지 남은 시간을 보여준다
     const soonestDefDeadline = myStealDefenses.length ? Math.min(...myStealDefenses.map(d => d.deadline)) : 0;
@@ -1099,6 +1127,14 @@ function itemDescFor(k, it, nanta){
     const s = (nanta ? ITEM_FX_MS.iceNanta : itemsMode === 'spicy' ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) / 1000;
     return `선두권이 ${s}초간 제출 불가`;
   }
+  if(k === 'earthquake'){
+    const s = (nanta ? ITEM_FX_MS.earthquakeNanta : itemsMode === 'spicy' ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake) / 1000;
+    return `선두권 문제 화면이 ${s}초간 흔들림`;
+  }
+  if(k === 'bee'){
+    const s = (nanta ? ITEM_FX_MS.beeNanta : itemsMode === 'spicy' ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee) / 1000;
+    return `선두권 문제가 ${s}초간 벌떼에 가려짐`;
+  }
   if(k === 'slide'){
     if(nanta) return '선두권 -5층 (보호 없이 0층까지 내려갈 수 있음)';
     if(itemsMode === 'spicy') return '선두권 -4층 (2등보다 1층 아래까지만 허용)';
@@ -1166,6 +1202,12 @@ function renderItemBar(){
     } else if(heldItem === 'ice'){
       const s = (itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : itemsMode === 'spicy' ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) / 1000;
       desc = `선두권이 ${s}초간 제출 불가`;
+    } else if(heldItem === 'earthquake'){
+      const s = (itemsMode === 'nanta' ? ITEM_FX_MS.earthquakeNanta : itemsMode === 'spicy' ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake) / 1000;
+      desc = `선두권 문제 화면이 ${s}초간 흔들림`;
+    } else if(heldItem === 'bee'){
+      const s = (itemsMode === 'nanta' ? ITEM_FX_MS.beeNanta : itemsMode === 'spicy' ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee) / 1000;
+      desc = `선두권 문제가 ${s}초간 벌떼에 가려짐`;
     }
     if(roundState.team_mode){
       const u = unitLabel();
@@ -1328,10 +1370,10 @@ function rerollQuestion(){
 }
 
 function clearIncomingFx(){
-  el('qbox').classList.remove('fogged');
-  clearTimeout(fogTimer); clearTimeout(iceTimer);
+  el('qbox').classList.remove('fogged', 'shaking', 'beeswarm');
+  clearTimeout(fogTimer); clearTimeout(iceTimer); clearTimeout(earthquakeTimer); clearTimeout(beeTimer);
   frozen = false; mySnailNext = 0;
-  myFogUntil = 0; myIceUntil = 0;
+  myFogUntil = 0; myIceUntil = 0; myEarthquakeUntil = 0; myBeeUntil = 0;
   // 진행 중인 강탈 방어 창도 해독으로 완전히 무효화 — 각 공격자에게 결과 통보
   myStealDefenses.forEach(d=>{ clearTimeout(d.timer); notifyStealResult(d.attackerId, 'cure', 0); });
   myStealDefenses = [];
@@ -1662,6 +1704,28 @@ function applyIncomingFx(type, attackerId, reflected){
       frozen = false;
       myIceUntil = 0;
       if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; el('answerInput').focus(); }
+    }, dur);
+  } else if(type === 'earthquake'){
+    const box = el('qbox');
+    const dur = itemsMode === 'nanta' ? ITEM_FX_MS.earthquakeNanta : spicy ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake;
+    el('earthquakeLabel').textContent = reflected ? '반사당한 지진' : '지진';
+    box.classList.add('shaking');
+    myEarthquakeUntil = serverNow() + dur;
+    clearTimeout(earthquakeTimer);
+    earthquakeTimer = setTimeout(()=>{
+      box.classList.remove('shaking');
+      myEarthquakeUntil = 0;
+    }, dur);
+  } else if(type === 'bee'){
+    const box = el('qbox');
+    const dur = itemsMode === 'nanta' ? ITEM_FX_MS.beeNanta : spicy ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee;
+    el('beeLabel').textContent = reflected ? '반사당한 벌떼' : '벌떼';
+    box.classList.add('beeswarm');
+    myBeeUntil = serverNow() + dur;
+    clearTimeout(beeTimer);
+    beeTimer = setTimeout(()=>{
+      box.classList.remove('beeswarm');
+      myBeeUntil = 0;
     }, dur);
   } else if(type === 'snail'){
     mySnailNext = spicy ? 2 : 1;
