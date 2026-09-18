@@ -277,7 +277,7 @@ export const ITEMS = {
   jackpot:  { emoji: '🎲',  name: '인생 한방',  kind: 'self',    desc: '다음 정답 +20층 / 오답 -10층 (개인전·팀전 공통)' },
   snowball: { emoji: '🌀',  name: '눈덩이',    kind: 'self',    desc: '다음 정답에 지금 연속 수만큼 층수 추가 (최대 10층)' },
   vest:     { emoji: '🛟',  name: '구명조끼',  kind: 'self',    desc: '20초간 틀려도 층수·연속이 안 깎임' },
-  barrier:  { emoji: '🔰',  name: '쉴드',      kind: 'self',    desc: '10초간 모든 방해 공격에 무적 (그 사이 나를 노린 공격 아이템은 그대로 사라짐)' },
+  barrier:  { emoji: '🔰',  name: '쉴드',      kind: 'self',    desc: '5초간 모든 방해 공격에 무적 (그 사이 나를 노린 공격 아이템은 그대로 사라짐)' },
   randombox:{ emoji: '🎁',  name: '랜덤박스',  kind: 'self',    desc: '즉시 다른 아이템 하나를 뽑아 바로 발동' },
   cure:     { emoji: '🍵',  name: '해독',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
   angel:    { emoji: '👼',  name: '천사',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
@@ -305,7 +305,7 @@ export const ITEM_FX_MS = {
   fog: 8000, ice: 8000, waterballoon: 8000, earthquake: 8000, bee: 8000, festival: 20000, immunity: 3000,
   fogSpicy: 10000, iceSpicy: 10000, waterballoonSpicy: 10000, earthquakeSpicy: 10000, beeSpicy: 10000,
   fogNanta: 5000, iceNanta: 5000, waterballoonNanta: 5000, earthquakeNanta: 5000, beeNanta: 5000,
-  soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 10000, mirrorNanta: 10000, siren: 10000, sirenNanta: 10000, vest: 20000, barrier: 10000,
+  soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 10000, mirrorNanta: 10000, siren: 10000, sirenNanta: 10000, vest: 20000, barrier: 5000,
   comboSpark: 30000, comboSparkLast: 60000,   // 꼴찌(동률 포함)가 쓰면 1분으로 늘어남
   stealAmt: 5, stealDefenseMs: 7000, stealDefenseAmt: 1,   // 강탈(개인전): 방어 실패 시 5층, 방어 성공(그 문제를 제시간에 맞힘) 시 1층만
   snowballCap: 10,   // 눈덩이: 연속 정답 수만큼 추가되지만, 인생 한방(+20) 등과 밸런스 맞춰 최대 10층까지만
