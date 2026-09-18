@@ -336,6 +336,7 @@ export function itemPool(opts = {}) {
       if (it.kind === 'comeback') return canComeback;
       if (k === 'jackpot') return !!opts.canJackpot && !nanta;   // '인생 한방'은 중하위권 이하만, 난타전 제외
       if (k === 'cure' || k === 'angel') return !canComeback;   // '해독'·'천사'(기능 동일, 이름만 다름)는 하위권에겐 안 뜸 (방해는 선두권만 걸리므로 쓸모없음)
+      if (k === 'barrier') return !canComeback;   // '쉴드'도 해독·천사와 마찬가지로 하위권에겐 안 뜸
       if (k === 'mirror' || k === 'siren') return (mode === 'spicy' && !canComeback) || (nanta && !!opts.defenseHeavy);   // '해독'·'천사'처럼 하위권에겐 안 뜸. 난타전 반사경·사이렌: 1등에게만
       if (k === 'randombox') return false;   // '랜덤박스'는 학생이 뽑아서 얻지 않음 — 교사가 직접 뿌릴 때만 받음
       return true;
