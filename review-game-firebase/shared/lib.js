@@ -276,7 +276,7 @@ export const ITEMS = {
   undo:     { emoji: '🪃',  name: '되돌리기',   kind: 'self',    desc: '방금 틀린 문제를 없던 일로 (오답 -1·연속 복구)' },
   jackpot:  { emoji: '🎲',  name: '인생 한방',  kind: 'self',    desc: '다음 정답 +20층 / 오답 -10층 (개인전·팀전 공통)' },
   snowball: { emoji: '🌀',  name: '눈덩이',    kind: 'self',    desc: '다음 정답에 지금 연속 수만큼 층수 추가 (최대 10층)' },
-  vest:     { emoji: '🛟',  name: '구명조끼',  kind: 'self',    desc: '20초간 틀려도 층수·연속이 안 깎임 (미끄럼틀·강탈도 막음)' },
+  vest:     { emoji: '🛟',  name: '구명조끼',  kind: 'self',    desc: '20초간 틀려도 층수·연속이 안 깎임 (미끄럼틀·강탈·바나나·지뢰도 막음)' },
   randombox:{ emoji: '🎁',  name: '랜덤박스',  kind: 'self',    desc: '즉시 다른 아이템 하나를 뽑아 바로 발동' },
   cure:     { emoji: '🍵',  name: '해독',      kind: 'defense', desc: '나에게 걸린 방해를 즉시 해제' },
   mirror:   { emoji: '🪞',  name: '반사경',     kind: 'defense', desc: '10초간 날아오는 첫 견제를 쏜 사람에게 반사' },
@@ -293,6 +293,8 @@ export const ITEMS = {
   snail:    { emoji: '🐌',  name: '느림보',    kind: 'attack',  desc: '선두권 다음 정답이 +1층만' },
   slide:    { emoji: '⬇️',  name: '미끄럼틀',  kind: 'attack',  desc: '선두권 -3층 (2등 층수 아래로는 안 내려감)' },
   steal:    { emoji: '🥷',  name: '강탈',      kind: 'attack',  desc: '선두권 -5층, 나 +5층 (7초 안에 맞히면 방어 · 팀전은 상대 팀 1등만 -3)' },
+  banana:   { emoji: '🍌',  name: '바나나',    kind: 'attack',  desc: '선두권이 바나나를 밟아 즉시 -2층' },
+  mine:     { emoji: '💣',  name: '지뢰',      kind: 'attack',  desc: '카드 3장 중 1장만 생존, 나머지는 -1~-4층' },
 };
 
 // 매운맛(spicy)·난타전(nanta)에서는 방해 효과가 더 오래/세게 간다.
