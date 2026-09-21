@@ -30,6 +30,13 @@
           "$entry": {
             ".validate": "!newData.exists() || (newData.hasChild('name') && newData.hasChild('ts') && newData.child('name').val().length <= 20)"
           }
+        },
+        "class_log": {
+          ".read": true,
+          ".write": true,
+          "$entry": {
+            ".validate": "!newData.exists() || (newData.hasChild('name') && newData.hasChild('ts') && newData.child('name').val().length <= 20)"
+          }
         }
       }
     },
