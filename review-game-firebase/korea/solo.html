@@ -346,7 +346,7 @@
       <div class="floor-badge">🏢 <span id="floorVal">0</span>층</div>
       <div class="timer">⏱ <span id="timerVal">--:--</span></div>
     </div>
-    <div class="msg-toolbar"><button type="button" id="msgOpenBtn">💬 선생님께 쪽지 보내기<span class="unread-badge hidden" id="msgUnreadBadge"></span></button></div>
+    <div class="msg-toolbar"><button type="button" id="msgOpenBtn">💬쪽지<span class="unread-badge hidden" id="msgUnreadBadge"></span></button></div>
     <div class="msg-banner" id="msgBanner">
       <div class="mb-head">💬 선생님과 쪽지<button type="button" class="mb-close" id="msgBannerClose">닫기 ✕</button></div>
       <div class="mb-text hidden" id="msgBannerText"></div>
@@ -396,6 +396,19 @@
       <div class="best-note" id="bestNote"></div>
       <button id="retryBtn">↺ 다른 범위로 다시 연습하기</button>
       <button id="dashFromEndBtn" class="secondary" style="margin-top:10px;">📊 내 학습 기록 보기</button>
+    </div>
+  </div>
+
+  <div id="missedMsgPopup" class="clear-prompt hidden">
+    <div class="clear-box">
+      <div class="clear-emoji">💬</div>
+      <div class="clear-title">선생님이 보낸 쪽지가 있어요</div>
+      <div class="clear-sub" id="missedMsgText"></div>
+      <input type="text" id="missedMsgReplyInput" placeholder="답장 입력 후 Enter" maxlength="200" autocomplete="off">
+      <div class="clear-btns">
+        <button type="button" id="missedMsgReplyBtn">답장 보내기</button>
+        <button type="button" id="missedMsgCloseBtn" class="secondary">확인했어요</button>
+      </div>
     </div>
   </div>
 
@@ -887,6 +900,8 @@ let chatChangeUnsub = null;
 let lastSentMsgKey = null; // 내가 마지막으로 보낸 쪽지 key — 선생님이 읽으면 이 키의 read가 true로 바뀐다
 let pendingAdminMsgKeys = []; // 아직 학생이 확인(배너 닫기/열기/답장)하지 않은 선생님 쪽지 key들
 let unreadIncomingCount = 0;
+let lastAdminMsgText = ''; // 가장 최근에 받은 선생님 쪽지 내용 (배너를 열 때 보여줌)
+let missedPopupKeys = []; // 연습 종료 팝업에서 "확인했어요/답장"을 누르면 읽음 처리할 key들
 
 function startPresenceAndChat(){
   const cls = sessionClassKey;
@@ -916,9 +931,9 @@ function startPresenceAndChat(){
       chatSeenKeys.add(msgSnap.key);
       const msg = msgSnap.val();
       if(msg && msg.from === 'admin'){
-        showMsgBanner(msg.text);
-        // 배너가 떴다고 바로 "읽음" 처리하지 않는다 — 학생이 실제로 배너를 닫거나 열거나
-        // 답장을 보낼 때(markIncomingRead)까지는 msgOpenBtn에 안읽음 배지를 띄워둔다.
+        // 관리자 쪽처럼 화면에 바로 띄우지 않고, "💬쪽지" 버튼에 안읽음 숫자만 올려둔다.
+        // 학생이 직접 버튼을 눌러 열어봐야 내용이 보이고, 그때 읽음 처리된다.
+        lastAdminMsgText = msg.text;
         pendingAdminMsgKeys.push(msgSnap.key);
         unreadIncomingCount++;
         updateMsgBadge();
@@ -967,20 +982,20 @@ function markIncomingRead(){
   updateMsgBadge();
 }
 
-function showMsgBanner(text){
-  el('msgBannerText').textContent = text;
-  el('msgBannerText').classList.remove('hidden');
-  el('msgSentNote').textContent = '';
-  el('msgReplyInput').value = '';
-  el('msgBanner').classList.add('show');
-}
 el('msgBannerClose').onclick = () => { el('msgBanner').classList.remove('show'); markIncomingRead(); };
 
-// 학생이 먼저 선생님께 쪽지를 보내고 싶을 때(아직 받은 쪽지가 없어도) 입력창을 바로 열어준다.
+// "💬쪽지" 버튼 — 안 읽은 쪽지가 있으면 내용을 보여주고, 없으면 새로 쓸 수 있게 빈 입력창을 연다.
+// 어느 쪽이든 여는 순간 "확인했다"고 보고 안읽음 배지를 지운다.
 el('msgOpenBtn').onclick = () => {
-  el('msgBannerText').textContent = '';
-  el('msgBannerText').classList.add('hidden');
+  if(pendingAdminMsgKeys.length && lastAdminMsgText){
+    el('msgBannerText').textContent = lastAdminMsgText;
+    el('msgBannerText').classList.remove('hidden');
+  } else {
+    el('msgBannerText').textContent = '';
+    el('msgBannerText').classList.add('hidden');
+  }
   el('msgSentNote').textContent = '';
+  el('msgReplyInput').value = '';
   el('msgBanner').classList.add('show');
   el('msgReplyInput').focus();
   markIncomingRead();
@@ -1002,6 +1017,10 @@ el('msgReplyBtn').onclick = sendMsgReply;
 el('msgReplyInput').addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); sendMsgReply(); } });
 
 function showEndedView(){
+  // stopPresenceAndChat()이 pendingAdminMsgKeys를 비우기 전에, 못 보고 넘어간 쪽지가
+  // 있었는지부터 챙겨둔다 — 있었으면 종료 화면 위에 팝업으로 띄워준다.
+  const missedKeys = pendingAdminMsgKeys.slice();
+  const missedText = lastAdminMsgText;
   stopPresenceAndChat();
   ended = true;
   paused = false;
@@ -1021,7 +1040,40 @@ function showEndedView(){
     bestNote.textContent = `개인 최고 기록: ${prevBest}층`;
   }
   showView('endedView');
+  if(missedKeys.length) showMissedMsgPopup(missedText, missedKeys);
 }
+
+function showMissedMsgPopup(text, keys){
+  missedPopupKeys = keys || [];
+  el('missedMsgText').textContent = text || '';
+  el('missedMsgReplyInput').value = '';
+  el('missedMsgPopup').classList.remove('hidden');
+}
+function markMissedPopupRead(){
+  if(missedPopupKeys.length && sessionClassKey){
+    const name = (el('nameInput').value.trim() || '').slice(0, 20);
+    missedPopupKeys.forEach(key => {
+      update(ref(db, `messages/${ROOM}/${sessionClassKey}/${name}/${key}`), { read: true }).catch(()=>{});
+    });
+    missedPopupKeys = [];
+  }
+}
+el('missedMsgCloseBtn').onclick = () => {
+  markMissedPopupRead();
+  el('missedMsgPopup').classList.add('hidden');
+};
+function sendMissedMsgReply(){
+  const text = el('missedMsgReplyInput').value.trim();
+  if(!text || !sessionClassKey) return;
+  markMissedPopupRead();
+  const name = (el('nameInput').value.trim() || '').slice(0, 20);
+  const newRef = push(chatRef(ROOM, sessionClassKey, name));
+  set(newRef, { from:'student', text: text.slice(0,300), ts: Date.now(), read:false }).catch(()=>{});
+  el('missedMsgReplyInput').value = '';
+  el('missedMsgPopup').classList.add('hidden');
+}
+el('missedMsgReplyBtn').onclick = sendMissedMsgReply;
+el('missedMsgReplyInput').addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); sendMissedMsgReply(); } });
 
 function tick(){
   if(!roundState || ended || paused) return;
