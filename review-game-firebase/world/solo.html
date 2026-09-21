@@ -263,6 +263,13 @@
   .utable .pct{ font-weight:800; color:var(--sub); white-space:nowrap; text-align:right; }
   .utable button.mini{ width:auto; padding:5px 10px; font-size:.72rem; border-radius:8px; flex:0 0 auto; }
   .utable button.mini:disabled{ opacity:.4; }
+
+  .wrong-list{ max-height:240px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; }
+  .wrong-row{ padding:8px 10px; border-bottom:1px solid var(--line); font-size:.82rem; }
+  .wrong-row:last-child{ border-bottom:none; }
+  .wrong-row .wunit{ display:inline-block; font-size:.7rem; color:var(--sky1); background:#eef2fb; padding:1px 6px; border-radius:6px; margin-right:6px; }
+  .wrong-row .wtext{ color:var(--ink); }
+  .wrong-row .wans{ display:block; color:var(--sub); font-size:.76rem; margin-top:2px; }
   .dash-empty{ color:var(--sub); font-size:.85rem; padding:8px 0; line-height:1.6; }
 
   .ptable{ width:100%; border-collapse:collapse; font-size:.84rem; }
@@ -457,6 +464,8 @@ let sessionClassKey = null;
 let soloLogged = false;
 let hintCount = 0;      // 이번 세션에서 초성 힌트를 쓴 문제 수
 let unitStats = {};     // 이번 세션 단원별 정답/오답 { 단원명: {c, w} } — 종료 시 solo_log에 배열로 저장
+let qStats = {};        // 이번 세션 문제별 정답/오답 { qid: {c, w} } — 관리자 문제별 오답률 분석용
+let wrongMap = new Map(); // 이번 세션에서 아직 못 맞힌 문제 { qid => {qid, unit, qtext, answer, ts} } — 맞히면 제거
 let soloLogRef = null;  // 이번 세션의 solo_log 항목 ref (첫 정답/오답 때 생성 후 계속 갱신)
 
 let questionsObj = {};
@@ -757,6 +766,13 @@ function submitAnswer(){
   const uName = q.unit || '(기타)';
   const uStat = unitStats[uName] || (unitStats[uName] = { c:0, w:0 });
   uStat[correct ? 'c' : 'w'] += 1;
+  const qStat = qStats[answeredQid] || (qStats[answeredQid] = { c:0, w:0 });
+  qStat[correct ? 'c' : 'w'] += 1;
+  if(correct){
+    wrongMap.delete(answeredQid); // 끝까지 못 맞힌 문제만 오답 노트에 남도록, 맞히면 제거
+  } else {
+    wrongMap.set(answeredQid, { qid: answeredQid, unit: uName, qtext: q.question, answer: q.answers[0], ts: serverNow() });
+  }
 
   if(correct){
     gain = usedHint ? 1 : computeGain(elapsed);
@@ -883,7 +899,9 @@ function syncSoloLog(final){
     correct: correctCount,
     wrong: wrongCount,
     hints: hintCount,
-    unit_stats: Object.entries(unitStats).map(([u,x]) => ({ u, c: x.c, w: x.w }))
+    unit_stats: Object.entries(unitStats).map(([u,x]) => ({ u, c: x.c, w: x.w })),
+    q_stats: Object.entries(qStats).map(([qid,x]) => ({ qid, c: x.c, w: x.w })),
+    wrong_items: [...wrongMap.values()].slice(-30)
   };
   try{
     if(soloLogRef) update(soloLogRef, data);
@@ -1168,7 +1186,7 @@ el('startBtn').onclick = async () => {
   msg.textContent = '';
 
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
-  hintCount = 0; soloLogRef = null; unitStats = {};
+  hintCount = 0; soloLogRef = null; unitStats = {}; qStats = {}; wrongMap = new Map();
   clearedQids = new Set(); allClearedPrompted = false; paused = false;
   el('clearPrompt').classList.add('hidden');
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
@@ -1201,6 +1219,46 @@ el('startBtn').onclick = async () => {
   if(tickHandle) clearInterval(tickHandle);
   tickHandle = setInterval(tick, 250);
 };
+
+// 오답 노트의 "다시 풀기" — 단원 선택 없이 지정된 문제 id들만으로 바로 세션을 시작한다.
+// 학년·반·이름은 대시보드를 열 수 있었던 시점에 이미 입력돼 있으므로 다시 확인하지 않는다.
+function startReviewSession(qids){
+  const validQids = qids.filter(qid=>questionsObj[qid]);
+  if(!validQids.length){ alert('다시 풀 수 있는 문제가 없어요 (문제가 삭제되었을 수 있어요).'); return; }
+  const duration_sec = Math.min(1200, Math.max(120, validQids.length*45));
+
+  floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
+  hintCount = 0; soloLogRef = null; unitStats = {}; qStats = {}; wrongMap = new Map();
+  clearedQids = new Set(); allClearedPrompted = false; paused = false;
+  el('clearPrompt').classList.add('hidden');
+  queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
+
+  sessionClassKey = classKey();
+  sessionStartedAt = serverNow();
+  sessionUnits = ['오답 노트 복습'];
+  sessionDuration = duration_sec;
+  sessionOrder = 'random';
+  sessionWeight = 'even';
+  soloLogged = false;
+
+  roundState = {
+    duration_sec,
+    end_time: serverNow() + duration_sec*1000,
+    order: 'random',
+    weight: 'even',
+    qids: validQids
+  };
+
+  el('floorVal').textContent = 0;
+  el('streakVal').textContent = '';
+  el('feedback').classList.remove('show');
+  showView('playView');
+  assignNextQuestion();
+  startPresenceAndChat();
+
+  if(tickHandle) clearInterval(tickHandle);
+  tickHandle = setInterval(tick, 250);
+}
 
 el('retryBtn').onclick = () => {
   ended = true;
@@ -1284,6 +1342,24 @@ function aggregate(list){
   return { units, c, w, h, best, daySet, floors, count: list.length };
 }
 
+// 세션들을 시간순으로 훑으며 "지금 시점에 아직 못 맞힌 문제"만 남긴다.
+// 한 세션에서 q_stats에 정답(c>0)이 있는 문제는 그 시점에 해결된 것으로 보고 지우고,
+// 그 세션이 끝날 때도 여전히 wrong_items에 남아있던 문제만 다시 넣는다.
+// 이렇게 하면 이전 세션에서 틀렸던 문제를 나중 세션에서 맞혔을 때 오답 노트에서 자연히 빠진다.
+function aggregateWrongItems(list){
+  const sorted = list.slice().sort((a,b)=>(a.ts||0)-(b.ts||0));
+  const wrongAgg = new Map();
+  sorted.forEach(e=>{
+    (Array.isArray(e.q_stats) ? e.q_stats : []).forEach(qs=>{
+      if(qs && qs.qid && (qs.c||0) > 0) wrongAgg.delete(qs.qid);
+    });
+    (Array.isArray(e.wrong_items) ? e.wrong_items : []).forEach(wi=>{
+      if(wi && wi.qid) wrongAgg.set(wi.qid, wi);
+    });
+  });
+  return [...wrongAgg.values()].sort((a,b)=>(b.ts||0)-(a.ts||0));
+}
+
 function median(arr){
   if(!arr.length) return 0;
   const a = arr.slice().sort((x,y)=>x-y);
@@ -1310,6 +1386,7 @@ function allStudentTotals(obj){
 const MIN_PEERS = 5; // 이 인원 이상 모여야 '상위 %'를 보여준다
 
 let lastAgg = null;
+let lastWrongItems = []; // renderDash가 마지막으로 계산한 오답 노트 목록 — "다시 풀기" 버튼에서 참조
 
 async function refreshRecord(force){
   const t = el('recordTeaser');
@@ -1373,6 +1450,9 @@ function renderDash(list, soloObj){
   const totalUnits = allUnits.length || urows.length;
 
   const lastFloorVal = agg.floors.length ? agg.floors[agg.floors.length - 1].floor : 0;
+
+  const wrongItems = aggregateWrongItems(list);
+  lastWrongItems = wrongItems;
 
   // ── 친구들과 비교 ──────────────────────────────
   const totals = allStudentTotals(soloObj);
@@ -1440,6 +1520,20 @@ function renderDash(list, soloObj){
     </div>
 
     <div class="dash-section">
+      <h3>❌ 오답 노트 <span class="note">아직 못 맞힌 문제 ${wrongItems.length}개</span></h3>
+      ${wrongItems.length ? `
+        <div class="wrong-list">
+          ${wrongItems.slice(0,30).map(w=>`<div class="wrong-row">
+            <span class="wunit">${escapeHtml(w.unit||'')}</span>
+            <span class="wtext">${escapeHtml(w.qtext||'')}</span>
+            <span class="wans">정답: ${escapeHtml(w.answer||'')}</span>
+          </div>`).join('')}
+        </div>
+        <button type="button" class="mini" id="wrongRetryBtn" style="margin-top:10px; width:auto; padding:9px 16px;">🔁 오답 노트 다시 풀기 (${wrongItems.length}문제)</button>
+      ` : `<div class="dash-empty">아직 다시 풀어야 할 오답이 없어요. 틀린 문제를 끝까지 못 맞히면 여기 쌓여요.</div>`}
+    </div>
+
+    <div class="dash-section">
       <h3>🏅 단원 정복 ${conquered.length} / ${totalUnits}단원 <span class="note">정답률 80%↑ · ${MASTER_MIN}문제 이상</span></h3>
       <div class="badge-wrap">
         ${conquered.length
@@ -1485,6 +1579,13 @@ el('dashFromEndBtn').onclick = openDash;
 
 // 대시보드의 '연습' 버튼: 그 단원만 범위로 잡고 setup 으로
 el('dashBody').addEventListener('click', (ev)=>{
+  const wb = ev.target.closest('#wrongRetryBtn');
+  if(wb){
+    const qids = lastWrongItems.map(w=>w.qid);
+    closeDash();
+    startReviewSession(qids);
+    return;
+  }
   const b = ev.target.closest('[data-practice-unit]');
   if(!b || b.disabled) return;
   const u = b.dataset.practiceUnit;
