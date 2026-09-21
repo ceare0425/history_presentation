@@ -197,26 +197,53 @@ let sortMode = "name";
 let expanded = new Set();
 let students = {};   // sid -> record
 let reviews = {};    // sid -> { itemId -> {status,reason,at,photoAt} }
-let photosAll = {};  // sid -> { itemId -> dataURL(base64) }
-let unsub = null, unsubR = null, unsubP = null;
+let photosAll = {};  // sid -> { itemId -> dataURL(base64) } — 펼친 학생만 채워짐 (지연 로딩)
+let photoSubs = {};  // sid -> unsubscribe (펼쳐진 학생의 사진 실시간 구독만 유지)
+let unsub = null, unsubR = null;
+
+/* Firebase 콜백은 짧은 시간에 몰려서 여러 번 올 수 있다(예: "전체 펼치기"로 학생 수십 명의
+   사진 구독이 한꺼번에 시작되는 경우). 매번 즉시 render()하면 보드 전체를 그때마다 다시 그려
+   이미 그려진 사진들까지 반복해서 디코딩하게 되어 급격히 느려진다. 한 프레임에 몰린 요청은
+   하나의 render()로 합친다. */
+let renderScheduled = false;
+function scheduleRender(){
+  if (renderScheduled) return;
+  renderScheduled = true;
+  requestAnimationFrame(() => { renderScheduled = false; render(); });
+}
 
 function subscribe(){
   if (unsub) unsub();
   if (unsubR) unsubR();
-  if (unsubP) unsubP();
+  Object.keys(photoSubs).forEach(unsubscribePhotos);
+  photosAll = {};
+  expanded.clear();
   document.getElementById("livedot").classList.remove("on");
   const r = ref(db, `museum/${TOUR}/students`);
   unsub = onValue(r, snap => {
     students = snap.val() || {};
     document.getElementById("livedot").classList.add("on");
     document.getElementById("fbWarn").hidden = true;   // 읽기 성공 → 규칙 정상. 학생 0명이어도 경고 안 띄움
-    render();
+    scheduleRender();
   }, err => {
     document.getElementById("fbWarn").hidden = false;
     document.getElementById("board").innerHTML = `<div class="empty"><div class="big">🔒</div>데이터를 읽지 못했습니다.<br><small>${err.message}</small></div>`;
   });
-  unsubR = onValue(ref(db, `museum/${TOUR}/reviews`), snap => { reviews = snap.val() || {}; render(); }, () => {});
-  unsubP = onValue(ref(db, `museum/${TOUR}/photos`), snap => { photosAll = snap.val() || {}; render(); }, () => {});
+  unsubR = onValue(ref(db, `museum/${TOUR}/reviews`), snap => { reviews = snap.val() || {}; scheduleRender(); }, () => {});
+}
+/* 사진은 학생 수 × 유물 수만큼 있으면 용량이 커서(예: 50명×20장 ≈ 100MB+),
+   전체를 한번에 구독하지 않고 펼쳐본 학생의 사진만 그때그때 구독한다.
+   어떤 유물에 사진이 있는지·검토 상태는 학생 레코드의 photoAt(가벼움)만으로 이미 알 수 있다. */
+function subscribePhotos(sid){
+  if (photoSubs[sid]) return;
+  photoSubs[sid] = onValue(ref(db, `museum/${TOUR}/photos/${sid}`), snap => {
+    photosAll[sid] = snap.val() || {};
+    scheduleRender();
+  }, () => {});
+}
+function unsubscribePhotos(sid){
+  if (photoSubs[sid]) { photoSubs[sid](); delete photoSubs[sid]; }
+  delete photosAll[sid];
 }
 
 async function setReview(sid, itemId, verdict){
@@ -266,8 +293,15 @@ document.getElementById("sortRecent").addEventListener("click", () => setSort("r
 function setSort(m){ sortMode = m; render(); }
 document.getElementById("expandAll").addEventListener("click", () => {
   const rows = currentRows();
-  if (expanded.size >= rows.filter(r=>r.rec).length) expanded.clear();
-  else rows.forEach(r => { if (r.rec) expanded.add(r.sid); });
+  if (expanded.size >= rows.filter(r=>r.rec).length) {
+    expanded.forEach(unsubscribePhotos);
+    expanded.clear();
+  } else {
+    const withPhotos = rows.filter(r => r.rec && Object.keys(r.rec.photoAt||{}).length > 0);
+    // 사진을 가진 학생을 한꺼번에 많이 펼치면 사진 데이터를 전부 내려받아야 해서 느려질 수 있음 — 실수 방지
+    if (withPhotos.length > 15 && !confirm(`사진이 있는 학생 ${withPhotos.length}명을 한꺼번에 펼치면 사진을 모두 내려받아 느려지거나 버벅일 수 있어요.\n그래도 전체 펼치기를 진행할까요? (학생을 한 명씩 눌러 보는 것을 권장합니다)`)) return;
+    rows.forEach(r => { if (r.rec) { expanded.add(r.sid); subscribePhotos(r.sid); } });
+  }
   render();
 });
 document.getElementById("csv").addEventListener("click", exportCSV);
@@ -304,10 +338,11 @@ function recProgress(rec){
   return { sc, sd, pc, pct: Math.round((sd / STEP_TOTAL) * 100) };
 }
 // 승인/반려 둘 다 "검토 완료"로 취급 — 반려된 사진은 새로 다시 올리기 전까지 미검토 목록에 다시 끼면 안 됨
+// (사진 실물이 아니라 학생 레코드의 photoAt만 보면 되므로, 이 함수는 photosAll 지연 로딩과 무관하게 항상 정확하다)
 function pendingPhotoIds(sid, rec){
-  const photos = photosAll[sid] || {}, rvAll = reviews[sid] || {};
-  return Object.keys(photos).filter(id => {
-    const at = (rec && rec.photoAt && rec.photoAt[id]) || 0;
+  const photoAt = (rec && rec.photoAt) || {}, rvAll = reviews[sid] || {};
+  return Object.keys(photoAt).filter(id => {
+    const at = photoAt[id] || 0;
     const rv = rvAll[id];
     if (!rv) return true;                                     // 아직 검토 안 함
     if (Number(rv.photoAt || 0) !== Number(at)) return true;  // 새 사진 올림 → 재검토 대기
@@ -396,7 +431,8 @@ function render(){
   document.querySelectorAll("tr.stu").forEach(tr => tr.addEventListener("click", () => {
     const sid = tr.dataset.sid;
     if (!students[sid]) return;
-    expanded.has(sid) ? expanded.delete(sid) : expanded.add(sid);
+    if (expanded.has(sid)) { expanded.delete(sid); unsubscribePhotos(sid); }
+    else { expanded.add(sid); subscribePhotos(sid); }
     render();
   }));
   document.querySelectorAll("[data-review]").forEach(btn => btn.addEventListener("click", e => {
@@ -441,10 +477,12 @@ function rowHTML(r){
 function detailHTML(sid, rec){
   const stamps = rec.stamps || {};
   const steps = rec.steps || {};
-  const photos = photosAll[sid] || {};   // { itemId -> base64 dataURL }
+  const photoAt = rec.photoAt || {};      // 어떤 유물에 사진이 있는지·언제 올렸는지는 학생 레코드에 항상 있음(가벼움)
+  const photos = photosAll[sid];          // { itemId -> base64 dataURL } — 이 학생을 펼친 뒤에야 지연 로딩됨
   const cards = ORDER.map(id => {
     const m = META[id];
-    const done = m.s.map((lbl,i)=> lbl === "사진" ? !!photos[id] : !!stepVal(steps, `${id}:${i}`));
+    const hasPhoto = !!photoAt[id];
+    const done = m.s.map((lbl,i)=> lbl === "사진" ? hasPhoto : !!stepVal(steps, `${id}:${i}`));
     const nDone = done.filter(Boolean).length;
     const stamped = !!stamps[id];
     const answers = m.s.map((lbl,i) => {
@@ -452,13 +490,14 @@ function detailHTML(sid, rec){
       if (typeof v === "string" && v.trim()) return `<div class="ans"><b>${lbl}:</b> ${esc(v)}</div>`;
       return "";
     }).join("");
-    const pic = photos[id]
-      ? `<a href="${esc(photos[id])}" target="_blank" rel="noopener"><img class="dpic" src="${esc(photos[id])}" alt="" loading="lazy"></a>`
-      : `<div class="dpic nopic">사진 없음</div>`;
+    const imgSrc = photos && photos[id];
+    const pic = !hasPhoto ? `<div class="dpic nopic">사진 없음</div>`
+      : imgSrc ? `<a href="${esc(imgSrc)}" target="_blank" rel="noopener"><img class="dpic" src="${esc(imgSrc)}" alt="" loading="lazy"></a>`
+      : `<div class="dpic nopic">⏳ 불러오는 중…</div>`;
     const rv = (reviews[sid] || {})[id];
-    const curAt = (rec.photoAt && rec.photoAt[id]) || 0;
+    const curAt = photoAt[id] || 0;
     let rbadge = "", rbtns = "";
-    if (photos[id]){
+    if (hasPhoto){
       const stale = rv && Number(rv.photoAt || 0) !== Number(curAt);
       if (!rv || (rv.status !== "ok" && rv.status !== "rejected")) rbadge = `<span class="rvb wait">⏳ 승인 대기 (스탬프 잠김)</span>`;
       else if (stale) rbadge = `<span class="rvb resub">🔄 새 사진 · 재검토 필요</span>`;
