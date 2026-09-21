@@ -1139,6 +1139,9 @@ function closeChatModal(){
   openChatKey = null; openChatCls = null; openChatName = null;
 }
 el('chatModalClose').onclick = closeChatModal;
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && !el('chatModal').classList.contains('hidden')) closeChatModal();
+});
 
 function sendChatMsg(){
   const text = el('chatInput').value.trim();
