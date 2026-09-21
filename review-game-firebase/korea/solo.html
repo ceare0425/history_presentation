@@ -152,6 +152,8 @@
   .hint-text{ font-size:1.2rem; font-weight:800; letter-spacing:.18em; color:var(--sky1); }
 
   /* ── 선생님 실시간 쪽지 배너 ── */
+  .msg-toolbar{ display:flex; justify-content:flex-end; flex:0 0 auto; margin:-0.4vh 0 .6vh; }
+  .msg-toolbar button{ width:auto; padding:5px 12px; font-size:.78rem; font-weight:700; background:#dbe6fb; color:var(--sky1); border-radius:999px; }
   .msg-banner{
     max-height:0; overflow:hidden; opacity:0; flex:0 0 auto;
     background:#eaf1ff; border:2px solid #7fa6e8; border-radius:12px; padding:0 12px;
@@ -343,9 +345,10 @@
       <div class="floor-badge">🏢 <span id="floorVal">0</span>층</div>
       <div class="timer">⏱ <span id="timerVal">--:--</span></div>
     </div>
+    <div class="msg-toolbar"><button type="button" id="msgOpenBtn">💬 선생님께 쪽지 보내기</button></div>
     <div class="msg-banner" id="msgBanner">
-      <div class="mb-head">💬 선생님 쪽지<button type="button" class="mb-close" id="msgBannerClose">닫기 ✕</button></div>
-      <div class="mb-text" id="msgBannerText"></div>
+      <div class="mb-head">💬 선생님과 쪽지<button type="button" class="mb-close" id="msgBannerClose">닫기 ✕</button></div>
+      <div class="mb-text hidden" id="msgBannerText"></div>
       <div class="mb-reply">
         <input type="text" id="msgReplyInput" placeholder="답장 입력 후 Enter" maxlength="200" autocomplete="off">
         <button type="button" id="msgReplyBtn">보내기</button>
@@ -912,11 +915,21 @@ function stopPresenceAndChat(){
 
 function showMsgBanner(text){
   el('msgBannerText').textContent = text;
+  el('msgBannerText').classList.remove('hidden');
   el('msgSentNote').textContent = '';
   el('msgReplyInput').value = '';
   el('msgBanner').classList.add('show');
 }
 el('msgBannerClose').onclick = () => { el('msgBanner').classList.remove('show'); };
+
+// 학생이 먼저 선생님께 쪽지를 보내고 싶을 때(아직 받은 쪽지가 없어도) 입력창을 바로 열어준다.
+el('msgOpenBtn').onclick = () => {
+  el('msgBannerText').textContent = '';
+  el('msgBannerText').classList.add('hidden');
+  el('msgSentNote').textContent = '';
+  el('msgBanner').classList.add('show');
+  el('msgReplyInput').focus();
+};
 
 function sendMsgReply(){
   const text = el('msgReplyInput').value.trim();
