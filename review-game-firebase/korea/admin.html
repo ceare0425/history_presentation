@@ -82,6 +82,7 @@
 
   .presence-row{ display:flex; align-items:center; gap:10px; padding:8px 6px; border-bottom:1px solid var(--line); font-size:.9rem; }
   .presence-row:last-child{ border-bottom:none; }
+  .presence-row.offline{ opacity:.62; }
   .presence-row .pname{ font-weight:700; color:var(--ink); }
   .presence-row .pcls{ color:var(--sub); font-size:.82rem; }
   .presence-row .ptime{ color:var(--sub); font-size:.78rem; margin-left:auto; }
@@ -285,7 +286,7 @@
 
   <div class="card" style="grid-column:1 / -1">
     <h2>⑤ 온라인 연습 학생 · 실시간 쪽지</h2>
-    <div class="sub" style="margin-top:-6px;">지금 <code>solo.html</code>(혼자 연습하기)에서 연습 중인 학생이 실시간으로 표시됩니다. <b>쪽지</b>를 누르면 그 학생에게 바로 메시지를 보낼 수 있고 학생 화면 상단에 배너로 뜨며, 학생이 답장하면 여기서 이어서 대화할 수 있습니다.</div>
+    <div class="sub" style="margin-top:-6px;">지금 <code>solo.html</code>(혼자 연습하기)에서 연습 중인 학생이 실시간으로 표시됩니다. <b>쪽지</b>를 누르면 그 학생에게 바로 메시지를 보낼 수 있고 학생 화면 상단에 배너로 뜨며, 학생이 답장하면 여기서 이어서 대화할 수 있습니다. 학생이 연습을 끝내고 오프라인이 되어도 아직 확인 못한 쪽지가 있으면 목록에 계속 남아 있어 나중에 열어볼 수 있습니다.</div>
     <div id="presenceList"><div class="muted">지금 온라인인 학생이 없습니다.</div></div>
   </div>
 
@@ -1006,7 +1007,8 @@ onValue(roomRef(ROOM,'players'), (snap)=>{
 
 // ── ⑤ 온라인 연습 학생 · 실시간 쪽지 ────────────────────
 let presenceObj = {}; // { "학년-반": { 이름: {since} } }
-const chatThreads = {}; // "학년-반␟이름" -> { msgs:[], unread:0, unsub:fn }
+let allMsgObj = {}; // { "학년-반": { 이름: { msgId: {from,text,ts,read} } } } — 학생이 오프라인이 돼도 쪽지 기록은 그대로 남아 있다
+const chatThreads = {}; // "학년-반␟이름" -> { msgs:[], unread:0, unsub:fn } (지금 대화창을 연 학생만 실시간 구독)
 let openChatKey = null, openChatCls = null, openChatName = null; // 지금 모달에 열려있는 학생
 
 function chatThreadKey(cls, name){ return cls + '␟' + name; }
@@ -1021,6 +1023,29 @@ function fmtPresenceTime(since){
   const sec = Math.max(0, Math.round((Date.now()-since)/1000));
   if(sec < 60) return '방금 접속';
   return Math.round(sec/60) + '분째 연습 중';
+}
+
+function fmtAgo(ts){
+  if(!ts) return '';
+  const sec = Math.max(0, Math.round((Date.now()-ts)/1000));
+  if(sec < 60) return '방금';
+  if(sec < 3600) return Math.round(sec/60) + '분 전';
+  if(sec < 86400) return Math.round(sec/3600) + '시간 전';
+  return Math.round(sec/86400) + '일 전';
+}
+
+// 학생이 연습을 끝내고 오프라인이 된 뒤에도, 선생님이 아직 확인 못한 쪽지가 있으면
+// 그 정보는 messages/{room} 트리에 그대로 남아 있으므로 여기서 바로 계산한다(presence와 무관).
+function threadMsgs(cls, name){
+  const t = (allMsgObj[cls] || {})[name] || {};
+  return Object.keys(t).map(k => ({ key:k, ...t[k] }));
+}
+function threadUnread(cls, name){
+  return threadMsgs(cls, name).filter(m => m.from === 'student' && !m.read).length;
+}
+function threadLastTs(cls, name){
+  const msgs = threadMsgs(cls, name);
+  return msgs.length ? Math.max(...msgs.map(m => m.ts || 0)) : 0;
 }
 
 function ensureChatThread(cls, name){
@@ -1052,32 +1077,39 @@ function markStudentMsgsRead(cls, name, msgs){
   });
 }
 
-function teardownChatThread(key){
-  const t = chatThreads[key];
-  if(t && t.unsub) t.unsub();
-  delete chatThreads[key];
-}
-
 function renderPresenceList(){
   const box = el('presenceList');
   const rows = [];
+  const seen = new Set();
   for(const cls of Object.keys(presenceObj)){
     for(const name of Object.keys(presenceObj[cls])){
-      rows.push({ cls, name, since: (presenceObj[cls][name]||{}).since });
+      rows.push({ cls, name, online:true, since: (presenceObj[cls][name]||{}).since });
+      seen.add(chatThreadKey(cls, name));
+    }
+  }
+  // 연습이 끝나 오프라인이 됐어도, 선생님이 아직 확인 못한 학생 쪽지가 있으면 목록에 남겨 나중에 볼 수 있게 한다.
+  for(const cls of Object.keys(allMsgObj)){
+    for(const name of Object.keys(allMsgObj[cls])){
+      const key = chatThreadKey(cls, name);
+      if(seen.has(key)) continue;
+      if(threadUnread(cls, name) > 0){
+        rows.push({ cls, name, online:false, lastTs: threadLastTs(cls, name) });
+        seen.add(key);
+      }
     }
   }
   if(!rows.length){
-    box.innerHTML = '<div class="muted">지금 온라인인 학생이 없습니다.</div>';
+    box.innerHTML = '<div class="muted">지금 온라인인 학생이 없고, 확인하지 못한 쪽지도 없습니다.</div>';
     return;
   }
-  rows.sort((a,b)=> clsLabelShort(a.cls).localeCompare(clsLabelShort(b.cls),'ko') || a.name.localeCompare(b.name,'ko'));
+  rows.sort((a,b)=> (b.online - a.online) || clsLabelShort(a.cls).localeCompare(clsLabelShort(b.cls),'ko') || a.name.localeCompare(b.name,'ko'));
   box.innerHTML = rows.map(r=>{
-    const key = chatThreadKey(r.cls, r.name);
-    const unread = chatThreads[key] ? chatThreads[key].unread : 0;
-    return `<div class="presence-row">
+    const unread = threadUnread(r.cls, r.name);
+    const timeLabel = r.online ? fmtPresenceTime(r.since) : `오프라인 · 쪽지 ${fmtAgo(r.lastTs)}`;
+    return `<div class="presence-row${r.online?'':' offline'}">
       <span class="pname">${escapeHtml(r.name)}</span>
       <span class="pcls">${escapeHtml(clsLabelShort(r.cls))}</span>
-      <span class="ptime">${escapeHtml(fmtPresenceTime(r.since))}</span>
+      <span class="ptime">${escapeHtml(timeLabel)}</span>
       <button type="button" class="pchat-btn" data-cls="${escapeHtml(r.cls)}" data-name="${escapeHtml(r.name)}">💬 쪽지${unread?`<span class="unread">${unread}</span>`:''}</button>
     </div>`;
   }).join('');
@@ -1091,19 +1123,15 @@ el('presenceList').addEventListener('click', (e)=>{
 
 onValue(ref(db, 'presence/'+ROOM), (snap)=>{
   presenceObj = snap.val() || {};
-  const liveKeys = new Set();
-  for(const cls of Object.keys(presenceObj)){
-    for(const name of Object.keys(presenceObj[cls])){
-      liveKeys.add(chatThreadKey(cls, name));
-      ensureChatThread(cls, name);
-    }
-  }
-  for(const key of Object.keys(chatThreads)){
-    if(!liveKeys.has(key) && key !== openChatKey) teardownChatThread(key);
-  }
   renderPresenceList();
 });
-setInterval(renderPresenceList, 30000); // "N분째 연습 중" 표시 갱신
+// 학생 쪽지 기록은 presence(접속 여부)와 별개로 항상 남아 있으므로 room 전체를 구독해
+// 오프라인 학생의 "확인 못한 쪽지"도 놓치지 않고 목록에 띄운다(텍스트만이라 용량 부담 없음).
+onValue(ref(db, 'messages/'+ROOM), (snap)=>{
+  allMsgObj = snap.val() || {};
+  renderPresenceList();
+});
+setInterval(renderPresenceList, 30000); // "N분째 연습 중" · "N분 전" 표시 갱신
 
 function chatMsgHtml(msg){
   const who = msg.from === 'admin' ? 'admin' : 'student';
