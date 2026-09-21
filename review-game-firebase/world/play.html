@@ -1237,7 +1237,7 @@ function itemDescFor(k, it, nanta){
   }
   if(k === 'ice'){
     const s = (nanta ? ITEM_FX_MS.iceNanta : itemsMode === 'spicy' ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) / 1000;
-    return `선두권이 ${s}초간 제출 불가`;
+    return `선두권이 얼음이 녹을 때까지 ${s}초간 제출 불가`;
   }
   if(k === 'waterballoon'){
     const s = (nanta ? ITEM_FX_MS.waterballoonNanta : itemsMode === 'spicy' ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon) / 1000;
