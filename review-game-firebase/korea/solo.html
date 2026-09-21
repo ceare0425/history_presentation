@@ -745,7 +745,7 @@ function flashFeedback(correct, correctAnswer, gain, wasRetry, usedHint){
     fillBlanksWithAnswer(correctAnswer);
   }
   clearTimeout(feedbackTimer);
-  feedbackTimer = setTimeout(()=>{ f.classList.remove('show'); }, correct ? 1400 : 2000);
+  feedbackTimer = setTimeout(()=>{ f.classList.remove('show'); }, correct ? 400 : 2000);
 }
 
 function submitAnswer(){
@@ -805,7 +805,7 @@ function submitAnswer(){
     if(maybeShowClearPrompt()) return;   // 선택 범위를 다 풀었으면 계속할지 물어본다 (입력창은 잠근 채로)
     el('submitBtn').disabled = false; el('answerInput').disabled = false;
     assignNextQuestion();
-  }, correct ? 700 : 2000);
+  }, correct ? 400 : 2000);
 }
 
 // 이번 세션에서 고른 주제(범위)를 사람이 읽기 좋은 문구로. 예: 「08. …」 / 「08. …」 외 2개 주제 / 전체 범위
