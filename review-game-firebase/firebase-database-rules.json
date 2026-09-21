@@ -39,6 +39,29 @@
         ".write": true
       }
     },
+    "presence": {
+      ".read": true,
+      "$room": {
+        "$classKey": {
+          "$name": {
+            ".write": true
+          }
+        }
+      }
+    },
+    "messages": {
+      ".read": true,
+      "$room": {
+        "$classKey": {
+          "$name": {
+            "$msgId": {
+              ".write": true,
+              ".validate": "newData.hasChild('from') && newData.hasChild('text') && newData.hasChild('ts') && newData.child('text').val().length <= 300"
+            }
+          }
+        }
+      }
+    },
     "museum": {
       ".read": true,
       "$tour": {

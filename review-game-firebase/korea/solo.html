@@ -151,6 +151,21 @@
   .hint-row #endPracticeBtn{ margin-left:auto; background:#c96f5b; }
   .hint-text{ font-size:1.2rem; font-weight:800; letter-spacing:.18em; color:var(--sky1); }
 
+  /* ── 선생님 실시간 쪽지 배너 ── */
+  .msg-banner{
+    max-height:0; overflow:hidden; opacity:0; flex:0 0 auto;
+    background:#eaf1ff; border:2px solid #7fa6e8; border-radius:12px; padding:0 12px;
+    transition:max-height .25s ease, opacity .2s ease, margin .25s ease;
+  }
+  .msg-banner.show{ max-height:220px; opacity:1; padding:10px 12px; margin-bottom:1vh; }
+  .msg-banner .mb-head{ display:flex; align-items:center; gap:8px; font-weight:800; color:var(--sky1); font-size:.92rem; }
+  .msg-banner .mb-head .mb-close{ margin-left:auto; width:auto; flex:0 0 auto; padding:2px 8px; font-size:.75rem; background:#9fb6dd; }
+  .msg-banner .mb-text{ font-size:1rem; color:var(--ink); margin:.4em 0 .6em; line-height:1.5; word-break:keep-all; }
+  .msg-banner .mb-reply{ display:flex; gap:6px; }
+  .msg-banner .mb-reply input[type=text]{ flex:1; margin:0; padding:8px 10px; font-size:.9rem; }
+  .msg-banner .mb-reply button{ width:auto; flex:0 0 auto; padding:8px 14px; font-size:.85rem; }
+  .msg-banner .mb-sent{ font-size:.8rem; color:var(--sub); margin-top:4px; min-height:1.1em; }
+
   .floor-badge{ transition:transform .15s ease; }
   .floor-badge.pop{ animation:floorPop .5s ease; }
   @keyframes floorPop{
@@ -328,6 +343,15 @@
       <div class="floor-badge">🏢 <span id="floorVal">0</span>층</div>
       <div class="timer">⏱ <span id="timerVal">--:--</span></div>
     </div>
+    <div class="msg-banner" id="msgBanner">
+      <div class="mb-head">💬 선생님 쪽지<button type="button" class="mb-close" id="msgBannerClose">닫기 ✕</button></div>
+      <div class="mb-text" id="msgBannerText"></div>
+      <div class="mb-reply">
+        <input type="text" id="msgReplyInput" placeholder="답장 입력 후 Enter" maxlength="200" autocomplete="off">
+        <button type="button" id="msgReplyBtn">보내기</button>
+      </div>
+      <div class="mb-sent" id="msgSentNote"></div>
+    </div>
     <div class="streak" id="streakVal"></div>
 
     <div class="avatar-char" id="avatarChar">🧗</div>
@@ -385,9 +409,10 @@
 
 <script type="module">
 import {
-  roomRef, ref, db, onValue, get, push, update, serverNow,
+  roomRef, ref, db, onValue, get, push, update, set, remove, onDisconnect, onChildAdded, serverNow,
   isCorrect, computeGain, fmtTime, escapeHtml, shuffle, choseongHint,
-  unitsFromQuestions, poolFromQuestions, recencyWeightFn, weightedQueue
+  unitsFromQuestions, poolFromQuestions, recencyWeightFn, weightedQueue,
+  presenceRef, chatRef
 } from '../shared/lib.js';
 
 const ROOM = 'korea';
@@ -846,9 +871,68 @@ function logSoloSession(){
 }
 
 // 창을 닫거나 다른 페이지로 이동해도 지금까지의 기록을 남긴다 (best-effort)
-window.addEventListener('pagehide', ()=>{ if(soloLogRef && !soloLogged){ try{ syncSoloLog(true); }catch(_e){} } });
+window.addEventListener('pagehide', ()=>{ if(soloLogRef && !soloLogged){ try{ syncSoloLog(true); }catch(_e){} } stopPresenceAndChat(); });
+
+// ── 선생님과 실시간 쪽지 주고받기 ──────────────────────
+// 연습 중(playView)에만 "온라인"으로 표시되고, 연습을 마치거나 창을 닫으면 바로 사라진다.
+let presenceSessionRef = null;
+let chatSeenKeys = null;
+let chatUnsub = null;
+
+function startPresenceAndChat(){
+  const cls = sessionClassKey;
+  const name = (el('nameInput').value.trim() || '').slice(0, 20);
+  if(!cls || !name) return;
+  stopPresenceAndChat();
+
+  const pRef = presenceRef(ROOM, cls, name);
+  set(pRef, { since: Date.now() }).catch(()=>{});
+  onDisconnect(pRef).remove();
+  presenceSessionRef = pRef;
+
+  const cRef = chatRef(ROOM, cls, name);
+  chatSeenKeys = new Set();
+  get(cRef).then(snap => {
+    snap.forEach(child => { chatSeenKeys.add(child.key); });
+  }).catch(()=>{}).finally(() => {
+    chatUnsub = onChildAdded(cRef, (child) => {
+      if(chatSeenKeys.has(child.key)) return;
+      chatSeenKeys.add(child.key);
+      const msg = child.val();
+      if(msg && msg.from === 'admin') showMsgBanner(msg.text);
+    });
+  });
+}
+
+function stopPresenceAndChat(){
+  if(presenceSessionRef){ remove(presenceSessionRef).catch(()=>{}); presenceSessionRef = null; }
+  if(chatUnsub){ chatUnsub(); chatUnsub = null; }
+  chatSeenKeys = null;
+}
+
+function showMsgBanner(text){
+  el('msgBannerText').textContent = text;
+  el('msgSentNote').textContent = '';
+  el('msgReplyInput').value = '';
+  el('msgBanner').classList.add('show');
+}
+el('msgBannerClose').onclick = () => { el('msgBanner').classList.remove('show'); };
+
+function sendMsgReply(){
+  const text = el('msgReplyInput').value.trim();
+  if(!text || !sessionClassKey || !chatSeenKeys) return;
+  const name = (el('nameInput').value.trim() || '').slice(0, 20);
+  const newRef = push(chatRef(ROOM, sessionClassKey, name));
+  chatSeenKeys.add(newRef.key);
+  set(newRef, { from:'student', text: text.slice(0,300), ts: Date.now() }).catch(()=>{});
+  el('msgReplyInput').value = '';
+  el('msgSentNote').textContent = '답장을 보냈어요.';
+}
+el('msgReplyBtn').onclick = sendMsgReply;
+el('msgReplyInput').addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); sendMsgReply(); } });
 
 function showEndedView(){
+  stopPresenceAndChat();
   ended = true;
   paused = false;
   el('clearPrompt').classList.add('hidden');
@@ -957,6 +1041,7 @@ el('startBtn').onclick = async () => {
   el('feedback').classList.remove('show');
   showView('playView');
   assignNextQuestion();
+  startPresenceAndChat();
 
   if(tickHandle) clearInterval(tickHandle);
   tickHandle = setInterval(tick, 250);
