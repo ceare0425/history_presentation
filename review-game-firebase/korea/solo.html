@@ -153,7 +153,8 @@
 
   /* ── 선생님 실시간 쪽지 배너 ── */
   .msg-toolbar{ display:flex; justify-content:flex-end; flex:0 0 auto; margin:-0.4vh 0 .6vh; }
-  .msg-toolbar button{ width:auto; padding:5px 12px; font-size:.78rem; font-weight:700; background:#dbe6fb; color:var(--sky1); border-radius:999px; }
+  .msg-toolbar button{ position:relative; width:auto; padding:5px 12px; font-size:.78rem; font-weight:700; background:#dbe6fb; color:var(--sky1); border-radius:999px; }
+  .msg-toolbar .unread-badge{ position:absolute; top:-6px; right:-6px; background:var(--bad); color:#fff; font-size:.65rem; font-weight:800; border-radius:999px; padding:1px 5px; min-width:16px; text-align:center; }
   .msg-banner{
     max-height:0; overflow:hidden; opacity:0; flex:0 0 auto;
     background:#eaf1ff; border:2px solid #7fa6e8; border-radius:12px; padding:0 12px;
@@ -345,7 +346,7 @@
       <div class="floor-badge">🏢 <span id="floorVal">0</span>층</div>
       <div class="timer">⏱ <span id="timerVal">--:--</span></div>
     </div>
-    <div class="msg-toolbar"><button type="button" id="msgOpenBtn">💬 선생님께 쪽지 보내기</button></div>
+    <div class="msg-toolbar"><button type="button" id="msgOpenBtn">💬 선생님께 쪽지 보내기<span class="unread-badge hidden" id="msgUnreadBadge"></span></button></div>
     <div class="msg-banner" id="msgBanner">
       <div class="mb-head">💬 선생님과 쪽지<button type="button" class="mb-close" id="msgBannerClose">닫기 ✕</button></div>
       <div class="mb-text hidden" id="msgBannerText"></div>
@@ -884,6 +885,8 @@ let chatSeenKeys = null;
 let chatUnsub = null;
 let chatChangeUnsub = null;
 let lastSentMsgKey = null; // 내가 마지막으로 보낸 쪽지 key — 선생님이 읽으면 이 키의 read가 true로 바뀐다
+let pendingAdminMsgKeys = []; // 아직 학생이 확인(배너 닫기/열기/답장)하지 않은 선생님 쪽지 key들
+let unreadIncomingCount = 0;
 
 function startPresenceAndChat(){
   const cls = sessionClassKey;
@@ -914,8 +917,11 @@ function startPresenceAndChat(){
       const msg = msgSnap.val();
       if(msg && msg.from === 'admin'){
         showMsgBanner(msg.text);
-        // 학생 화면에 뜬 순간 "읽음" 처리 — 선생님 쪽 대화창에서 1이 사라진다.
-        update(ref(db, `messages/${ROOM}/${cls}/${name}/${msgSnap.key}`), { read: true }).catch(()=>{});
+        // 배너가 떴다고 바로 "읽음" 처리하지 않는다 — 학생이 실제로 배너를 닫거나 열거나
+        // 답장을 보낼 때(markIncomingRead)까지는 msgOpenBtn에 안읽음 배지를 띄워둔다.
+        pendingAdminMsgKeys.push(msgSnap.key);
+        unreadIncomingCount++;
+        updateMsgBadge();
       }
     });
     chatChangeUnsub = onChildChanged(cRef, (msgSnap) => {
@@ -933,6 +939,32 @@ function stopPresenceAndChat(){
   if(chatUnsub){ chatUnsub(); chatUnsub = null; }
   if(chatChangeUnsub){ chatChangeUnsub(); chatChangeUnsub = null; }
   chatSeenKeys = null;
+  pendingAdminMsgKeys = [];
+  unreadIncomingCount = 0;
+  updateMsgBadge();
+}
+
+function updateMsgBadge(){
+  const badge = el('msgUnreadBadge');
+  if(unreadIncomingCount > 0){
+    badge.textContent = unreadIncomingCount;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+// 배너를 닫거나 열거나 답장을 보내면 "확인했다"고 보고, 밀려있던 선생님 쪽지를 읽음 처리한다.
+function markIncomingRead(){
+  if(pendingAdminMsgKeys.length && sessionClassKey){
+    const name = (el('nameInput').value.trim() || '').slice(0, 20);
+    pendingAdminMsgKeys.forEach(key => {
+      update(ref(db, `messages/${ROOM}/${sessionClassKey}/${name}/${key}`), { read: true }).catch(()=>{});
+    });
+    pendingAdminMsgKeys = [];
+  }
+  unreadIncomingCount = 0;
+  updateMsgBadge();
 }
 
 function showMsgBanner(text){
@@ -942,7 +974,7 @@ function showMsgBanner(text){
   el('msgReplyInput').value = '';
   el('msgBanner').classList.add('show');
 }
-el('msgBannerClose').onclick = () => { el('msgBanner').classList.remove('show'); };
+el('msgBannerClose').onclick = () => { el('msgBanner').classList.remove('show'); markIncomingRead(); };
 
 // 학생이 먼저 선생님께 쪽지를 보내고 싶을 때(아직 받은 쪽지가 없어도) 입력창을 바로 열어준다.
 el('msgOpenBtn').onclick = () => {
@@ -951,11 +983,13 @@ el('msgOpenBtn').onclick = () => {
   el('msgSentNote').textContent = '';
   el('msgBanner').classList.add('show');
   el('msgReplyInput').focus();
+  markIncomingRead();
 };
 
 function sendMsgReply(){
   const text = el('msgReplyInput').value.trim();
   if(!text || !sessionClassKey || !chatSeenKeys) return;
+  markIncomingRead();
   const name = (el('nameInput').value.trim() || '').slice(0, 20);
   const newRef = push(chatRef(ROOM, sessionClassKey, name));
   chatSeenKeys.add(newRef.key);
