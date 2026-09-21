@@ -868,7 +868,7 @@ function flashFeedback(correct, correctAnswer, gain, bonusApplied, wasRetry){
     fillBlanksWithAnswer(correctAnswer);
   }
   clearTimeout(feedbackTimer);
-  feedbackTimer = setTimeout(()=>{ f.classList.remove('show'); }, correct ? 1400 : 2000);
+  feedbackTimer = setTimeout(()=>{ f.classList.remove('show'); }, correct ? 400 : 2000);
 }
 
 async function submitAnswer(){
@@ -1007,7 +1007,7 @@ async function submitAnswer(){
   const proceedToNext = () => {
     setTimeout(()=>{
       assignNextQuestion();   // 입력창 재활성화는 renderQuestion()이 isFrozen() 여부를 보고 알아서 처리
-    }, correct ? 700 : 1500);
+    }, correct ? 400 : 1500);
   };
   if(comboSparkStreak !== null) openComboSparkPicker(comboSparkStreak, proceedToNext);
   else proceedToNext();
