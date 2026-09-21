@@ -101,7 +101,7 @@
   .chat-input-row input[type=text]{ flex:1; margin:0; }
   .chat-input-row button{ width:auto; flex:0 0 auto; padding:10px 16px; }
   .mini-del{ padding:3px 8px; font-size:.72rem; background:var(--bad); }
-  .unit-acc-list{ max-height:220px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; margin:6px 0 14px; }
+  .unit-acc-list{ max-height:220px; overflow-y:auto; overflow-x:hidden; border:1px solid var(--line); border-radius:10px; margin:6px 0 14px; }
   .unit-acc-row{ display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid var(--line); font-size:.82rem; }
   .unit-acc-row:last-child{ border-bottom:none; }
   .unit-acc-row .uname{ flex:1; }
@@ -1540,8 +1540,8 @@ function renderQuestionAcc(){
     const qtext = r.q ? r.q.question : '(삭제된 문제)';
     const unit = r.q ? r.q.unit : '';
     return `<div class="unit-acc-row">
-      <span style="display:inline-block; font-size:.72rem; color:var(--sky1); background:#eef2fb; padding:1px 6px; border-radius:6px; flex-shrink:0;">${escapeHtml(unit)}</span>
-      <span class="uname" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(qtext)}">${escapeHtml(qtext)}</span>
+      <span style="display:inline-block; max-width:70px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.72rem; color:var(--sky1); background:#eef2fb; padding:1px 6px; border-radius:6px; flex-shrink:0;" title="${escapeHtml(unit)}">${escapeHtml(unit)}</span>
+      <span class="uname" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;" title="${escapeHtml(qtext)}">${escapeHtml(qtext)}</span>
       <span class="ubar-track"><span class="ubar-fill" style="width:${r.acc}%; background:${color};"></span></span>
       <span class="uacc" style="color:${color};">${r.acc}%</span>
       <span class="ucnt">${r.c}/${r.w}</span>
