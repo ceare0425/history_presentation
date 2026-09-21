@@ -1317,7 +1317,7 @@ function renderItemBar(){
       desc = `선두권 문제 화면이 ${s}초간 흐려짐`;
     } else if(heldItem === 'ice'){
       const s = (itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : itemsMode === 'spicy' ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) / 1000;
-      desc = `선두권이 ${s}초간 제출 불가`;
+      desc = `선두권이 얼음이 녹을 때까지 ${s}초간 제출 불가`;
     } else if(heldItem === 'waterballoon'){
       const s = (itemsMode === 'nanta' ? ITEM_FX_MS.waterballoonNanta : itemsMode === 'spicy' ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon) / 1000;
       desc = `선두권이 물기가 마를 때까지 ${s}초간 제출 불가`;
