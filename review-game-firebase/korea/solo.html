@@ -879,6 +879,7 @@ window.addEventListener('pagehide', ()=>{ if(soloLogRef && !soloLogged){ try{ sy
 // ── 선생님과 실시간 쪽지 주고받기 ──────────────────────
 // 연습 중(playView)에만 "온라인"으로 표시되고, 연습을 마치거나 창을 닫으면 바로 사라진다.
 let presenceSessionRef = null;
+let presenceConnUnsub = null;
 let chatSeenKeys = null;
 let chatUnsub = null;
 let chatChangeUnsub = null;
@@ -891,9 +892,16 @@ function startPresenceAndChat(){
   stopPresenceAndChat();
 
   const pRef = presenceRef(ROOM, cls, name);
-  set(pRef, { since: Date.now() }).catch(()=>{});
-  onDisconnect(pRef).remove();
   presenceSessionRef = pRef;
+  // 와이파이가 잠깐 끊기거나 화면이 꺼졌다 켜지는 등으로 연결이 끊기면 서버가 onDisconnect를
+  // 실행해 온라인 표시를 지운다. ".info/connected"는 재연결될 때마다 다시 true가 되므로,
+  // 그때마다 onDisconnect와 실제 값을 다시 등록해서 연습 중인데도 목록에서 사라지는 일을 막는다.
+  presenceConnUnsub = onValue(ref(db, '.info/connected'), (snap) => {
+    if(snap.val() === true){
+      onDisconnect(pRef).remove();
+      set(pRef, { since: Date.now() }).catch(()=>{});
+    }
+  });
 
   const cRef = chatRef(ROOM, cls, name);
   chatSeenKeys = new Set();
@@ -920,6 +928,7 @@ function startPresenceAndChat(){
 }
 
 function stopPresenceAndChat(){
+  if(presenceConnUnsub){ presenceConnUnsub(); presenceConnUnsub = null; }
   if(presenceSessionRef){ remove(presenceSessionRef).catch(()=>{}); presenceSessionRef = null; }
   if(chatUnsub){ chatUnsub(); chatUnsub = null; }
   if(chatChangeUnsub){ chatChangeUnsub(); chatChangeUnsub = null; }
