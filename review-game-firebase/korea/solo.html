@@ -412,7 +412,7 @@
 
 <script type="module">
 import {
-  roomRef, ref, db, onValue, get, push, update, set, remove, onDisconnect, onChildAdded, serverNow,
+  roomRef, ref, db, onValue, get, push, update, set, remove, onDisconnect, onChildAdded, onChildChanged, serverNow,
   isCorrect, computeGain, fmtTime, escapeHtml, shuffle, choseongHint,
   unitsFromQuestions, poolFromQuestions, recencyWeightFn, weightedQueue,
   presenceRef, chatRef
@@ -881,6 +881,8 @@ window.addEventListener('pagehide', ()=>{ if(soloLogRef && !soloLogged){ try{ sy
 let presenceSessionRef = null;
 let chatSeenKeys = null;
 let chatUnsub = null;
+let chatChangeUnsub = null;
+let lastSentMsgKey = null; // 내가 마지막으로 보낸 쪽지 key — 선생님이 읽으면 이 키의 read가 true로 바뀐다
 
 function startPresenceAndChat(){
   const cls = sessionClassKey;
@@ -896,13 +898,23 @@ function startPresenceAndChat(){
   const cRef = chatRef(ROOM, cls, name);
   chatSeenKeys = new Set();
   get(cRef).then(snap => {
-    snap.forEach(child => { chatSeenKeys.add(child.key); });
+    snap.forEach(msgSnap => { chatSeenKeys.add(msgSnap.key); });
   }).catch(()=>{}).finally(() => {
-    chatUnsub = onChildAdded(cRef, (child) => {
-      if(chatSeenKeys.has(child.key)) return;
-      chatSeenKeys.add(child.key);
-      const msg = child.val();
-      if(msg && msg.from === 'admin') showMsgBanner(msg.text);
+    chatUnsub = onChildAdded(cRef, (msgSnap) => {
+      if(chatSeenKeys.has(msgSnap.key)) return;
+      chatSeenKeys.add(msgSnap.key);
+      const msg = msgSnap.val();
+      if(msg && msg.from === 'admin'){
+        showMsgBanner(msg.text);
+        // 학생 화면에 뜬 순간 "읽음" 처리 — 선생님 쪽 대화창에서 1이 사라진다.
+        update(ref(db, `messages/${ROOM}/${cls}/${name}/${msgSnap.key}`), { read: true }).catch(()=>{});
+      }
+    });
+    chatChangeUnsub = onChildChanged(cRef, (msgSnap) => {
+      const msg = msgSnap.val();
+      if(msg && msg.from === 'student' && msg.read && msgSnap.key === lastSentMsgKey){
+        el('msgSentNote').textContent = '선생님이 읽었어요 ✓';
+      }
     });
   });
 }
@@ -910,6 +922,7 @@ function startPresenceAndChat(){
 function stopPresenceAndChat(){
   if(presenceSessionRef){ remove(presenceSessionRef).catch(()=>{}); presenceSessionRef = null; }
   if(chatUnsub){ chatUnsub(); chatUnsub = null; }
+  if(chatChangeUnsub){ chatChangeUnsub(); chatChangeUnsub = null; }
   chatSeenKeys = null;
 }
 
@@ -937,9 +950,10 @@ function sendMsgReply(){
   const name = (el('nameInput').value.trim() || '').slice(0, 20);
   const newRef = push(chatRef(ROOM, sessionClassKey, name));
   chatSeenKeys.add(newRef.key);
-  set(newRef, { from:'student', text: text.slice(0,300), ts: Date.now() }).catch(()=>{});
+  lastSentMsgKey = newRef.key;
+  set(newRef, { from:'student', text: text.slice(0,300), ts: Date.now(), read:false }).catch(()=>{});
   el('msgReplyInput').value = '';
-  el('msgSentNote').textContent = '답장을 보냈어요.';
+  el('msgSentNote').textContent = '답장을 보냈어요 (안읽음)';
 }
 el('msgReplyBtn').onclick = sendMsgReply;
 el('msgReplyInput').addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); sendMsgReply(); } });
