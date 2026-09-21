@@ -1051,6 +1051,9 @@ el('chatPanelClose').onclick = () => {
   chatPanelOpen = false;
   el('chatPanel').classList.add('hidden');
 };
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && chatPanelOpen) el('chatPanelClose').click();
+});
 
 function sendChatMsg(){
   const text = el('chatInput').value.trim();
