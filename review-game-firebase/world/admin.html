@@ -88,9 +88,13 @@
   .presence-row .pchat-btn{ width:auto; flex:0 0 auto; padding:6px 12px; font-size:.8rem; position:relative; }
   .presence-row .pchat-btn .unread{ position:absolute; top:-6px; right:-6px; background:var(--bad); color:#fff; font-size:.65rem; font-weight:800; border-radius:999px; padding:1px 5px; min-width:16px; text-align:center; }
   .chat-log{ max-height:40vh; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:10px; margin:10px 0; display:flex; flex-direction:column; gap:8px; background:var(--bg); }
+  .chat-row{ display:flex; align-items:flex-end; gap:6px; }
+  .chat-row.admin{ justify-content:flex-end; }
+  .chat-row.student{ justify-content:flex-start; }
+  .chat-unread{ font-size:.68rem; font-weight:800; color:var(--gold-dark); flex:0 0 auto; }
   .chat-msg{ max-width:78%; padding:8px 12px; border-radius:12px; font-size:.9rem; line-height:1.5; word-break:break-word; }
-  .chat-msg.admin{ align-self:flex-end; background:var(--sky1); color:#fff; border-bottom-right-radius:3px; }
-  .chat-msg.student{ align-self:flex-start; background:#fff; border:1px solid var(--line); border-bottom-left-radius:3px; }
+  .chat-msg.admin{ background:var(--sky1); color:#fff; border-bottom-right-radius:3px; }
+  .chat-msg.student{ background:#fff; border:1px solid var(--line); border-bottom-left-radius:3px; }
   .chat-msg .ct{ font-size:.68rem; opacity:.7; margin-top:3px; }
   .chat-input-row{ display:flex; gap:8px; }
   .chat-input-row input[type=text]{ flex:1; margin:0; }
@@ -382,7 +386,7 @@
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script type="module">
 import {
-  roomRef, ref, onValue, onChildAdded, get, set, update, remove, push, db, serverNow,
+  roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, shuffle,
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS,
   presenceRef, chatRef
@@ -995,7 +999,7 @@ onValue(roomRef(ROOM,'players'), (snap)=>{
 
 // ── ⑤ 온라인 연습 학생 · 실시간 쪽지 ────────────────────
 let presenceObj = {}; // { "학년-반": { 이름: {since} } }
-const chatThreads = {}; // "학년-반␟이름" -> { seenKeys:Set, unread:0, unsub:fn }
+const chatThreads = {}; // "학년-반␟이름" -> { msgs:[], unread:0, unsub:fn }
 let openChatKey = null, openChatCls = null, openChatName = null; // 지금 모달에 열려있는 학생
 
 function chatThreadKey(cls, name){ return cls + '␟' + name; }
@@ -1015,26 +1019,30 @@ function fmtPresenceTime(since){
 function ensureChatThread(cls, name){
   const key = chatThreadKey(cls, name);
   if(chatThreads[key]) return chatThreads[key];
-  const t = { seenKeys:new Set(), unread:0, unsub:null };
+  const t = { msgs:[], unread:0, unsub:null };
   chatThreads[key] = t;
   const cRef = chatRef(ROOM, cls, name);
-  get(cRef).then(snap=>{
-    snap.forEach(child=>{ t.seenKeys.add(child.key); });
-  }).catch(()=>{}).finally(()=>{
-    t.unsub = onChildAdded(cRef, (child)=>{
-      if(t.seenKeys.has(child.key)) return;
-      t.seenKeys.add(child.key);
-      const msg = child.val();
-      if(!msg) return;
-      if(openChatKey === key){
-        appendChatMsg(msg);
-      } else if(msg.from === 'student'){
-        t.unread++;
-        renderPresenceList();
-      }
-    });
+  t.unsub = onValue(cRef, (snap)=>{
+    const msgs = [];
+    snap.forEach(msgSnap=>{ msgs.push({ key: msgSnap.key, ...msgSnap.val() }); });
+    t.msgs = msgs;
+    t.unread = msgs.filter(m=>m.from==='student' && !m.read).length;
+    if(openChatKey === key){
+      renderChatLog(t.msgs);
+      markStudentMsgsRead(cls, name, t.msgs);
+    }
+    renderPresenceList();
   });
   return t;
+}
+
+// 선생님이 대화창을 열어 학생의 쪽지를 실제로 보고 있을 때만 "읽음" 처리한다(카카오톡 방식).
+function markStudentMsgsRead(cls, name, msgs){
+  msgs.forEach(m=>{
+    if(m.from === 'student' && !m.read){
+      update(ref(db, `messages/${ROOM}/${cls}/${name}/${m.key}`), { read: true }).catch(()=>{});
+    }
+  });
 }
 
 function teardownChatThread(key){
@@ -1095,11 +1103,13 @@ function chatMsgHtml(msg){
   const label = msg.from === 'admin' ? '선생님' : '학생';
   const t = msg.ts ? new Date(msg.ts) : null;
   const tLabel = t ? `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}` : '';
-  return `<div class="chat-msg ${who}">${escapeHtml(msg.text||'')}<div class="ct">${label} · ${tLabel}</div></div>`;
+  // 내(선생님)가 보낸 쪽지를 학생이 아직 안 읽었으면 카카오톡처럼 "1"을 붙여두고, 읽으면 사라진다.
+  const unreadTick = (who === 'admin' && !msg.read) ? '<span class="chat-unread">1</span>' : '';
+  return `<div class="chat-row ${who}">${unreadTick}<div class="chat-msg ${who}">${escapeHtml(msg.text||'')}<div class="ct">${label} · ${tLabel}</div></div></div>`;
 }
-function appendChatMsg(msg){
+function renderChatLog(msgs){
   const log = el('chatLog');
-  log.insertAdjacentHTML('beforeend', chatMsgHtml(msg));
+  log.innerHTML = msgs.length ? msgs.map(chatMsgHtml).join('') : '<div class="muted">아직 대화가 없습니다.</div>';
   log.scrollTop = log.scrollHeight;
 }
 
@@ -1107,16 +1117,10 @@ function openChatModal(cls, name){
   openChatCls = cls; openChatName = name;
   openChatKey = chatThreadKey(cls, name);
   const t = ensureChatThread(cls, name);
-  t.unread = 0;
   el('chatModalTitle').textContent = `💬 ${name} 학생과 쪽지`;
   el('chatModalSub').textContent = `${clsLabelShort(cls)} · ${name}`;
-  el('chatLog').innerHTML = '<div class="muted">불러오는 중...</div>';
-  get(chatRef(ROOM, cls, name)).then(snap=>{
-    const msgs = [];
-    snap.forEach(child=>{ msgs.push(child.val()); });
-    el('chatLog').innerHTML = msgs.length ? msgs.map(chatMsgHtml).join('') : '<div class="muted">아직 대화가 없습니다.</div>';
-    el('chatLog').scrollTop = el('chatLog').scrollHeight;
-  });
+  renderChatLog(t.msgs);
+  markStudentMsgsRead(cls, name, t.msgs);
   el('chatModal').classList.remove('hidden');
   el('chatInput').value = '';
   el('chatInput').focus();
@@ -1131,11 +1135,8 @@ el('chatModalClose').onclick = closeChatModal;
 function sendChatMsg(){
   const text = el('chatInput').value.trim();
   if(!text || !openChatCls || !openChatName) return;
-  const t = chatThreads[chatThreadKey(openChatCls, openChatName)];
   const newRef = push(chatRef(ROOM, openChatCls, openChatName));
-  if(t) t.seenKeys.add(newRef.key);
-  set(newRef, { from:'admin', text: text.slice(0,300), ts: Date.now() }).catch(()=>{});
-  appendChatMsg({ from:'admin', text, ts: Date.now() });
+  set(newRef, { from:'admin', text: text.slice(0,300), ts: Date.now(), read:false }).catch(()=>{});
   el('chatInput').value = '';
 }
 el('chatSendBtn').onclick = sendChatMsg;
