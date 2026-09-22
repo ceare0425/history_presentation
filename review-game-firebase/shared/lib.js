@@ -87,29 +87,6 @@ export function escapeHtml(s) {
   }[c]));
 }
 
-// ── 시크릿 미션 카드: 라운드 시작 시 학생마다 하나씩 배정되는 개인 목표 ──
-// 절대 기준(연속·누적 정답 수 등)이라 아주 짧거나 아주 긴 라운드에서는 난이도 체감이 다를 수 있지만,
-// 보통 길이(5~15분) 라운드를 기준으로 잡은 값 — 칭호 시스템의 최소 조건과 같은 수준의 근사치.
-export const MISSIONS = [
-  { id: "streak5", emoji: "🔥", label: "5연속 정답 도전", reward: 3, test: (p) => (p.bestStreak || 0) >= 5 },
-  { id: "streak8", emoji: "⚡", label: "8연속 정답 도전", reward: 5, test: (p) => (p.bestStreak || 0) >= 8 },
-  { id: "correct18", emoji: "✅", label: "정답 18개 달성", reward: 4, test: (p) => (p.correct || 0) >= 18 },
-  { id: "accuracy90", emoji: "🎯", label: "정답률 90% 유지 (10문제 이상)", reward: 4, test: (p) => {
-      const total = (p.correct || 0) + (p.wrong || 0);
-      return total >= 10 && (p.correct || 0) / total >= 0.9;
-    } },
-  { id: "floor18", emoji: "🏔️", label: "18층 돌파", reward: 4, test: (p) => (p.floor || 0) >= 18 },
-];
-
-// 같은 학생 + 같은 라운드(token)면 항상 같은 미션이 나오도록 결정적 해시로 고른다
-// (Firebase에 배정 결과를 따로 저장할 필요가 없어 규칙 변경도 불필요함)
-export function pickMission(playerId, token) {
-  const s = `${playerId}:${token}`;
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  return MISSIONS[Math.abs(h) % MISSIONS.length];
-}
-
 // ── 정답의 초성만 남긴 힌트 문자열 (예: "함무라비 법전" → "ㅎㅁㄹㅂ ㅂㅈ") ──
 export function choseongHint(text) {
   const CHO = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
