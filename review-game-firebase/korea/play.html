@@ -122,6 +122,13 @@
     display:inline-block; font-size:.8rem; color:#fff; background:var(--sky2); border-radius:6px;
     padding:3px 10px; margin-bottom:.8vh; flex:0 0 auto;
   }
+  .mission-card{
+    display:flex; align-items:center; gap:6px; width:fit-content; max-width:100%;
+    font-size:.78rem; font-weight:700; color:#8a6100;
+    background:#fff4d6; border:1px solid #f0d38a; border-radius:8px;
+    padding:3px 10px; margin-bottom:.8vh; flex:0 0 auto;
+  }
+  .mission-card.done{ color:#1f7a44; background:#e3f7ea; border-color:#8fd6ac; }
 
   .team-badge{
     font-size:.85rem; font-weight:800; padding:4px 10px; border-radius:10px; color:#fff;
@@ -424,6 +431,7 @@
       <div id="feedback" class="feedback"></div>
 
       <div class="unit-tag" id="unitTag"></div>
+      <div class="mission-card hidden" id="missionCard"><span id="missionEmoji"></span> <span id="missionLabel"></span></div>
       <div class="qbox" id="qbox"><div class="qtext-inner" id="qText">문제를 불러오는 중...</div><div class="bee-layer" id="beeLayer"></div></div>
 
       <div class="answer-row">
@@ -471,7 +479,8 @@ import {
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   teamInfo, teamStandings, activeBonus,
-  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
+  ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader,
+  pickMission
 } from '../shared/lib.js';
 
 const ROOM = 'korea';
@@ -534,6 +543,8 @@ let myAnswered = false; // 이번 라운드에서 한 문제라도 제출했는�
 let unitStats = {};        // 이번 라운드 단원별 정답/오답 { 단원명: {c, w} } — 라운드 종료 시 class_log에 기록
 let qStats = {};           // 이번 라운드 문제별 정답/오답 { qid: {c, w} } — 관리자 문제별 오답률 분석용
 let classLogWritten = false; // 이번 라운드 class_log를 이미 기록했는지(중복 기록 방지)
+let myMission = null;      // 이번 라운드 시크릿 미션 (라운드 시작 시 배정)
+let missionDone = false;   // 이번 라운드에 미션을 이미 달성했는지
 
 // ── 아이템전 상태 ──
 let itemsMode = 'off';       // 'off' | 'nanta' | 'spicy' (round.items_mode)
@@ -995,6 +1006,7 @@ async function submitAnswer(){
   if(!existed){ payload.name = playerName; payload.avatar = AVATAR_IDLE; }
   if(itemsOn()) payload.item = heldItem || null;
   await update(pRef, payload);
+  checkMission(p);
 
   el('floorVal').textContent = p.floor;
   el('streakVal').textContent = p.streak >= 2 ? `🔥 ${p.streak}연속 정답!` : '';
@@ -1116,6 +1128,7 @@ function tick(){
       lastSeenToken = roundState.token;
       queue = []; retryList = []; retryMiss = {}; lastQid = null; currentQid = null; currentQuestion = null; currentStartedAt = null;
       unitStats = {}; qStats = {}; classLogWritten = false;
+      myMission = pickMission(playerId, roundState.token); missionDone = false; renderMissionCard();
       // 아이템 로컬 상태 초기화
       heldItem = null; myBoost = 0; myShield = false;
       mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myComboSparkUntil = 0; myImmuneUntil = 0;
@@ -1477,6 +1490,28 @@ async function bumpFloor(n){
   el('floorVal').textContent = nf;
   if(nf > lastFloor) popFloorBadge();
   lastFloor = nf;
+}
+
+// 시크릿 미션 카드: 조건 달성 시 1회만 보너스 지급 + 전광판에 알림
+function renderMissionCard(){
+  const card = el('missionCard');
+  if(!card) return;
+  if(!myMission){ card.classList.add('hidden'); return; }
+  card.classList.remove('hidden');
+  card.classList.toggle('done', missionDone);
+  el('missionEmoji').textContent = missionDone ? '✅' : myMission.emoji;
+  el('missionLabel').textContent = missionDone
+    ? `미션 성공! ${myMission.label} (+${myMission.reward}${unitLabel()})`
+    : `시크릿 미션: ${myMission.label}`;
+}
+function checkMission(p){
+  if(!myMission || missionDone) return;
+  if(!myMission.test(p)) return;
+  missionDone = true;
+  renderMissionCard();
+  showItemAlert(`🎯 미션 성공! ${myMission.label} +${myMission.reward}${unitLabel()}`);
+  bumpFloor(myMission.reward);
+  push(roomRef(ROOM,'item_events'), { type:'mission_complete', byName: playerName, label: myMission.label, emoji: myMission.emoji, at: serverNow() }).catch(()=>{});
 }
 
 // '콤보 스파크' 카드 뒤집기: 카드 3장 중 하나를 직접 골라 보상을 받고, 나머지 카드도 뒤집어서 뭐였는지 보여준다.
