@@ -149,15 +149,6 @@
   .bonus-banner.show{ display:block; }
   @keyframes bonusPulseBoard{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.015); } }
 
-  .combo-gauge{
-    position:relative; z-index:2; max-height:0; overflow:hidden; opacity:0; padding:0 32px;
-    transition:max-height .3s ease, opacity .3s ease, padding .3s ease;
-  }
-  .combo-gauge.show{ max-height:60px; opacity:1; padding:8px 32px; }
-  .combo-gauge-label{ display:block; font-size:.85rem; font-weight:800; color:#bfe8ff; margin-bottom:4px; }
-  .combo-gauge-bar{ height:10px; border-radius:6px; background:rgba(255,255,255,.14); overflow:hidden; }
-  .combo-gauge-fill{ height:100%; border-radius:6px; background:linear-gradient(90deg,#3fa9f5,#7df9ff); transition:width .4s ease; }
-
   #festivalBanner{ background:linear-gradient(90deg,#ffe08a,#a6e8ff,#ffd0f0); }
   .items-mode-badge{
     padding:5px 14px; border-radius:999px; font-weight:800; font-size:.85rem;
@@ -369,10 +360,6 @@
 
 <div id="ytBgmHost" aria-hidden="true"></div>
 
-<div class="combo-gauge" id="comboGauge">
-  <span class="combo-gauge-label">🌊 콤보 웨이브 <span id="comboGaugeCount">0</span>/<span id="comboGaugeMax">8</span></span>
-  <div class="combo-gauge-bar"><div class="combo-gauge-fill" id="comboGaugeFill"></div></div>
-</div>
 <div class="bonus-banner" id="bonusBanner">🔥 2배 찬스! 남은 시간 <span id="bonusRemain"></span>초</div>
 <div class="bonus-banner" id="festivalBanner">🌈 <span id="festivalWho"></span>축제! 남은 시간 <span id="festivalRemain"></span>초 · <span id="festivalScope">모두</span> 2배</div>
 <div class="item-toasts" id="itemToasts"></div>
@@ -412,12 +399,7 @@ const lastFloor = {};
 const lastWrong = {};
 const climberEls = {};
 
-let roundState = { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off', combo:{count:0} };
-// play.html의 comboThreshold()와 같은 공식 (게이지 표시용) — 반 인원의 약 75%가 기여해야 달성
-function comboThreshold(){
-  const n = Object.values(playersObj).filter(p=>p.name).length || 1;
-  return Math.max(4, Math.min(20, Math.ceil(n * 0.75)));
-}
+let roundState = { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off' };
 
 // 진행 단위: 개인전=탑 오르기(층), 2팀=줄다리기(cm), 3팀 이상=땅따먹기(평)
 function unitLabel(){
@@ -1031,12 +1013,6 @@ function showItemEvent(e){
     spawnConfettiBatch(8);
     return;
   }
-  if(e.type === 'combo_wave'){
-    // 콤보로 발동된 2배 찬스는 아래 render()의 activeBonus 감지 로직이 알아서 배너·색종이·효과음을 띄워주므로
-    // 여기서는 "학급이 함께 만든 콤보"라는 것만 짧게 알려준다 (중복 연출 방지)
-    itemToast('🌊 콤보 웨이브 발동! 다같이 이뤄낸 2배 찬스!');
-    return;
-  }
   if(e.type === 'steal_result'){
     const attacker = playersObj[e.target];
     const attackerName = escapeHtml(attacker?.name || '누군가');
@@ -1154,13 +1130,6 @@ function render(){
   imb.classList.toggle('hidden', !im || im === 'off');
   imb.textContent = im === 'spicy' ? '⚔️ 아이템전 · 매운맛' : (im && im !== 'off') ? '🥊 아이템전 · 난타전 (난투)' : '';
 
-  const comboCount = (roundState.combo && roundState.combo.count) || 0;
-  const comboMax = comboThreshold();
-  el('comboGauge').classList.toggle('show', effective === 'running');
-  el('comboGaugeCount').textContent = comboCount;
-  el('comboGaugeMax').textContent = comboMax;
-  el('comboGaugeFill').style.width = Math.min(100, (comboCount / comboMax) * 100) + '%';
-
   if(effective === 'ended' && prevEffective !== 'ended'){
     showEndCelebration(players, ranked);
   } else if(effective !== 'ended' && prevEffective === 'ended'){
@@ -1174,8 +1143,8 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
   roundState = r ? {
     status: r.status||'idle', end_time: r.end_time ?? null, duration_sec: r.duration_sec||420,
     bonus: r.bonus||[], team_mode: !!r.team_mode, team_count: r.team_count||4,
-    items_mode: r.items_mode||'off', combo: r.combo||{count:0}
-  } : { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off', combo:{count:0} };
+    items_mode: r.items_mode||'off'
+  } : { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off' };
 });
 onValue(roomRef(ROOM,'item_events'), (snap)=>{
   const obj = snap.val() || {};

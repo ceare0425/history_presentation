@@ -475,7 +475,7 @@
 
 <script type="module">
 import {
-  roomRef, ref, db, onValue, get, set, update, push, runTransaction, serverNow, escapeHtml,
+  roomRef, ref, db, onValue, get, set, update, push, serverNow, escapeHtml,
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   teamInfo, teamStandings, activeBonus,
@@ -959,7 +959,6 @@ async function submitAnswer(){
     if(itemsOn() && !heldItem && p.streak > 0 && (itemsMode === 'nanta' || p.streak % 3 === 0)){
       heldItem = rollItem(itemRollOpts());
     }
-    bumpCombo();   // 콤보 파도타기: 아이템전 여부와 무관하게 항상 반 전체 콤보 게이지에 기여
   } else {
     p.wrong = (p.wrong||0) + 1;
     let undoFloorDelta = 0;
@@ -1331,16 +1330,24 @@ function renderItemGuide(){
 }
 
 // ── 아이템 UI / 사용 / 효과 ─────────────────────────
+// bar.innerHTML을 매번 다시 쓰면 내용이 그대로여도 버튼 DOM이 새로 생겨 itemPop 등장 애니메이션이
+// 계속 재생되어 화면이 깜박여 보인다(내 플레이어 노드는 정답/오답마다 자주 갱신되어 renderItemBar가 잦다).
+// 실제로 내용이 달라질 때만 innerHTML을 갈아끼워 불필요한 재생을 막는다.
+function setItemBarHtml(bar, html){
+  if(bar.dataset.sig === html) return;
+  bar.dataset.sig = html;
+  bar.innerHTML = html;
+}
 function renderItemBar(){
   const bar = el('itemBar');
   const hint = el('itemHintLine');
   if(!bar || !hint) return;
-  if(!itemsOn()){ bar.innerHTML = ''; hint.textContent = ''; return; }
+  if(!itemsOn()){ setItemBarHtml(bar, ''); hint.textContent = ''; return; }
   // 교사가 뿌린 랜덤박스 — 이미 든 아이템이 있어 교체 여부를 고르는 중
   if(randomboxOfferPending && heldItem && heldItem !== 'randombox' && ITEMS[heldItem]){
-    bar.innerHTML =
+    setItemBarHtml(bar,
       `<button type="button" class="item-btn" id="rbAcceptBtn">🎁 랜덤박스로 바꾸기<small>지금 든 ${ITEMS[heldItem].name}은 사라져요</small></button>` +
-      `<button type="button" class="item-discard-btn" id="rbDeclineBtn">유지</button>`;
+      `<button type="button" class="item-discard-btn" id="rbDeclineBtn">유지</button>`);
     el('rbAcceptBtn').onclick = () => {
       el('rbAcceptBtn').disabled = true; el('rbDeclineBtn').disabled = true;
       randomboxOfferPending = false;
@@ -1393,9 +1400,9 @@ function renderItemBar(){
       else if(heldItem === 'roulette') desc = `즉시 +1 ~ +8${u} 랜덤!`;
       else if(heldItem === 'lottery') desc = `즉시 +3 ~ +10${u} 랜덤! (+10은 4%)`;
     }
-    bar.innerHTML =
+    setItemBarHtml(bar,
       `<button type="button" class="item-btn" id="useItemBtn">${it.emoji} ${it.name} 사용<small>${desc}</small></button>` +
-      `<button type="button" class="item-discard-btn" id="discardItemBtn">버리기</button>`;
+      `<button type="button" class="item-discard-btn" id="discardItemBtn">버리기</button>`);
     el('useItemBtn').onclick = () => {
       el('useItemBtn').disabled = true;
       el('discardItemBtn').disabled = true;
@@ -1408,7 +1415,7 @@ function renderItemBar(){
     };
     hint.textContent = '안 쓸 아이템은 버리면 다음 걸 받아요';
   } else {
-    bar.innerHTML = '';
+    setItemBarHtml(bar, '');
     hint.textContent = itemsMode !== 'nanta' ? '3연속 정답하면 아이템 획득!'
       : inTopRanks(allPlayers, playerId, NANTA_TARGET_TOP) ? ''
       : '정답마다 아이템! 상위 3등을 저격하세요 ⚔️';
@@ -1513,51 +1520,6 @@ function checkMission(p){
   showItemAlert(`🎯 미션 성공! ${myMission.label} +${myMission.reward}${unitLabel()}`);
   bumpFloor(myMission.reward);
   push(roomRef(ROOM,'item_events'), { type:'mission_complete', byName: playerName, label: myMission.label, emoji: myMission.emoji, at: serverNow() }).catch(()=>{});
-}
-
-// 콤보 파도타기: 반 전체가 짧은 시간 안에 "서로 다른 학생들이" 연달아 정답을 맞히면
-// 전광판 콤보 게이지가 채워지고, 가득 차면 기존 2배 찬스(round.bonus)를 자동으로 짧게 발동시킨다.
-// 정답 개수가 아니라 "기여한 학생 수"(ids)를 세므로, 잘하는 학생 한 명이 혼자 빠르게 여러 문제를 풀어도
-// 게이지는 1만 올라간다 — 실제로 여러 명이 참여해야 채워짐(사용자 지적: 20명 반에서 한 명이 다 채워버리는 문제).
-// 증가는 여러 학생이 동시에 제출할 수 있어 트랜잭션으로 처리 — 단순 get+update면 경쟁 상태로 증가분이 유실될 수 있다.
-const COMBO_DECAY_MS = 5000;   // 마지막 정답 이후 이 시간이 지나면 참여자 목록이 초기화됨(누구든 정답을 내면 다시 연장)
-const COMBO_BONUS_SEC = 15;    // 발동 시 2배 찬스 지속 시간
-// 목표치를 인원수에 맞춰 조절 — 반 인원의 약 75%가 각자 한 번씩은 기여해야 달성 (20명↔15·10명↔8·5명↔4)
-function comboThreshold(){
-  const n = allPlayers.filter(p=>p.name).length || 1;
-  return Math.max(4, Math.min(20, Math.ceil(n * 0.75)));
-}
-async function bumpCombo(){
-  const myToken = Math.random().toString(36).slice(2);
-  const threshold = comboThreshold();
-  let iTriggered = false;
-  try{
-    const res = await runTransaction(roomRef(ROOM,'round','combo'), (cur) => {
-      cur = cur || {};
-      const now = serverNow();
-      let ids = cur.ids || {};
-      if(!cur.lastAt || now - cur.lastAt > COMBO_DECAY_MS) ids = {};
-      ids[playerId] = true;
-      const count = Object.keys(ids).length;
-      if(count >= threshold){
-        iTriggered = true;
-        return { ids: {}, count: 0, lastAt: now, waveAt: now, waveToken: myToken };
-      }
-      iTriggered = false;
-      return { ids, count, lastAt: now, waveAt: cur.waveAt || null, waveToken: cur.waveToken || null };
-    });
-    if(res.committed && iTriggered && res.snapshot.val()?.waveToken === myToken) triggerComboWave();
-  }catch(e){ /* 네트워크 문제 시 그냥 무시 — 콤보 게이지는 보너스 연출일 뿐 정답 처리에는 영향 없음 */ }
-}
-async function triggerComboWave(){
-  try{
-    const snap = await get(roomRef(ROOM,'round'));
-    const r = snap.val() || {};
-    const elapsedNow = (r.duration_sec||0) - Math.max(0, Math.round(((r.end_time||0) - serverNow())/1000));
-    const bonus = [...(r.bonus||[]), { start: elapsedNow, end: elapsedNow + COMBO_BONUS_SEC, mult: 2 }];
-    await update(roomRef(ROOM,'round'), { bonus });
-  }catch(e){ /* 무시 */ }
-  push(roomRef(ROOM,'item_events'), { type:'combo_wave', at: serverNow() }).catch(()=>{});
 }
 
 // '콤보 스파크' 카드 뒤집기: 카드 3장 중 하나를 직접 골라 보상을 받고, 나머지 카드도 뒤집어서 뭐였는지 보여준다.
