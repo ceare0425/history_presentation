@@ -413,10 +413,10 @@ const lastWrong = {};
 const climberEls = {};
 
 let roundState = { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off', combo:{count:0} };
-// play.html의 comboThreshold()와 같은 공식 (게이지 표시용) — 인원수에 맞춰 목표치가 달라짐
+// play.html의 comboThreshold()와 같은 공식 (게이지 표시용) — 반 인원의 약 75%가 기여해야 달성
 function comboThreshold(){
   const n = Object.values(playersObj).filter(p=>p.name).length || 1;
-  return Math.max(5, Math.min(16, Math.round(3 + 2*Math.sqrt(n))));
+  return Math.max(4, Math.min(20, Math.ceil(n * 0.75)));
 }
 
 // 진행 단위: 개인전=탑 오르기(층), 2팀=줄다리기(cm), 3팀 이상=땅따먹기(평)
