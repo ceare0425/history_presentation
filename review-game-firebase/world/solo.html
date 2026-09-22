@@ -108,10 +108,17 @@
     width:auto; height:auto; margin:0 .12em; padding:0 .12em; vertical-align:baseline;
     border-bottom-color:var(--bad); color:var(--bad); font-weight:800;
   }
+  .unit-tag-row{ display:flex; align-items:center; gap:8px; margin-bottom:.8vh; flex:0 0 auto; }
   .unit-tag{
     display:inline-block; font-size:.8rem; color:#fff; background:var(--sky2); border-radius:6px;
-    padding:3px 10px; margin-bottom:.8vh; flex:0 0 auto;
+    padding:3px 10px; flex:0 0 auto;
   }
+  .mini-btn{
+    width:auto; padding:4px 10px; font-size:.72rem; font-weight:700; border-radius:8px;
+    background:#e6e9f0; color:var(--sub); flex:0 0 auto; cursor:pointer; border:none; font-family:inherit;
+  }
+  .mini-btn.gold{ background:#fff2cc; color:var(--gold-dark); }
+  #relearnBtn{ margin-left:auto; }
 
   .avatar-char{
     text-align:center; font-size:2.4rem; line-height:1; margin:.2vh 0 .4vh;
@@ -155,6 +162,7 @@
   .msg-toolbar{ display:flex; justify-content:flex-end; align-items:center; gap:8px; flex:0 0 auto; margin:-0.4vh 0 .6vh; }
   .msg-toolbar button{ position:relative; width:auto; padding:5px 12px; font-size:.78rem; font-weight:700; background:#dbe6fb; color:var(--sky1); border-radius:999px; }
   .msg-toolbar .report-btn{ background:#ffe6cf; color:#c96f5b; }
+  .msg-toolbar .bookmark-btn.active{ background:#fff2cc; color:var(--gold-dark); }
   .msg-toolbar .unread-badge{ position:absolute; top:-6px; right:-6px; background:var(--bad); color:#fff; font-size:.65rem; font-weight:800; border-radius:999px; padding:1px 5px; min-width:16px; text-align:center; }
   /* 선생님과의 대화창 — 관리자 화면과 같은 형태의 채팅창을 학생 쪽에도 그대로 띄운다 */
   .chat-panel{
@@ -373,6 +381,7 @@
       <div class="timer">⏱ <span id="timerVal">--:--</span></div>
     </div>
     <div class="msg-toolbar">
+      <button type="button" id="bookmarkBtn" class="bookmark-btn">☆ 즐겨찾기</button>
       <button type="button" id="reportWrongBtn" class="report-btn">🚩 신고</button>
       <button type="button" id="msgOpenBtn">💬쪽지<span class="unread-badge hidden" id="msgUnreadBadge"></span></button>
     </div>
@@ -382,7 +391,10 @@
 
     <div id="feedback" class="feedback"></div>
 
-    <div class="unit-tag" id="unitTag"></div>
+    <div class="unit-tag-row">
+      <div class="unit-tag" id="unitTag"></div>
+      <button type="button" id="relearnBtn" class="mini-btn gold hidden">📖 다시 배우기</button>
+    </div>
     <div class="qbox"><div class="qtext-inner" id="qText">문제를 불러오는 중...</div></div>
 
     <div class="answer-row">
@@ -462,10 +474,11 @@ import {
   roomRef, ref, db, onValue, get, push, update, set, remove, onDisconnect, onChildAdded, onChildChanged, serverNow,
   isCorrect, computeGain, fmtTime, escapeHtml, shuffle, choseongHint,
   unitsFromQuestions, poolFromQuestions, recencyWeightFn, weightedQueue,
-  presenceRef, chatRef
+  presenceRef, chatRef, bookmarksRef, bookmarkRef, findLessonForUnit
 } from '../shared/lib.js';
 
 const ROOM = 'world';
+const SUBJECT_NAME = '세계사'; // pages.json의 과목명과 일치해야 "다시 배우기" 링크가 매칭됨
 const STORAGE_BEST_KEY = 'rg_fb_' + ROOM + '_solo_best_floor';
 const STORAGE_NAME_KEY = 'rg_fb_name'; // 세계사/한국사·수업참여 공용 — 한 번 입력하면 계속 유지
 const STORAGE_CLASS_KEY = 'rg_fb_class';            // 세계사/한국사 공용 — 한 번 고르면 다음에도 유지
@@ -485,6 +498,14 @@ let wrongMap = new Map(); // 이번 세션에서 아직 못 맞힌 문제 { qid 
 let lastWrongInfo = null; // 방금 오답 처리된 문제 — "🚩 신고" 버튼이 다음 문제로 넘어가도 계속 참조
 let reportedQids = new Set(); // 이번 세션에서 이미 신고한 qid — 같은 문제 중복 신고 방지
 let soloLogRef = null;  // 이번 세션의 solo_log 항목 ref (첫 정답/오답 때 생성 후 계속 갱신)
+let bookmarkedQids = new Set(); // 지금 학생(학년-반+이름)이 즐겨찾기한 문제 id들
+let currentRelearnUrl = null;   // 지금 화면 문제의 "다시 배우기" 링크 (없으면 null)
+let pagesData = null;           // pages.json — 주제(unit)와 실제 프레젠테이션 슬라이드를 매칭하는 데 쓰임
+fetch('../../pages.json', { cache: 'no-store' }).then(r => r.json()).then(d => {
+  pagesData = d;
+  updateRelearnBtn();
+  if(!el('dashPanel').classList.contains('hidden') && lastDashList) renderDash(lastDashList, lastDashSoloObj);
+}).catch(()=>{});
 
 let questionsObj = {};
 let allUnits = [];
@@ -658,6 +679,50 @@ function popFloorBadge(){
   badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop');
 }
 
+// 지금 화면 문제(unit)에 대응하는 슬라이드가 pages.json에 있으면 "📖 다시 배우기" 버튼을 보여준다.
+function updateRelearnBtn(){
+  const btn = el('relearnBtn');
+  const q = currentQuestion;
+  const lesson = q ? findLessonForUnit(pagesData, SUBJECT_NAME, q.unit) : null;
+  currentRelearnUrl = lesson ? ('../../' + lesson.path) : null;
+  btn.classList.toggle('hidden', !currentRelearnUrl);
+}
+el('relearnBtn').onclick = () => { if(currentRelearnUrl) window.open(currentRelearnUrl, '_blank'); };
+
+function updateBookmarkBtn(){
+  const btn = el('bookmarkBtn');
+  if(!currentQid){ btn.disabled = true; btn.textContent = '☆ 즐겨찾기'; btn.classList.remove('active'); return; }
+  btn.disabled = false;
+  const on = bookmarkedQids.has(currentQid);
+  btn.textContent = on ? '★ 즐겨찾기' : '☆ 즐겨찾기';
+  btn.classList.toggle('active', on);
+}
+el('bookmarkBtn').onclick = () => {
+  if(!currentQid || !currentQuestion || !sessionClassKey) return;
+  const qid = currentQid;
+  const q = currentQuestion;
+  const name = myName();
+  const bRef = bookmarkRef(ROOM, sessionClassKey, name, qid);
+  if(bookmarkedQids.has(qid)){
+    bookmarkedQids.delete(qid);
+    remove(bRef).catch(()=>{});
+  } else {
+    bookmarkedQids.add(qid);
+    set(bRef, { unit: q.unit || '', qtext: q.question || '', answer: (q.answers||[])[0] || '', ts: Date.now() }).catch(()=>{});
+  }
+  updateBookmarkBtn();
+};
+// 지금 이 학생(학년-반+이름)이 즐겨찾기한 문제 id들을 서버에서 불러온다 (연습 시작 때 한 번).
+async function loadBookmarks(){
+  bookmarkedQids = new Set();
+  if(!sessionClassKey) { updateBookmarkBtn(); return; }
+  try{
+    const snap = await get(bookmarksRef(ROOM, sessionClassKey, myName()));
+    bookmarkedQids = new Set(Object.keys(snap.val() || {}));
+  }catch(_e){ /* 실패해도 연습에는 지장 없음 */ }
+  updateBookmarkBtn();
+}
+
 function renderQuestion(q){
   hintUsed = false;
   el('hintText').textContent = '';
@@ -665,6 +730,8 @@ function renderQuestion(q){
   if(!q){
     el('qText').textContent = '풀 수 있는 문제가 없습니다.';
     el('unitTag').textContent = '';
+    updateRelearnBtn();
+    updateBookmarkBtn();
     return;
   }
   el('unitTag').textContent = q.unit + (q.page ? ' · ' + q.page : '');
@@ -673,6 +740,8 @@ function renderQuestion(q){
   el('answerInput').disabled = false;
   el('submitBtn').disabled = false;
   el('answerInput').focus();
+  updateRelearnBtn();
+  updateBookmarkBtn();
 }
 
 function currentPool(){
@@ -1270,14 +1339,15 @@ el('startBtn').onclick = async () => {
   showView('playView');
   assignNextQuestion();
   startPresenceAndChat();
+  loadBookmarks();
 
   if(tickHandle) clearInterval(tickHandle);
   tickHandle = setInterval(tick, 250);
 };
 
-// 복습 추천의 "다시 풀기" — 단원 선택 없이 지정된 문제 id들만으로 바로 세션을 시작한다.
+// 복습 추천/즐겨찾기의 "다시 풀기" — 단원 선택 없이 지정된 문제 id들만으로 바로 세션을 시작한다.
 // 학년·반·이름은 대시보드를 열 수 있었던 시점에 이미 입력돼 있으므로 다시 확인하지 않는다.
-function startReviewSession(qids){
+function startReviewSession(qids, label){
   const validQids = qids.filter(qid=>questionsObj[qid]);
   if(!validQids.length){ alert('다시 풀 수 있는 문제가 없어요 (문제가 삭제되었을 수 있어요).'); return; }
   const duration_sec = Math.min(1200, Math.max(120, validQids.length*45));
@@ -1291,7 +1361,7 @@ function startReviewSession(qids){
 
   sessionClassKey = classKey();
   sessionStartedAt = serverNow();
-  sessionUnits = ['복습 추천'];
+  sessionUnits = [label || '복습 추천'];
   sessionDuration = duration_sec;
   sessionOrder = 'random';
   sessionWeight = 'even';
@@ -1311,6 +1381,7 @@ function startReviewSession(qids){
   showView('playView');
   assignNextQuestion();
   startPresenceAndChat();
+  loadBookmarks();
 
   if(tickHandle) clearInterval(tickHandle);
   tickHandle = setInterval(tick, 250);
@@ -1472,6 +1543,16 @@ const MIN_PEERS = 5; // 이 인원 이상 모여야 '상위 %'를 보여준다
 
 let lastAgg = null;
 let lastReviewItems = []; // renderDash가 마지막으로 계산한 복습 추천(오답+오래된 정답) 목록 — "다시 풀기" 버튼에서 참조
+let lastBookmarkItems = []; // openDash가 불러온 즐겨찾기 목록 — 대시보드 렌더·"다시 풀기"·해제 버튼에서 참조
+let lastDashList = null, lastDashSoloObj = null; // 마지막으로 대시보드를 그릴 때 쓴 원본 데이터 (pages.json이 늦게 도착했을 때 재렌더링용)
+
+// unit에 대응하는 슬라이드가 있으면 "📖 다시 배우기" 버튼 HTML을, 없으면 빈 문자열을 반환.
+// 오답 노트·복습 추천·즐겨찾기 목록에서 공통으로 쓴다.
+function relearnLinkHtml(unit){
+  const lesson = findLessonForUnit(pagesData, SUBJECT_NAME, unit);
+  if(!lesson) return '';
+  return `<button type="button" class="mini-btn gold" data-relearn-unit="${escapeHtml(unit||'')}">📖 다시 배우기</button>`;
+}
 
 // "🔁 복습 추천 다시 풀기" 바로가기 버튼 — setup 화면(인적사항과 연습 범위 사이)과 종료 화면 둘 다에 있어
 // 대시보드를 열지 않고도 바로 복습 추천 문제만으로 세션을 시작할 수 있게 한다.
@@ -1628,11 +1709,34 @@ function renderDash(list, soloObj){
           ${reviewItems.slice(0,30).map(r=>`<div class="wrong-row">
             <span class="wunit">${escapeHtml(r.unit||'')}</span>
             <span class="wtext">${escapeHtml(r.qtext||'')}</span>
-            <span class="wans">${escapeHtml(r.note||'')}</span>
+            <span class="wans" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+              <span>${escapeHtml(r.note||'')}</span>
+              ${relearnLinkHtml(r.unit)}
+            </span>
           </div>`).join('')}
         </div>
         <button type="button" class="mini" id="reviewRetryBtn" style="margin-top:10px; width:auto; padding:9px 16px;">🔁 복습 추천 다시 풀기 (${reviewItems.length}문제)</button>
       ` : `<div class="dash-empty">아직 복습 추천 문제가 없어요. 틀린 문제를 끝까지 못 맞히거나, 맞힌 지 ${REVIEW_DUE_DAYS}일이 지나면 여기 쌓여요.</div>`}
+    </div>
+
+    <div class="dash-section">
+      <h3>⭐ 즐겨찾기 <span class="note">연습 중 직접 표시해 둔 문제 ${lastBookmarkItems.length}개</span></h3>
+      ${lastBookmarkItems.length ? `
+        <div class="wrong-list">
+          ${lastBookmarkItems.slice(0,30).map(b=>`<div class="wrong-row">
+            <span class="wunit">${escapeHtml(b.unit||'')}</span>
+            <span class="wtext">${escapeHtml(b.qtext||'')}</span>
+            <span class="wans" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+              <span>정답: ${escapeHtml(b.answer||'')}</span>
+              <span style="display:flex; gap:6px; flex:0 0 auto;">
+                ${relearnLinkHtml(b.unit)}
+                <button type="button" class="mini-btn" data-unbookmark="${escapeHtml(b.qid)}">✕ 해제</button>
+              </span>
+            </span>
+          </div>`).join('')}
+        </div>
+        <button type="button" class="mini" id="bookmarkRetryBtn" style="margin-top:10px; width:auto; padding:9px 16px;">⭐ 즐겨찾기 문제만 풀기 (${lastBookmarkItems.length}문제)</button>
+      ` : `<div class="dash-empty">연습 중 문제 화면의 ☆ 즐겨찾기 버튼을 누르면 헷갈렸던 문제를 여기 모아뒀다가 다시 풀 수 있어요.</div>`}
     </div>
 
     <div class="dash-section">
@@ -1665,11 +1769,26 @@ function renderDash(list, soloObj){
   `;
 }
 
+async function loadDashBookmarks(){
+  const cls = classKey(), nm = myName();
+  if(!cls || !nm) return [];
+  try{
+    const snap = await get(bookmarksRef(ROOM, cls, nm));
+    const obj = snap.val() || {};
+    return Object.entries(obj)
+      .map(([qid,v])=>({ qid, unit:v.unit, qtext:v.qtext, answer:v.answer, ts:v.ts }))
+      .sort((a,b)=>(b.ts||0)-(a.ts||0));
+  }catch(_e){ return []; }
+}
+
 function openDash(){
   el('dashPanel').classList.remove('hidden');
   el('dashBody').innerHTML = '<div class="dash-empty">불러오는 중…</div>';
-  loadSoloLog(true).then(obj=>{
-    renderDash(mySessions(obj), obj);
+  Promise.all([loadSoloLog(true), loadDashBookmarks()]).then(([obj, bookmarks])=>{
+    lastBookmarkItems = bookmarks;
+    lastDashList = mySessions(obj);
+    lastDashSoloObj = obj;
+    renderDash(lastDashList, lastDashSoloObj);
     refreshRecord(false);
   });
 }
@@ -1692,6 +1811,29 @@ el('dashBody').addEventListener('click', (ev)=>{
     const qids = lastReviewItems.map(r=>r.qid);
     closeDash();
     startReviewSession(qids);
+    return;
+  }
+  const bmRetryBtn = ev.target.closest('#bookmarkRetryBtn');
+  if(bmRetryBtn){
+    const qids = lastBookmarkItems.map(x=>x.qid);
+    closeDash();
+    startReviewSession(qids, '⭐ 즐겨찾기');
+    return;
+  }
+  const relearnBtn = ev.target.closest('[data-relearn-unit]');
+  if(relearnBtn){
+    const lesson = findLessonForUnit(pagesData, SUBJECT_NAME, relearnBtn.dataset.relearnUnit);
+    if(lesson) window.open('../../' + lesson.path, '_blank');
+    return;
+  }
+  const unbookmarkBtn = ev.target.closest('[data-unbookmark]');
+  if(unbookmarkBtn){
+    const qid = unbookmarkBtn.dataset.unbookmark;
+    const cls = classKey(), nm = myName();
+    lastBookmarkItems = lastBookmarkItems.filter(x=>x.qid !== qid);
+    bookmarkedQids.delete(qid);
+    if(cls && nm) remove(bookmarkRef(ROOM, cls, nm, qid)).catch(()=>{});
+    renderDash(lastDashList, lastDashSoloObj);
     return;
   }
   const b = ev.target.closest('[data-practice-unit]');

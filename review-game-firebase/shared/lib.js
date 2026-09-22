@@ -29,6 +29,14 @@ export function chatRef(room, classKey, name) {
   return ref(db, `messages/${room}/${classKey}/${name}`);
 }
 
+// ── 즐겨찾기(학생이 직접 표시해 둔 문제) 경로 헬퍼 ──────────
+export function bookmarksRef(room, classKey, name) {
+  return ref(db, `bookmarks/${room}/${classKey}/${name}`);
+}
+export function bookmarkRef(room, classKey, name, qid) {
+  return ref(db, `bookmarks/${room}/${classKey}/${name}/${qid}`);
+}
+
 // ── 방(room) 경로 헬퍼 ─────────────────────────────
 export function roomPath(roomId, ...parts) {
   return ["rooms", roomId, ...parts].join("/");
@@ -144,6 +152,49 @@ export function poolFromQuestions(questionsObj, units) {
   if (!units || units.length === 0) return entries;
   const unitSet = new Set(units);
   return entries.filter(([, q]) => unitSet.has(q.unit));
+}
+
+// ── 문제 '주제(unit)' → pages.json 속 실제 프레젠테이션 슬라이드 매칭("다시 배우기") ──
+// 문제 은행의 주제명과 pages.json 제목은 완전히 같은 문구가 아닐 수 있어(예: "·" vs ",")
+// 1) 완전 일치 → 2) 앞의 두 자리 차시 번호("01.") 일치 → 3) 공백·문장부호를 지운 뒤 포함 관계
+// 순서로 느슨하게 매칭한다. 매칭되는 슬라이드가 없으면 null.
+function flattenSubjectPages(subject) {
+  const pages = [];
+  (subject.pages || []).forEach((p) => pages.push(p));
+  (subject.groups || []).forEach((g) => (g.pages || []).forEach((p) => pages.push(p)));
+  return pages;
+}
+
+function normalizeTitle(s) {
+  return String(s || "").replace(/[\s.,·・()\[\]{}'"‘’“”\-:：]/g, "").toLowerCase();
+}
+
+export function findLessonForUnit(pagesData, subjectName, unit) {
+  if (!pagesData || !unit) return null;
+  const subject = (pagesData.subjects || []).find((s) => s.name === subjectName);
+  if (!subject) return null;
+  const pages = flattenSubjectPages(subject);
+  if (!pages.length) return null;
+
+  const exact = pages.find((p) => p.title === unit);
+  if (exact) return exact;
+
+  const m = String(unit).match(/^(\d{2})\./);
+  if (m) {
+    const re = new RegExp("^" + m[1] + "\\.");
+    const byNum = pages.find((p) => re.test(p.title || ""));
+    if (byNum) return byNum;
+  }
+
+  const nu = normalizeTitle(unit);
+  if (nu) {
+    const byContain = pages.find((p) => {
+      const nt = normalizeTitle(p.title);
+      return nt && (nt.includes(nu) || nu.includes(nt));
+    });
+    if (byContain) return byContain;
+  }
+  return null;
 }
 
 // ── "최근 주제 우선" 출제: 주제명 앞 숫자(주제 01 → 1)가 클수록 최근으로 본다 ──
