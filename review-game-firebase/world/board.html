@@ -10,6 +10,25 @@
     --gold:#f2d27a; --gold-dark:#c5a028;
     --panel:rgba(255,255,255,.07); --line:rgba(255,255,255,.15);
   }
+  /* 시대별 테마 스킨: 문제 내용과 무관하게 관리자가 라운드마다 고르는 전광판 배경 분위기 */
+  body[data-theme="ancient"]{
+    --sky-top:#2b1a0f; --sky-mid:#6b3f1d; --sky-low:#c9812f; --sky-horizon:#f0b95a; --sky-glow:#ffe3a0;
+    --gold:#e8c468; --gold-dark:#a97d2c;
+  }
+  body[data-theme="ancient"] .mountains svg polygon:nth-child(1){ fill:#6b3f1d; }
+  body[data-theme="ancient"] .mountains svg polygon:nth-child(2){ fill:#8a5626; }
+  body[data-theme="medieval"]{
+    --sky-top:#150826; --sky-mid:#3a1856; --sky-low:#6b3fa0; --sky-horizon:#b877d9; --sky-glow:#e8b9ff;
+    --gold:#e0c96a; --gold-dark:#a98a2c;
+  }
+  body[data-theme="medieval"] .mountains svg polygon:nth-child(1){ fill:#3a1856; }
+  body[data-theme="medieval"] .mountains svg polygon:nth-child(2){ fill:#502476; }
+  body[data-theme="modern"]{
+    --sky-top:#050b1a; --sky-mid:#0f2545; --sky-low:#123a5e; --sky-horizon:#1fb6c9; --sky-glow:#7df9ff;
+    --gold:#ffd166; --gold-dark:#c99a2e;
+  }
+  body[data-theme="modern"] .mountains svg polygon:nth-child(1){ fill:#0f2545; }
+  body[data-theme="modern"] .mountains svg polygon:nth-child(2){ fill:#123a5e; }
   *{box-sizing:border-box;}
   html,body{ height:100%; margin:0; }
   body{
@@ -323,6 +342,17 @@
     to{ transform:translateY(112vh) rotate(600deg); }
   }
   .end-hint{ margin-top:2.4rem; font-size:.95rem; opacity:.65; }
+
+  .title-badges{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:1.6rem; z-index:1; max-width:900px; }
+  .title-badge{
+    display:flex; align-items:center; gap:8px; padding:8px 16px; border-radius:999px;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.22);
+    font-weight:700; font-size:.95rem; backdrop-filter:blur(2px);
+  }
+  .title-badge .tb-emoji{ font-size:1.15rem; }
+  .title-badge .tb-label{ opacity:.85; }
+  .title-badge .tb-name{ color:var(--gold); font-weight:900; }
+  .title-badge .tb-detail{ opacity:.7; font-size:.85rem; }
 </style>
 </head>
 <body>
@@ -340,6 +370,7 @@
 <header>
   <h1>🌍 세계사 탑 오르기</h1>
   <div class="status">
+    <span class="items-mode-badge hidden" id="themeBadge"></span>
     <span class="items-mode-badge hidden" id="itemsModeBadge"></span>
     <button class="bgm-btn muted" id="bgmToggle" type="button">🔊 배경음</button>
     <span class="pill idle" id="statusPill">대기중</span>
@@ -374,6 +405,7 @@
   <div class="end-title">🎉 게임 종료! 축하합니다 🎉</div>
   <div class="team-winner hidden" id="teamWinner"></div>
   <div class="podium" id="podium"></div>
+  <div class="title-badges" id="titleBadges"></div>
   <div class="end-hint">다음 라운드를 시작하면 이 화면은 사라집니다</div>
 </div>
 
@@ -387,7 +419,8 @@ const lastFloor = {};
 const lastWrong = {};
 const climberEls = {};
 
-let roundState = { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off' };
+let roundState = { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off', theme:'off' };
+const THEME_LABELS = { ancient:'🏛️ 고대 테마', medieval:'🏰 중세 테마', modern:'🏙️ 근현대 테마' };
 
 // 진행 단위: 개인전=탑 오르기(층), 2팀=줄다리기(cm), 3팀 이상=땅따먹기(평)
 function unitLabel(){
@@ -408,6 +441,7 @@ let lastOvertakeAt = 0;
 const overtakePairAt = new Map();   // 정렬한 'a|b' → { at:마지막 알림 시각, mover:그때 앞선 쪽 key } (같은 쌍 반복 억제 + 방향 전환 감지)
 const OVERTAKE_GLOBAL_CD = 3000;    // 전체 알림 최소 간격
 const OVERTAKE_PAIR_CD = 12000;     // 같은 두 대상 재알림 최소 간격
+let overtakeCounts = {};            // 개인전: playerId → 이번 라운드 추월 횟수 (🔥역전왕 칭호용, 라운드 시작마다 리셋)
 const seenItemEvents = new Set();
 
 // ── 효과음: 외부 파일 없이 Web Audio로 생성 (팡파레 · 알림음) ──
@@ -503,7 +537,7 @@ function detectOvertakes(players, ranked, effective){
   order.forEach((o,i)=> cur[o.key] = i + 1);
 
   if(prevRankMode !== mode || Object.keys(prevRank).length === 0){
-    prevRank = cur; prevRankMode = mode; return;
+    prevRank = cur; prevRankMode = mode; overtakeCounts = {}; return;
   }
 
   const now = serverNow();
@@ -535,6 +569,7 @@ function detectOvertakes(players, ranked, effective){
       if(!last || now - last.at >= pairCd){
         overtakePairAt.set(pk, { at: now, mover: best.mover.key });
         lastOvertakeAt = now;
+        if(!teamOn) overtakeCounts[best.mover.key] = (overtakeCounts[best.mover.key]||0) + 1;
         const note = best.moverRank === 1 ? ' 선두 등극! 👑' : '';
         overtakeToast(`🔥 ${best.mover.name}, ${best.passed.name} 제쳤다!${note}`);
         playOvertakeChime();
@@ -860,9 +895,57 @@ function buildPodium(ranked){
   `).join('');
 }
 
+// 게임 종료 시 통계 기반 칭호(🎯정확도왕·⚡번개 정답왕·💪열공왕·🔥역전왕) 산정 — 최소 시도/연속 조건 미달이면 해당 칭호는 생략
+function computeTitles(players){
+  const badges = [];
+  const accCands = players.filter(p=> ((p.correct||0)+(p.wrong||0)) >= 5);
+  if(accCands.length){
+    const best = accCands.reduce((a,b)=>{
+      const ra = (a.correct||0)/((a.correct||0)+(a.wrong||0));
+      const rb = (b.correct||0)/((b.correct||0)+(b.wrong||0));
+      return rb > ra ? b : a;
+    });
+    const rate = Math.round((best.correct||0)/((best.correct||0)+(best.wrong||0))*100);
+    if(rate > 0) badges.push({ emoji:'🎯', label:'정확도왕', name:best.name, detail:`정답률 ${rate}%` });
+  }
+  const streakCands = players.filter(p=> (p.bestStreak||0) >= 3);
+  if(streakCands.length){
+    const best = streakCands.reduce((a,b)=> (b.bestStreak||0) > (a.bestStreak||0) ? b : a);
+    badges.push({ emoji:'⚡', label:'번개 정답왕', name:best.name, detail:`${best.bestStreak}연속 정답` });
+  }
+  const triedCands = players.filter(p=> ((p.correct||0)+(p.wrong||0)) >= 5);
+  if(triedCands.length){
+    const best = triedCands.reduce((a,b)=> ((b.correct||0)+(b.wrong||0)) > ((a.correct||0)+(a.wrong||0)) ? b : a);
+    badges.push({ emoji:'💪', label:'열공왕', name:best.name, detail:`${(best.correct||0)+(best.wrong||0)}문제 도전` });
+  }
+  if(!roundState.team_mode){
+    const entries = Object.entries(overtakeCounts).filter(([,c])=> c >= 1);
+    if(entries.length){
+      entries.sort((a,b)=> b[1]-a[1]);
+      const [pid, count] = entries[0];
+      const p = players.find(pp=> pp.id === pid);
+      if(p) badges.push({ emoji:'🔥', label:'역전왕', name:p.name, detail:`추월 ${count}회` });
+    }
+  }
+  return badges;
+}
+
+function renderTitleBadges(players){
+  const box = el('titleBadges');
+  if(!box) return;
+  box.innerHTML = computeTitles(players).map(b => `
+    <div class="title-badge">
+      <span class="tb-emoji">${b.emoji}</span>
+      <span class="tb-label">${b.label}</span>
+      <span class="tb-name">${escapeHtml(b.name||'')}</span>
+      <span class="tb-detail">${escapeHtml(b.detail||'')}</span>
+    </div>`).join('');
+}
+
 function showEndCelebration(players, ranked){
   if(!players.length) return;
   buildPodium(ranked);
+  renderTitleBadges(players);
   const teamWinnerEl = el('teamWinner');
   if(roundState.team_mode){
     const standings = teamStandings(players);
@@ -1063,6 +1146,12 @@ function render(){
   imb.classList.toggle('hidden', !im || im === 'off');
   imb.textContent = im === 'spicy' ? '⚔️ 아이템전 · 매운맛' : (im && im !== 'off') ? '🥊 아이템전 · 난타전 (난투)' : '';
 
+  document.body.setAttribute('data-theme', roundState.theme || 'off');
+  const tb = el('themeBadge');
+  const themeLabel = THEME_LABELS[roundState.theme];
+  tb.classList.toggle('hidden', !themeLabel);
+  tb.textContent = themeLabel || '';
+
   if(effective === 'ended' && prevEffective !== 'ended'){
     showEndCelebration(players, ranked);
   } else if(effective !== 'ended' && prevEffective === 'ended'){
@@ -1076,8 +1165,8 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
   roundState = r ? {
     status: r.status||'idle', end_time: r.end_time ?? null, duration_sec: r.duration_sec||420,
     bonus: r.bonus||[], team_mode: !!r.team_mode, team_count: r.team_count||4,
-    items_mode: r.items_mode||'off'
-  } : { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off' };
+    items_mode: r.items_mode||'off', theme: r.theme||'off'
+  } : { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off', theme:'off' };
 });
 onValue(roomRef(ROOM,'item_events'), (snap)=>{
   const obj = snap.val() || {};
