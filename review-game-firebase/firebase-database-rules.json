@@ -69,6 +69,19 @@
         }
       }
     },
+    "bookmarks": {
+      ".read": true,
+      "$room": {
+        "$classKey": {
+          "$name": {
+            "$qid": {
+              ".write": true,
+              ".validate": "!newData.exists() || (newData.hasChild('unit') && newData.hasChild('qtext') && newData.hasChild('ts'))"
+            }
+          }
+        }
+      }
+    },
     "museum": {
       ".read": true,
       "$tour": {
