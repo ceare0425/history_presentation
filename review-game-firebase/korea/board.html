@@ -10,25 +10,6 @@
     --gold:#f2d27a; --gold-dark:#c5a028;
     --panel:rgba(255,255,255,.07); --line:rgba(255,255,255,.15);
   }
-  /* 시대별 테마 스킨: 문제 내용과 무관하게 관리자가 라운드마다 고르는 전광판 배경 분위기 */
-  body[data-theme="ancient"]{
-    --sky-top:#2b1a0f; --sky-mid:#6b3f1d; --sky-low:#c9812f; --sky-horizon:#f0b95a; --sky-glow:#ffe3a0;
-    --gold:#e8c468; --gold-dark:#a97d2c;
-  }
-  body[data-theme="ancient"] .mountains svg polygon:nth-child(1){ fill:#6b3f1d; }
-  body[data-theme="ancient"] .mountains svg polygon:nth-child(2){ fill:#8a5626; }
-  body[data-theme="medieval"]{
-    --sky-top:#150826; --sky-mid:#3a1856; --sky-low:#6b3fa0; --sky-horizon:#b877d9; --sky-glow:#e8b9ff;
-    --gold:#e0c96a; --gold-dark:#a98a2c;
-  }
-  body[data-theme="medieval"] .mountains svg polygon:nth-child(1){ fill:#3a1856; }
-  body[data-theme="medieval"] .mountains svg polygon:nth-child(2){ fill:#502476; }
-  body[data-theme="modern"]{
-    --sky-top:#050b1a; --sky-mid:#0f2545; --sky-low:#123a5e; --sky-horizon:#1fb6c9; --sky-glow:#7df9ff;
-    --gold:#ffd166; --gold-dark:#c99a2e;
-  }
-  body[data-theme="modern"] .mountains svg polygon:nth-child(1){ fill:#0f2545; }
-  body[data-theme="modern"] .mountains svg polygon:nth-child(2){ fill:#123a5e; }
   *{box-sizing:border-box;}
   html,body{ height:100%; margin:0; }
   body{
@@ -370,7 +351,6 @@
 <header>
   <h1>🏯 한국사 탑 오르기</h1>
   <div class="status">
-    <span class="items-mode-badge hidden" id="themeBadge"></span>
     <span class="items-mode-badge hidden" id="itemsModeBadge"></span>
     <button class="bgm-btn muted" id="bgmToggle" type="button">🔊 배경음</button>
     <span class="pill idle" id="statusPill">대기중</span>
@@ -419,8 +399,7 @@ const lastFloor = {};
 const lastWrong = {};
 const climberEls = {};
 
-let roundState = { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off', theme:'off' };
-const THEME_LABELS = { ancient:'🏛️ 고대 테마', medieval:'🏰 중세 테마', modern:'🏙️ 근현대 테마' };
+let roundState = { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off' };
 
 // 진행 단위: 개인전=탑 오르기(층), 2팀=줄다리기(cm), 3팀 이상=땅따먹기(평)
 function unitLabel(){
@@ -1151,12 +1130,6 @@ function render(){
   imb.classList.toggle('hidden', !im || im === 'off');
   imb.textContent = im === 'spicy' ? '⚔️ 아이템전 · 매운맛' : (im && im !== 'off') ? '🥊 아이템전 · 난타전 (난투)' : '';
 
-  document.body.setAttribute('data-theme', roundState.theme || 'off');
-  const tb = el('themeBadge');
-  const themeLabel = THEME_LABELS[roundState.theme];
-  tb.classList.toggle('hidden', !themeLabel);
-  tb.textContent = themeLabel || '';
-
   if(effective === 'ended' && prevEffective !== 'ended'){
     showEndCelebration(players, ranked);
   } else if(effective !== 'ended' && prevEffective === 'ended'){
@@ -1170,8 +1143,8 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
   roundState = r ? {
     status: r.status||'idle', end_time: r.end_time ?? null, duration_sec: r.duration_sec||420,
     bonus: r.bonus||[], team_mode: !!r.team_mode, team_count: r.team_count||4,
-    items_mode: r.items_mode||'off', theme: r.theme||'off'
-  } : { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off', theme:'off' };
+    items_mode: r.items_mode||'off'
+  } : { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off' };
 });
 onValue(roomRef(ROOM,'item_events'), (snap)=>{
   const obj = snap.val() || {};
