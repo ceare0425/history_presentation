@@ -1151,7 +1151,7 @@ function render(){
   imb.textContent = im === 'spicy' ? '⚔️ 아이템전 · 매운맛' : (im && im !== 'off') ? '🥊 아이템전 · 난타전 (난투)' : '';
 
   const comboCount = (roundState.combo && roundState.combo.count) || 0;
-  el('comboGauge').classList.toggle('show', effective === 'running' && comboCount > 0);
+  el('comboGauge').classList.toggle('show', effective === 'running');
   el('comboGaugeCount').textContent = comboCount;
   el('comboGaugeFill').style.width = Math.min(100, (comboCount / COMBO_THRESHOLD) * 100) + '%';
 
