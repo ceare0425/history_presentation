@@ -230,13 +230,6 @@
         <button type="button" data-im="nanta">난타전</button>
       </div>
       <div class="sub hidden" id="itemsModeHint" style="margin:4px 0 0; font-size:.76rem;"></div>
-      <label>테마 스킨 (전광판 배경 분위기 — 문제 내용과는 무관, 그냥 골라주는 장식)</label>
-      <div class="toggle-row" id="themeToggle">
-        <button type="button" class="active" data-theme="off">기본</button>
-        <button type="button" data-theme="ancient">🏛️ 고대</button>
-        <button type="button" data-theme="medieval">🏰 중세</button>
-        <button type="button" data-theme="modern">🏙️ 근현대</button>
-      </div>
       <div class="btnrow">
         <button id="startBtn">▶ 게임 시작</button>
         <button class="bad" id="endBtn">■ 종료</button>
@@ -437,7 +430,6 @@ let questionWeight = 'even'; // 'even' | 'recent' — 주제별 출제 비중
 let teamModeState = false;
 let teamCountState = 4;
 let itemsModeState = 'off'; // 'off' | 'nanta' | 'spicy'
-let themeState = 'off'; // 'off' | 'ancient' | 'medieval' | 'modern' — 전광판 배경 스킨, 문제 내용과 무관
 let teamStateHydrated = false; // round 리스너에서 한 번이라도 값을 읽어왔는지 (버튼 초기 상태 복원용)
 
 const ITEMS_MODE_HINT = {
@@ -448,9 +440,6 @@ const ITEMS_MODE_HINT = {
 function syncItemsModeUI(){
   el('itemsModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.im === itemsModeState));
   el('itemsModeHint').textContent = ITEMS_MODE_HINT[itemsModeState] || '';
-}
-function syncThemeUI(){
-  el('themeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.theme === themeState));
 }
 
 function syncWeightToggleEnabled(){
@@ -502,14 +491,6 @@ el('itemsModeToggle').querySelectorAll('button').forEach(btn=>{
     itemsModeState = btn.dataset.im;
     syncItemsModeUI();
     await update(roomRef(ROOM,'round'), { items_mode: itemsModeState });
-  };
-});
-
-el('themeToggle').querySelectorAll('button').forEach(btn=>{
-  btn.onclick = async () => {
-    themeState = btn.dataset.theme;
-    syncThemeUI();
-    await update(roomRef(ROOM,'round'), { theme: themeState });
   };
 });
 
@@ -607,8 +588,7 @@ el('startBtn').onclick = async () => {
       team_mode: teamModeState,
       team_count: teamCountState,
       bonus,
-      items_mode: itemsModeState,
-      theme: themeState
+      items_mode: itemsModeState
     };
     updates[`rooms/${ROOM}/item_events`] = null;
     Object.keys(playersObj).forEach(pid=>{
@@ -642,7 +622,7 @@ el('resetBtn').onclick = async () => {
     updates[`rooms/${ROOM}/players/${pid}`] = null;
   });
   updates[`rooms/${ROOM}/item_events`] = null;
-  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null, team_mode: teamModeState, team_count: teamCountState, items_mode: itemsModeState, theme: themeState };
+  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null, team_mode: teamModeState, team_count: teamCountState, items_mode: itemsModeState };
   try{
     await update(ref(db), updates);
     msg.className='msg ok'; msg.textContent = '전체 초기화 완료! 접속해 있던 학생은 모두 내보내졌습니다.';
@@ -1037,9 +1017,8 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
     duration_sec: r.duration_sec||420, end_time: r.end_time ?? null, token: r.token||0,
     order: r.order||'random', qids: r.qids||[],
     team_mode: !!r.team_mode, team_count: r.team_count||4, bonus: r.bonus||[],
-    items_mode: (r.items_mode === 'mild' ? 'nanta' : r.items_mode) || 'off',   // 구버전 '순한맛' 값 호환
-    theme: r.theme || 'off'
-  } : { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random', qids:[], team_mode:false, team_count:4, bonus:[], items_mode:'off', theme:'off' };
+    items_mode: (r.items_mode === 'mild' ? 'nanta' : r.items_mode) || 'off'   // 구버전 '순한맛' 값 호환
+  } : { status:'idle', units:[], duration_sec:420, end_time:null, token:0, order:'random', qids:[], team_mode:false, team_count:4, bonus:[], items_mode:'off' };
 
   if(!teamStateHydrated){
     teamStateHydrated = true;
@@ -1047,8 +1026,6 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
     teamCountState = roundState.team_count;
     itemsModeState = roundState.items_mode;
     syncItemsModeUI();
-    themeState = roundState.theme;
-    syncThemeUI();
     el('teamModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', (b.dataset.mode==='on')===teamModeState));
     el('teamCountRow').classList.toggle('hidden', !teamModeState);
     el('teamShuffleRow').classList.toggle('hidden', !teamModeState);
