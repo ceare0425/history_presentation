@@ -1350,6 +1350,7 @@ function renderItemBar(){
       `<button type="button" class="item-discard-btn" id="rbDeclineBtn">유지</button>`);
     el('rbAcceptBtn').onclick = () => {
       el('rbAcceptBtn').disabled = true; el('rbDeclineBtn').disabled = true;
+      delete bar.dataset.sig;   // disabled 상태는 innerHTML에 반영 안 되므로 다음 렌더가 내용이 같아도 강제로 새로 그리게 함
       randomboxOfferPending = false;
       acceptRandombox().catch(err => console.warn('acceptRandombox', err));
     };
@@ -1406,11 +1407,13 @@ function renderItemBar(){
     el('useItemBtn').onclick = () => {
       el('useItemBtn').disabled = true;
       el('discardItemBtn').disabled = true;
+      delete bar.dataset.sig;   // disabled 상태는 innerHTML에 반영 안 되므로 다음 렌더가 내용이 같아도 강제로 새로 그리게 함
       useItem().catch(err => console.warn('useItem', err));
     };
     el('discardItemBtn').onclick = () => {
       el('useItemBtn').disabled = true;
       el('discardItemBtn').disabled = true;
+      delete bar.dataset.sig;
       discardItem().catch(err => console.warn('discardItem', err));
     };
     hint.textContent = '안 쓸 아이템은 버리면 다음 걸 받아요';
