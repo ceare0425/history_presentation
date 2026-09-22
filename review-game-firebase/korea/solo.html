@@ -151,6 +151,14 @@
   .hint-row #endPracticeBtn{ margin-left:auto; background:#c96f5b; }
   .hint-text{ font-size:1.2rem; font-weight:800; letter-spacing:.18em; color:var(--sky1); }
 
+  /* ── 문제 신고 ── */
+  .report-row{
+    display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-top:8px; padding:8px 10px;
+    background:#fff2e0; border:1px solid #f0c98a; border-radius:10px; font-size:.8rem; color:var(--sub); flex:0 0 auto;
+  }
+  .report-row .report-text{ flex:1 1 auto; }
+  .report-row button{ width:auto; flex:0 0 auto; padding:6px 10px; font-size:.78rem; }
+
   /* ── 선생님 실시간 쪽지 배너 ── */
   .msg-toolbar{ display:flex; justify-content:flex-end; flex:0 0 auto; margin:-0.4vh 0 .6vh; }
   .msg-toolbar button{ position:relative; width:auto; padding:5px 12px; font-size:.78rem; font-weight:700; background:#dbe6fb; color:var(--sky1); border-radius:999px; }
@@ -390,6 +398,11 @@
       <span class="hint-text" id="hintText"></span>
       <button type="button" id="endPracticeBtn" class="secondary">■ 연습 종료</button>
     </div>
+    <div class="report-row hidden" id="reportRow">
+      <span class="report-text">🚩 방금 문제가 이상했나요?</span>
+      <button type="button" id="reportWrongBtn" class="secondary">신고하기</button>
+      <button type="button" id="reportDismissBtn" class="secondary">닫기</button>
+    </div>
   </div>
 
   <div id="chatPanel" class="chat-panel hidden">
@@ -478,6 +491,8 @@ let hintCount = 0;      // 이번 세션에서 초성 힌트를 쓴 문제 수
 let unitStats = {};     // 이번 세션 단원별 정답/오답 { 단원명: {c, w} } — 종료 시 solo_log에 배열로 저장
 let qStats = {};        // 이번 세션 문제별 정답/오답 { qid: {c, w} } — 관리자 문제별 오답률 분석용
 let wrongMap = new Map(); // 이번 세션에서 아직 못 맞힌 문제 { qid => {qid, unit, qtext, answer, ts} } — 맞히면 제거
+let lastWrongInfo = null; // 방금 오답 처리된 문제 — "🚩 신고" 버튼이 다음 문제로 넘어가도 계속 참조
+let reportedQids = new Set(); // 이번 세션에서 이미 신고한 qid — 같은 문제 중복 신고 방지
 let soloLogRef = null;  // 이번 세션의 solo_log 항목 ref (첫 정답/오답 때 생성 후 계속 갱신)
 
 let questionsObj = {};
@@ -804,6 +819,10 @@ function submitAnswer(){
       retryList.push({ qid: answeredQid, wait: RETRY_GAP + Math.min(6, (misses-1)*2) });
       if(retryList.length > RETRY_MAX) retryList.shift();
     }
+    // 다음 문제로 넘어간 뒤에도 방금 틀린 문제를 신고할 수 있게 남겨둔다 (이미 신고한 문제는 다시 띄우지 않음)
+    if(!reportedQids.has(answeredQid)){
+      lastWrongInfo = { qid: answeredQid, unit: uName, qtext: q.question, answer: q.answers[0] };
+    }
   }
 
   el('floorVal').textContent = floor;
@@ -813,6 +832,7 @@ function submitAnswer(){
   syncSoloLog(false);
   flashFeedback(correct, q.answers[0], gain, wasRetry, usedHint);
   playCharacterReaction(correct);
+  updateReportRow();
 
   setTimeout(()=>{
     if(ended) return;
@@ -1084,6 +1104,35 @@ function sendChatMsg(){
 el('chatSendBtn').onclick = sendChatMsg;
 el('chatInput').addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); sendChatMsg(); } });
 
+// "🚩 신고" 배너 — 방금 오답 처리된 문제(lastWrongInfo)가 있을 때만 보이고,
+// 다음 문제로 넘어가도(2초짜리 피드백 애니메이션과 달리) 신고하거나 닫을 때까지 계속 남아있는다.
+function updateReportRow(){
+  const row = el('reportRow');
+  if(!row) return;
+  row.classList.toggle('hidden', !lastWrongInfo);
+}
+function reportCurrentWrong(){
+  const info = lastWrongInfo;
+  if(!info || !sessionClassKey) return;
+  const reason = prompt('어떤 점이 이상했나요? (예: 정답을 입력했는데 오답 처리됨)', '');
+  if(reason === null) return; // 취소
+  if(!reason.trim()){ alert('간단히 이유를 적어야 신고할 수 있어요.'); return; }
+  const name = (el('nameInput').value.trim() || '').slice(0, 20);
+  const text = `🚩 문제 신고 [${info.unit || '(기타)'}] "${info.qtext}" (정답: ${info.answer||''}) — ${reason.trim()}`.slice(0, 300);
+  const newRef = push(chatRef(ROOM, sessionClassKey, name));
+  const msgObj = { from:'student', text, ts: Date.now(), read:false };
+  if(chatSeenKeys) chatSeenKeys.add(newRef.key);
+  chatMsgs[newRef.key] = msgObj;
+  set(newRef, msgObj).catch(()=>{});
+  renderChatPanel();
+  reportedQids.add(info.qid);
+  lastWrongInfo = null;
+  updateReportRow();
+  alert('신고했어요. 선생님께 전달됐어요. 감사합니다!');
+}
+el('reportWrongBtn').onclick = reportCurrentWrong;
+el('reportDismissBtn').onclick = () => { lastWrongInfo = null; updateReportRow(); };
+
 function showEndedView(){
   // stopPresenceAndChat()이 pendingAdminMsgKeys를 비우기 전에, 못 보고 넘어간 쪽지가
   // 있었는지부터 챙겨둔다 — 있었으면 종료 화면 위에 팝업으로 띄워준다.
@@ -1205,6 +1254,7 @@ el('startBtn').onclick = async () => {
 
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
   hintCount = 0; soloLogRef = null; unitStats = {}; qStats = {}; wrongMap = new Map();
+  lastWrongInfo = null; reportedQids = new Set(); updateReportRow();
   clearedQids = new Set(); allClearedPrompted = false; paused = false;
   el('clearPrompt').classList.add('hidden');
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
@@ -1247,6 +1297,7 @@ function startReviewSession(qids){
 
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
   hintCount = 0; soloLogRef = null; unitStats = {}; qStats = {}; wrongMap = new Map();
+  lastWrongInfo = null; reportedQids = new Set(); updateReportRow();
   clearedQids = new Set(); allClearedPrompted = false; paused = false;
   el('clearPrompt').classList.add('hidden');
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
