@@ -588,8 +588,7 @@ el('startBtn').onclick = async () => {
       team_mode: teamModeState,
       team_count: teamCountState,
       bonus,
-      items_mode: itemsModeState,
-      combo: { count: 0 }
+      items_mode: itemsModeState
     };
     updates[`rooms/${ROOM}/item_events`] = null;
     Object.keys(playersObj).forEach(pid=>{
@@ -623,7 +622,7 @@ el('resetBtn').onclick = async () => {
     updates[`rooms/${ROOM}/players/${pid}`] = null;
   });
   updates[`rooms/${ROOM}/item_events`] = null;
-  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null, team_mode: teamModeState, team_count: teamCountState, items_mode: itemsModeState, combo: { count: 0 } };
+  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null, team_mode: teamModeState, team_count: teamCountState, items_mode: itemsModeState };
   try{
     await update(ref(db), updates);
     msg.className='msg ok'; msg.textContent = '전체 초기화 완료! 접속해 있던 학생은 모두 내보내졌습니다.';
