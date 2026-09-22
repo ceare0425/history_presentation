@@ -475,7 +475,7 @@
 
 <script type="module">
 import {
-  roomRef, ref, db, onValue, get, set, update, push, serverNow, escapeHtml,
+  roomRef, ref, db, onValue, get, set, update, push, runTransaction, serverNow, escapeHtml,
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   teamInfo, teamStandings, activeBonus,
@@ -959,6 +959,7 @@ async function submitAnswer(){
     if(itemsOn() && !heldItem && p.streak > 0 && (itemsMode === 'nanta' || p.streak % 3 === 0)){
       heldItem = rollItem(itemRollOpts());
     }
+    bumpCombo();   // 콤보 파도타기: 아이템전 여부와 무관하게 항상 반 전체 콤보 게이지에 기여
   } else {
     p.wrong = (p.wrong||0) + 1;
     let undoFloorDelta = 0;
@@ -1512,6 +1513,43 @@ function checkMission(p){
   showItemAlert(`🎯 미션 성공! ${myMission.label} +${myMission.reward}${unitLabel()}`);
   bumpFloor(myMission.reward);
   push(roomRef(ROOM,'item_events'), { type:'mission_complete', byName: playerName, label: myMission.label, emoji: myMission.emoji, at: serverNow() }).catch(()=>{});
+}
+
+// 콤보 파도타기: 반 전체가 짧은 시간 안에 연달아 정답을 맞히면(개인 스트릭이 아니라 학급 전체 합산)
+// 전광판 콤보 게이지가 채워지고, 가득 차면 기존 2배 찬스(round.bonus)를 자동으로 짧게 발동시킨다.
+// count 증가는 여러 학생이 동시에 제출할 수 있어 트랜잭션으로 처리 — 단순 get+update면 경쟁 상태로 증가분이 유실될 수 있다.
+const COMBO_THRESHOLD = 8;     // 반 전체가 이만큼 연달아 맞히면 발동 (인원수와 무관한 고정값 — 참고: [[project-review-game]] 칭호/미션의 최소 조건과 같은 수준의 근사치)
+const COMBO_DECAY_MS = 12000;  // 이 시간 안에 다음 정답이 없으면 게이지가 0으로 리셋
+const COMBO_BONUS_SEC = 15;    // 발동 시 2배 찬스 지속 시간
+async function bumpCombo(){
+  const myToken = Math.random().toString(36).slice(2);
+  let iTriggered = false;
+  try{
+    const res = await runTransaction(roomRef(ROOM,'round','combo'), (cur) => {
+      cur = cur || {};
+      const now = serverNow();
+      let count = cur.count || 0;
+      if(!cur.lastAt || now - cur.lastAt > COMBO_DECAY_MS) count = 0;
+      count += 1;
+      if(count >= COMBO_THRESHOLD){
+        iTriggered = true;
+        return { count: 0, lastAt: now, waveAt: now, waveToken: myToken };
+      }
+      iTriggered = false;
+      return { count, lastAt: now, waveAt: cur.waveAt || null, waveToken: cur.waveToken || null };
+    });
+    if(res.committed && iTriggered && res.snapshot.val()?.waveToken === myToken) triggerComboWave();
+  }catch(e){ /* 네트워크 문제 시 그냥 무시 — 콤보 게이지는 보너스 연출일 뿐 정답 처리에는 영향 없음 */ }
+}
+async function triggerComboWave(){
+  try{
+    const snap = await get(roomRef(ROOM,'round'));
+    const r = snap.val() || {};
+    const elapsedNow = (r.duration_sec||0) - Math.max(0, Math.round(((r.end_time||0) - serverNow())/1000));
+    const bonus = [...(r.bonus||[]), { start: elapsedNow, end: elapsedNow + COMBO_BONUS_SEC, mult: 2 }];
+    await update(roomRef(ROOM,'round'), { bonus });
+  }catch(e){ /* 무시 */ }
+  push(roomRef(ROOM,'item_events'), { type:'combo_wave', at: serverNow() }).catch(()=>{});
 }
 
 // '콤보 스파크' 카드 뒤집기: 카드 3장 중 하나를 직접 골라 보상을 받고, 나머지 카드도 뒤집어서 뭐였는지 보여준다.
