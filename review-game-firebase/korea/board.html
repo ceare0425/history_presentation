@@ -413,7 +413,11 @@ const lastWrong = {};
 const climberEls = {};
 
 let roundState = { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off', combo:{count:0} };
-const COMBO_THRESHOLD = 8;   // play.html의 COMBO_THRESHOLD와 같은 값 (게이지 표시용)
+// play.html의 comboThreshold()와 같은 공식 (게이지 표시용) — 인원수에 맞춰 목표치가 달라짐
+function comboThreshold(){
+  const n = Object.values(playersObj).filter(p=>p.name).length || 1;
+  return Math.max(5, Math.min(16, Math.round(3 + 2*Math.sqrt(n))));
+}
 
 // 진행 단위: 개인전=탑 오르기(층), 2팀=줄다리기(cm), 3팀 이상=땅따먹기(평)
 function unitLabel(){
@@ -1151,9 +1155,11 @@ function render(){
   imb.textContent = im === 'spicy' ? '⚔️ 아이템전 · 매운맛' : (im && im !== 'off') ? '🥊 아이템전 · 난타전 (난투)' : '';
 
   const comboCount = (roundState.combo && roundState.combo.count) || 0;
+  const comboMax = comboThreshold();
   el('comboGauge').classList.toggle('show', effective === 'running');
   el('comboGaugeCount').textContent = comboCount;
-  el('comboGaugeFill').style.width = Math.min(100, (comboCount / COMBO_THRESHOLD) * 100) + '%';
+  el('comboGaugeMax').textContent = comboMax;
+  el('comboGaugeFill').style.width = Math.min(100, (comboCount / comboMax) * 100) + '%';
 
   if(effective === 'ended' && prevEffective !== 'ended'){
     showEndCelebration(players, ranked);
