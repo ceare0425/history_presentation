@@ -1515,16 +1515,17 @@ function checkMission(p){
   push(roomRef(ROOM,'item_events'), { type:'mission_complete', byName: playerName, label: myMission.label, emoji: myMission.emoji, at: serverNow() }).catch(()=>{});
 }
 
-// 콤보 파도타기: 반 전체가 짧은 시간 안에 연달아 정답을 맞히면(개인 스트릭이 아니라 학급 전체 합산)
+// 콤보 파도타기: 반 전체가 짧은 시간 안에 "서로 다른 학생들이" 연달아 정답을 맞히면
 // 전광판 콤보 게이지가 채워지고, 가득 차면 기존 2배 찬스(round.bonus)를 자동으로 짧게 발동시킨다.
-// count 증가는 여러 학생이 동시에 제출할 수 있어 트랜잭션으로 처리 — 단순 get+update면 경쟁 상태로 증가분이 유실될 수 있다.
-const COMBO_DECAY_MS = 12000;  // 이 시간 안에 다음 정답이 없으면 게이지가 0으로 리셋
+// 정답 개수가 아니라 "기여한 학생 수"(ids)를 세므로, 잘하는 학생 한 명이 혼자 빠르게 여러 문제를 풀어도
+// 게이지는 1만 올라간다 — 실제로 여러 명이 참여해야 채워짐(사용자 지적: 20명 반에서 한 명이 다 채워버리는 문제).
+// 증가는 여러 학생이 동시에 제출할 수 있어 트랜잭션으로 처리 — 단순 get+update면 경쟁 상태로 증가분이 유실될 수 있다.
+const COMBO_DECAY_MS = 12000;  // 마지막 정답 이후 이 시간이 지나면 참여자 목록이 초기화됨(누구든 정답을 내면 다시 연장)
 const COMBO_BONUS_SEC = 15;    // 발동 시 2배 찬스 지속 시간
-// 목표치를 인원수에 맞춰 조절 — 고정값이면 인원이 많은 반(최대 20명 안팎)일수록 압도적으로 빨리 차고,
-// 적은 반(5명 안팎)은 거의 못 채우는 문제가 있었음. sqrt로 완만하게 늘려 5명↔7·10명↔9·20명↔12 수준으로 맞춤.
+// 목표치를 인원수에 맞춰 조절 — 반 인원의 약 75%가 각자 한 번씩은 기여해야 달성 (20명↔15·10명↔8·5명↔4)
 function comboThreshold(){
   const n = allPlayers.filter(p=>p.name).length || 1;
-  return Math.max(5, Math.min(16, Math.round(3 + 2*Math.sqrt(n))));
+  return Math.max(4, Math.min(20, Math.ceil(n * 0.75)));
 }
 async function bumpCombo(){
   const myToken = Math.random().toString(36).slice(2);
@@ -1534,15 +1535,16 @@ async function bumpCombo(){
     const res = await runTransaction(roomRef(ROOM,'round','combo'), (cur) => {
       cur = cur || {};
       const now = serverNow();
-      let count = cur.count || 0;
-      if(!cur.lastAt || now - cur.lastAt > COMBO_DECAY_MS) count = 0;
-      count += 1;
+      let ids = cur.ids || {};
+      if(!cur.lastAt || now - cur.lastAt > COMBO_DECAY_MS) ids = {};
+      ids[playerId] = true;
+      const count = Object.keys(ids).length;
       if(count >= threshold){
         iTriggered = true;
-        return { count: 0, lastAt: now, waveAt: now, waveToken: myToken };
+        return { ids: {}, count: 0, lastAt: now, waveAt: now, waveToken: myToken };
       }
       iTriggered = false;
-      return { count, lastAt: now, waveAt: cur.waveAt || null, waveToken: cur.waveToken || null };
+      return { ids, count, lastAt: now, waveAt: cur.waveAt || null, waveToken: cur.waveToken || null };
     });
     if(res.committed && iTriggered && res.snapshot.val()?.waveToken === myToken) triggerComboWave();
   }catch(e){ /* 네트워크 문제 시 그냥 무시 — 콤보 게이지는 보너스 연출일 뿐 정답 처리에는 영향 없음 */ }
