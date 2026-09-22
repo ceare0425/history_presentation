@@ -114,18 +114,20 @@ export function shuffle(arr) {
   return a;
 }
 
-// ── 문제 은행 텍스트(주제 | 문제 | 정답) 한 줄 파싱 ──
+// ── 문제 은행 텍스트(주제 | 문제 | 정답 | 페이지(선택)) 한 줄 파싱 ──
 export function parseQuestionLine(line) {
   line = (line || "").trim();
   if (!line || line.startsWith("#")) return null;
   const parts = line.split("|").map((p) => p.trim());
-  if (parts.length !== 3) return null;
-  let [unit, question, answerField] = parts;
+  if (parts.length !== 3 && parts.length !== 4) return null;
+  let [unit, question, answerField, page] = parts;
   if (!unit || !question || !answerField) return null;
   if (!question.includes("____")) question = question + " ____";
   const answers = answerField.split("/").map((a) => a.trim()).filter(Boolean);
   if (!answers.length) return null;
-  return { unit, question, answers };
+  const result = { unit, question, answers };
+  if (page) result.page = page;
+  return result;
 }
 
 // ── 문제 풀 계산 ──
