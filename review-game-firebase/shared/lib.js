@@ -3,7 +3,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
-  getDatabase, ref, onValue, onChildAdded, onChildChanged, get, set, update, remove, push, child, onDisconnect
+  getDatabase, ref, onValue, onChildAdded, onChildChanged, get, set, update, remove, push, child, onDisconnect, runTransaction
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 
 export const firebaseConfig = {
@@ -18,7 +18,7 @@ export const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
-export { ref, onValue, onChildAdded, onChildChanged, get, set, update, remove, push, child, onDisconnect };
+export { ref, onValue, onChildAdded, onChildChanged, get, set, update, remove, push, child, onDisconnect, runTransaction };
 
 // ── 실시간 쪽지(관리자 ↔ 혼자 연습 학생) 경로 헬퍼 ──────────
 // 반(학년-반)+이름별로 접속 여부(presence)와 대화 내역(messages)을 따로 둔다.
