@@ -1008,11 +1008,6 @@ function showItemEvent(e){
     spawnConfettiBatch(14);
     return;
   }
-  if(e.type === 'mission_complete'){
-    itemToast(`${e.emoji||'🎯'} ${escapeHtml(e.byName||'누군가')} 미션 성공! ${escapeHtml(e.label||'')}`);
-    spawnConfettiBatch(8);
-    return;
-  }
   if(e.type === 'steal_result'){
     const attacker = playersObj[e.target];
     const attackerName = escapeHtml(attacker?.name || '누군가');
