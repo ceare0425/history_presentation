@@ -667,7 +667,7 @@ function renderQuestion(q){
     el('unitTag').textContent = '';
     return;
   }
-  el('unitTag').textContent = q.unit;
+  el('unitTag').textContent = q.unit + (q.page ? ' · ' + q.page : '');
   el('qText').innerHTML = q.text.replace(/____/g, '<span class="blank-mark"></span>');
   el('answerInput').value = '';
   el('answerInput').disabled = false;
@@ -700,8 +700,8 @@ function assignNextQuestion(){
     currentStartedAt = serverNow();
     currentIsRetry = true;
     lastQid = due.qid;
-    renderQuestion({ id: due.qid, text: currentQuestion.question, unit: currentQuestion.unit });
-    el('unitTag').textContent = '🔁 복습 · ' + currentQuestion.unit;
+    renderQuestion({ id: due.qid, text: currentQuestion.question, unit: currentQuestion.unit, page: currentQuestion.page });
+    el('unitTag').textContent = '🔁 복습 · ' + currentQuestion.unit + (currentQuestion.page ? ' · ' + currentQuestion.page : '');
     return;
   }
   currentIsRetry = false;
@@ -723,7 +723,7 @@ function assignNextQuestion(){
   currentQuestion = questionsObj[qid];
   currentStartedAt = serverNow();
   lastQid = qid;
-  renderQuestion({ id: qid, text: currentQuestion.question, unit: currentQuestion.unit });
+  renderQuestion({ id: qid, text: currentQuestion.question, unit: currentQuestion.unit, page: currentQuestion.page });
 }
 
 const AVATAR_IDLE = '🧗';
