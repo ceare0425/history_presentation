@@ -1225,9 +1225,9 @@ el('startBtn').onclick = async () => {
   tickHandle = setInterval(tick, 250);
 };
 
-// 오답 노트·복습 추천의 "다시 풀기" — 단원 선택 없이 지정된 문제 id들만으로 바로 세션을 시작한다.
+// 복습 추천의 "다시 풀기" — 단원 선택 없이 지정된 문제 id들만으로 바로 세션을 시작한다.
 // 학년·반·이름은 대시보드를 열 수 있었던 시점에 이미 입력돼 있으므로 다시 확인하지 않는다.
-function startReviewSession(qids, label){
+function startReviewSession(qids){
   const validQids = qids.filter(qid=>questionsObj[qid]);
   if(!validQids.length){ alert('다시 풀 수 있는 문제가 없어요 (문제가 삭제되었을 수 있어요).'); return; }
   const duration_sec = Math.min(1200, Math.max(120, validQids.length*45));
@@ -1240,7 +1240,7 @@ function startReviewSession(qids, label){
 
   sessionClassKey = classKey();
   sessionStartedAt = serverNow();
-  sessionUnits = [label || '오답 노트 복습'];
+  sessionUnits = ['복습 추천'];
   sessionDuration = duration_sec;
   sessionOrder = 'random';
   sessionWeight = 'even';
@@ -1410,8 +1410,7 @@ function allStudentTotals(obj){
 const MIN_PEERS = 5; // 이 인원 이상 모여야 '상위 %'를 보여준다
 
 let lastAgg = null;
-let lastWrongItems = []; // renderDash가 마지막으로 계산한 오답 노트 목록 — "다시 풀기" 버튼에서 참조
-let lastDueItems = [];   // renderDash가 마지막으로 계산한 복습 추천 목록 — "다시 풀기" 버튼에서 참조
+let lastReviewItems = []; // renderDash가 마지막으로 계산한 복습 추천(오답+오래된 정답) 목록 — "다시 풀기" 버튼에서 참조
 
 async function refreshRecord(force){
   const t = el('recordTeaser');
@@ -1477,9 +1476,12 @@ function renderDash(list, soloObj){
   const lastFloorVal = agg.floors.length ? agg.floors[agg.floors.length - 1].floor : 0;
 
   const wrongItems = aggregateWrongItems(list);
-  lastWrongItems = wrongItems;
   const dueItems = aggregateDueReview(list, new Set(wrongItems.map(w=>w.qid)));
-  lastDueItems = dueItems;
+  const reviewItems = [
+    ...wrongItems.map(w => ({ qid: w.qid, unit: w.unit, qtext: w.qtext, note: `정답: ${w.answer||''}` })),
+    ...dueItems.map(d => ({ qid: d.qid, unit: d.unit, qtext: d.qtext, note: `${dayNum(serverNow()) - dayNum(d.ts)}일 전에 맞혔어요` }))
+  ];
+  lastReviewItems = reviewItems;
 
   // ── 친구들과 비교 ──────────────────────────────
   const totals = allStudentTotals(soloObj);
@@ -1547,31 +1549,17 @@ function renderDash(list, soloObj){
     </div>
 
     <div class="dash-section">
-      <h3>❌ 오답 노트 <span class="note">아직 못 맞힌 문제 ${wrongItems.length}개</span></h3>
-      ${wrongItems.length ? `
+      <h3>🔁 복습 추천 <span class="note">아직 못 맞혔거나 맞힌 지 ${REVIEW_DUE_DAYS}일 넘은 문제 ${reviewItems.length}개</span></h3>
+      ${reviewItems.length ? `
         <div class="wrong-list">
-          ${wrongItems.slice(0,30).map(w=>`<div class="wrong-row">
-            <span class="wunit">${escapeHtml(w.unit||'')}</span>
-            <span class="wtext">${escapeHtml(w.qtext||'')}</span>
-            <span class="wans">정답: ${escapeHtml(w.answer||'')}</span>
+          ${reviewItems.slice(0,30).map(r=>`<div class="wrong-row">
+            <span class="wunit">${escapeHtml(r.unit||'')}</span>
+            <span class="wtext">${escapeHtml(r.qtext||'')}</span>
+            <span class="wans">${escapeHtml(r.note||'')}</span>
           </div>`).join('')}
         </div>
-        <button type="button" class="mini" id="wrongRetryBtn" style="margin-top:10px; width:auto; padding:9px 16px;">🔁 오답 노트 다시 풀기 (${wrongItems.length}문제)</button>
-      ` : `<div class="dash-empty">아직 다시 풀어야 할 오답이 없어요. 틀린 문제를 끝까지 못 맞히면 여기 쌓여요.</div>`}
-    </div>
-
-    <div class="dash-section">
-      <h3>🔁 복습 추천 <span class="note">맞힌 지 ${REVIEW_DUE_DAYS}일 넘은 문제 ${dueItems.length}개</span></h3>
-      ${dueItems.length ? `
-        <div class="wrong-list">
-          ${dueItems.map(d=>`<div class="wrong-row">
-            <span class="wunit">${escapeHtml(d.unit||'')}</span>
-            <span class="wtext">${escapeHtml(d.qtext||'')}</span>
-            <span class="wans">${dayNum(serverNow()) - dayNum(d.ts)}일 전에 맞혔어요</span>
-          </div>`).join('')}
-        </div>
-        <button type="button" class="mini" id="dueRetryBtn" style="margin-top:10px; width:auto; padding:9px 16px;">🔁 복습 추천 다시 풀기 (${dueItems.length}문제)</button>
-      ` : `<div class="dash-empty">아직 복습 추천 문제가 없어요. 문제를 맞히고 ${REVIEW_DUE_DAYS}일이 지나면 여기 다시 떠서 잊지 않게 도와줘요.</div>`}
+        <button type="button" class="mini" id="reviewRetryBtn" style="margin-top:10px; width:auto; padding:9px 16px;">🔁 복습 추천 다시 풀기 (${reviewItems.length}문제)</button>
+      ` : `<div class="dash-empty">아직 복습 추천 문제가 없어요. 틀린 문제를 끝까지 못 맞히거나, 맞힌 지 ${REVIEW_DUE_DAYS}일이 지나면 여기 쌓여요.</div>`}
     </div>
 
     <div class="dash-section">
@@ -1620,18 +1608,11 @@ el('dashFromEndBtn').onclick = openDash;
 
 // 대시보드의 '연습' 버튼: 그 단원만 범위로 잡고 setup 으로
 el('dashBody').addEventListener('click', (ev)=>{
-  const wb = ev.target.closest('#wrongRetryBtn');
-  if(wb){
-    const qids = lastWrongItems.map(w=>w.qid);
+  const reviewBtn = ev.target.closest('#reviewRetryBtn');
+  if(reviewBtn){
+    const qids = lastReviewItems.map(r=>r.qid);
     closeDash();
     startReviewSession(qids);
-    return;
-  }
-  const dueBtn = ev.target.closest('#dueRetryBtn');
-  if(dueBtn){
-    const qids = lastDueItems.map(d=>d.qid);
-    closeDash();
-    startReviewSession(qids, '복습 추천');
     return;
   }
   const b = ev.target.closest('[data-practice-unit]');
