@@ -256,10 +256,18 @@
     75%{ transform:translate(-3px,-3px) rotate(-1deg); }
   }
   .scramble-ch{ display:inline-block; white-space:pre; }
-  .bee-layer{ position:absolute; inset:0; overflow:hidden; border-radius:16px; pointer-events:none; display:none; }
+  /* 벌떼: 문제를 가리는 건 움직이지 않는 벌집 무늬 막이 맡고, 그 위로 소수의 벌만 날아다닌다.
+     예전처럼 벌 900마리를 각각 애니메이션하면 휴대폰에서 심하게 버벅여서 바꿈 */
+  .bee-layer{
+    position:absolute; inset:0; overflow:hidden; border-radius:16px; pointer-events:none; display:none;
+    background:
+      radial-gradient(circle at 50% 50%, #FFEC96 0 38%, transparent 40%) 0 0/26px 26px,
+      radial-gradient(circle at 50% 50%, #FFEC96 0 38%, transparent 40%) 13px 13px/26px 26px,
+      #ECB228;
+  }
   .qbox.beeswarm .bee-layer{ display:block; }
   .bee-layer span{
-    position:absolute; left:0; top:0; opacity:.96; will-change:transform;
+    position:absolute; left:0; top:0; will-change:transform;
     animation-name:beeSwarm; animation-timing-function:linear; animation-iteration-count:infinite;
   }
   @keyframes beeSwarm{
@@ -602,7 +610,7 @@ function spawnBeeSwarm(layer, count){
   for(let i = 0; i < count; i++){
     const pts = [edgePoint(), insidePoint(), insidePoint(), insidePoint(), edgePoint()];
     const vars = pts.map((p, idx) => `--x${idx}:${p.x.toFixed(1)}px;--y${idx}:${p.y.toFixed(1)}px;`).join('');
-    const size = (1.0 + Math.random() * 0.9).toFixed(2);
+    const size = (1.6 + Math.random() * 1.2).toFixed(2);
     const dur = (1.5 + Math.random() * 2.3).toFixed(2);
     const delay = (Math.random() * -4).toFixed(2);
     html += `<span style="${vars}font-size:${size}rem;animation-duration:${dur}s;animation-delay:${delay}s;">🐝</span>`;
@@ -2054,7 +2062,9 @@ function applyIncomingFx(type, attackerId, reflected){
     const box = el('qbox');
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.beeNanta : spicy ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee;
     el('beeLabel').textContent = reflected ? '반사당한 벌떼' : '벌떼';
-    spawnBeeSwarm(el('beeLayer'), 900);
+    // 휴대폰(터치 기기·좁은 화면)은 벌 수를 더 줄여 렉을 막는다 — 문제 가리기는 벌집 막이 담당
+    const lowPower = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || window.innerWidth < 700;
+    spawnBeeSwarm(el('beeLayer'), lowPower ? 18 : 40);
     box.classList.add('beeswarm');
     myBeeUntil = serverNow() + dur;
     clearTimeout(beeTimer);
