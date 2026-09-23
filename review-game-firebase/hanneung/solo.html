@@ -135,7 +135,7 @@ table.era-t{ width:100%; border-collapse:collapse; background:#fff; border-radiu
 
   <div class="mode">
     <h2>🧭 시대별 연습</h2>
-    <p>고른 시대의 문제만 풉니다. 하나 고를 때마다 바로 정답을 알려 줍니다.</p>
+    <p>고른 시대의 문제만 풉니다. 모든 문항을 고르고 제출하면 채점해 줍니다.</p>
     <div class="era-chips" id="eraChips"></div>
     <button class="btn" id="startEraBtn" type="button">연습 시작</button>
   </div>
@@ -277,8 +277,8 @@ function openSolve(){
   const e = exam();
   const names = { exam:'실전 모의고사', era:'시대별 연습', wrong:'틀린 문제 다시 풀기' };
   $('solveTitle').textContent = `${e.title} · ${S.reviewing ? '검토' : names[S.mode]}`;
-  $('submitBtn').hidden = !(S.mode === 'exam' && !S.reviewing);
-  $('legend').innerHTML = (S.mode === 'exam' && !S.reviewing)
+  $('submitBtn').hidden = S.reviewing;
+  $('legend').innerHTML = !S.reviewing
     ? '색칠된 번호 = 답을 고른 문항'
     : '<span style="color:var(--ok)">■</span> 맞힘 · <span style="color:var(--bad)">■</span> 틀림';
   clearInterval(timerId);
@@ -300,7 +300,8 @@ function tick(){
 }
 
 // 즉시 채점 모드(연습·오답·검토)에서는 답을 고르면 바로 정답 공개
-function instant(){ return S.mode !== 'exam' || S.reviewing; }
+// 정답은 제출 뒤 검토 화면에서만 보여 준다 (풀이 중에는 어떤 방식이든 채점 결과를 숨김)
+function instant(){ return S.reviewing; }
 
 function renderQ(){
   const e = exam(), n = S.list[S.idx], pick = S.picks[S.idx], ans = e.answers[n-1];
@@ -330,7 +331,7 @@ function renderQ(){
   }
   $('prevBtn').disabled = S.idx === 0;
   const last = S.idx === S.list.length - 1;
-  $('nextBtn').textContent = last ? (S.mode === 'exam' && !S.reviewing ? '제출 ▶' : '끝내기 ▶') : '다음 ▶';
+  $('nextBtn').textContent = last ? (S.reviewing ? '결과로 ▶' : '제출 ▶') : '다음 ▶';
   renderGrid();
 }
 
@@ -349,16 +350,8 @@ function renderGrid(){
 
 function choose(c){
   if(S.reviewing) return;
-  const n = S.list[S.idx];
-  if(instant()){
-    if(S.picks[S.idx]) return;
-    S.picks[S.idx] = c;
-    markWrong(n, c === exam().answers[n-1]);
-    syncLog(false);
-  } else {
-    S.picks[S.idx] = S.picks[S.idx] === c ? 0 : c; // 같은 번호 다시 누르면 선택 취소
-    persist();
-  }
+  S.picks[S.idx] = S.picks[S.idx] === c ? 0 : c; // 같은 번호 다시 누르면 선택 취소
+  persist();
   renderQ();
 }
 
@@ -376,14 +369,20 @@ function go(i){
 }
 function next(){
   if(S.idx < S.list.length - 1) return go(S.idx + 1);
-  if(S.mode === 'exam' && !S.reviewing) return submit();
   if(S.reviewing) return show('resultView');
-  practiceDone();
+  submit();
 }
 
+// 모든 문항을 골라야 제출(채점)할 수 있다 — 안 고른 문항이 있으면 첫 번째 안 고른 문항으로 보내 준다
+// (실전 모의고사의 시간 종료만 예외로, finish()가 그때까지 고른 답으로 바로 채점)
 function submit(){
   const left = S.picks.filter(p => !p).length;
-  if(!confirm(left ? `아직 안 푼 문항이 ${left}개 있어요. 그래도 제출할까요?` : '제출하고 채점할까요?')) return;
+  if(left){
+    alert(`아직 고르지 않은 문항이 ${left}개 있어요. 모든 문항을 골라야 제출할 수 있어요.`);
+    go(S.picks.findIndex(p => !p));
+    return;
+  }
+  if(!confirm('제출하고 채점할까요? 제출하면 답을 바꿀 수 없어요.')) return;
   finish();
 }
 
@@ -391,21 +390,13 @@ function finish(){
   clearInterval(timerId);
   const e = exam();
   S.list.forEach((n, i) => markWrong(n, S.picks[i] === e.answers[n-1]));
-  delete store.progress; save();
+  if(S.mode === 'exam'){ delete store.progress; save(); }
   syncLog(true);
   showResult();
 }
 
-function practiceDone(){
-  const e = exam();
-  const done = S.picks.filter(Boolean).length;
-  const ok = S.list.filter((n, i) => S.picks[i] === e.answers[n-1]).length;
-  alert(`${done}문항 중 ${ok}문항 맞혔어요!`);
-  goHome();
-}
-
 // ── 선생님 화면(관리자) 기록: rooms/hanneung/solo_log ──────────
-// picks는 1~50번 문항 순서의 50글자 문자열(안 푼 문항은 0). 연습은 첫 답부터 같은 항목을 계속 갱신한다.
+// picks는 1~50번 문항 순서의 50글자 문자열(안 푼 문항은 0). 어느 방식이든 제출(채점)할 때 한 번 기록한다.
 function syncLog(final){
   const L = window.hgLog;
   if(!L || !S || S.reviewing) return;
@@ -442,14 +433,23 @@ function showResult(){
     if(r){ score += e.points[n-1]; ok++; byEra[e.eras[n-1]].c++; }
     else wrong.push(i);
   });
-  const grade = gradeOf(score);
-  const prevBest = store.best[S.examId] || 0;
-  if(score > prevBest){ store.best[S.examId] = score; save(); }
-  $('resExam').textContent = e.title;
-  $('resScore').textContent = score + '점';
-  $('resGrade').textContent = grade === '불합격' ? '급수 미달' : grade + ' 합격 점수';
-  $('resGrade').className = 'grade' + (grade === '불합격' ? ' fail' : '');
-  $('resMeta').textContent = `50문항 중 ${ok}문항 정답` + (prevBest ? ` · 이전 최고 ${prevBest}점` : '');
+  const names = { exam:'실전 모의고사', era:'시대별 연습', wrong:'틀린 문제 다시 풀기' };
+  $('resExam').textContent = `${e.title} · ${names[S.mode]}`;
+  if(S.mode === 'exam'){
+    const grade = gradeOf(score);
+    const prevBest = store.best[S.examId] || 0;
+    if(score > prevBest){ store.best[S.examId] = score; save(); }
+    $('resScore').textContent = score + '점';
+    $('resGrade').hidden = false;
+    $('resGrade').textContent = grade === '불합격' ? '급수 미달' : grade + ' 합격 점수';
+    $('resGrade').className = 'grade' + (grade === '불합격' ? ' fail' : '');
+    $('resMeta').textContent = `50문항 중 ${ok}문항 정답` + (prevBest ? ` · 이전 최고 ${prevBest}점` : '');
+  } else {
+    // 연습은 일부 문항만 푸므로 점수·급수 대신 맞힌 개수와 정답률만 보여 준다
+    $('resScore').textContent = `${ok} / ${S.list.length}`;
+    $('resGrade').hidden = true;
+    $('resMeta').textContent = `정답률 ${Math.round(ok / S.list.length * 100)}%`;
+  }
   $('eraTable').innerHTML = '<tr><th>시대</th><th>정답</th><th style="width:40%">정답률</th></tr>' +
     byEra.map((x, i) => x.t ? `<tr><td>${ERAS[i]}</td><td>${x.c} / ${x.t}</td><td><div class="bar"><i style="width:${Math.round(x.c/x.t*100)}%"></i></div></td></tr>` : '').join('');
   $('resWrong').innerHTML = wrong.length
@@ -465,7 +465,6 @@ function review(i){
 
 function goHome(){
   clearInterval(timerId);
-  if(S && S.mode !== 'exam' && S.logRef) syncLog(true); // 연습을 끝내고 나가면 종료 표시
   S = null;
   renderHome();
   show('home');
@@ -493,6 +492,7 @@ $('resumeBtn').onclick = () => {
 $('discardBtn').onclick = () => { if(confirm('이어서 풀던 기록을 지울까요?')){ delete store.progress; save(); renderHome(); } };
 $('homeBtn').onclick = () => {
   if(S && S.mode === 'exam' && !S.reviewing){ persist(); } // 모의고사는 나가도 이어서 풀 수 있게 저장
+  else if(S && !S.reviewing && S.picks.some(Boolean) && !confirm('제출하지 않고 나가면 고른 답이 사라져요. 나갈까요?')) return;
   goHome();
 };
 $('submitBtn').onclick = submit;
