@@ -471,7 +471,7 @@ import {
   recencyWeightFn, weightedQueue,
   teamInfo, teamStandings, activeBonus,
   ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
-} from '../shared/lib.js?v=20260923b';
+} from '../shared/lib.js?v=20260923c';
 
 const ROOM = 'world';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
@@ -1920,13 +1920,13 @@ function handleItemEvents(obj){
       return;
     }
     if(now < myImmuneUntil){
-      myImmuneUntil = 0;
+      // 무적은 막아도 소멸하지 않는다 — 방해가 걸려 있는 동안 + 끝난 뒤 3초까지 모든 방해를 계속 막는다
       tellStealBlocked('immune');
-      update(roomRef(ROOM, 'players', playerId), { immuneUntil: 0 });   // 한 번 막았으면 남은 무적 시간은 소멸
       showItemAlert('🛡️ 무적 상태로 방해를 막아냈다!');
       return;
     }
-    myImmuneUntil = now + ITEM_FX_MS.immunity;
+    // 무적은 방해가 끝난 다음부터 3초 — 시간형 방해(안개 5초 등)는 걸려 있는 동안에도 무적이라 방해가 겹치지 않는다
+    myImmuneUntil = now + incomingFxMs(e.type) + ITEM_FX_MS.immunity;
     update(roomRef(ROOM, 'players', playerId), { immuneUntil: myImmuneUntil });   // 공격자가 무적 여부를 미리 볼 수 있게 동기화
     applyIncomingFx(e.type, e.by, !!e.reflected);
   });
@@ -1984,6 +1984,14 @@ function openMineOverlay(attackerId, mineLabel){
 // 다시 강탈하려 할 때(useItem) 미리 걸러내서 "이미 강탈당한 상태" 안내로 막을 수 있게 함
 function syncStealActive(){
   update(roomRef(ROOM, 'players', playerId), { stealActive: myStealDefenses.length > 0 });
+}
+
+// 시간형 방해(안개·얼음·물풍선·지진·벌떼)의 지속시간(ms). 즉시 끝나는 방해(미끄럼틀·강탈 등)는 0.
+// applyIncomingFx와 같은 규칙으로 모드(기본·매운맛·난타전)에 따라 고른다.
+function incomingFxMs(type){
+  if(!['fog','ice','waterballoon','earthquake','bee'].includes(type)) return 0;
+  const spicy = itemsMode === 'spicy' || itemsMode === 'nanta';
+  return ITEM_FX_MS[itemsMode === 'nanta' ? type + 'Nanta' : spicy ? type + 'Spicy' : type] || 0;
 }
 
 function applyIncomingFx(type, attackerId, reflected){
