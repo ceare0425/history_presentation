@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한능검 기출 풀기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --main:#8B4513; --dark:#6B3010; --accent:#C5A028; --bg:#F5E6C4; --card:#FFFBF0;
+  --text:#2C1A0E; --sub:#6B4F33; --line:#E2CFA6; --ok:#1F7A4D; --bad:#B23A3A;
+}
+[hidden]{ display:none !important; }
+*{ box-sizing:border-box; }
+html,body{ margin:0; }
+body{ background:var(--bg); color:var(--text); font-family:'Noto Sans KR',sans-serif; -webkit-tap-highlight-color:transparent; }
+button{ font-family:inherit; cursor:pointer; }
+
+/* ── 시작 화면 ── */
+.home{ max-width:760px; margin:0 auto; padding:28px 16px 40px; }
+.home h1{ font-family:'Noto Serif KR',serif; font-weight:900; color:var(--dark); font-size:1.7rem; margin:0 0 4px; }
+.home .lead{ color:var(--sub); margin:0 0 20px; font-size:.95rem; }
+.exam-pick{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+.exam-pick button{ padding:8px 14px; border-radius:999px; border:1.5px solid var(--main); background:#fff; color:var(--main); font-weight:700; }
+.exam-pick button.on{ background:var(--main); color:#fff; }
+.mode{ background:var(--card); border-radius:14px; padding:18px; margin-bottom:14px; box-shadow:0 3px 12px rgba(107,48,16,.08); }
+.mode h2{ margin:0 0 6px; font-size:1.1rem; color:var(--dark); }
+.mode p{ margin:0 0 12px; color:var(--sub); font-size:.9rem; line-height:1.55; }
+.btn{ padding:11px 18px; border-radius:10px; border:none; background:var(--main); color:#fff; font-weight:700; font-size:.95rem; }
+.btn.ghost{ background:#fff; color:var(--main); border:1.5px solid var(--main); }
+.btn:disabled{ opacity:.45; cursor:default; }
+.era-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+.era-chips label{ display:flex; align-items:center; gap:5px; padding:6px 11px; border-radius:999px; background:#fff; border:1.5px solid var(--line); font-size:.88rem; cursor:pointer; }
+.era-chips input{ accent-color:var(--main); }
+.row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.check{ display:flex; align-items:center; gap:6px; font-size:.88rem; color:var(--sub); }
+.resume{ background:#FFF3CD; border:1.5px solid var(--accent); }
+
+/* ── 풀이 화면 ── */
+.top{ position:sticky; top:0; z-index:5; background:var(--dark); color:#fff; display:flex; align-items:center; gap:10px; padding:8px 14px; }
+.top .ttl{ font-weight:700; font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.top .sp{ flex:1; }
+.top .timer{ font-variant-numeric:tabular-nums; font-weight:700; background:rgba(255,255,255,.14); padding:4px 10px; border-radius:8px; }
+.top .timer.warn{ background:var(--bad); }
+.top button{ background:rgba(255,255,255,.16); color:#fff; border:none; padding:6px 11px; border-radius:8px; font-weight:700; font-size:.85rem; }
+.top button.gold{ background:var(--accent); color:#2C1A0E; }
+
+.solve{ display:grid; grid-template-columns:1fr 240px; gap:16px; max-width:1180px; margin:0 auto; padding:14px 16px 120px; }
+@media (max-width:900px){ .solve{ grid-template-columns:1fr; } .side{ order:2; } }
+.qcard{ background:#fff; border-radius:14px; padding:14px; box-shadow:0 3px 12px rgba(107,48,16,.08); }
+.qhead{ display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:.85rem; color:var(--sub); }
+.qhead .era{ background:#F3E3C0; color:var(--dark); padding:2px 8px; border-radius:6px; font-weight:700; }
+.qhead .pos{ margin-left:auto; }
+.qimg{ display:block; width:100%; max-width:760px; height:auto; margin:0 auto; }
+.feedback{ margin-top:10px; padding:10px 12px; border-radius:10px; font-weight:700; }
+.feedback.ok{ background:#E3F4EA; color:var(--ok); }
+.feedback.bad{ background:#FBE6E6; color:var(--bad); }
+
+.choices{ display:flex; gap:8px; justify-content:center; margin-top:12px; }
+.choices button{ flex:1; max-width:110px; height:56px; border-radius:12px; border:2px solid var(--line); background:#fff; font-size:1.6rem; color:var(--text); }
+.choices button.pick{ background:var(--main); border-color:var(--main); color:#fff; }
+.choices button.right{ background:var(--ok); border-color:var(--ok); color:#fff; }
+.choices button.wrong{ background:var(--bad); border-color:var(--bad); color:#fff; }
+.choices button:disabled{ cursor:default; }
+.navrow{ display:flex; gap:8px; margin-top:12px; }
+.navrow .btn{ flex:1; }
+@media (min-width:901px){
+  .dock{ position:sticky; bottom:0; z-index:4; background:rgba(245,230,196,.96); padding:4px 0 12px; }
+  /* 문항 전체가 한 화면에 들어오도록(상단바·선택 버튼 높이 제외) */
+  .qimg{ width:auto; max-width:100%; max-height:calc(100vh - 250px); }
+}
+@media (max-width:900px){
+  .dock{ position:fixed; left:0; right:0; bottom:0; background:rgba(255,251,240,.97); padding:8px 12px calc(8px + env(safe-area-inset-bottom)); box-shadow:0 -3px 12px rgba(0,0,0,.1); z-index:6; }
+  .choices{ margin-top:0; }
+  .navrow{ margin-top:8px; }
+  .navrow .btn{ padding:9px; }
+}
+
+.side .box{ background:#fff; border-radius:14px; padding:12px; box-shadow:0 3px 12px rgba(107,48,16,.08); position:sticky; top:62px; }
+.side h3{ margin:0 0 8px; font-size:.9rem; color:var(--dark); }
+.grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:5px; }
+@media (max-width:900px){ .grid{ grid-template-columns:repeat(10,1fr); } }
+.grid button{ height:34px; border-radius:7px; border:1.5px solid var(--line); background:#fff; font-size:.8rem; font-weight:700; color:var(--sub); padding:0; }
+.grid button.done{ background:#F3E3C0; color:var(--dark); border-color:#E0C58C; }
+.grid button.right{ background:#DDF1E5; color:var(--ok); border-color:#9CD3B2; }
+.grid button.wrong{ background:#F9DCDC; color:var(--bad); border-color:#E6A3A3; }
+.grid button.cur{ outline:2.5px solid var(--main); outline-offset:1px; }
+.legend{ font-size:.75rem; color:var(--sub); margin-top:8px; line-height:1.6; }
+
+/* ── 결과 화면 ── */
+.result{ max-width:760px; margin:0 auto; padding:24px 16px 48px; }
+.scorebox{ background:var(--card); border-radius:16px; padding:22px; text-align:center; box-shadow:0 3px 12px rgba(107,48,16,.08); margin-bottom:14px; }
+.scorebox .score{ font-family:'Noto Serif KR',serif; font-size:3.2rem; font-weight:900; color:var(--dark); line-height:1.1; }
+.scorebox .grade{ display:inline-block; margin-top:8px; padding:5px 14px; border-radius:999px; font-weight:900; background:var(--accent); color:#2C1A0E; }
+.scorebox .grade.fail{ background:#D9CBB0; color:var(--sub); }
+.scorebox .meta{ color:var(--sub); font-size:.9rem; margin-top:10px; }
+table.era-t{ width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; font-size:.9rem; margin-bottom:14px; }
+.era-t th,.era-t td{ padding:9px 10px; border-bottom:1px solid #F0E4CC; text-align:left; }
+.era-t th{ background:#F3E3C0; color:var(--dark); }
+.bar{ height:8px; background:#F0E4CC; border-radius:4px; overflow:hidden; min-width:80px; }
+.bar i{ display:block; height:100%; background:var(--ok); }
+.wrong-list{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+.wrong-list button{ padding:6px 10px; border-radius:8px; border:1.5px solid #E6A3A3; background:#FBE6E6; color:var(--bad); font-weight:700; }
+</style>
+</head>
+<body>
+
+<!-- 시작 화면 -->
+<section class="home" id="home">
+  <h1>🎖️ 한능검 기출 풀기</h1>
+  <p class="lead">한국사능력검정시험 실제 기출문제를 시험지 모습 그대로 풀어 봅니다.</p>
+  <div class="exam-pick" id="examPick"></div>
+
+  <div class="mode resume" id="resumeBox" hidden>
+    <h2>⏯ 이어서 풀기</h2>
+    <p id="resumeInfo"></p>
+    <div class="row">
+      <button class="btn" id="resumeBtn" type="button">이어서 풀기</button>
+      <button class="btn ghost" id="discardBtn" type="button">처음부터 다시</button>
+    </div>
+  </div>
+
+  <div class="mode">
+    <h2>📝 실전 모의고사</h2>
+    <p>50문항을 실제 시험처럼 풉니다. 다 풀고 제출하면 점수와 급수(1급 80점·2급 70점·3급 60점 이상)를 알려 줍니다.</p>
+    <div class="row">
+      <label class="check"><input type="checkbox" id="useTimer" checked> 80분 시간 제한</label>
+      <button class="btn" id="startExamBtn" type="button">시작하기</button>
+    </div>
+  </div>
+
+  <div class="mode">
+    <h2>🧭 시대별 연습</h2>
+    <p>고른 시대의 문제만 풉니다. 하나 고를 때마다 바로 정답을 알려 줍니다.</p>
+    <div class="era-chips" id="eraChips"></div>
+    <button class="btn" id="startEraBtn" type="button">연습 시작</button>
+  </div>
+
+  <div class="mode">
+    <h2>🔁 틀린 문제 다시 풀기</h2>
+    <p id="wrongInfo">아직 틀린 문제가 없어요.</p>
+    <div class="row">
+      <button class="btn" id="startWrongBtn" type="button" disabled>다시 풀기</button>
+      <button class="btn ghost" id="clearWrongBtn" type="button" hidden>목록 비우기</button>
+    </div>
+  </div>
+</section>
+
+<!-- 풀이 화면 -->
+<section id="solveView" hidden>
+  <div class="top">
+    <button type="button" id="homeBtn">✕</button>
+    <div class="ttl" id="solveTitle"></div>
+    <div class="sp"></div>
+    <div class="timer" id="timer" hidden></div>
+    <button type="button" class="gold" id="submitBtn" hidden>제출</button>
+  </div>
+  <div class="solve">
+    <div>
+      <div class="qcard">
+        <div class="qhead"><span class="era" id="qEra"></span><span id="qPts"></span><span class="pos" id="qPos"></span></div>
+        <img class="qimg" id="qImg" alt="">
+        <div class="feedback" id="feedback" hidden></div>
+      </div>
+      <div class="dock">
+        <div class="choices" id="choices"></div>
+        <div class="navrow">
+          <button class="btn ghost" id="prevBtn" type="button">◀ 이전</button>
+          <button class="btn" id="nextBtn" type="button">다음 ▶</button>
+        </div>
+      </div>
+    </div>
+    <aside class="side">
+      <div class="box">
+        <h3>문항 이동</h3>
+        <div class="grid" id="qGrid"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- 결과 화면 -->
+<section class="result" id="resultView" hidden>
+  <div class="scorebox">
+    <div id="resExam" style="color:var(--sub); font-weight:700;"></div>
+    <div class="score" id="resScore"></div>
+    <div class="grade" id="resGrade"></div>
+    <div class="meta" id="resMeta"></div>
+  </div>
+  <table class="era-t" id="eraTable"></table>
+  <h3 style="color:var(--dark); margin:0 0 8px;">틀린 문항 <span style="font-size:.8rem; color:var(--sub); font-weight:400;">(누르면 정답과 함께 볼 수 있어요)</span></h3>
+  <div class="wrong-list" id="resWrong"></div>
+  <div class="row">
+    <button class="btn" id="reviewBtn" type="button">전체 문항 검토</button>
+    <button class="btn ghost" id="resHomeBtn" type="button">처음 화면으로</button>
+  </div>
+</section>
+
+<script>
+// ── 기출 데이터 ─────────────────────────────
+// 새 회차 추가: 한능검/기출/<회차>/q01.webp~q50.webp 이미지를 넣고 아래에 항목만 추가하면 된다.
+const ERAS = ['선사~남북국', '고려', '조선', '근대(개항기)', '일제강점기', '현대', '통합'];
+const EXAMS = {
+  '79': {
+    title: '제79회 심화', dir: '기출/79회', minutes: 80,
+    answers: [2,4,2,1,2,1,3,2,5,3, 5,5,1,3,3,3,4,5,5,4, 2,4,4,3,1,3,1,5,1,2, 2,1,4,2,2,1,3,5,5,4, 1,4,3,4,5,1,2,5,2,3],
+    points:  [1,1,2,1,3,3,1,2,2,2, 2,2,3,2,2,1,2,3,2,2, 1,3,2,2,3,2,1,1,2,2, 3,2,2,2,1,3,3,2,2,2, 1,2,2,2,2,2,2,2,2,3],
+    // 문항별 시대(ERAS 인덱스)
+    eras:    [0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1,2,2, 2,2,2,2,2,2,2,3,3,3, 3,3,3,3,3,4,4,4,4,4, 4,4,4,4,5,5,5,5,5,6]
+  }
+};
+const CIRCLED = ['①','②','③','④','⑤'];
+const STORE = 'hanneung_gichul_v1';
+
+// ── 저장소 (브라우저별, 실패해도 동작) ──────────
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE)) || {}; }catch(e){ return {}; } }
+function save(){ try{ localStorage.setItem(STORE, JSON.stringify(store)); }catch(e){} }
+let store = load();
+store.wrong = store.wrong || {};   // { '79': [번호...] }
+store.best = store.best || {};     // { '79': 점수 }
+
+const $ = id => document.getElementById(id);
+let examId = Object.keys(EXAMS)[0];
+let S = null;   // 현재 풀이 상태
+let timerId = null;
+
+function exam(){ return EXAMS[examId]; }
+function imgSrc(n){ return exam().dir + '/q' + String(n).padStart(2,'0') + '.webp'; }
+
+// ── 시작 화면 ─────────────────────────────
+function renderHome(){
+  $('examPick').innerHTML = Object.entries(EXAMS).map(([id, e]) =>
+    `<button type="button" data-exam="${id}" class="${id===examId?'on':''}">${e.title}</button>`).join('');
+  $('examPick').querySelectorAll('button').forEach(b => b.onclick = () => { examId = b.dataset.exam; renderHome(); });
+
+  const e = exam();
+  const counts = ERAS.map((_, i) => e.eras.filter(x => x === i).length);
+  $('eraChips').innerHTML = ERAS.map((name, i) => counts[i] ?
+    `<label><input type="checkbox" value="${i}" checked> ${name} <small>(${counts[i]})</small></label>` : '').join('');
+
+  const w = store.wrong[examId] || [];
+  $('wrongInfo').textContent = w.length ? `지금까지 틀린 문제 ${w.length}개가 모여 있어요. 맞히면 목록에서 빠집니다.` : '아직 틀린 문제가 없어요.';
+  $('startWrongBtn').disabled = !w.length;
+  $('clearWrongBtn').hidden = !w.length;
+
+  const saved = store.progress && store.progress.examId === examId ? store.progress : null;
+  $('resumeBox').hidden = !saved;
+  if(saved){
+    const done = saved.picks.filter(Boolean).length;
+    let info = `${e.title} 실전 모의고사 · ${saved.list.length}문항 중 ${done}문항 풀이`;
+    if(saved.endAt) info += ` · 남은 시간 ${fmt(Math.max(0, saved.endAt - Date.now()))}`;
+    $('resumeInfo').textContent = info;
+  }
+}
+
+function show(view){
+  ['home','solveView','resultView'].forEach(v => $(v).hidden = v !== view);
+  window.scrollTo(0, 0);
+}
+
+// ── 풀이 시작 ─────────────────────────────
+function start(mode, list, opts){
+  S = { mode, examId, list, idx:0, picks: list.map(() => 0), endAt: null, reviewing: false };
+  if(opts && opts.timer) S.endAt = Date.now() + exam().minutes * 60000;
+  if(mode === 'exam') persist();
+  openSolve();
+}
+function persist(){
+  if(S && S.mode === 'exam' && !S.reviewing){ store.progress = { examId:S.examId, list:S.list, idx:S.idx, picks:S.picks, endAt:S.endAt }; save(); }
+}
+
+function openSolve(){
+  const e = exam();
+  const names = { exam:'실전 모의고사', era:'시대별 연습', wrong:'틀린 문제 다시 풀기' };
+  $('solveTitle').textContent = `${e.title} · ${S.reviewing ? '검토' : names[S.mode]}`;
+  $('submitBtn').hidden = !(S.mode === 'exam' && !S.reviewing);
+  $('legend').innerHTML = (S.mode === 'exam' && !S.reviewing)
+    ? '색칠된 번호 = 답을 고른 문항'
+    : '<span style="color:var(--ok)">■</span> 맞힘 · <span style="color:var(--bad)">■</span> 틀림';
+  clearInterval(timerId);
+  $('timer').hidden = !(S.endAt && !S.reviewing);
+  if(S.endAt && !S.reviewing){ tick(); timerId = setInterval(tick, 1000); }
+  show('solveView');
+  renderQ();
+}
+
+function fmt(ms){
+  const s = Math.ceil(ms/1000), m = Math.floor(s/60);
+  return `${m}:${String(s%60).padStart(2,'0')}`;
+}
+function tick(){
+  const left = S.endAt - Date.now();
+  $('timer').textContent = '⏱ ' + fmt(Math.max(0,left));
+  $('timer').classList.toggle('warn', left < 5*60000);
+  if(left <= 0){ clearInterval(timerId); alert('시간이 끝났어요. 지금까지 고른 답으로 채점합니다.'); finish(); }
+}
+
+// 즉시 채점 모드(연습·오답·검토)에서는 답을 고르면 바로 정답 공개
+function instant(){ return S.mode !== 'exam' || S.reviewing; }
+
+function renderQ(){
+  const e = exam(), n = S.list[S.idx], pick = S.picks[S.idx], ans = e.answers[n-1];
+  $('qImg').src = imgSrc(n);
+  $('qImg').alt = `${e.title} ${n}번 문항`;
+  $('qEra').textContent = ERAS[e.eras[n-1]];
+  $('qPts').textContent = `${e.points[n-1]}점`;
+  $('qPos').textContent = `${S.idx+1} / ${S.list.length}`;
+  const graded = instant() && (pick || S.reviewing); // 검토에서는 안 푼 문항도 정답 표시
+  $('choices').innerHTML = CIRCLED.map((c, i) => {
+    let cls = '';
+    if(graded){ if(i+1 === ans) cls = 'right'; else if(i+1 === pick) cls = 'wrong'; }
+    else if(i+1 === pick) cls = 'pick';
+    return `<button type="button" class="${cls}" data-c="${i+1}" ${graded?'disabled':''}>${c}</button>`;
+  }).join('');
+  $('choices').querySelectorAll('button').forEach(b => b.onclick = () => choose(+b.dataset.c));
+  const fb = $('feedback');
+  fb.hidden = !graded;
+  if(graded){
+    const ok = pick === ans;
+    fb.className = 'feedback ' + (ok ? 'ok' : 'bad');
+    fb.textContent = ok ? `⭕ 정답! (${CIRCLED[ans-1]})` : (pick ? `❌ 오답 — 고른 답 ${CIRCLED[pick-1]}, 정답 ${CIRCLED[ans-1]}` : `⬜ 안 푼 문항 — 정답 ${CIRCLED[ans-1]}`);
+  }
+  $('prevBtn').disabled = S.idx === 0;
+  const last = S.idx === S.list.length - 1;
+  $('nextBtn').textContent = last ? (S.mode === 'exam' && !S.reviewing ? '제출 ▶' : '끝내기 ▶') : '다음 ▶';
+  renderGrid();
+}
+
+function renderGrid(){
+  const e = exam();
+  $('qGrid').innerHTML = S.list.map((n, i) => {
+    const p = S.picks[i];
+    let cls = '';
+    if(p) cls = instant() ? (p === e.answers[n-1] ? 'right' : 'wrong') : 'done';
+    else if(S.reviewing) cls = 'wrong';
+    if(i === S.idx) cls += ' cur';
+    return `<button type="button" class="${cls}" data-i="${i}">${n}</button>`;
+  }).join('');
+  $('qGrid').querySelectorAll('button').forEach(b => b.onclick = () => go(+b.dataset.i));
+}
+
+function choose(c){
+  if(S.reviewing) return;
+  const n = S.list[S.idx];
+  if(instant()){
+    if(S.picks[S.idx]) return;
+    S.picks[S.idx] = c;
+    markWrong(n, c === exam().answers[n-1]);
+  } else {
+    S.picks[S.idx] = S.picks[S.idx] === c ? 0 : c; // 같은 번호 다시 누르면 선택 취소
+    persist();
+  }
+  renderQ();
+}
+
+function markWrong(n, ok){
+  const set = new Set(store.wrong[S.examId] || []);
+  if(ok) set.delete(n); else set.add(n);
+  store.wrong[S.examId] = [...set].sort((a,b) => a-b);
+  save();
+}
+
+function go(i){
+  if(i < 0 || i >= S.list.length) return;
+  S.idx = i; persist(); renderQ();
+  window.scrollTo(0, 0);
+}
+function next(){
+  if(S.idx < S.list.length - 1) return go(S.idx + 1);
+  if(S.mode === 'exam' && !S.reviewing) return submit();
+  if(S.reviewing) return show('resultView');
+  practiceDone();
+}
+
+function submit(){
+  const left = S.picks.filter(p => !p).length;
+  if(!confirm(left ? `아직 안 푼 문항이 ${left}개 있어요. 그래도 제출할까요?` : '제출하고 채점할까요?')) return;
+  finish();
+}
+
+function finish(){
+  clearInterval(timerId);
+  const e = exam();
+  S.list.forEach((n, i) => markWrong(n, S.picks[i] === e.answers[n-1]));
+  delete store.progress; save();
+  showResult();
+}
+
+function practiceDone(){
+  const e = exam();
+  const done = S.picks.filter(Boolean).length;
+  const ok = S.list.filter((n, i) => S.picks[i] === e.answers[n-1]).length;
+  alert(`${done}문항 중 ${ok}문항 맞혔어요!`);
+  goHome();
+}
+
+// ── 결과 ─────────────────────────────────
+function showResult(){
+  const e = exam();
+  let score = 0, ok = 0;
+  const byEra = ERAS.map(() => ({ t:0, c:0 }));
+  const wrong = [];
+  S.list.forEach((n, i) => {
+    const r = S.picks[i] === e.answers[n-1];
+    byEra[e.eras[n-1]].t++;
+    if(r){ score += e.points[n-1]; ok++; byEra[e.eras[n-1]].c++; }
+    else wrong.push(i);
+  });
+  const grade = score >= 80 ? '1급' : score >= 70 ? '2급' : score >= 60 ? '3급' : '불합격';
+  const prevBest = store.best[S.examId] || 0;
+  if(score > prevBest){ store.best[S.examId] = score; save(); }
+  $('resExam').textContent = e.title;
+  $('resScore').textContent = score + '점';
+  $('resGrade').textContent = grade === '불합격' ? '급수 미달' : grade + ' 합격 점수';
+  $('resGrade').className = 'grade' + (grade === '불합격' ? ' fail' : '');
+  $('resMeta').textContent = `50문항 중 ${ok}문항 정답` + (prevBest ? ` · 이전 최고 ${prevBest}점` : '');
+  $('eraTable').innerHTML = '<tr><th>시대</th><th>정답</th><th style="width:40%">정답률</th></tr>' +
+    byEra.map((x, i) => x.t ? `<tr><td>${ERAS[i]}</td><td>${x.c} / ${x.t}</td><td><div class="bar"><i style="width:${Math.round(x.c/x.t*100)}%"></i></div></td></tr>` : '').join('');
+  $('resWrong').innerHTML = wrong.length
+    ? wrong.map(i => `<button type="button" data-i="${i}">${S.list[i]}번</button>`).join('')
+    : '<span style="color:var(--ok); font-weight:700;">🎉 모두 맞혔어요!</span>';
+  $('resWrong').querySelectorAll('button').forEach(b => b.onclick = () => review(+b.dataset.i));
+  show('resultView');
+}
+function review(i){
+  S.reviewing = true; S.idx = i || 0;
+  openSolve();
+}
+
+function goHome(){
+  clearInterval(timerId);
+  S = null;
+  renderHome();
+  show('home');
+}
+
+// ── 버튼 연결 ─────────────────────────────
+$('startExamBtn').onclick = () => {
+  if(store.progress && store.progress.examId === examId && !confirm('이어서 풀던 모의고사가 있어요. 새로 시작할까요? (이전 풀이는 지워집니다)')) return;
+  start('exam', exam().answers.map((_, i) => i+1), { timer: $('useTimer').checked });
+};
+$('startEraBtn').onclick = () => {
+  const on = [...$('eraChips').querySelectorAll('input:checked')].map(x => +x.value);
+  if(!on.length) return alert('시대를 하나 이상 골라 주세요.');
+  const list = exam().eras.map((era, i) => on.includes(era) ? i+1 : 0).filter(Boolean);
+  start('era', list);
+};
+$('startWrongBtn').onclick = () => start('wrong', (store.wrong[examId] || []).slice());
+$('clearWrongBtn').onclick = () => { if(confirm('틀린 문제 목록을 비울까요?')){ store.wrong[examId] = []; save(); renderHome(); } };
+$('resumeBtn').onclick = () => {
+  const p = store.progress;
+  S = { mode:'exam', examId:p.examId, list:p.list, idx:p.idx||0, picks:p.picks, endAt:p.endAt, reviewing:false };
+  if(S.endAt && S.endAt <= Date.now()){ alert('시간이 이미 끝났어요. 채점 결과를 보여 줄게요.'); return finish(); }
+  openSolve();
+};
+$('discardBtn').onclick = () => { if(confirm('이어서 풀던 기록을 지울까요?')){ delete store.progress; save(); renderHome(); } };
+$('homeBtn').onclick = () => {
+  if(S && S.mode === 'exam' && !S.reviewing){ persist(); } // 모의고사는 나가도 이어서 풀 수 있게 저장
+  goHome();
+};
+$('submitBtn').onclick = submit;
+$('prevBtn').onclick = () => go(S.idx - 1);
+$('nextBtn').onclick = next;
+$('reviewBtn').onclick = () => review(0);
+$('resHomeBtn').onclick = goHome;
+
+// 키보드·포인터(프레젠터) 대응: 1~5 선택, ←/→·PageUp/PageDown 이동
+document.addEventListener('keydown', ev => {
+  if(!S || $('solveView').hidden) return;
+  if(ev.key >= '1' && ev.key <= '5'){ choose(+ev.key); }
+  else if(ev.key === 'ArrowRight' || ev.key === 'PageDown'){ ev.preventDefault(); next(); }
+  else if(ev.key === 'ArrowLeft' || ev.key === 'PageUp'){ ev.preventDefault(); go(S.idx - 1); }
+});
+
+renderHome();
+</script>
+</body>
+</html>
