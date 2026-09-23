@@ -126,20 +126,6 @@
             { "label": "빈칸 학습", "color": "green" }
           ],
           "gradient": "linear-gradient(90deg, #8B4513, #C5A028)"
-        },
-        {
-          "title": "한능검 기출 풀기 — 실제 기출문제",
-          "path": "한능검/한능검 기출 풀기.html",
-          "emoji": "✍️",
-          "description": "한국사능력검정시험 실제 기출문제(제79회 심화)를 시험지 모습 그대로 풀기. 80분 실전 모의고사(점수·급수 판정), 시대별 연습(즉시 채점), 틀린 문제 다시 풀기 지원.",
-          "tags": [
-            { "label": "한능검 대비", "color": "orange" },
-            { "label": "기출문제", "color": "purple" },
-            { "label": "실전 모의고사", "color": "blue" },
-            { "label": "자동 채점", "color": "green" }
-          ],
-          "gradient": "linear-gradient(90deg, #6B3010, #C5A028)",
-          "app": true
         }
       ]
     },

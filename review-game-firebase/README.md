@@ -39,6 +39,10 @@
 - 관리자 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/admin.html`
 - 대형 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/korea/board.html`
 
+**한능검 기출 풀기** (혼자 연습 전용)
+- `https://ceare0425.github.io/history_presentation/review-game-firebase/hanneung/solo.html` — 학생 화면에서 인적사항 입력 → 혼자 연습하기 → 한능검 기출 풀기로 들어옵니다. 인적사항 없이 직접 열면 `student.html`로 되돌려 보냅니다.
+- 실제 기출 시험지를 문항별 이미지(`hanneung/<회차>/q01~q50.webp`)로 잘라 보여 주고, 정답·배점·시대 분류는 `hanneung/solo.html` 안 `EXAMS`에 있습니다. 풀이 기록·오답 목록은 학생별로 그 기기의 `localStorage`에만 저장됩니다(Firebase 기록 없음).
+
 짧은 주소(`ceare0425.github.io/h`,`/w`,`/k`)는 별도 저장소 `ceare0425/ceare0425.github.io`의
 리다이렉트 페이지입니다. 학생 접속 주소로만 연결됩니다(관리자 화면은 교사만 쓰니 그대로 긴 주소나
 메인 페이지에서 클릭해서 들어가면 됩니다). tinyurl 단축주소는 학교 유해차단 필터에 막히므로 쓰지 마세요.
@@ -183,7 +187,7 @@
 
 ### 학생용 시작 화면 (`student.html`)과 자동 참여
 
-`student.html`은 **학년·반·이름 입력 → 수업 참여/혼자 연습 선택 → 세계사/한국사 선택** 3단계
+`student.html`은 **학년·반·이름 입력 → 수업 참여/혼자 연습 선택 → 세계사/한국사(혼자 연습이면 한능검 기출 풀기도) 선택** 3단계
 화면입니다. 입력한 학년·반·이름은 `localStorage`(`rg_fb_grade`, `rg_fb_class`, `rg_fb_name`)에
 저장되고, `solo.html`·`play.html` 둘 다 이 값을 그대로 읽어 씁니다:
 
