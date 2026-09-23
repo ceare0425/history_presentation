@@ -1694,8 +1694,10 @@ async function useItem(){
       if(topMemberId){
         const topMember = allPlayers.find(p=> p.id === topMemberId);
         if(topMember && topMember.immuneUntil && serverNow() < topMember.immuneUntil){
+          // 무적인 상대에게 쓰면 효과 없이 아이템만 사라진다
+          heldItem = null; await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
           renderItemBar();
-          showItemAlert('🛡️ 상대방이 무적 상태여서 아이템이 작동하지 않습니다 (아이템은 그대로 있어요)');
+          showItemAlert('🛡️ 상대방이 무적 상태라 아이템이 튕겨 나가 사라졌어요');
           return;
         }
       }
@@ -1747,8 +1749,10 @@ async function useItem(){
       return;
     }
     if(target.immuneUntil && serverNow() < target.immuneUntil){
+      // 무적인 상대에게 쓰면 효과 없이 아이템만 사라진다
+      heldItem = null; await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
       renderItemBar();
-      showItemAlert('🛡️ 상대방이 무적 상태여서 아이템이 작동하지 않습니다 (아이템은 그대로 있어요)');
+      showItemAlert('🛡️ 상대방이 무적 상태라 아이템이 튕겨 나가 사라졌어요');
       return;
     }
     heldItem = null;
