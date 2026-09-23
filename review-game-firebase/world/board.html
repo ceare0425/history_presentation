@@ -1016,6 +1016,14 @@ function showItemEvent(e){
       itemToast(`🛟 ${victimName} 님이 구명조끼로 ${attackerName} 님의 강탈을 완전히 막아냈다!`);
     } else if(e.outcome === 'cure'){
       itemToast(`🍵 ${victimName} 님이 해독으로 ${attackerName} 님의 강탈을 완전히 막아냈다!`);
+    } else if(e.outcome === 'shield'){
+      itemToast(`🔰 ${victimName} 님이 쉴드로 ${attackerName} 님의 강탈을 막아냈다!`);
+    } else if(e.outcome === 'mirror'){
+      itemToast(`🪞 ${victimName} 님의 반사경에 ${attackerName} 님의 강탈이 막혔다!`);
+    } else if(e.outcome === 'siren'){
+      itemToast(`🚨 ${victimName} 님의 사이렌에 ${attackerName} 님의 강탈이 막혔다!`);
+    } else if(e.outcome === 'immune'){
+      itemToast(`🛡️ ${victimName} 님이 무적 상태라 ${attackerName} 님의 강탈이 막혔다!`);
     } else if(e.outcome === 'angel'){
       itemToast(`👼 ${victimName} 님이 천사로 ${attackerName} 님의 강탈을 완전히 막아냈다!`);
     } else if(e.outcome === 'defended'){
