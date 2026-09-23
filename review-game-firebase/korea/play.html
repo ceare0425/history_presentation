@@ -1845,10 +1845,10 @@ function handleItemEvents(obj){
       myStealAttackUntil = 0;
       // 쉴드·반사경·사이렌·무적에 막힌 경우 — 층수 변화 없이 막힌 이유만 알려준다
       const blockedMsg = {
-        shield: '🔰 상대의 쉴드 때문에 강탈이 막혔어요…',
+        shield: '🔰 상대의 쉴드 때문에 강탈에 실패했어요…',
         mirror: '🪞 강탈이 나에게 되돌아와요!',
         siren:  '🚨 강탈이 나에게 되돌아와요!',
-        immune: '🛡️ 상대가 무적 상태라 강탈이 막혔어요…'
+        immune: '🛡️ 상대가 무적 상태라 강탈에 실패했어요…'
       }[e.outcome];
       if(blockedMsg){ showItemAlert(blockedMsg); return; }
       if(e.outcome === 'cure'){
