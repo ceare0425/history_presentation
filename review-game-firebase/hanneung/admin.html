@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한능검 기출 풀기 - 관리자</title>
+<style>
+  :root{
+    --main:#8B4513; --dark:#6B3010; --accent:#C5A028; --bg:#F7F1E3; --card:#fff;
+    --text:#2C1A0E; --sub:#6B4F33; --line:#E8DCC2; --ok:#1F7A4D; --bad:#B23A3A;
+  }
+  [hidden]{ display:none !important; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Malgun Gothic','Pretendard',-apple-system,sans-serif; padding:22px; }
+  h1{ margin:0; font-size:1.45rem; color:var(--dark); }
+  .sub{ color:var(--sub); font-size:.85rem; margin:4px 0 16px; }
+  .head{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .head a{ padding:7px 12px; font-size:.82rem; font-weight:700; color:#fff; background:var(--main); border-radius:9px; text-decoration:none; }
+  .head a.ghost{ background:#fff; color:var(--main); border:1.5px solid var(--main); }
+
+  .filters{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; background:var(--card); padding:12px; border-radius:12px; margin-bottom:12px; box-shadow:0 3px 12px rgba(107,48,16,.07); }
+  .filters label{ font-size:.8rem; color:var(--sub); }
+  select, input[type=text]{ padding:7px 9px; border:1.5px solid var(--line); border-radius:8px; font-size:.88rem; font-family:inherit; background:#fff; }
+  .tabs{ display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+  .tabs button{ padding:9px 15px; border-radius:10px; border:1.5px solid var(--line); background:#fff; font-weight:700; color:var(--sub); cursor:pointer; font-family:inherit; }
+  .tabs button.on{ background:var(--dark); color:#fff; border-color:var(--dark); }
+
+  .card{ background:var(--card); border-radius:14px; padding:16px; box-shadow:0 3px 12px rgba(107,48,16,.07); margin-bottom:14px; }
+  .stats{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .stat{ background:#FBF6EA; border-radius:10px; padding:10px 14px; min-width:110px; }
+  .stat b{ display:block; font-size:1.35rem; color:var(--dark); }
+  .stat span{ font-size:.78rem; color:var(--sub); }
+
+  table{ width:100%; border-collapse:collapse; font-size:.88rem; }
+  th, td{ padding:8px 9px; border-bottom:1px solid #F1E8D5; text-align:left; white-space:nowrap; }
+  th{ background:#F6EBD3; color:var(--dark); position:sticky; top:0; }
+  tr.click{ cursor:pointer; }
+  tr.click:hover td{ background:#FFF8E6; }
+  .tbl-wrap{ overflow:auto; max-height:70vh; }
+  .muted{ color:var(--sub); font-size:.85rem; padding:10px 0; }
+  .badge{ display:inline-block; padding:2px 8px; border-radius:999px; font-size:.78rem; font-weight:800; }
+  .g1{ background:#C5A028; color:#2C1A0E; } .g2{ background:#E6CF7A; color:#2C1A0E; } .g3{ background:#F0E2B0; color:#5C3D1E; } .gx{ background:#E6DCC8; color:#6B4F33; }
+  .live{ background:#E3F4EA; color:var(--ok); } .done{ background:#EEE6D6; color:var(--sub); }
+  .bar{ height:9px; background:#F0E4CC; border-radius:5px; overflow:hidden; width:120px; display:inline-block; vertical-align:middle; }
+  .bar i{ display:block; height:100%; }
+  .dist{ display:flex; gap:4px; }
+  .dist span{ min-width:44px; text-align:center; padding:2px 4px; border-radius:6px; background:#F7F1E3; font-size:.8rem; }
+  .dist span.ans{ background:#DDF1E5; color:var(--ok); font-weight:800; }
+  .dist span.hot{ background:#F9DCDC; color:var(--bad); font-weight:800; }
+  .btn{ padding:7px 12px; border-radius:8px; border:none; background:var(--main); color:#fff; font-weight:700; cursor:pointer; font-family:inherit; font-size:.85rem; }
+  .btn.ghost{ background:#fff; color:var(--main); border:1.5px solid var(--main); }
+  .btn.bad{ background:var(--bad); }
+
+  /* 상세 모달 */
+  .modal{ position:fixed; inset:0; background:rgba(30,20,10,.55); display:flex; align-items:flex-start; justify-content:center; padding:24px 12px; z-index:50; overflow:auto; }
+  .modal .box{ background:#fff; border-radius:16px; width:min(980px,100%); padding:18px; }
+  .modal .mh{ display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+  .modal .mh h2{ margin:0; font-size:1.15rem; color:var(--dark); }
+  .modal .mh .sp{ flex:1; }
+  .qgrid{ display:grid; grid-template-columns:repeat(10,1fr); gap:5px; margin-bottom:12px; }
+  .qgrid button{ border:1.5px solid var(--line); background:#fff; border-radius:8px; padding:5px 0; cursor:pointer; font-family:inherit; font-size:.8rem; line-height:1.3; }
+  .qgrid button b{ display:block; font-size:.72rem; color:var(--sub); }
+  .qgrid button.o{ background:#DDF1E5; border-color:#9CD3B2; color:var(--ok); }
+  .qgrid button.x{ background:#F9DCDC; border-color:#E6A3A3; color:var(--bad); }
+  .qgrid button.n{ background:#F1ECE2; color:#9A8A70; }
+  .qgrid button.cur{ outline:2.5px solid var(--dark); outline-offset:1px; }
+  .qview{ text-align:center; }
+  .qview img{ max-width:100%; max-height:70vh; }
+  .qview .cap{ font-weight:800; margin:8px 0; }
+
+  .auth-gate{ position:fixed; inset:0; z-index:100; background:rgba(44,26,14,.92); display:flex; align-items:center; justify-content:center; padding:16px; }
+  .auth-box{ background:#fff; border-radius:14px; padding:24px; width:100%; max-width:300px; text-align:center; }
+  .auth-msg{ font-weight:800; color:var(--dark); margin-bottom:14px; }
+  .auth-box input{ width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid var(--line); font-size:1.1rem; text-align:center; letter-spacing:.2em; font-family:inherit; }
+  .auth-err{ color:var(--bad); font-size:.82rem; min-height:1.2em; margin-top:8px; }
+  .auth-box button{ width:100%; margin-top:10px; padding:10px; border:none; border-radius:8px; font-weight:700; cursor:pointer; font-size:.95rem; background:var(--accent); color:#2C1A0E; }
+</style>
+</head>
+<body>
+
+<div id="authGate" class="auth-gate">
+  <div class="auth-box">
+    <div class="auth-msg">🧑‍🏫 선생님인지 확인하고 있어요</div>
+    <input type="password" id="authInput" autocomplete="off" placeholder="비밀번호" inputmode="numeric">
+    <div class="auth-err" id="authErr"></div>
+    <button type="button" id="authOk">확인</button>
+  </div>
+</div>
+<script>
+(function(){
+  var PW = ['7328','6845','1000'];
+  var gate = document.getElementById('authGate');
+  var input = document.getElementById('authInput');
+  var err = document.getElementById('authErr');
+  function tryAuth(){
+    if(PW.indexOf(input.value) !== -1){ gate.remove(); }
+    else{ err.textContent = '비밀번호가 틀렸습니다.'; input.value=''; input.focus(); }
+  }
+  document.getElementById('authOk').addEventListener('click', tryAuth);
+  input.addEventListener('keydown', function(ev){ if(ev.key==='Enter') tryAuth(); });
+  input.focus();
+})();
+</script>
+
+<div class="head">
+  <h1>🎖️ 한능검 기출 풀기 · 관리자</h1>
+  <a href="solo.html" target="_blank" rel="noopener" class="ghost">학생 화면 미리보기</a>
+  <a href="../index.html" class="ghost">복습 게임 첫 화면</a>
+</div>
+<div class="sub">학생이 <b>학생 화면 → 혼자 연습하기 → 한능검 기출 풀기</b>에서 푼 기록이 실시간으로 표시됩니다.</div>
+
+<div class="filters">
+  <label>회차</label><select id="fExam"></select>
+  <label>반</label><select id="fCls"><option value="">전체</option></select>
+  <label>기간</label>
+  <select id="fPeriod">
+    <option value="all">전체</option>
+    <option value="today">오늘</option>
+    <option value="7">최근 7일</option>
+    <option value="30">최근 30일</option>
+  </select>
+  <input type="text" id="fName" placeholder="이름 검색">
+  <span class="muted" id="loadInfo" style="margin-left:auto;">불러오는 중...</span>
+</div>
+
+<div class="tabs" id="tabs">
+  <button type="button" data-tab="exam" class="on">📝 모의고사 결과</button>
+  <button type="button" data-tab="student">🧑‍🎓 학생별 현황</button>
+  <button type="button" data-tab="items">📊 문항 분석</button>
+  <button type="button" data-tab="practice">🧭 연습 기록</button>
+</div>
+
+<section id="tab-exam" class="card"></section>
+<section id="tab-student" class="card" hidden></section>
+<section id="tab-items" class="card" hidden></section>
+<section id="tab-practice" class="card" hidden></section>
+
+<div class="modal" id="modal" hidden>
+  <div class="box" id="modalBox"></div>
+</div>
+
+<script src="exams.js?v=20260923a"></script>
+<script type="module">
+import { roomRef, onValue, remove, escapeHtml } from '../shared/lib.js?v=20260923b';
+
+const $ = (id) => document.getElementById(id);
+const MODE_NAME = { exam:'실전 모의고사', era:'시대별 연습', wrong:'틀린 문제 다시 풀기' };
+let logs = [];          // [{ key, ...data }]
+let tab = 'exam';
+let itemSort = 'num';   // 'num' | 'low'
+let itemLatestOnly = false;
+
+// ── 불러오기 ─────────────────────────────
+$('fExam').innerHTML = Object.entries(EXAMS).map(([id, e]) => `<option value="${id}">${e.title}</option>`).join('');
+onValue(roomRef('hanneung', 'solo_log'), (snap) => {
+  const v = snap.val() || {};
+  logs = Object.entries(v).map(([key, d]) => ({ key, ...d })).filter(d => d && d.picks);
+  logs.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  $('loadInfo').textContent = `전체 기록 ${logs.length}건 · 실시간 반영 중`;
+  renderClsOptions();
+  render();
+}, (err) => { $('loadInfo').textContent = '불러오기 실패: ' + err.message; });
+
+function renderClsOptions(){
+  const sel = $('fCls'), cur = sel.value;
+  const set = [...new Set(logs.map(d => d.cls).filter(Boolean))].sort(clsCmp);
+  sel.innerHTML = '<option value="">전체</option>' + set.map(c => `<option value="${escapeHtml(c)}">${clsLabel(c)}</option>`).join('');
+  if(set.includes(cur)) sel.value = cur;
+}
+function clsCmp(a, b){
+  const [ga, ca] = String(a).split('-').map(Number), [gb, cb] = String(b).split('-').map(Number);
+  return (ga - gb) || (ca - cb);
+}
+function clsLabel(c){ const [g, n] = String(c || '').split('-'); return n ? `${g}학년 ${n}반` : (c || '-'); }
+
+function filtered(){
+  const ex = $('fExam').value, cls = $('fCls').value, q = $('fName').value.trim(), p = $('fPeriod').value;
+  let from = 0;
+  if(p === 'today'){ const d = new Date(); d.setHours(0,0,0,0); from = d.getTime(); }
+  else if(p !== 'all') from = Date.now() - Number(p) * 86400000;
+  return logs.filter(d => d.exam === ex && (!cls || d.cls === cls) && (!q || String(d.name).includes(q)) && (d.ts || 0) >= from);
+}
+
+// ── 공통 도우미 ───────────────────────────
+function fmtTs(ts){
+  if(!ts) return '-';
+  const d = new Date(ts), now = new Date();
+  const hm = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  if(d.toDateString() === now.toDateString()) return `오늘 ${hm}`;
+  return `${d.getMonth()+1}/${d.getDate()} ${hm}`;
+}
+function fmtDur(s){
+  if(!s && s !== 0) return '-';
+  const m = Math.floor(s / 60);
+  return m >= 60 ? `${Math.floor(m/60)}시간 ${m%60}분` : `${m}분 ${s%60}초`;
+}
+function gradeBadge(g){
+  const cls = g === '1급' ? 'g1' : g === '2급' ? 'g2' : g === '3급' ? 'g3' : 'gx';
+  return `<span class="badge ${cls}">${g === '불합격' ? '급수 미달' : g}</span>`;
+}
+function pct(a, b){ return b ? Math.round(a / b * 100) : 0; }
+function barHtml(p){
+  const color = p >= 70 ? 'var(--ok)' : p >= 40 ? 'var(--accent)' : 'var(--bad)';
+  return `<span class="bar"><i style="width:${p}%; background:${color}"></i></span> ${p}%`;
+}
+function picksOf(d){ return String(d.picks || '').split('').map(Number); }
+
+// ── 탭 ──────────────────────────────────
+$('tabs').querySelectorAll('button').forEach(b => b.onclick = () => {
+  tab = b.dataset.tab;
+  $('tabs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  ['exam','student','items','practice'].forEach(t => $('tab-' + t).hidden = t !== tab);
+  render();
+});
+['fExam','fCls','fPeriod'].forEach(id => $(id).onchange = render);
+$('fName').oninput = render;
+
+function render(){
+  const list = filtered();
+  if(tab === 'exam') renderExam(list);
+  else if(tab === 'student') renderStudent(list);
+  else if(tab === 'items') renderItems(list);
+  else renderPractice(list);
+}
+
+// ① 모의고사 결과
+function renderExam(list){
+  const ex = list.filter(d => d.mode === 'exam' && d.ended);
+  const box = $('tab-exam');
+  if(!ex.length){ box.innerHTML = '<div class="muted">아직 제출된 모의고사 기록이 없습니다.</div>'; return; }
+  const people = new Set(ex.map(d => d.cls + '|' + d.name)).size;
+  const avg = Math.round(ex.reduce((s, d) => s + (d.score || 0), 0) / ex.length * 10) / 10;
+  const cnt = g => ex.filter(d => d.grade === g).length;
+  box.innerHTML = `
+    <div class="stats">
+      <div class="stat"><b>${ex.length}회</b><span>응시 (${people}명)</span></div>
+      <div class="stat"><b>${avg}점</b><span>평균 점수</span></div>
+      <div class="stat"><b>${cnt('1급')}</b><span>1급 (80점↑)</span></div>
+      <div class="stat"><b>${cnt('2급')}</b><span>2급 (70점↑)</span></div>
+      <div class="stat"><b>${cnt('3급')}</b><span>3급 (60점↑)</span></div>
+      <div class="stat"><b>${cnt('불합격')}</b><span>급수 미달</span></div>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>제출</th><th>반</th><th>이름</th><th>점수</th><th>급수</th><th>정답</th><th>푼 문항</th><th>걸린 시간</th><th>시간 제한</th></tr></thead>
+      <tbody>${ex.map(d => `
+        <tr class="click" data-key="${d.key}">
+          <td>${fmtTs(d.ts)}</td><td>${clsLabel(d.cls)}</td><td><b>${escapeHtml(d.name)}</b></td>
+          <td><b>${d.score}점</b></td><td>${gradeBadge(d.grade)}</td>
+          <td>${d.correct} / ${d.total}</td><td>${d.answered} / ${d.total}</td>
+          <td>${fmtDur(d.dur_sec)}</td><td>${d.timed ? '80분' : '없음'}</td>
+        </tr>`).join('')}</tbody>
+    </table></div>
+    <div class="muted">행을 누르면 문항별 답안을 볼 수 있어요.</div>`;
+  bindRows(box);
+}
+
+// ② 학생별 현황
+function renderStudent(list){
+  const box = $('tab-student');
+  if(!list.length){ box.innerHTML = '<div class="muted">기록이 없습니다.</div>'; return; }
+  const by = new Map();
+  list.forEach(d => {
+    const k = d.cls + '|' + d.name;
+    if(!by.has(k)) by.set(k, { cls:d.cls, name:d.name, exams:[], pAns:0, pOk:0, last:0 });
+    const s = by.get(k);
+    if(d.mode === 'exam'){ if(d.ended) s.exams.push(d); }
+    else { s.pAns += d.answered || 0; s.pOk += d.correct || 0; }
+    s.last = Math.max(s.last, d.ts || 0);
+  });
+  const rows = [...by.values()].sort((a, b) => clsCmp(a.cls, b.cls) || String(a.name).localeCompare(b.name, 'ko'));
+  box.innerHTML = `<div class="tbl-wrap"><table>
+    <thead><tr><th>반</th><th>이름</th><th>모의고사</th><th>최고 점수</th><th>최근 점수</th><th>연습 문항</th><th>연습 정답률</th><th>마지막 활동</th></tr></thead>
+    <tbody>${rows.map(s => {
+      const best = s.exams.reduce((m, d) => (d.score > (m ? m.score : -1) ? d : m), null);
+      const recent = s.exams[0]; // logs가 최신순이라 첫 항목이 최근
+      return `<tr>
+        <td>${clsLabel(s.cls)}</td><td><b>${escapeHtml(s.name)}</b></td>
+        <td>${s.exams.length}회</td>
+        <td>${best ? `<b>${best.score}점</b> ${gradeBadge(best.grade)}` : '-'}</td>
+        <td>${recent ? `<a href="#" data-key="${recent.key}" class="open">${recent.score}점</a>` : '-'}</td>
+        <td>${s.pAns}문항</td><td>${s.pAns ? barHtml(pct(s.pOk, s.pAns)) : '-'}</td>
+        <td>${fmtTs(s.last)}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
+  box.querySelectorAll('a.open').forEach(a => a.onclick = (ev) => { ev.preventDefault(); openDetail(a.dataset.key); });
+}
+
+// ③ 문항 분석 (제출된 모의고사 기준)
+function renderItems(list){
+  const box = $('tab-items');
+  const e = EXAMS[$('fExam').value];
+  let ex = list.filter(d => d.mode === 'exam' && d.ended);
+  if(itemLatestOnly){
+    const seen = new Set();
+    ex = ex.filter(d => { const k = d.cls + '|' + d.name; if(seen.has(k)) return false; seen.add(k); return true; });
+  }
+  const head = `<div class="row" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
+      <label style="font-size:.85rem;">정렬 <select id="itemSort"><option value="num">번호순</option><option value="low">정답률 낮은 순</option></select></label>
+      <label style="font-size:.85rem;"><input type="checkbox" id="itemLatest" ${itemLatestOnly?'checked':''}> 학생별 최근 1회만</label>
+      <span class="muted">제출된 모의고사 ${ex.length}회 기준 · 문항을 누르면 문제를 볼 수 있어요</span></div>`;
+  if(!ex.length){ box.innerHTML = head + '<div class="muted">분석할 모의고사 기록이 없습니다.</div>'; bindItemCtl(); return; }
+  const stats = e.answers.map((ans, i) => {
+    const dist = [0,0,0,0,0,0]; // 0=무응답, 1~5
+    ex.forEach(d => { dist[picksOf(d)[i] || 0]++; });
+    return { n:i+1, ans, era:e.eras[i], pts:e.points[i], dist, rate: pct(dist[ans], ex.length) };
+  });
+  // 시대별 평균 정답률
+  const eraAgg = ERAS.map((name, k) => {
+    const s = stats.filter(x => x.era === k);
+    return s.length ? { name, rate: Math.round(s.reduce((a, x) => a + x.rate, 0) / s.length) } : null;
+  }).filter(Boolean);
+  const rows = itemSort === 'low' ? [...stats].sort((a, b) => a.rate - b.rate || a.n - b.n) : stats;
+  box.innerHTML = head + `
+    <div class="stats">${eraAgg.map(x => `<div class="stat"><b>${x.rate}%</b><span>${x.name}</span></div>`).join('')}</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>번호</th><th>시대</th><th>배점</th><th>정답</th><th>정답률</th><th>선택 분포 (가장 많이 고른 오답은 빨강)</th><th>무응답</th></tr></thead>
+      <tbody>${rows.map(x => {
+        let hot = 0, hotV = 0;
+        for(let c = 1; c <= 5; c++) if(c !== x.ans && x.dist[c] > hotV){ hot = c; hotV = x.dist[c]; }
+        return `<tr class="click" data-q="${x.n}">
+          <td><b>${x.n}번</b></td><td>${ERAS[x.era]}</td><td>${x.pts}점</td><td>${CIRCLED[x.ans-1]}</td>
+          <td>${barHtml(x.rate)}</td>
+          <td><div class="dist">${[1,2,3,4,5].map(c => `<span class="${c===x.ans?'ans':(c===hot?'hot':'')}">${CIRCLED[c-1]} ${pct(x.dist[c], ex.length)}%</span>`).join('')}</div></td>
+          <td>${x.dist[0]}명</td></tr>`;
+      }).join('')}</tbody></table></div>`;
+  bindItemCtl();
+  box.querySelectorAll('tr[data-q]').forEach(tr => tr.onclick = () => openQuestion(+tr.dataset.q, rows.find(r => r.n === +tr.dataset.q), ex.length));
+}
+function bindItemCtl(){
+  const s = $('itemSort'); if(s){ s.value = itemSort; s.onchange = () => { itemSort = s.value; render(); }; }
+  const l = $('itemLatest'); if(l){ l.onchange = () => { itemLatestOnly = l.checked; render(); }; }
+}
+
+// ④ 연습 기록
+function renderPractice(list){
+  const box = $('tab-practice');
+  const pr = list.filter(d => d.mode !== 'exam');
+  if(!pr.length){ box.innerHTML = '<div class="muted">연습 기록이 없습니다.</div>'; return; }
+  box.innerHTML = `<div class="tbl-wrap"><table>
+    <thead><tr><th>시각</th><th>반</th><th>이름</th><th>방식</th><th>푼 문항</th><th>정답</th><th>정답률</th><th>상태</th></tr></thead>
+    <tbody>${pr.map(d => `<tr class="click" data-key="${d.key}">
+      <td>${fmtTs(d.ts)}</td><td>${clsLabel(d.cls)}</td><td><b>${escapeHtml(d.name)}</b></td>
+      <td>${MODE_NAME[d.mode] || d.mode}</td><td>${d.answered} / ${d.total}</td><td>${d.correct}</td>
+      <td>${barHtml(pct(d.correct, d.answered))}</td>
+      <td>${d.ended ? '<span class="badge done">종료</span>' : '<span class="badge live">푸는 중</span>'}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  bindRows(box);
+}
+
+function bindRows(box){ box.querySelectorAll('tr[data-key]').forEach(tr => tr.onclick = () => openDetail(tr.dataset.key)); }
+
+// ── 상세 모달 ─────────────────────────────
+function openModal(html){ $('modalBox').innerHTML = html; $('modal').hidden = false; }
+function closeModal(){ $('modal').hidden = true; $('modalBox').innerHTML = ''; }
+$('modal').onclick = (ev) => { if(ev.target === $('modal')) closeModal(); };
+document.addEventListener('keydown', ev => { if(ev.key === 'Escape') closeModal(); });
+
+function imgSrc(examId, n){ return EXAMS[examId].dir + '/q' + String(n).padStart(2,'0') + '.webp'; }
+
+function openDetail(key){
+  const d = logs.find(x => x.key === key);
+  if(!d) return;
+  const e = EXAMS[d.exam];
+  const pk = picksOf(d);
+  const title = `${clsLabel(d.cls)} ${escapeHtml(d.name)} · ${MODE_NAME[d.mode] || d.mode}`;
+  const summary = d.mode === 'exam'
+    ? `<b>${d.score}점</b> ${gradeBadge(d.grade)} · 정답 ${d.correct}/${d.total} · ${fmtDur(d.dur_sec)} · ${fmtTs(d.ts)} 제출`
+    : `푼 문항 ${d.answered} · 정답 ${d.correct} · ${fmtTs(d.ts)}`;
+  const cells = e.answers.map((ans, i) => {
+    const p = pk[i] || 0;
+    // 연습 기록은 푼 문항만 표시
+    if(d.mode !== 'exam' && !p) return `<button type="button" class="n" data-q="${i+1}" disabled style="opacity:.35">${i+1}<b>-</b></button>`;
+    const cls = !p ? 'n' : p === ans ? 'o' : 'x';
+    return `<button type="button" class="${cls}" data-q="${i+1}">${i+1}<b>${p ? CIRCLED[p-1] : '무응답'}</b></button>`;
+  }).join('');
+  openModal(`
+    <div class="mh"><h2>${title}</h2><span class="sp"></span>
+      <button class="btn bad" id="delBtn" type="button">기록 삭제</button>
+      <button class="btn ghost" id="closeBtn" type="button">닫기</button></div>
+    <div style="margin-bottom:10px;">${summary}</div>
+    <div class="qgrid" id="qgrid">${cells}</div>
+    <div class="qview" id="qview"><div class="muted">번호를 누르면 문제와 학생이 고른 답을 볼 수 있어요.</div></div>`);
+  $('closeBtn').onclick = closeModal;
+  $('delBtn').onclick = async () => {
+    if(!confirm(`${clsLabel(d.cls)} ${d.name} 학생의 이 기록을 삭제할까요? 되돌릴 수 없습니다.`)) return;
+    try{ await remove(roomRef('hanneung', 'solo_log', d.key)); closeModal(); }
+    catch(err){ alert('삭제 실패: ' + err.message); }
+  };
+  $('qgrid').querySelectorAll('button[data-q]').forEach(b => b.onclick = () => {
+    $('qgrid').querySelectorAll('button').forEach(x => x.classList.toggle('cur', x === b));
+    const n = +b.dataset.q, p = pk[n-1] || 0, ans = e.answers[n-1];
+    const msg = !p ? `무응답 · 정답 ${CIRCLED[ans-1]}` : p === ans ? `⭕ ${CIRCLED[p-1]} 정답` : `❌ 고른 답 ${CIRCLED[p-1]} · 정답 ${CIRCLED[ans-1]}`;
+    $('qview').innerHTML = `<div class="cap" style="color:${p===ans?'var(--ok)':'var(--bad)'}">${n}번 (${ERAS[e.eras[n-1]]}, ${e.points[n-1]}점) — ${msg}</div><img src="${imgSrc(d.exam, n)}" alt="${n}번 문항">`;
+  });
+}
+
+function openQuestion(n, st, total){
+  const examId = $('fExam').value, e = EXAMS[examId];
+  openModal(`
+    <div class="mh"><h2>${e.title} ${n}번 · ${ERAS[e.eras[n-1]]} · ${e.points[n-1]}점</h2><span class="sp"></span>
+      <button class="btn ghost" id="closeBtn" type="button">닫기</button></div>
+    <div style="margin-bottom:10px;">정답 <b>${CIRCLED[e.answers[n-1]-1]}</b> · 정답률 <b>${st.rate}%</b> (${total}회 중 ${st.dist[e.answers[n-1]]}회) ·
+      ${[1,2,3,4,5].map(c => `${CIRCLED[c-1]} ${st.dist[c]}명`).join(' · ')} · 무응답 ${st.dist[0]}명</div>
+    <div class="qview"><img src="${imgSrc(examId, n)}" alt="${n}번 문항"></div>`);
+  $('closeBtn').onclick = closeModal;
+}
+</script>
+</body>
+</html>
