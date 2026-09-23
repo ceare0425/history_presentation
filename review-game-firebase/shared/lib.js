@@ -252,6 +252,7 @@ export const TEAM_OPTIONS = [
   { key: "blue", label: "🔵 파랑팀", color: "#5aa9e6" },
   { key: "green", label: "🟢 초록팀", color: "#7bd389" },
   { key: "purple", label: "🟣 보라팀", color: "#c792ea" },
+  { key: "yellow", label: "🟡 노랑팀", color: "#f5c542" },
 ];
 
 export function teamInfo(key) {
