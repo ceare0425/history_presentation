@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>한능검 기출 풀기</title>
+<title>한능검 기출 풀기 - 혼자 연습</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@700;900&display=swap" rel="stylesheet">
 <style>
@@ -21,6 +21,8 @@ button{ font-family:inherit; cursor:pointer; }
 .home{ max-width:760px; margin:0 auto; padding:28px 16px 40px; }
 .home h1{ font-family:'Noto Serif KR',serif; font-weight:900; color:var(--dark); font-size:1.7rem; margin:0 0 4px; }
 .home .lead{ color:var(--sub); margin:0 0 20px; font-size:.95rem; }
+.home .lead b{ color:var(--dark); }
+.back-link{ display:inline-block; margin-bottom:12px; color:var(--sub); font-size:.88rem; text-decoration:none; }
 .exam-pick{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
 .exam-pick button{ padding:8px 14px; border-radius:999px; border:1.5px solid var(--main); background:#fff; color:var(--main); font-weight:700; }
 .exam-pick button.on{ background:var(--main); color:#fff; }
@@ -108,8 +110,9 @@ table.era-t{ width:100%; border-collapse:collapse; background:#fff; border-radiu
 
 <!-- 시작 화면 -->
 <section class="home" id="home">
+  <a class="back-link" href="../student.html">‹ 처음 화면으로</a>
   <h1>🎖️ 한능검 기출 풀기</h1>
-  <p class="lead">한국사능력검정시험 실제 기출문제를 시험지 모습 그대로 풀어 봅니다.</p>
+  <p class="lead"><b id="whoLabel"></b> · 한국사능력검정시험 실제 기출문제를 시험지 모습 그대로 풀어 봅니다.</p>
   <div class="exam-pick" id="examPick"></div>
 
   <div class="mode resume" id="resumeBox" hidden>
@@ -200,11 +203,11 @@ table.era-t{ width:100%; border-collapse:collapse; background:#fff; border-radiu
 
 <script>
 // ── 기출 데이터 ─────────────────────────────
-// 새 회차 추가: 한능검/기출/<회차>/q01.webp~q50.webp 이미지를 넣고 아래에 항목만 추가하면 된다.
+// 새 회차 추가: hanneung/<회차>/q01.webp~q50.webp 이미지를 넣고 아래에 항목만 추가하면 된다.
 const ERAS = ['선사~남북국', '고려', '조선', '근대(개항기)', '일제강점기', '현대', '통합'];
 const EXAMS = {
   '79': {
-    title: '제79회 심화', dir: '기출/79회', minutes: 80,
+    title: '제79회 심화', dir: '79회', minutes: 80,
     answers: [2,4,2,1,2,1,3,2,5,3, 5,5,1,3,3,3,4,5,5,4, 2,4,4,3,1,3,1,5,1,2, 2,1,4,2,2,1,3,5,5,4, 1,4,3,4,5,1,2,5,2,3],
     points:  [1,1,2,1,3,3,1,2,2,2, 2,2,3,2,2,1,2,3,2,2, 1,3,2,2,3,2,1,1,2,2, 3,2,2,2,1,3,3,2,2,2, 1,2,2,2,2,2,2,2,2,3],
     // 문항별 시대(ERAS 인덱스)
@@ -212,7 +215,12 @@ const EXAMS = {
   }
 };
 const CIRCLED = ['①','②','③','④','⑤'];
-const STORE = 'hanneung_gichul_v1';
+// 학생 화면(student.html)에서 입력한 학년·반·이름 — 없으면 인적사항 입력부터 하도록 되돌려 보낸다
+function readId(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } }
+const WHO = { grade: readId('rg_fb_grade'), cls: readId('rg_fb_class'), name: readId('rg_fb_name') };
+if(!WHO.grade || !WHO.cls || !WHO.name) location.replace('../student.html');
+// 한 기기를 여러 학생이 같이 써도 기록이 섞이지 않도록 학생별로 따로 저장
+const STORE = `hanneung_gichul_v1:${WHO.grade}-${WHO.cls}-${WHO.name}`;
 
 // ── 저장소 (브라우저별, 실패해도 동작) ──────────
 function load(){ try{ return JSON.parse(localStorage.getItem(STORE)) || {}; }catch(e){ return {}; } }
@@ -474,6 +482,7 @@ document.addEventListener('keydown', ev => {
   else if(ev.key === 'ArrowLeft' || ev.key === 'PageUp'){ ev.preventDefault(); go(S.idx - 1); }
 });
 
+document.getElementById('whoLabel').textContent = `${WHO.grade}학년 ${WHO.cls}반 ${WHO.name}`;
 renderHome();
 </script>
 </body>

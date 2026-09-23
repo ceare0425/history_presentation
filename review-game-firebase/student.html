@@ -58,6 +58,8 @@
     background:#f4f6fb; border-radius:10px; border:1px solid var(--line);
   }
   .summary b{ color:var(--sky1); }
+  [hidden]{ display:none !important; }
+  .big-choice button.hanneung{ background:linear-gradient(90deg,#6B3010,#C5A028); }
   .hint{ font-size:.78rem; color:var(--sub); text-align:center; margin-top:18px; line-height:1.5; }
 </style>
 </head>
@@ -106,6 +108,7 @@
       <div class="big-choice">
         <button type="button" id="subjectKoreaBtn">🏯 한국사</button>
         <button type="button" id="subjectWorldBtn">🌍 세계사</button>
+        <button type="button" id="subjectHanneungBtn" class="hanneung" hidden>🎖️ 한능검 기출 풀기</button>
       </div>
     </div>
 
@@ -191,6 +194,8 @@
     const name = localStorage.getItem(NAME_KEY) || '';
     const modeLabel = m === 'join' ? '수업 참여' : '혼자 연습';
     el('step3Summary').innerHTML = `<b>${grade}학년 ${cls}반 ${name}</b> · ${modeLabel} — 어느 과목인가요?`;
+    // 한능검 기출 풀기는 혼자 연습 전용
+    el('subjectHanneungBtn').hidden = m !== 'solo';
     showStep(3);
   }
   el('modeJoinBtn').onclick = () => goStep3('join');
@@ -203,6 +208,7 @@
   }
   el('subjectWorldBtn').onclick = () => goSubject('world');
   el('subjectKoreaBtn').onclick = () => goSubject('korea');
+  el('subjectHanneungBtn').onclick = () => { location.href = 'hanneung/solo.html'; };
 </script>
 </body>
 </html>

@@ -229,12 +229,8 @@
   const CHEVRON = '<svg class="acc-chevron" viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>';
 
   function lessonRowHtml(p) {
-    // app: true 항목(기출 풀기 등)은 슬라이드가 아닌 독립 앱이라 뷰어로 변환하지 않고 원본 페이지를 그대로 연다
-    const linkAttrs = p.app
-      ? `href="${escAttr('../' + encodeURI(p.path))}"`
-      : `href="?path=${encodeURIComponent(p.path)}" onclick="openLesson(event,'${escAttr(p.path)}','${escAttr(p.title)}')"`;
     return `
-      <a class="lesson-row" ${linkAttrs}>
+      <a class="lesson-row" href="?path=${encodeURIComponent(p.path)}" onclick="openLesson(event,'${escAttr(p.path)}','${escAttr(p.title)}')">
         <span class="lesson-emoji">${p.emoji || '📄'}</span>
         <span style="flex:1; min-width:0;">
           <div class="lesson-title">${esc(p.title)}</div>
