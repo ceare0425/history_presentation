@@ -391,10 +391,10 @@
 <script type="module">
 import {
   roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
-  fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, shuffle,
+  fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, renderUnitGroups, shuffle,
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS,
   presenceRef, chatRef
-} from '../shared/lib.js?v=20260923a';
+} from '../shared/lib.js?v=20260923b';
 
 const ROOM = 'world';
 // 학년+반 구분(명단 관리, 학년별 solo_log 기록)을 넣기 전에는 한국사=1학년, 세계사=2학년만 썼으므로,
@@ -543,21 +543,7 @@ function updatePoolCountInfo(){
 function renderUnits(){
   const box = el('unitList');
   if(allUnits.length===0){ box.innerHTML = '<div class="muted">아직 문제가 없습니다. 아래 ②에서 추가해주세요.</div>'; updatePoolCountInfo(); return; }
-  box.innerHTML = '';
-  allUnits.forEach(u=>{
-    const row = document.createElement('label');
-    row.className = 'unit-row';
-    const checked = selectedUnits.has(u.unit) ? 'checked' : '';
-    row.innerHTML = `<input type="checkbox" data-unit="${escapeHtml(u.unit)}" ${checked}> ${escapeHtml(u.unit)} <span class="cnt">${u.count}문제</span>`;
-    box.appendChild(row);
-  });
-  box.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-    cb.onchange = () => {
-      if(cb.checked) selectedUnits.add(cb.dataset.unit);
-      else selectedUnits.delete(cb.dataset.unit);
-      updatePoolCountInfo();
-    };
-  });
+  renderUnitGroups(box, allUnits, selectedUnits, ROOM, updatePoolCountInfo);
   updatePoolCountInfo();
 }
 

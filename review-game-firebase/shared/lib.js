@@ -149,6 +149,107 @@ export function unitsFromQuestions(questionsObj) {
   return Object.entries(counts).map(([unit, count]) => ({ unit, count }));
 }
 
+// ── 출제 범위(주제) 목록을 단원별 접기(토글)로 묶어 그리기 ──────────
+// 한국사: 모든 주제 → 1단원 / 세계사: 주제 1~14 → 1단원, 주제 16~22 → 2단원
+// 범위 밖(번호 없는 주제 등)은 '기타'로 모은다. 접힌 상태에서도 단원 체크박스로 한 번에 선택·해제 가능.
+function unitNumber(unit) {
+  const m = String(unit || '').match(/\d+/);
+  return m ? parseInt(m[0], 10) : null;
+}
+function chapterOfUnit(room, unit) {
+  const n = unitNumber(unit);
+  if (room === 'korea') return '1단원';
+  if (n !== null && n >= 1 && n <= 14) return '1단원';
+  if (n !== null && n >= 16 && n <= 22) return '2단원';
+  return '기타';
+}
+const openChapters = new Set(); // 다시 그려도 펼침 상태 유지
+let unitGroupCssAdded = false;
+function addUnitGroupCss() {
+  if (unitGroupCssAdded) return;
+  unitGroupCssAdded = true;
+  const st = document.createElement('style');
+  st.textContent = `
+  .unit-group + .unit-group{ margin-top:4px; }
+  .unit-group-head{ display:flex; align-items:center; gap:8px; padding:6px 4px; font-size:.92rem; font-weight:700; border-radius:8px; background:#eef2fb; }
+  .unit-group-head input{ width:18px; height:18px; margin:0; flex:0 0 auto; cursor:pointer; }
+  .unit-group-toggle{ flex:1; display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none; min-width:0; }
+  .unit-group-toggle .arrow{ display:inline-block; transition:transform .15s; font-size:.75rem; }
+  .unit-group.open .unit-group-toggle .arrow{ transform:rotate(90deg); }
+  .unit-group-toggle .cnt{ color:var(--sub, #6b7280); font-size:.78rem; font-weight:400; margin-left:auto; }
+  .unit-group-body{ display:none; padding-left:14px; }
+  .unit-group.open .unit-group-body{ display:block; }`;
+  document.head.appendChild(st);
+}
+export function renderUnitGroups(box, allUnits, selectedUnits, room, onChange) {
+  addUnitGroupCss();
+  const order = ['1단원', '2단원', '기타'];
+  const groups = new Map();
+  allUnits.slice()
+    .sort((a, b) => (unitNumber(a.unit) ?? 999) - (unitNumber(b.unit) ?? 999) || String(a.unit).localeCompare(String(b.unit)))
+    .forEach((u) => {
+      const ch = chapterOfUnit(room, u.unit);
+      if (!groups.has(ch)) groups.set(ch, []);
+      groups.get(ch).push(u);
+    });
+  box.innerHTML = '';
+  order.filter((ch) => groups.has(ch)).forEach((ch) => {
+    const list = groups.get(ch);
+    const total = list.reduce((s, u) => s + u.count, 0);
+    const wrap = document.createElement('div');
+    wrap.className = 'unit-group' + (openChapters.has(ch) ? ' open' : '');
+    const head = document.createElement('div');
+    head.className = 'unit-group-head';
+    const gcb = document.createElement('input');
+    gcb.type = 'checkbox';
+    gcb.title = ch + ' 전체 선택/해제';
+    const toggle = document.createElement('div');
+    toggle.className = 'unit-group-toggle';
+    toggle.innerHTML = `<span class="arrow">▶</span> ${escapeHtml(ch)} <span class="cnt">주제 ${list.length}개 · ${total}문제</span>`;
+    head.append(gcb, toggle);
+    const body = document.createElement('div');
+    body.className = 'unit-group-body';
+    list.forEach((u) => {
+      const row = document.createElement('label');
+      row.className = 'unit-row';
+      const checked = selectedUnits.has(u.unit) ? 'checked' : '';
+      row.innerHTML = `<input type="checkbox" data-unit="${escapeHtml(u.unit)}" ${checked}> ${escapeHtml(u.unit)} <span class="cnt">${u.count}문제</span>`;
+      body.appendChild(row);
+    });
+    const childBoxes = Array.from(body.querySelectorAll('input[type=checkbox]'));
+    const syncGroup = () => {
+      const n = childBoxes.filter((cb) => cb.checked).length;
+      gcb.checked = n === childBoxes.length;
+      gcb.indeterminate = n > 0 && n < childBoxes.length;
+    };
+    childBoxes.forEach((cb) => {
+      cb.onchange = () => {
+        if (cb.checked) selectedUnits.add(cb.dataset.unit);
+        else selectedUnits.delete(cb.dataset.unit);
+        syncGroup();
+        onChange && onChange();
+      };
+    });
+    gcb.onchange = () => {
+      const on = gcb.checked;
+      childBoxes.forEach((cb) => {
+        cb.checked = on;
+        if (on) selectedUnits.add(cb.dataset.unit);
+        else selectedUnits.delete(cb.dataset.unit);
+      });
+      syncGroup();
+      onChange && onChange();
+    };
+    toggle.onclick = () => {
+      wrap.classList.toggle('open');
+      if (wrap.classList.contains('open')) openChapters.add(ch); else openChapters.delete(ch);
+    };
+    syncGroup();
+    wrap.append(head, body);
+    box.appendChild(wrap);
+  });
+}
+
 export function poolFromQuestions(questionsObj, units) {
   const entries = Object.entries(questionsObj || {});
   if (!units || units.length === 0) return entries;
