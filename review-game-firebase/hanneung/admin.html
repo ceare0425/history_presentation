@@ -139,7 +139,7 @@
   <div class="box" id="modalBox"></div>
 </div>
 
-<script src="exams.js?v=20260923a"></script>
+<script src="exams.js?v=20260923b"></script>
 <script type="module">
 import { roomRef, onValue, remove, escapeHtml } from '../shared/lib.js?v=20260923b';
 
@@ -151,7 +151,7 @@ let itemSort = 'num';   // 'num' | 'low'
 let itemLatestOnly = false;
 
 // ── 불러오기 ─────────────────────────────
-$('fExam').innerHTML = Object.entries(EXAMS).map(([id, e]) => `<option value="${id}">${e.title}</option>`).join('');
+$('fExam').innerHTML = EXAM_IDS.map(id => `<option value="${id}">${EXAMS[id].title}</option>`).join('');
 onValue(roomRef('hanneung', 'solo_log'), (snap) => {
   const v = snap.val() || {};
   logs = Object.entries(v).map(([key, d]) => ({ key, ...d })).filter(d => d && d.picks);
@@ -354,6 +354,7 @@ function closeModal(){ $('modal').hidden = true; $('modalBox').innerHTML = ''; }
 $('modal').onclick = (ev) => { if(ev.target === $('modal')) closeModal(); };
 document.addEventListener('keydown', ev => { if(ev.key === 'Escape') closeModal(); });
 
+function sharedImg(examId, n){ const s = sharedSrc(examId, n); return s ? `<img src="${s}" alt="공통 자료" style="display:block; margin:0 auto 6px;">` : ''; }
 function imgSrc(examId, n){ return EXAMS[examId].dir + '/q' + String(n).padStart(2,'0') + '.webp'; }
 
 function openDetail(key){
@@ -389,7 +390,7 @@ function openDetail(key){
     $('qgrid').querySelectorAll('button').forEach(x => x.classList.toggle('cur', x === b));
     const n = +b.dataset.q, p = pk[n-1] || 0, ans = e.answers[n-1];
     const msg = !p ? `무응답 · 정답 ${CIRCLED[ans-1]}` : p === ans ? `⭕ ${CIRCLED[p-1]} 정답` : `❌ 고른 답 ${CIRCLED[p-1]} · 정답 ${CIRCLED[ans-1]}`;
-    $('qview').innerHTML = `<div class="cap" style="color:${p===ans?'var(--ok)':'var(--bad)'}">${n}번 (${ERAS[e.eras[n-1]]}, ${e.points[n-1]}점) — ${msg}</div><img src="${imgSrc(d.exam, n)}" alt="${n}번 문항">`;
+    $('qview').innerHTML = `<div class="cap" style="color:${p===ans?'var(--ok)':'var(--bad)'}">${n}번 (${ERAS[e.eras[n-1]]}, ${e.points[n-1]}점) — ${msg}</div>${sharedImg(d.exam, n)}<img src="${imgSrc(d.exam, n)}" alt="${n}번 문항">`;
   });
 }
 
@@ -400,7 +401,7 @@ function openQuestion(n, st, total){
       <button class="btn ghost" id="closeBtn" type="button">닫기</button></div>
     <div style="margin-bottom:10px;">정답 <b>${CIRCLED[e.answers[n-1]-1]}</b> · 정답률 <b>${st.rate}%</b> (${total}회 중 ${st.dist[e.answers[n-1]]}회) ·
       ${[1,2,3,4,5].map(c => `${CIRCLED[c-1]} ${st.dist[c]}명`).join(' · ')} · 무응답 ${st.dist[0]}명</div>
-    <div class="qview"><img src="${imgSrc(examId, n)}" alt="${n}번 문항"></div>`);
+    <div class="qview">${sharedImg(examId, n)}<img src="${imgSrc(examId, n)}" alt="${n}번 문항"></div>`);
   $('closeBtn').onclick = closeModal;
 }
 </script>
