@@ -466,7 +466,7 @@
 
 <script type="module">
 import {
-  roomRef, ref, db, onValue, get, set, update, push, serverNow, escapeHtml,
+  roomRef, ref, db, onValue, get, set, update, push, runTransaction, serverNow, escapeHtml,
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   teamInfo, teamStandings, activeBonus,
@@ -533,6 +533,9 @@ let myAnswered = false; // 이번 라운드에서 한 문제라도 제출했는�
 let unitStats = {};        // 이번 라운드 단원별 정답/오답 { 단원명: {c, w} } — 라운드 종료 시 class_log에 기록
 let qStats = {};           // 이번 라운드 문제별 정답/오답 { qid: {c, w} } — 관리자 문제별 오답률 분석용
 let classLogWritten = false; // 이번 라운드 class_log를 이미 기록했는지(중복 기록 방지)
+// 답을 제출한 뒤 다음 문제가 나올 때까지는 다시 제출하지 못하게 막는다 — 해독·얼음 해제 타이머 등이
+// 그 사이에 입력창을 다시 켜 버려도(특히 콤보 스파크 카드를 고르는 동안) 같은 문제로 점수를 두 번 받지 않도록
+let submitBusy = false;
 
 // ── 아이템전 상태 ──
 let itemsMode = 'off';       // 'off' | 'nanta' | 'spicy' (round.items_mode)
@@ -763,6 +766,7 @@ function popFloorBadge(){
 
 function renderQuestion(q){
   clearItemAlert();
+  submitBusy = false;   // 새 문제(또는 문제 없음)가 나오면 다시 제출 가능
   if(!q){
     el('qText').textContent = '출제할 문제가 없습니다. 선생님께 문의하세요.';
     el('unitTag').textContent = '';
@@ -879,8 +883,10 @@ function flashFeedback(correct, correctAnswer, gain, bonusApplied, wasRetry){
 
 async function submitAnswer(){
   if(isFrozen()) return; // '얼음'·'물풍선' 피격 중
+  if(submitBusy) return;   // 이미 이 문제에 답을 냈음 (다음 문제 대기 중)
   const text = el('answerInput').value.trim();
   if(!text || !currentQid || !currentQuestion) return;
+  submitBusy = true;
   el('submitBtn').disabled = true;
   el('answerInput').disabled = true;
 
@@ -914,6 +920,7 @@ async function submitAnswer(){
   const snap = await get(pRef);
   const existed = snap.exists();
   const p = snap.val() || { name: playerName, floor:0, correct:0, wrong:0, streak:0, bestStreak:0 };
+  const floorBefore = p.floor || 0;   // 층수는 아래에서 '변화량'만 트랜잭션으로 반영 (그 사이 맞은 공격·보너스가 덮어써지지 않게)
   let gain = 0;
   let bonusApplied = false;
   let comboSparkStreak = null;   // '콤보 스파크' 발동 시 카드 뒤집기용 연속 정답 수 (답 처리 뒤 별도 진행)
@@ -995,12 +1002,14 @@ async function submitAnswer(){
   // 관리자가 "전체 초기화"를 눌러 내 기록이 삭제된 뒤에도(새로고침 없이) 계속 제출할 수 있도록,
   // 노드가 사라졌으면 이름을 다시 포함해서 씀 (보안 규칙이 name 필드를 요구함)
   const payload = {
-    floor: p.floor, correct: p.correct, wrong: p.wrong,
+    correct: p.correct, wrong: p.wrong,
     streak: p.streak, bestStreak: p.bestStreak, lastActive: serverNow()
   };
-  if(!existed){ payload.name = playerName; payload.avatar = AVATAR_IDLE; }
+  if(!existed){ payload.name = playerName; payload.avatar = AVATAR_IDLE; payload.floor = 0; }
   if(itemsOn()) payload.item = heldItem || null;
   await update(pRef, payload);
+  // 제출 처리 중(get~update 사이)에 바나나·강탈 등으로 층수가 바뀌었을 수 있어, 읽어둔 층수로 덮어쓰지 않고 변화량만 더한다
+  p.floor = await addFloor((p.floor || 0) - floorBefore);
 
   el('floorVal').textContent = p.floor;
   el('streakVal').textContent = p.streak >= 2 ? `🔥 ${p.streak}연속 정답!` : '';
@@ -1485,12 +1494,23 @@ async function discardItem(){
   showItemAlert(itemsMode === 'nanta' ? '🗑️ 아이템을 버렸어요 — 정답을 맞히면 새로 받아요' : '🗑️ 아이템을 버렸어요 — 3연속 정답하면 새로 받아요');
 }
 
+// 층수 변경은 모두 트랜잭션으로 — 정답 제출·아이템·피격이 거의 동시에 일어나도 서로의 변화를 덮어써 지워버리지 않게
+// fn(현재 층수) → 새 층수. 반환값은 최종 층수.
+async function changeFloor(fn){
+  const res = await runTransaction(roomRef(ROOM, 'players', playerId), (cur)=>{
+    if(!cur) cur = { name: playerName, floor: 0 };   // 로컬 캐시가 비어 있을 때의 첫 호출 — 서버 값이 다르면 자동으로 다시 실행됨
+    cur.floor = Math.max(0, fn(cur.floor || 0));
+    if(!cur.name) cur.name = playerName;
+    cur.lastActive = serverNow();
+    return cur;
+  });
+  const v = res.snapshot.val();
+  return (v && v.floor) || 0;
+}
+function addFloor(n){ return n ? changeFloor(f => f + n) : changeFloor(f => f); }
+
 async function bumpFloor(n){
-  const pRef = roomRef(ROOM, 'players', playerId);
-  const snap = await get(pRef);
-  const cur = snap.val() || {};
-  const nf = Math.max(0, (cur.floor || 0) + n);
-  await update(pRef, { floor: nf, name: cur.name || playerName, lastActive: serverNow() });
+  const nf = await addFloor(n);
   el('floorVal').textContent = nf;
   if(nf > lastFloor) popFloorBadge();
   lastFloor = nf;
@@ -1605,9 +1625,9 @@ async function applyUndo(){
   const pRef = roomRef(ROOM, 'players', playerId);
   const snap = await get(pRef);
   const cur = snap.val() || {};
-  const nf = Math.max(0, (cur.floor || 0) + myUndoFloorDelta);
   const nw = Math.max(0, (cur.wrong || 0) - 1);
-  await update(pRef, { floor: nf, wrong: nw, streak: myUndoStreak, name: cur.name || playerName, lastActive: serverNow() });
+  await update(pRef, { wrong: nw, streak: myUndoStreak, name: cur.name || playerName, lastActive: serverNow() });
+  const nf = await addFloor(myUndoFloorDelta);
   el('floorVal').textContent = nf;
   lastFloor = nf;
   el('streakVal').textContent = myUndoStreak >= 2 ? `🔥 ${myUndoStreak}연속 정답!` : '';
@@ -1639,6 +1659,9 @@ async function useItem(){
     const rolled = rollItem(itemRollOpts());
     if(!rolled){ renderItemBar(); showItemAlert('🎁 랜덤박스가 비었어요…'); return; }
     heldItem = rolled;
+    // 뽑힌 아이템을 DB에도 저장 — 바로 못 쓰는 경우(되돌릴 오답 없음·상대 무적 등)엔 아이템이 그대로 남아야 하는데,
+    // 저장하지 않으면 다음 플레이어 노드 갱신 때 item:null로 덮여 사라져 버림
+    await update(roomRef(ROOM, 'players', playerId), { item: rolled, name: playerName, lastActive: serverNow() });
     renderItemBar();
     showItemAlert(`🎁 랜덤박스 → ${ITEMS[rolled].emoji} ${ITEMS[rolled].name}!`);
     return useItem();
@@ -2040,10 +2063,13 @@ async function slideDown(label){
   const second = guardPool[1] ? (guardPool[1].floor || 0) : 0;
   floorGuard = nanta ? 0 : spicy ? Math.max(0, second - 1) : second;
   // 가드가 현재 층수보다 높으면(반사 등 예외) 올라가 버리지 않도록 clamp
-  const guard = Math.min(floorGuard, cur.floor || 0);
-  const nf = Math.max((cur.floor || 0) - drop, guard, 0);
-  const actualDrop = (cur.floor || 0) - nf;
-  await update(pRef, { floor: nf, name: cur.name || playerName, lastActive: serverNow() });
+  let actualDrop = 0;
+  const nf = await changeFloor(f => {
+    const guard = Math.min(floorGuard, f);
+    const v = Math.max(f - drop, guard, 0);
+    actualDrop = f - v;
+    return v;
+  });
   el('floorVal').textContent = nf;
   lastFloor = nf;
   showItemAlert(`⬇️ ${label || '미끄럼틀'}! -${actualDrop}${unitLabel()} 밀렸어요`);
