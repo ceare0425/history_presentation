@@ -1016,6 +1016,8 @@ function showItemEvent(e){
       itemToast(`🛟 ${victimName} 님이 구명조끼로 ${attackerName} 님의 강탈을 완전히 막아냈다!`);
     } else if(e.outcome === 'cure'){
       itemToast(`🍵 ${victimName} 님이 해독으로 ${attackerName} 님의 강탈을 완전히 막아냈다!`);
+    } else if(e.outcome === 'angel'){
+      itemToast(`👼 ${victimName} 님이 천사로 ${attackerName} 님의 강탈을 완전히 막아냈다!`);
     } else if(e.outcome === 'defended'){
       itemToast(`🛡️ ${victimName} 님이 ${attackerName} 님의 강탈을 막아냈다! (-${e.amt}${unitLabel()}만)`);
     } else {

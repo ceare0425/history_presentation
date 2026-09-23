@@ -575,6 +575,17 @@ el('startBtn').onclick = async () => {
 
   const qids = pool.map(([qid])=>qid);
 
+  // 팀 수를 줄인 뒤(예: 5팀 → 4팀) 다시 배정하지 않으면, 빠진 팀에 남은 학생은 전광판·팀 순위에서 사라진다
+  if(teamModeState){
+    const activeTeams = new Set(TEAM_OPTIONS.slice(0, teamCountState).map(t=>t.key));
+    const stray = Object.values(playersObj).filter(p=> p && p.team && !activeTeams.has(p.team));
+    if(stray.length){
+      msg.className='msg err';
+      msg.textContent = `지금 팀 수(${teamCountState}팀)에 없는 팀에 배정된 학생이 ${stray.length}명 있어요. "🎲 팀 자동 배정"을 다시 눌러 주세요.`;
+      return;
+    }
+  }
+
   el('startBtn').disabled = true;
   try{
     const bonus = [];

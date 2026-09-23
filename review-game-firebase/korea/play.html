@@ -881,7 +881,19 @@ function flashFeedback(correct, correctAnswer, gain, bonusApplied, wasRetry){
   feedbackTimer = setTimeout(()=>{ f.classList.remove('show'); }, correct ? 400 : 2000);
 }
 
+// 네트워크 오류로 제출이 실패하면 입력창이 잠긴 채 멈추지 않도록 복구해 준다
 async function submitAnswer(){
+  try{
+    await submitAnswerCore();
+  }catch(err){
+    console.warn('submitAnswer', err);
+    submitBusy = false;
+    if(!roundEnded() && !isFrozen()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; }
+    showItemAlert('⚠️ 답이 전송되지 않았어요. 다시 제출해 주세요');
+  }
+}
+async function submitAnswerCore(){
+  if(roundEnded()) return; // 라운드가 끝난 뒤에는 제출 불가
   if(isFrozen()) return; // '얼음'·'물풍선' 피격 중
   if(submitBusy) return;   // 이미 이 문제에 답을 냈음 (다음 문제 대기 중)
   const text = el('answerInput').value.trim();
@@ -1034,6 +1046,7 @@ el('answerInput').addEventListener('keydown', e=>{ if(e.key==='Enter') submitAns
 // Ctrl 키로 아이템 사용, Esc 키로 아이템 버리기 — 노트북에서 답 입력하며 마우스로 버튼 누르기 번거로운 것 보완
 document.addEventListener('keydown', e=>{
   if(e.repeat) return;
+  if(el('playView').classList.contains('hidden')) return;   // 게임 화면이 아닐 때(종료·대기 화면)는 단축키 무시
   if(e.key === 'Control'){
     const btn = el('useItemBtn');
     if(btn && !btn.disabled) btn.click();
@@ -1488,6 +1501,7 @@ async function acceptRandombox(){
 
 async function discardItem(){
   if(!heldItem) return;
+  if(roundEnded()){ renderItemBar(); return; }
   heldItem = null;
   await update(roomRef(ROOM, 'players', playerId), { item: null, name: playerName, lastActive: serverNow() });
   renderItemBar();
@@ -1637,6 +1651,8 @@ async function applyUndo(){
 
 async function useItem(){
   if(!heldItem) return;
+  // 라운드가 끝난 뒤에는 아이템을 쓸 수 없음 — 종료 후 층수·순위가 바뀌지 않도록
+  if(roundState.status !== 'running' || roundEnded()){ renderItemBar(); showItemAlert('게임이 끝나서 아이템을 쓸 수 없어요'); return; }
   const key = heldItem;
   const it = ITEMS[key];
   if(!it){ heldItem = null; renderItemBar(); return; }
