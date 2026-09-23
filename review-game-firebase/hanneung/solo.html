@@ -163,6 +163,7 @@ table.era-t{ width:100%; border-collapse:collapse; background:#fff; border-radiu
     <div>
       <div class="qcard">
         <div class="qhead"><span class="era" id="qEra"></span><span id="qPts"></span><span class="pos" id="qPos"></span></div>
+        <img class="qimg" id="qShared" alt="공통 자료" hidden>
         <img class="qimg" id="qImg" alt="">
         <div class="feedback" id="feedback" hidden></div>
       </div>
@@ -201,7 +202,7 @@ table.era-t{ width:100%; border-collapse:collapse; background:#fff; border-radiu
   </div>
 </section>
 
-<script src="exams.js?v=20260923a"></script>
+<script src="exams.js?v=20260923b"></script>
 <script type="module">
 // Firebase 기록용 — 불러오지 못해도 풀이 자체는 그대로 동작한다
 import { roomRef, push, update, serverNow } from '../shared/lib.js?v=20260923b';
@@ -223,7 +224,7 @@ store.wrong = store.wrong || {};   // { '79': [번호...] }
 store.best = store.best || {};     // { '79': 점수 }
 
 const $ = id => document.getElementById(id);
-let examId = Object.keys(EXAMS)[0];
+let examId = EXAM_IDS[0];
 let S = null;   // 현재 풀이 상태
 let timerId = null;
 
@@ -232,7 +233,7 @@ function imgSrc(n){ return exam().dir + '/q' + String(n).padStart(2,'0') + '.web
 
 // ── 시작 화면 ─────────────────────────────
 function renderHome(){
-  $('examPick').innerHTML = Object.entries(EXAMS).map(([id, e]) =>
+  $('examPick').innerHTML = EXAM_IDS.map(id => [id, EXAMS[id]]).map(([id, e]) =>
     `<button type="button" data-exam="${id}" class="${id===examId?'on':''}">${e.title}</button>`).join('');
   $('examPick').querySelectorAll('button').forEach(b => b.onclick = () => { examId = b.dataset.exam; renderHome(); });
 
@@ -303,6 +304,10 @@ function instant(){ return S.mode !== 'exam' || S.reviewing; }
 
 function renderQ(){
   const e = exam(), n = S.list[S.idx], pick = S.picks[S.idx], ans = e.answers[n-1];
+  // [47~48]처럼 여러 문항이 같이 쓰는 공통 자료는 문항 위에 함께 보여 준다
+  const sh = sharedSrc(S.examId, n);
+  $('qShared').hidden = !sh;
+  if(sh) $('qShared').src = sh;
   $('qImg').src = imgSrc(n);
   $('qImg').alt = `${e.title} ${n}번 문항`;
   $('qEra').textContent = ERAS[e.eras[n-1]];
