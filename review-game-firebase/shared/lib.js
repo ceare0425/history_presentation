@@ -466,7 +466,8 @@ export const ITEMS = {
 };
 
 // 방해(안개·얼음·물풍선·지진·벌떼) 지속시간은 매운맛·난타전 모두 5초로 통일.
-// 피격 후 무적 시간은 아이템전 전체 공통 3초로 통일(모드 무관).
+// 피격 후 무적은 방해가 끝난 다음부터 3초(모드 무관) — 시간형 방해는 걸려 있는 동안 + 3초, 즉시형은 맞은 뒤 3초.
+// 무적 중 공격을 막아도 무적은 사라지지 않는다.
 export const ITEM_FX_MS = {
   fog: 5000, ice: 5000, waterballoon: 5000, earthquake: 5000, bee: 5000, festival: 20000, immunity: 3000,
   fogSpicy: 5000, iceSpicy: 5000, waterballoonSpicy: 5000, earthquakeSpicy: 5000, beeSpicy: 5000,
