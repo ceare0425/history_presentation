@@ -399,8 +399,8 @@
         <div class="festival-banner" id="mirrorBanner">🪞 반사경 대기 중 · <span id="mirrorRemain"></span>초 남음</div>
         <div class="festival-banner" id="sirenBanner">🚨 사이렌 대기 중 · <span id="sirenRemain"></span>초 남음</div>
         <div class="debuff-banner" id="fogBanner">🌫️ <span id="fogLabel">안개</span>! 문제가 흐려요 · <span id="fogRemain"></span>초 남음</div>
-        <div class="debuff-banner" id="iceBanner">🧊 <span id="iceLabel">얼음</span>! 얼음이 녹을 때까지 제출 불가 · <span id="iceRemain"></span>초 남음</div>
-        <div class="debuff-banner" id="waterballoonBanner">💧 <span id="waterballoonLabel">물풍선</span>! 물기가 마를 때까지 제출 불가 · <span id="waterballoonRemain"></span>초 남음</div>
+        <div class="debuff-banner" id="iceBanner">🧊 <span id="iceLabel">얼음</span>! 얼음이 녹을 때까지 제출 불가 (답은 미리 입력 가능) · <span id="iceRemain"></span>초 남음</div>
+        <div class="debuff-banner" id="waterballoonBanner">💧 <span id="waterballoonLabel">물풍선</span>! 물기가 마를 때까지 제출 불가 (답은 미리 입력 가능) · <span id="waterballoonRemain"></span>초 남음</div>
         <div class="debuff-banner" id="earthquakeBanner">📳 <span id="earthquakeLabel">지진</span>! 화면이 흔들려요 · <span id="earthquakeRemain"></span>초 남음</div>
         <div class="debuff-banner" id="beeBanner">🐝 <span id="beeLabel">벌떼</span>! 문제가 가려져요 · <span id="beeRemain"></span>초 남음</div>
         <div class="atk-banner" id="stealAtkBanner">🥷⏳ 강탈 공격 중··· <span id="stealAtkRemain"></span>초 후 결과!</div>
@@ -471,7 +471,7 @@ import {
   recencyWeightFn, weightedQueue,
   teamInfo, teamStandings, activeBonus,
   ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
-} from '../shared/lib.js?v=20260923c';
+} from '../shared/lib.js?v=20260923d';
 
 const ROOM = 'korea';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
@@ -573,9 +573,11 @@ let myStealAttackUntil = 0;  // 내가 쏜 '강탈'의 결과를 기다리는 �
 let myFogUntil = 0, myIceUntil = 0;   // 안개·얼음 피격 종료 시각(ms) — 배너에 남은 시간 표시용
 let myEarthquakeUntil = 0, myBeeUntil = 0;   // 지진·벌떼 피격 종료 시각(ms)
 let myWaterballoonUntil = 0;   // '물풍선' — 얼음과 동일(이름만 다름) 피격 종료 시각(ms)
-// '얼음'·'물풍선'은 효과가 같은 "제출 불가" 디버프라, 둘 중 하나라도 남아있으면 입력을 잠근다
+// '얼음'·'물풍선'은 효과가 같은 "제출 불가" 디버프 — 답은 미리 입력할 수 있고 제출만 막는다
 // (겹쳐 맞아도 먼저 끝난 쪽이 나중 것까지 풀어버리지 않도록 별도 플래그 대신 남은 시간으로 판정)
 function isFrozen(){ return serverNow() < myIceUntil || serverNow() < myWaterballoonUntil; }
+// '지뢰' 카드 창이 떠 있는 동안에도 제출 불가 — 카드를 골라야만 문제를 풀 수 있다
+function mineOpen(){ return !el('mineOverlay').classList.contains('hidden'); }
 const seenItemEvents = new Set();
 
 const el = (id) => document.getElementById(id);
@@ -779,11 +781,10 @@ function renderQuestion(q){
   el('answerInput').value = '';
   // '얼음'·'물풍선' 피격 중이면 새 문제가 나와도 입력을 풀어주면 안 됨 — 재도전 큐·리롤 등 여러 경로가
   // 여기로 모이므로 각 호출부가 아니라 이 함수 자체에서 상태를 지켜야 빠짐없이 막힘
-  if(!isFrozen()){
-    el('answerInput').disabled = false;
-    el('submitBtn').disabled = false;
-    el('answerInput').focus();
-  }
+  // 얼음·물풍선 중에도 입력은 되고, 제출 버튼만 막아 둔다
+  el('answerInput').disabled = false;
+  el('submitBtn').disabled = isFrozen() || mineOpen();
+  el('answerInput').focus();
 }
 
 function currentPool(){
@@ -888,13 +889,14 @@ async function submitAnswer(){
   }catch(err){
     console.warn('submitAnswer', err);
     submitBusy = false;
-    if(!roundEnded() && !isFrozen()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; }
+    if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = isFrozen() || mineOpen(); }
     showItemAlert('⚠️ 답이 전송되지 않았어요. 다시 제출해 주세요');
   }
 }
 async function submitAnswerCore(){
   if(roundEnded()) return; // 라운드가 끝난 뒤에는 제출 불가
-  if(isFrozen()) return; // '얼음'·'물풍선' 피격 중
+  if(isFrozen()) return; // '얼음'·'물풍선' 피격 중 (입력은 되지만 제출은 막힘)
+  if(mineOpen()){ showItemAlert('💣 지뢰 카드를 먼저 골라야 답을 낼 수 있어요'); return; }
   if(submitBusy) return;   // 이미 이 문제에 답을 냈음 (다음 문제 대기 중)
   const text = el('answerInput').value.trim();
   if(!text || !currentQid || !currentQuestion) return;
@@ -1067,6 +1069,7 @@ document.addEventListener('keydown', e=>{
   if(el('mineOverlay').classList.contains('hidden')) return;
   const idx = { '1': 0, '2': 1, '3': 2 }[e.key];
   if(idx === undefined) return;
+  e.preventDefault();   // 카드 고르는 숫자가 답 입력칸에 찍히지 않게
   const btn = el('mineCards').querySelectorAll('.combo-card')[idx];
   if(btn) btn.click();
 });
@@ -1306,11 +1309,11 @@ function itemDescFor(k, it, nanta){
   }
   if(k === 'ice'){
     const s = (nanta ? ITEM_FX_MS.iceNanta : itemsMode === 'spicy' ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) / 1000;
-    return `선두권이 얼음이 녹을 때까지 ${s}초간 제출 불가`;
+    return `선두권이 얼음이 녹을 때까지 ${s}초간 제출 불가 (답 입력은 가능)`;
   }
   if(k === 'waterballoon'){
     const s = (nanta ? ITEM_FX_MS.waterballoonNanta : itemsMode === 'spicy' ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon) / 1000;
-    return `선두권이 물기가 마를 때까지 ${s}초간 제출 불가`;
+    return `선두권이 물기가 마를 때까지 ${s}초간 제출 불가 (답 입력은 가능)`;
   }
   if(k === 'earthquake'){
     const s = (nanta ? ITEM_FX_MS.earthquakeNanta : itemsMode === 'spicy' ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake) / 1000;
@@ -1395,10 +1398,10 @@ function renderItemBar(){
       desc = `선두권 문제 화면이 ${s}초간 흐려짐`;
     } else if(heldItem === 'ice'){
       const s = (itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : itemsMode === 'spicy' ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice) / 1000;
-      desc = `선두권이 얼음이 녹을 때까지 ${s}초간 제출 불가`;
+      desc = `선두권이 얼음이 녹을 때까지 ${s}초간 제출 불가 (답 입력은 가능)`;
     } else if(heldItem === 'waterballoon'){
       const s = (itemsMode === 'nanta' ? ITEM_FX_MS.waterballoonNanta : itemsMode === 'spicy' ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon) / 1000;
-      desc = `선두권이 물기가 마를 때까지 ${s}초간 제출 불가`;
+      desc = `선두권이 물기가 마를 때까지 ${s}초간 제출 불가 (답 입력은 가능)`;
     } else if(heldItem === 'earthquake'){
       const s = (itemsMode === 'nanta' ? ITEM_FX_MS.earthquakeNanta : itemsMode === 'spicy' ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake) / 1000;
       desc = `선두권 문제 화면이 흔들리고 글자가 ${s}초간 뒤섞임`;
@@ -1592,7 +1595,7 @@ function clearIncomingFx(outcome){
   myStealDefenses.forEach(d=>{ clearTimeout(d.timer); notifyStealResult(d.attackerId, outcome || 'cure', 0); });
   myStealDefenses = [];
   syncStealActive();
-  if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; }
+  if(!roundEnded()){ el('answerInput').disabled = false; el('submitBtn').disabled = mineOpen(); }
 }
 
 async function applySelfItem(key){
@@ -1952,6 +1955,7 @@ function openMineOverlay(attackerId, mineLabel){
   cardsEl.innerHTML = cards.map((c, i) => `<button type="button" class="combo-card" data-i="${i}" data-key="${i+1}">💣</button>`).join('');
   el('mineResult').textContent = '';
   el('mineOverlay').classList.remove('hidden');
+  el('submitBtn').disabled = true;   // 카드를 고르기 전에는 제출 불가
   const btns = Array.from(cardsEl.querySelectorAll('.combo-card'));
   const reveal = (btn, c) => {
     btn.classList.add('flipped');
@@ -1975,7 +1979,10 @@ function openMineOverlay(attackerId, mineLabel){
         }
         notifyMineResult(attackerId, c.survive);
       }, 500);
-      setTimeout(() => { el('mineOverlay').classList.add('hidden'); }, 950);
+      setTimeout(() => {
+        el('mineOverlay').classList.add('hidden');
+        if(!roundEnded()) el('submitBtn').disabled = isFrozen();
+      }, 950);
     };
   });
 }
@@ -2014,23 +2021,21 @@ function applyIncomingFx(type, attackerId, reflected){
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice;
     el('iceLabel').textContent = reflected ? '반사당한 얼음' : '얼음';
     myIceUntil = serverNow() + dur;
-    el('answerInput').disabled = true;
-    el('submitBtn').disabled = true;
+    el('submitBtn').disabled = true;   // 입력은 그대로 두고 제출만 막음
     clearTimeout(iceTimer);
     iceTimer = setTimeout(()=>{
       myIceUntil = 0;
-      if(!roundEnded() && !isFrozen()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; el('answerInput').focus(); }
+      if(!roundEnded() && !isFrozen()){ el('answerInput').disabled = false; el('submitBtn').disabled = mineOpen(); }
     }, dur);
   } else if(type === 'waterballoon'){   // 얼음과 완전히 동일한 효과(이름·멘트만 다름)
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.waterballoonNanta : spicy ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon;
     el('waterballoonLabel').textContent = reflected ? '반사당한 물풍선' : '물풍선';
     myWaterballoonUntil = serverNow() + dur;
-    el('answerInput').disabled = true;
-    el('submitBtn').disabled = true;
+    el('submitBtn').disabled = true;   // 입력은 그대로 두고 제출만 막음
     clearTimeout(waterballoonTimer);
     waterballoonTimer = setTimeout(()=>{
       myWaterballoonUntil = 0;
-      if(!roundEnded() && !isFrozen()){ el('answerInput').disabled = false; el('submitBtn').disabled = false; el('answerInput').focus(); }
+      if(!roundEnded() && !isFrozen()){ el('answerInput').disabled = false; el('submitBtn').disabled = mineOpen(); }
     }, dur);
   } else if(type === 'earthquake'){
     const box = el('qbox');
