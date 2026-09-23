@@ -41,7 +41,8 @@
 
 **한능검 기출 풀기** (혼자 연습 전용)
 - `https://ceare0425.github.io/history_presentation/review-game-firebase/hanneung/solo.html` — 학생 화면에서 인적사항 입력 → 혼자 연습하기 → 한능검 기출 풀기로 들어옵니다. 인적사항 없이 직접 열면 `student.html`로 되돌려 보냅니다.
-- 실제 기출 시험지를 문항별 이미지(`hanneung/<회차>/q01~q50.webp`)로 잘라 보여 주고, 정답·배점·시대 분류는 `hanneung/solo.html` 안 `EXAMS`에 있습니다. 풀이 기록·오답 목록은 학생별로 그 기기의 `localStorage`에만 저장됩니다(Firebase 기록 없음).
+- 실제 기출 시험지를 문항별 이미지(`hanneung/<회차>/q01~q50.webp`)로 잘라 보여 주고, 이어서 풀기·오답 목록은 학생별로 그 기기의 `localStorage`에 저장되고, 풀이 결과는 Firebase `rooms/hanneung/solo_log`에도 남습니다(모의고사는 제출 시 1건, 연습은 첫 답부터 같은 항목 갱신; `picks`는 1~50번 순서의 50글자 문자열, 안 푼 문항은 0). 정답·배점·시대 분류는 `hanneung/exams.js`를 학생·관리자 화면이 함께 씁니다.
+- 관리자 화면: `https://ceare0425.github.io/history_presentation/review-game-firebase/hanneung/admin.html` — 모의고사 결과(점수·급수), 학생별 현황, 문항 분석(정답률·선택 분포), 연습 기록. 비밀번호는 다른 관리자 화면과 같음. 기존 규칙의 `rooms/$room/solo_log`를 그대로 쓰므로 Firebase 규칙을 따로 배포할 필요 없음.
 
 짧은 주소(`ceare0425.github.io/h`,`/w`,`/k`)는 별도 저장소 `ceare0425/ceare0425.github.io`의
 리다이렉트 페이지입니다. 학생 접속 주소로만 연결됩니다(관리자 화면은 교사만 쓰니 그대로 긴 주소나
