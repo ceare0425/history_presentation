@@ -1,5 +1,7 @@
 // 복습 게임(탑 오르기) - Firebase Realtime Database 공용 모듈
 // world/, korea/ 두 게임 폴더가 이 파일을 그대로 가져다 씁니다.
+// ⚠️ 이 파일을 고치면 이 파일을 import하는 모든 HTML(world·korea의 admin/board/play/solo, student.html)의
+//    'shared/lib.js?v=...' 버전 값을 함께 올릴 것 — 안 올리면 브라우저가 예전 파일을 최대 10분간 캐시에서 계속 씀
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
