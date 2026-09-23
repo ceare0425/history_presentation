@@ -151,7 +151,8 @@ let itemSort = 'num';   // 'num' | 'low'
 let itemLatestOnly = false;
 
 // ── 불러오기 ─────────────────────────────
-$('fExam').innerHTML = EXAM_IDS.map(id => `<option value="${id}">${EXAMS[id].title}</option>`).join('');
+// 맨 위 '전체 회차'(값 '')가 기본 — 모든 회차 기록을 한꺼번에 본다
+$('fExam').innerHTML = '<option value="">전체 회차</option>' + EXAM_IDS.map(id => `<option value="${id}">${EXAMS[id].title}</option>`).join('');
 onValue(roomRef('hanneung', 'solo_log'), (snap) => {
   const v = snap.val() || {};
   logs = Object.entries(v).map(([key, d]) => ({ key, ...d })).filter(d => d && d.picks);
@@ -178,7 +179,7 @@ function filtered(){
   let from = 0;
   if(p === 'today'){ const d = new Date(); d.setHours(0,0,0,0); from = d.getTime(); }
   else if(p !== 'all') from = Date.now() - Number(p) * 86400000;
-  return logs.filter(d => d.exam === ex && (!cls || d.cls === cls) && (!q || String(d.name).includes(q)) && (d.ts || 0) >= from);
+  return logs.filter(d => (!ex || d.exam === ex) && (!cls || d.cls === cls) && (!q || String(d.name).includes(q)) && (d.ts || 0) >= from);
 }
 
 // ── 공통 도우미 ───────────────────────────
@@ -198,6 +199,8 @@ function gradeBadge(g){
   const cls = g === '1급' ? 'g1' : g === '2급' ? 'g2' : g === '3급' ? 'g3' : 'gx';
   return `<span class="badge ${cls}">${g === '불합격' ? '급수 미달' : g}</span>`;
 }
+function allExams(){ return !$('fExam').value; }
+function examShort(d){ return EXAMS[d.exam] ? d.exam + '회' : (d.exam || '-'); }
 function pct(a, b){ return b ? Math.round(a / b * 100) : 0; }
 function barHtml(p){
   const color = p >= 70 ? 'var(--ok)' : p >= 40 ? 'var(--accent)' : 'var(--bad)';
@@ -241,10 +244,10 @@ function renderExam(list){
       <div class="stat"><b>${cnt('불합격')}</b><span>급수 미달</span></div>
     </div>
     <div class="tbl-wrap"><table>
-      <thead><tr><th>제출</th><th>반</th><th>이름</th><th>점수</th><th>급수</th><th>정답</th><th>푼 문항</th><th>걸린 시간</th><th>시간 제한</th></tr></thead>
+      <thead><tr><th>제출</th>${allExams() ? '<th>회차</th>' : ''}<th>반</th><th>이름</th><th>점수</th><th>급수</th><th>정답</th><th>푼 문항</th><th>걸린 시간</th><th>시간 제한</th></tr></thead>
       <tbody>${ex.map(d => `
         <tr class="click" data-key="${d.key}">
-          <td>${fmtTs(d.ts)}</td><td>${clsLabel(d.cls)}</td><td><b>${escapeHtml(d.name)}</b></td>
+          <td>${fmtTs(d.ts)}</td>${allExams() ? `<td>${examShort(d)}</td>` : ''}<td>${clsLabel(d.cls)}</td><td><b>${escapeHtml(d.name)}</b></td>
           <td><b>${d.score}점</b></td><td>${gradeBadge(d.grade)}</td>
           <td>${d.correct} / ${d.total}</td><td>${d.answered} / ${d.total}</td>
           <td>${fmtDur(d.dur_sec)}</td><td>${d.timed ? '80분' : '없음'}</td>
@@ -276,8 +279,8 @@ function renderStudent(list){
       return `<tr>
         <td>${clsLabel(s.cls)}</td><td><b>${escapeHtml(s.name)}</b></td>
         <td>${s.exams.length}회</td>
-        <td>${best ? `<b>${best.score}점</b> ${gradeBadge(best.grade)}` : '-'}</td>
-        <td>${recent ? `<a href="#" data-key="${recent.key}" class="open">${recent.score}점</a>` : '-'}</td>
+        <td>${best ? `<b>${best.score}점</b> ${gradeBadge(best.grade)}${allExams() ? ` <small>(${examShort(best)})</small>` : ''}` : '-'}</td>
+        <td>${recent ? `<a href="#" data-key="${recent.key}" class="open">${recent.score}점</a>${allExams() ? ` <small>(${examShort(recent)})</small>` : ''}` : '-'}</td>
         <td>${s.pAns}문항</td><td>${s.pAns ? barHtml(pct(s.pOk, s.pAns)) : '-'}</td>
         <td>${fmtTs(s.last)}</td></tr>`;
     }).join('')}</tbody></table></div>`;
@@ -287,6 +290,7 @@ function renderStudent(list){
 // ③ 문항 분석 (제출된 모의고사 기준)
 function renderItems(list){
   const box = $('tab-items');
+  if(allExams()) return renderItemsAll(box, list);
   const e = EXAMS[$('fExam').value];
   let ex = list.filter(d => d.mode === 'exam' && d.ended);
   if(itemLatestOnly){
@@ -325,6 +329,33 @@ function renderItems(list){
   bindItemCtl();
   box.querySelectorAll('tr[data-q]').forEach(tr => tr.onclick = () => openQuestion(+tr.dataset.q, rows.find(r => r.n === +tr.dataset.q), ex.length));
 }
+// 전체 회차: 회차마다 문제가 달라 문항별 표는 합칠 수 없으므로, 회차별 요약과 전 회차 시대별 정답률을 보여 준다
+function renderItemsAll(box, list){
+  const ex = list.filter(d => d.mode === 'exam' && d.ended);
+  if(!ex.length){ box.innerHTML = '<div class="muted">분석할 모의고사 기록이 없습니다.</div>'; return; }
+  const era = ERAS.map(() => ({ t:0, c:0 }));
+  ex.forEach(d => {
+    const e = EXAMS[d.exam]; if(!e) return;
+    const pk = picksOf(d);
+    e.answers.forEach((ans, i) => { const k = e.eras[i]; era[k].t++; if(pk[i] === ans) era[k].c++; });
+  });
+  const rows = EXAM_IDS.map(id => {
+    const xs = ex.filter(d => d.exam === id);
+    if(!xs.length) return '';
+    const avg = Math.round(xs.reduce((a, d) => a + (d.score || 0), 0) / xs.length * 10) / 10;
+    const people = new Set(xs.map(d => d.cls + '|' + d.name)).size;
+    const pass = xs.filter(d => d.grade && d.grade !== '불합격').length;
+    return `<tr class="click" data-exam="${id}"><td><b>${EXAMS[id].title}</b></td><td>${xs.length}회 (${people}명)</td>
+      <td>${avg}점</td><td>${barHtml(pct(pass, xs.length))}</td></tr>`;
+  }).join('');
+  box.innerHTML = `
+    <div class="muted" style="padding-top:0;">전체 회차 모의고사 ${ex.length}회 기준 · 회차를 누르면 그 회차의 문항별 분석으로 넘어가요</div>
+    <div class="stats">${era.map((x, k) => x.t ? `<div class="stat"><b>${pct(x.c, x.t)}%</b><span>${ERAS[k]}</span></div>` : '').join('')}</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>회차</th><th>응시</th><th>평균 점수</th><th>급수 취득 비율 (60점↑)</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+  box.querySelectorAll('tr[data-exam]').forEach(tr => tr.onclick = () => { $('fExam').value = tr.dataset.exam; render(); });
+}
 function bindItemCtl(){
   const s = $('itemSort'); if(s){ s.value = itemSort; s.onchange = () => { itemSort = s.value; render(); }; }
   const l = $('itemLatest'); if(l){ l.onchange = () => { itemLatestOnly = l.checked; render(); }; }
@@ -336,9 +367,9 @@ function renderPractice(list){
   const pr = list.filter(d => d.mode !== 'exam');
   if(!pr.length){ box.innerHTML = '<div class="muted">연습 기록이 없습니다.</div>'; return; }
   box.innerHTML = `<div class="tbl-wrap"><table>
-    <thead><tr><th>시각</th><th>반</th><th>이름</th><th>방식</th><th>푼 문항</th><th>정답</th><th>정답률</th><th>상태</th></tr></thead>
+    <thead><tr><th>시각</th>${allExams() ? '<th>회차</th>' : ''}<th>반</th><th>이름</th><th>방식</th><th>푼 문항</th><th>정답</th><th>정답률</th><th>상태</th></tr></thead>
     <tbody>${pr.map(d => `<tr class="click" data-key="${d.key}">
-      <td>${fmtTs(d.ts)}</td><td>${clsLabel(d.cls)}</td><td><b>${escapeHtml(d.name)}</b></td>
+      <td>${fmtTs(d.ts)}</td>${allExams() ? `<td>${examShort(d)}</td>` : ''}<td>${clsLabel(d.cls)}</td><td><b>${escapeHtml(d.name)}</b></td>
       <td>${MODE_NAME[d.mode] || d.mode}</td><td>${d.answered} / ${d.total}</td><td>${d.correct}</td>
       <td>${barHtml(pct(d.correct, d.answered))}</td>
       <td>${d.ended ? '<span class="badge done">종료</span>' : '<span class="badge live">푸는 중</span>'}</td></tr>`).join('')}
