@@ -629,9 +629,13 @@ function wrapForScramble(box){
 }
 function startScramble(){
   const box = el('qText');
-  scrambleTokens = wrapForScramble(box);
+  // 이미 뒤섞는 중에 또 맞으면(지진 연속 피격) 섞인 상태를 다시 쪼개지 말고 원래 순서 목록을 그대로 유지
+  // — 다시 쪼개면 섞인 순서가 '원래 순서'로 저장돼 지진이 끝나도 문제가 복원되지 않음
+  const alive = scrambleTokens && scrambleTokens.length && scrambleTokens.every(n => n.parentNode === box);
+  if(!alive) scrambleTokens = wrapForScramble(box);
   clearInterval(scrambleTimer);
   scrambleTimer = setInterval(() => {
+    if(!scrambleTokens || !scrambleTokens.every(n => n.parentNode === box)){ clearInterval(scrambleTimer); scrambleTimer = null; scrambleTokens = null; return; }
     const shuffled = scrambleTokens.slice();
     for(let i = shuffled.length - 1; i > 0; i--){
       const j = Math.floor(Math.random() * (i + 1));
@@ -644,7 +648,9 @@ function stopScramble(){
   clearInterval(scrambleTimer);
   scrambleTimer = null;
   if(scrambleTokens){
-    scrambleTokens.forEach(n => el('qText').appendChild(n));   // 원래 순서로 복원
+    const box = el('qText');
+    // 문제가 이미 새로 바뀌었으면(옛 조각이 떨어져 나감) 옛 글자를 새 문제에 붙이지 않는다
+    if(scrambleTokens.every(n => n.parentNode === box)) scrambleTokens.forEach(n => box.appendChild(n));   // 원래 순서로 복원
     scrambleTokens = null;
   }
 }
@@ -763,8 +769,9 @@ function renderQuestion(q){
     return;
   }
   el('unitTag').textContent = q.unit + (q.page ? ' · ' + q.page : '');
+  stopScramble();   // 이전 문제의 뒤섞기 상태를 먼저 정리
   el('qText').innerHTML = q.text.replace(/____/g, '<span class="blank-mark"></span>');
-  if(serverNow() < myEarthquakeUntil) startScramble();   // 지진 피격 중 새 문제가 나와도 계속 뒤섞이게 재적용
+  if(el('qbox').classList.contains('shaking')) startScramble();   // 지진 피격 중 새 문제가 나와도 계속 뒤섞이게 재적용
   el('answerInput').value = '';
   // '얼음'·'물풍선' 피격 중이면 새 문제가 나와도 입력을 풀어주면 안 됨 — 재도전 큐·리롤 등 여러 경로가
   // 여기로 모이므로 각 호출부가 아니라 이 함수 자체에서 상태를 지켜야 빠짐없이 막힘
