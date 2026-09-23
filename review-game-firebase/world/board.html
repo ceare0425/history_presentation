@@ -698,10 +698,12 @@ function renderTower(players, leaderId){
   const usable = trackHeight - 20;
   const seen = new Set();
 
-  players.forEach((p)=>{
+  players.forEach((p, idx)=>{
     seen.add(p.id);
     const node = ensureClimberEl(track, p.id);
-    track.appendChild(node);
+    // 순서가 바뀐 경우에만 옮긴다 — 매 렌더(0.5초)마다 appendChild로 다시 붙이면 왕관·불꽃·사다리·+층수 팝업
+    // 애니메이션이 계속 처음부터 재시작돼 끊겨 보인다
+    if(track.children[idx] !== node) track.insertBefore(node, track.children[idx] || null);
     const floor = p.floor||0;
     const h = Math.round((floor / maxFloor) * usable);
     const avatar = p.avatar || '🐱'; // 입장 시 배정된 개인 캐릭터 (예전 데이터엔 없을 수 있어 기본값)
