@@ -372,6 +372,7 @@
       </div>
       <div class="setup-msg" id="setupMsg"></div>
       <button id="startBtn">▶ 연습 시작</button>
+      <button type="button" id="titlesBtnSetup">🏅 칭호 도감</button>
     </div>
   </div>
 
@@ -441,6 +442,7 @@
       <button type="button" id="reviewQuickBtnEnd" class="review-quick-btn hidden" style="margin-top:10px;"></button>
       <button id="retryBtn">↺ 다른 범위로 다시 연습하기</button>
       <button id="dashFromEndBtn" class="secondary" style="margin-top:10px;">📊 내 학습 기록 보기</button>
+      <button type="button" id="titlesBtnEnd">🏅 칭호 도감</button>
     </div>
   </div>
 
@@ -471,11 +473,12 @@
 
 <script type="module">
 import {
-  roomRef, ref, db, onValue, get, push, update, set, remove, onDisconnect, onChildAdded, onChildChanged, serverNow,
+  roomRef, ref, db, onValue, get, push, update, set, remove, onDisconnect, onChildAdded, onChildChanged, runTransaction, serverNow,
   isCorrect, computeGain, fmtTime, escapeHtml, shuffle, choseongHint,
   unitsFromQuestions, poolFromQuestions, renderUnitGroups, recencyWeightFn, weightedQueue,
   presenceRef, chatRef, bookmarksRef, bookmarkRef, findLessonForUnit
-} from '../shared/lib.js?v=20260928f';
+} from '../shared/lib.js?v=20260928g';
+import { mountTitles } from '../shared/titles.js?v=20260928a';
 
 const ROOM = 'world';
 const SUBJECT_NAME = '세계사'; // pages.json의 과목명과 일치해야 "다시 배우기" 링크가 매칭됨
@@ -508,6 +511,11 @@ fetch('../../pages.json', { cache: 'no-store' }).then(r => r.json()).then(d => {
 }).catch(()=>{});
 
 let questionsObj = {};
+// 🏅 칭호 수집 (shared/titles.js) — 수업 게임 기록과 합쳐서 쌓인다
+const titles = mountTitles({ db, ref, get, update, onValue, runTransaction, serverNow, escapeHtml }, {
+  room: ROOM,
+  getQuestions: () => questionsObj
+});
 let allUnits = [];
 let selectedUnits = new Set();
 
@@ -653,8 +661,17 @@ el('weightToggle').querySelectorAll('button').forEach(btn=>{
   };
 });
 
+// 🏅 칭호 도감 — 학년·반·이름이 정해져 있어야 내 칭호를 불러올 수 있다
+const openTitlesCheck = () => {
+  if(!classKey() || !myName()){ alert('학년·반·이름을 먼저 입력해 주세요.'); return false; }
+  titles.setIdentity(classKey(), myName());
+};
+titles.bindButton(el('titlesBtnSetup'), openTitlesCheck);
+titles.bindButton(el('titlesBtnEnd'), openTitlesCheck);
+
 onValue(roomRef(ROOM,'questions'), (snap)=>{
   questionsObj = snap.val() || {};
+  titles.refresh();
   allUnits = unitsFromQuestions(questionsObj);
   if(selectedUnits.size===0){ allUnits.forEach(u=>selectedUnits.add(u.unit)); }
   renderUnits();
@@ -835,6 +852,7 @@ function submitAnswer(){
   const usedHint = hintUsed;
   const elapsed = (serverNow() - currentStartedAt) / 1000;
   const correct = isCorrect(text, q.answers);
+  titles.recordAnswer(answeredQid, correct);
   let gain = 0;
 
   const uName = q.unit || '(기타)';
@@ -876,6 +894,8 @@ function submitAnswer(){
   if(floor > lastFloor) popFloorBadge();
   lastFloor = floor;
   syncSoloLog(false);
+  if(floor >= 10 && wrongCount === 0) titles.unlockHidden('flawless');   // 숨은 칭호 '무결점'
+  if(correctCount >= 30) titles.unlockHidden('marathon');                // 숨은 칭호 '마라토너'
   flashFeedback(correct, q.answers[0], gain, wasRetry, usedHint);
   playCharacterReaction(correct);
 
@@ -1303,6 +1323,7 @@ el('startBtn').onclick = async () => {
 
   // 이번 세션 정보 기록용으로 저장 (종료 시 선생님 화면으로 보냄)
   localStorage.setItem(STORAGE_NAME_KEY, nameNow);
+  titles.setIdentity(classKey(), myName());
   sessionClassKey = classKey();
   sessionStartedAt = serverNow();
   sessionUnits = units;
@@ -1345,6 +1366,7 @@ function startReviewSession(qids, label){
   el('clearPrompt').classList.add('hidden');
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
 
+  titles.setIdentity(classKey(), myName());
   sessionClassKey = classKey();
   sessionStartedAt = serverNow();
   sessionUnits = [label || '복습 추천'];

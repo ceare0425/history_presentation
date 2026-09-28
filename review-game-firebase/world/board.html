@@ -273,6 +273,10 @@
     margin-top:6px; font-size:.72rem; text-align:center; max-width:64px; overflow:hidden; text-overflow:ellipsis;
     white-space:nowrap; opacity:.9;
   }
+  /* 🏅 대표 칭호 (학생이 칭호 도감에서 고른 것) */
+  .climber .ptitle{ font-size:.62rem; font-weight:800; text-align:center; width:96px; line-height:1.15; margin-bottom:2px; text-shadow:0 1px 3px rgba(0,0,0,.6); word-break:keep-all; }
+  .climber .ptitle:empty{ display:none; }
+  .lb-title{ display:block; font-size:.7rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .climber .floorno{ font-size:.7rem; color:var(--gold); font-weight:700; text-shadow:0 1px 3px rgba(0,0,0,.5); }
 
   .popup{
@@ -408,7 +412,8 @@
 </div>
 
 <script type="module">
-import { roomRef, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers, teamInfo, teamStandings, activeBonus, ITEMS, ITEM_FX_MS, TEAM_OPTIONS, sweepOfflinePlayers, watchForUpdate } from '../shared/lib.js?v=20260928f';
+import { roomRef, ref, db, update, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers, teamInfo, teamStandings, activeBonus, ITEMS, ITEM_FX_MS, TEAM_OPTIONS, sweepOfflinePlayers, watchForUpdate } from '../shared/lib.js?v=20260928g';
+import { RARITY } from '../shared/titles.js?v=20260928a';
 
 const ROOM = 'world';
 const el = (id) => document.getElementById(id);
@@ -695,6 +700,7 @@ function ensureClimberEl(track, id){
   const div = document.createElement('div');
   div.className = 'climber';
   div.innerHTML = `
+    <div class="ptitle"></div>
     <div class="floorno"></div>
     <div class="crown-badge">👑</div>
     <div class="avatar-wrap">
@@ -760,6 +766,10 @@ function renderTower(players, leaderId){
     if(tInfo) colEl.style.setProperty('--team-color', tInfo.color);
     else colEl.style.removeProperty('--team-color');
     node.querySelector('.base').textContent = p.name || '';
+    const pt = node.querySelector('.ptitle');
+    const tt = p.title && p.title.n ? p.title : null;
+    pt.textContent = tt ? `${tt.e || ''} ${tt.n}` : '';
+    pt.style.color = tt ? (RARITY[tt.r] || RARITY.common).dark : '';
     node.classList.toggle('leader', leaderId != null && p.id === leaderId);
     node.classList.toggle('onfire', (p.streak||0) >= 3);
     node.classList.toggle('rv-pair-start', !!rvMark && idx > 0 && rvMark[p.id] === 'start');
@@ -933,17 +943,17 @@ function computeTitles(players){
       return rb > ra ? b : a;
     });
     const rate = Math.round((best.correct||0)/((best.correct||0)+(best.wrong||0))*100);
-    if(rate > 0) badges.push({ emoji:'🎯', label:'정확도왕', name:best.name, detail:`정답률 ${rate}%` });
+    if(rate > 0) badges.push({ key:'acc', pid:best.id, emoji:'🎯', label:'정확도왕', name:best.name, detail:`정답률 ${rate}%` });
   }
   const streakCands = players.filter(p=> (p.bestStreak||0) >= 3);
   if(streakCands.length){
     const best = streakCands.reduce((a,b)=> (b.bestStreak||0) > (a.bestStreak||0) ? b : a);
-    badges.push({ emoji:'⚡', label:'번개 정답왕', name:best.name, detail:`${best.bestStreak}연속 정답` });
+    badges.push({ key:'streak', pid:best.id, emoji:'⚡', label:'번개 정답왕', name:best.name, detail:`${best.bestStreak}연속 정답` });
   }
   const triedCands = players.filter(p=> ((p.correct||0)+(p.wrong||0)) >= 5);
   if(triedCands.length){
     const best = triedCands.reduce((a,b)=> ((b.correct||0)+(b.wrong||0)) > ((a.correct||0)+(a.wrong||0)) ? b : a);
-    badges.push({ emoji:'💪', label:'열공왕', name:best.name, detail:`${(best.correct||0)+(best.wrong||0)}문제 도전` });
+    badges.push({ key:'study', pid:best.id, emoji:'💪', label:'열공왕', name:best.name, detail:`${(best.correct||0)+(best.wrong||0)}문제 도전` });
   }
   if(!roundState.team_mode){
     const entries = Object.entries(overtakeCounts).filter(([,c])=> c >= 1);
@@ -951,7 +961,7 @@ function computeTitles(players){
       entries.sort((a,b)=> b[1]-a[1]);
       const [pid, count] = entries[0];
       const p = players.find(pp=> pp.id === pid);
-      if(p) badges.push({ emoji:'🔥', label:'역전왕', name:p.name, detail:`추월 ${count}회` });
+      if(p) badges.push({ key:'overtake', pid:p.id, emoji:'🔥', label:'역전왕', name:p.name, detail:`추월 ${count}회` });
     }
   }
   return badges;
@@ -969,8 +979,27 @@ function renderTitleBadges(players){
     </div>`).join('');
 }
 
+// 🏅 칭호 명예 기록: 종료 화면에 뜬 배지·1등·라이벌 승리를 학생별 titles/<room>/<반>/<이름>/log에 남긴다.
+// 키에 라운드 token을 넣어, 전광판을 여러 개 띄우거나 새로고침해도 한 라운드는 한 번만 센다.
+function recordHonors(players, ranked){
+  if(!roundState.token) return;
+  const ups = {};
+  const add = (p, kind) => {
+    if(!p || !p.cls || !p.name) return;
+    ups[`titles/${ROOM}/${p.cls}/${p.name}/log/${roundState.token}_${kind}`] = true;
+  };
+  computeTitles(players).forEach(b => add(players.find(p => p.id === b.pid), b.key));
+  if(!roundState.team_mode && ranked[0] && (ranked[0].floor||0) > 0) add(ranked[0], 'first');
+  rivalMatches().forEach(m => {
+    const fa = m.a.floor||0, fb = m.b.floor||0;
+    if(fa > fb) add(m.a, 'rivalwin'); else if(fb > fa) add(m.b, 'rivalwin');
+  });
+  if(Object.keys(ups).length) update(ref(db), ups).catch(()=>{});
+}
+
 function showEndCelebration(players, ranked){
   if(!players.length) return;
+  recordHonors(players, ranked);
   buildPodium(ranked);
   renderTitleBadges(players);
   // ⚔️ 라이벌전 결과: 대결마다 승자(무승부)를 한 줄씩
@@ -1173,7 +1202,7 @@ function render(){
     return `
     <div class="lb-row ${i===0?'rank1':''}">
       <div class="lb-medal">${MEDALS[i] || (i+1)}</div>
-      <div class="lb-name">${escapeHtml(p.name||'')}</div>
+      <div class="lb-name">${escapeHtml(p.name||'')}${p.title && p.title.n ? `<span class="lb-title" style="color:${(RARITY[p.title.r] || RARITY.common).dark}">${escapeHtml((p.title.e || '') + ' ' + p.title.n)}</span>` : ''}</div>
       <div class="lb-floor">${(p.floor||0)+unitLabel()}</div>
     </div>`;
   }).join('') : '<div style="opacity:.6; font-size:.85rem; padding:6px 4px;">아직 참가한 학생이 없습니다</div>';
@@ -1231,7 +1260,7 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
   roundState = r ? {
     status: r.status||'idle', end_time: r.end_time ?? null, duration_sec: r.duration_sec||420,
     bonus: r.bonus||[], team_mode: !!r.team_mode, team_count: r.team_count||4,
-    items_mode: r.items_mode||'off', rivals: r.rivals||{}
+    items_mode: r.items_mode||'off', rivals: r.rivals||{}, token: r.token||0
   } : { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off' };
 });
 onValue(roomRef(ROOM,'item_events'), (snap)=>{
