@@ -67,6 +67,20 @@
   .lb-medal{ width:28px; text-align:center; font-size:1.2rem; }
   .lb-name{ flex:1; font-weight:700; font-size:1.02rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .lb-floor{ font-weight:900; color:var(--gold); }
+  /* ⚔️ 라이벌 대진표 (개인전 + 라이벌 짝이 있을 때 순위 대신 표시) */
+  .rv-row{ display:flex; align-items:center; gap:6px; padding:8px 8px; border-radius:10px; margin-bottom:6px; background:var(--panel); font-size:.92rem; }
+  .rv-side{ flex:1; min-width:0; display:flex; flex-direction:column; opacity:.75; }
+  .rv-side.right{ text-align:right; }
+  .rv-side.win{ opacity:1; }
+  .rv-side .nm{ font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rv-side .fl{ font-weight:900; color:#cfd8ea; }
+  .rv-side.win .fl{ color:var(--gold); }
+  .rv-vs{ flex:0 0 auto; font-size:.8rem; font-weight:900; opacity:.7; }
+  .rv-note{ font-size:.72rem; opacity:.6; margin:-2px 0 8px 4px; }
+  .rival-results{ display:flex; flex-wrap:wrap; gap:8px 14px; justify-content:center; margin-top:1.4rem; z-index:1; max-width:1100px; font-size:.9rem; }
+  .rival-results:empty{ display:none; }
+  .rival-results .rr{ background:rgba(255,255,255,.12); border-radius:999px; padding:6px 14px; }
+  .rival-results .rr b{ color:var(--gold); }
 
   .tower-area{ position:relative; overflow-x:auto; overflow-y:hidden; padding:0 20px; display:flex; align-items:flex-end; grid-column:2; grid-row:1; }
   .tower-track{ position:relative; display:flex; align-items:flex-end; gap:26px; height:100%; padding-bottom:56px; padding-top:20px; }
@@ -367,7 +381,7 @@
 
 <main>
   <div class="leaderboard">
-    <h2>🏆 순위</h2>
+    <h2 id="lbTitle">🏆 순위</h2>
     <div id="lbList"></div>
   </div>
   <div class="tower-area" id="towerArea">
@@ -386,6 +400,7 @@
   <div class="team-winner hidden" id="teamWinner"></div>
   <div class="podium" id="podium"></div>
   <div class="title-badges" id="titleBadges"></div>
+  <div class="rival-results" id="rivalResults"></div>
   <div class="end-hint">다음 라운드를 시작하면 이 화면은 사라집니다</div>
 </div>
 
@@ -927,6 +942,12 @@ function showEndCelebration(players, ranked){
   if(!players.length) return;
   buildPodium(ranked);
   renderTitleBadges(players);
+  // ⚔️ 라이벌전 결과: 대결마다 승자(무승부)를 한 줄씩
+  el('rivalResults').innerHTML = rivalMatches().map(m=>{
+    const fa = m.a.floor||0, fb = m.b.floor||0;
+    const na = escapeHtml(m.a.name||'?'), nb = escapeHtml(m.b.name||'?');
+    return `<span class="rr">⚔️ ${fa>fb?`<b>${na}</b>`:na} ${fa}:${fb} ${fb>fa?`<b>${nb}</b>`:nb}${fa===fb?' 무승부':''}</span>`;
+  }).join('');
   const teamWinnerEl = el('teamWinner');
   if(roundState.team_mode){
     const standings = teamStandings(players);
@@ -1072,6 +1093,33 @@ function showItemEvent(e){
   itemToast(`${it.emoji} ${who} → ${it.name}`);
 }
 
+// ⚔️ 라이벌 짝 목록: round.rivals({ pid: 라이벌 pid })를 대결 단위로 묶는다.
+// 서로 짝인 둘은 한 대결, 홀수 인원의 남는 한 명(한쪽 방향 짝)은 따로 한 대결(extra)로 표시. 나간 학생이 낀 대결은 뺀다.
+function rivalMatches(){
+  if(roundState.team_mode) return [];
+  const rv = roundState.rivals || {};
+  const seen = new Set(), out = [];
+  Object.entries(rv).forEach(([a,b])=>{
+    if(seen.has(a)) return;
+    const mutual = rv[b] === a;
+    if(mutual){ seen.add(a); seen.add(b); }
+    const pa = playersObj[a], pb = playersObj[b];
+    if(!pa || !pb) return;
+    out.push({ a:{id:a,...pa}, b:{id:b,...pb}, extra:!mutual });
+  });
+  return out;
+}
+function rivalSideHtml(p, win, right){
+  return `<div class="rv-side ${right?'right':''} ${win?'win':''}"><span class="nm">${win?'👑 ':''}${escapeHtml(p.name||'?')}</span><span class="fl">${(p.floor||0)+unitLabel()}</span></div>`;
+}
+function renderRivalBoard(matches){
+  return matches.map(m=>{
+    const fa = m.a.floor||0, fb = m.b.floor||0;
+    return `<div class="rv-row">${rivalSideHtml(m.a, fa>fb, false)}<div class="rv-vs">VS</div>${rivalSideHtml(m.b, fb>fa, true)}</div>`
+      + (m.extra ? `<div class="rv-note">↑ 홀수 인원이라 ${escapeHtml(m.a.name||'?')} 님은 ${escapeHtml(m.b.name||'?')} 님과 추가 대결</div>` : '');
+  }).join('');
+}
+
 function render(){
   const remaining = roundState.end_time!=null ? Math.max(0, Math.round((roundState.end_time - serverNow())/1000)) : null;
   let effective = roundState.status;
@@ -1088,7 +1136,9 @@ function render(){
 
   el('emptyMsg').style.display = players.length ? 'none' : 'flex';
 
-  el('lbList').innerHTML = ranked.length ? ranked.slice(0,10).map((p,i)=>{
+  const matches = rivalMatches();
+  el('lbTitle').textContent = matches.length ? `⚔️ 라이벌 대진표 (${matches.length}경기)` : '🏆 순위';
+  el('lbList').innerHTML = matches.length ? renderRivalBoard(matches) : ranked.length ? ranked.slice(0,10).map((p,i)=>{
     return `
     <div class="lb-row ${i===0?'rank1':''}">
       <div class="lb-medal">${MEDALS[i] || (i+1)}</div>
@@ -1150,7 +1200,7 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
   roundState = r ? {
     status: r.status||'idle', end_time: r.end_time ?? null, duration_sec: r.duration_sec||420,
     bonus: r.bonus||[], team_mode: !!r.team_mode, team_count: r.team_count||4,
-    items_mode: r.items_mode||'off'
+    items_mode: r.items_mode||'off', rivals: r.rivals||{}
   } : { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off' };
 });
 onValue(roomRef(ROOM,'item_events'), (snap)=>{

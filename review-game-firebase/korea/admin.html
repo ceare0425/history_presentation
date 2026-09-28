@@ -652,9 +652,9 @@ el('startBtn').onclick = async () => {
       if(!teamModeState) updates[`rooms/${ROOM}/players/${pid}/team`] = null;
     });
     await update(ref(db), updates);
-    const rivalCount = Object.keys(rivals).length;
+    const rivalCount = Math.floor(Object.keys(rivals).length / 2);   // 1:1 경기 수 (홀수면 남는 한 명은 추가 대결)
     const bonusNote = (bonus.length ? ` · 🔥 2배 찬스 ${bonus.length}회 예정` : '')
-      + (rivalModeState && !teamModeState ? (rivalCount ? ` · ⚔️ 라이벌 ${rivalCount}명 배정` : ' · ⚔️ 학생이 2명 이상이어야 라이벌이 배정돼요') : '');
+      + (rivalModeState && !teamModeState ? (rivalCount ? ` · ⚔️ 라이벌 1:1 ${rivalCount}경기 동시 진행 (대진표는 전광판)` : ' · ⚔️ 학생이 2명 이상이어야 라이벌이 배정돼요') : '');
     msg.className='msg ok'; msg.textContent = `시작! 출제 문항 ${qids.length}개 (선택 범위 ${pool.length}개 중)${bonusNote}`;
   } catch(err){
     msg.className='msg err'; msg.textContent = '시작 실패: ' + err.message;
