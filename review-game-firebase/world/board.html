@@ -89,6 +89,9 @@
     display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; width:58px; flex:0 0 auto;
     position:relative;
   }
+  /* ⚔️ 라이벌전: 짝끼리 바짝 붙이고 짝과 짝 사이는 넓게 */
+  .climber.rv-pair-start{ margin-left:34px; }
+  .climber.rv-mate{ margin-left:-18px; }
   .climber .crown-badge{
     font-size:1.05rem; line-height:1; height:1.05rem; margin-bottom:1px;
     opacity:0; transform:translateY(0) scale(.6); transition:opacity .2s, transform .2s;
@@ -706,8 +709,34 @@ function ensureClimberEl(track, id){
   return div;
 }
 
+// 라이벌전이면 탑의 줄 순서를 대진표 순서(A B · C D · …)로 바꾼다. 짝이 없는 학생은 맨 뒤.
+// 반환: 순서가 바뀐 목록과 각 학생의 자리 표시('start' 짝의 첫 사람 / 'mate' 짝의 둘째 이후)
+function rivalTowerOrder(players, matches){
+  const byId = {}; players.forEach(p=> byId[p.id] = p);
+  const groups = [], groupOf = {};
+  matches.forEach(m=>{
+    if(!m.extra){ const g = [m.a.id, m.b.id]; groups.push(g); groupOf[m.a.id] = groupOf[m.b.id] = g; }
+  });
+  // 홀수 인원의 남는 한 명은 자기 라이벌이 있는 짝 옆에 붙인다(3명 한 조)
+  matches.forEach(m=>{
+    if(!m.extra) return;
+    const g = groupOf[m.b.id];
+    if(g) g.push(m.a.id); else groups.push([m.a.id, m.b.id]);
+  });
+  const order = [], mark = {}, used = new Set();
+  groups.forEach(g=> g.forEach((id, i)=>{
+    if(used.has(id) || !byId[id]) return;
+    used.add(id); order.push(byId[id]); mark[id] = i === 0 ? 'start' : 'mate';
+  }));
+  players.forEach(p=>{ if(!used.has(p.id)){ order.push(p); mark[p.id] = 'start'; } });
+  return { order, mark };
+}
+
 function renderTower(players, leaderId){
   const track = el('towerTrack');
+  const matches = rivalMatches();
+  let rvMark = null;
+  if(matches.length){ const t = rivalTowerOrder(players, matches); players = t.order; rvMark = t.mark; }
   const maxFloor = Math.max(10, ...players.map(p=>p.floor||0));
   const trackHeight = track.clientHeight || 500;
   const usable = trackHeight - 20;
@@ -733,6 +762,8 @@ function renderTower(players, leaderId){
     node.querySelector('.base').textContent = p.name || '';
     node.classList.toggle('leader', leaderId != null && p.id === leaderId);
     node.classList.toggle('onfire', (p.streak||0) >= 3);
+    node.classList.toggle('rv-pair-start', !!rvMark && idx > 0 && rvMark[p.id] === 'start');
+    node.classList.toggle('rv-mate', !!rvMark && rvMark[p.id] === 'mate');
 
     const prev = lastFloor[p.id];
     if(prev !== undefined && floor > prev){
