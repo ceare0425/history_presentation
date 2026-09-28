@@ -393,8 +393,8 @@ import {
   roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, renderUnitGroups, shuffle,
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS,
-  presenceRef, chatRef
-} from '../shared/lib.js?v=20260928a';
+  presenceRef, chatRef, isOffline, sweepOfflinePlayers
+} from '../shared/lib.js?v=20260928b';
 
 const ROOM = 'world';
 // 학년+반 구분(명단 관리, 학년별 solo_log 기록)을 넣기 전에는 한국사=1학년, 세계사=2학년만 썼으므로,
@@ -955,7 +955,7 @@ function renderRoster(){
       : '';
     return `<tr>
       <td class="rank">${i+1}</td>
-      <td>${p.avatar||''} ${escapeHtml(p.name||'')}</td>
+      <td>${p.avatar||''} ${escapeHtml(p.name||'')}${isOffline(p) ? ' <span class="muted" title="10초 안에 다시 연결되지 않으면 자동으로 내보내져요">📴 연결 끊김</span>' : ''}</td>
       ${teamCell}
       <td>${p.floor||0}${unitLabel()}</td>
       <td>${p.correct||0}/${p.wrong||0}</td>
@@ -1542,6 +1542,7 @@ el('soloClearBtn').onclick = async () => {
 };
 
 setInterval(renderRoster, 500);
+setInterval(()=> sweepOfflinePlayers(ROOM, playersObj), 2000);   // 연결이 10초 넘게 끊긴 학생 자동 내보내기
 setInterval(renderSoloStats, 15000); // '연습 중' → '중단' 표시가 시간이 지나면 갱신되도록
 
 // ── ⑦ 학생 명단 관리 (혼자 연습 이름 제한용) ──────────────

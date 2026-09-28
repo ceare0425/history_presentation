@@ -56,6 +56,37 @@ export function serverNow() {
   return Date.now() + serverOffsetMs;
 }
 
+// ── 연결 끊김 자동 내보내기 ──────────────────────────
+// 학생 화면(play.html)은 연결이 끊기면 서버가 players/<id>/offlineAt(서버 시각)을 남기도록 onDisconnect를 걸고,
+// 다시 연결되면 offlineAt을 지운다. offlineAt이 OFFLINE_KICK_MS보다 오래 남아 있으면 접속해 있는 아무 화면
+// (다른 학생·관리자·전광판)이나 그 학생을 players에서 지운다 = 자동 내보내기.
+export const OFFLINE_KICK_MS = 10000;
+export const OFFLINE_MARK = { ".sv": "timestamp" };   // onDisconnect에서 서버 시각을 기록하는 값
+export function isOffline(p) {
+  return !!(p && p.offlineAt);
+}
+// 내 연결이 막 다시 붙은 직후에는 다른 학생들도 아직 재연결 중일 수 있으므로(학교 와이파이가 통째로 끊겼다 붙는 경우 등)
+// 내 연결이 SWEEP_SETTLE_MS 이상 유지된 뒤에만 내보내기를 한다 — 그래야 다 같이 끊겼다 돌아온 학생들을 잘못 지우지 않는다.
+const SWEEP_SETTLE_MS = 6000;
+let connectedSince = 0;
+onValue(ref(db, ".info/connected"), (snap) => {
+  connectedSince = snap.val() === true ? Date.now() : 0;
+});
+// players: [{id, ...}] 또는 { id: {...} }
+export function sweepOfflinePlayers(roomId, players) {
+  if (!connectedSince || Date.now() - connectedSince < SWEEP_SETTLE_MS) return;
+  const list = Array.isArray(players) ? players : Object.entries(players || {}).map(([id, p]) => ({ id, ...p }));
+  const now = serverNow();
+  list.forEach((p) => {
+    if (!p || !p.id || !p.offlineAt || now - p.offlineAt <= OFFLINE_KICK_MS) return;
+    // 그 사이 학생이 다시 연결돼 offlineAt이 지워졌으면 지우지 않도록 서버 값을 보고 판단(여러 화면이 동시에 해도 안전)
+    runTransaction(roomRef(roomId, "players", p.id), (cur) => {
+      if (cur && cur.offlineAt && serverNow() - cur.offlineAt > OFFLINE_KICK_MS) return null;
+      return undefined;   // 중단 (그대로 둠)
+    }).catch(() => {});
+  });
+}
+
 // ── 정답 채점 (기존 파이썬 서버의 normalize_answer / is_correct 이식) ──
 const STRIP_RE = /[\s.,·・()\[\]{}'"‘’“”\-·]/g;
 
@@ -633,7 +664,8 @@ export function isLastGroup(players, id) {
 // spicy(매운맛): 상위 그룹을 1명 넓히고 필요 격차를 4→2층으로 낮춰 접전에서도 견제가 들어간다.
 // nanta(난타전): 격차 조건 없이 '상위 NANTA_TARGET_TOP등(=상위권)'이 후보(자신 제외). 아래 등수도 상위권을 저격할 수 있다.
 export function attackCandidates(players, byId, spicy = false, nanta = false) {
-  const ranked = rankedPlayers(players);
+  // 연결이 끊긴 학생(곧 자동으로 내보내짐)은 공격해도 효과가 없으므로 대상 순위에서 뺀다
+  const ranked = rankedPlayers(players.filter((p) => !isOffline(p)));
   if (ranked.length < 2) return [];
   if (nanta) {
     return ranked.slice(0, NANTA_TARGET_TOP)
