@@ -1398,6 +1398,24 @@ async function loadSoloLog(force){
   return soloCache;
 }
 
+// 수업 게임(play.html) 기록 — 복습 추천에만 합쳐 쓴다(정답률·연속 학습일 등 연습 통계에는 안 섞음)
+let classCache = null, classCacheAt = 0;
+async function loadClassLog(force){
+  if(!force && classCache && Date.now() - classCacheAt < 15000) return classCache;
+  try{
+    const snap = await get(roomRef(ROOM, 'class_log'));
+    classCache = snap.val() || {};
+    classCacheAt = Date.now();
+  }catch(_e){ if(!classCache) classCache = {}; }
+  return classCache;
+}
+
+// 복습 추천용: 혼자 연습 + 수업 게임 기록을 합친 내 세션 목록
+async function loadReviewSessions(force){
+  const [soloObj, classObj] = await Promise.all([loadSoloLog(force), loadClassLog(force)]);
+  return { soloObj, soloList: mySessions(soloObj), reviewList: mySessions(soloObj).concat(mySessions(classObj)) };
+}
+
 function myName(){ return (el('nameInput').value.trim() || '').slice(0, 20); }
 
 function mySessions(obj){
@@ -1497,7 +1515,7 @@ function computeReviewItems(list){
   const wrongItems = aggregateWrongItems(list);
   const dueItems = aggregateDueReview(list, new Set(wrongItems.map(w=>w.qid)));
   return [
-    ...wrongItems.map(w => ({ qid: w.qid, unit: w.unit, qtext: w.qtext, note: `정답: ${w.answer||''}` })),
+    ...wrongItems.map(w => ({ qid: w.qid, unit: w.unit, qtext: w.qtext, note: `${w.src === 'class' ? '수업 게임에서 틀림 · ' : ''}정답: ${w.answer||''}` })),
     ...dueItems.map(d => ({ qid: d.qid, unit: d.unit, qtext: d.qtext, note: `${dayNum(serverNow()) - dayNum(d.ts)}일 전에 맞혔어요` }))
   ];
 }
@@ -1530,7 +1548,7 @@ const MIN_PEERS = 5; // 이 인원 이상 모여야 '상위 %'를 보여준다
 let lastAgg = null;
 let lastReviewItems = []; // renderDash가 마지막으로 계산한 복습 추천(오답+오래된 정답) 목록 — "다시 풀기" 버튼에서 참조
 let lastBookmarkItems = []; // openDash가 불러온 즐겨찾기 목록 — 대시보드 렌더·"다시 풀기"·해제 버튼에서 참조
-let lastDashList = null, lastDashSoloObj = null; // 마지막으로 대시보드를 그릴 때 쓴 원본 데이터 (pages.json이 늦게 도착했을 때 재렌더링용)
+let lastDashList = null, lastDashSoloObj = null, lastDashReviewList = null; // 마지막으로 대시보드를 그릴 때 쓴 원본 데이터 (pages.json이 늦게 도착했을 때 재렌더링용)
 
 // unit에 대응하는 슬라이드가 있으면 "📖 다시 배우기" 버튼 HTML을, 없으면 빈 문자열을 반환.
 // 오답 노트·복습 추천·즐겨찾기 목록에서 공통으로 쓴다.
@@ -1566,9 +1584,9 @@ async function refreshRecord(force){
     return;
   }
   t.disabled = false;
-  const list = mySessions(await loadSoloLog(force));
+  const { soloList: list, reviewList } = await loadReviewSessions(force);
   lastAgg = aggregate(list);
-  updateReviewQuickBtn(list);
+  updateReviewQuickBtn(reviewList);
   if(!list.length){
     t.classList.add('empty');
     t.innerHTML = '<span>아직 연습 기록이 없어요 — 첫 연습을 시작해 보세요! 📊</span>';
@@ -1620,7 +1638,7 @@ function renderDash(list, soloObj){
 
   const lastFloorVal = agg.floors.length ? agg.floors[agg.floors.length - 1].floor : 0;
 
-  const reviewItems = computeReviewItems(list);
+  const reviewItems = computeReviewItems(lastDashReviewList || list);
   lastReviewItems = reviewItems;
 
   // ── 친구들과 비교 ──────────────────────────────
@@ -1770,10 +1788,11 @@ async function loadDashBookmarks(){
 function openDash(){
   el('dashPanel').classList.remove('hidden');
   el('dashBody').innerHTML = '<div class="dash-empty">불러오는 중…</div>';
-  Promise.all([loadSoloLog(true), loadDashBookmarks()]).then(([obj, bookmarks])=>{
+  Promise.all([loadReviewSessions(true), loadDashBookmarks()]).then(([rs, bookmarks])=>{
     lastBookmarkItems = bookmarks;
-    lastDashList = mySessions(obj);
-    lastDashSoloObj = obj;
+    lastDashList = rs.soloList;
+    lastDashReviewList = rs.reviewList;
+    lastDashSoloObj = rs.soloObj;
     renderDash(lastDashList, lastDashSoloObj);
     refreshRecord(false);
   });

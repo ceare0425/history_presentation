@@ -574,7 +574,8 @@ let lastFloor = 0;
 let kicked = false;
 let myAnswered = false; // 이번 라운드에서 한 문제라도 제출했는지 (아직 안 했으면 종료 화면 대신 대기 화면을 보여줌)
 let unitStats = {};        // 이번 라운드 단원별 정답/오답 { 단원명: {c, w} } — 라운드 종료 시 class_log에 기록
-let qStats = {};           // 이번 라운드 문제별 정답/오답 { qid: {c, w} } — 관리자 문제별 오답률 분석용
+let qStats = {};           // 이번 라운드 문제별 정답/오답 { qid: {c, w, last} } — 관리자 분석 + 혼자 연습 복습 추천용
+let wrongMap = new Map();  // 이번 라운드에서 아직 못 맞힌 문제 { qid => {qid, unit, qtext, answer, ts, src} } — class_log에 남겨 혼자 연습 '복습 추천'으로 이어짐
 let classLogWritten = false; // 이번 라운드 class_log를 이미 기록했는지(중복 기록 방지)
 // 답을 제출한 뒤 다음 문제가 나올 때까지는 다시 제출하지 못하게 막는다 — 해독·얼음 해제 타이머 등이
 // 그 사이에 입력창을 다시 켜 버려도(특히 콤보 스파크 카드를 고르는 동안) 같은 문제로 점수를 두 번 받지 않도록
@@ -964,6 +965,12 @@ async function submitAnswerCore(){
   uStat[correct ? 'c' : 'w'] += 1;
   const qStat = qStats[answeredQid] || (qStats[answeredQid] = { c:0, w:0 });
   qStat[correct ? 'c' : 'w'] += 1;
+  if(correct){
+    qStat.last = serverNow();       // 마지막으로 맞힌 시각 — 혼자 연습 '복습 추천'에서 오래된 문제를 다시 띄우는 데 씀
+    wrongMap.delete(answeredQid);   // 끝까지 못 맞힌 문제만 혼자 연습 '복습 추천'에 넘기도록, 맞히면 제거
+  }else{
+    wrongMap.set(answeredQid, { qid: answeredQid, unit: uName, qtext: q.question, answer: q.answers[0], ts: serverNow(), src: 'class' });
+  }
 
   // 강탈 방어 판정은 정답일 때만 유효하므로 여기서(=제출한 바로 이 순간, 아래 await 전에) 확정해야 한다.
   // 뒤이은 await(네트워크 왕복) 도중 실제 시간이 흘러 마감을 넘기거나, 독립적으로 돌고 있는 실패
@@ -1143,7 +1150,8 @@ async function syncClassLog(me){
       correct: me.correct||0,
       wrong: me.wrong||0,
       unit_stats: Object.entries(unitStats).map(([u,x]) => ({ u, c: x.c, w: x.w })),
-      q_stats: Object.entries(qStats).map(([qid,x]) => ({ qid, c: x.c, w: x.w }))
+      q_stats: Object.entries(qStats).map(([qid,x]) => ({ qid, c: x.c, w: x.w, last: x.last||null })),
+      wrong_items: [...wrongMap.values()].slice(-30)
     });
   }catch(_e){ /* 기록 실패해도 게임에는 지장 없음 */ }
 }
@@ -1207,7 +1215,7 @@ function tick(){
       const saved = loadFxState();
       const restoring = !!(saved && saved.pid === playerId && saved.token === roundState.token);
       queue = []; retryList = []; retryMiss = {}; lastQid = null; currentQid = null; currentQuestion = null; currentStartedAt = null;
-      unitStats = {}; qStats = {}; classLogWritten = false;
+      unitStats = {}; qStats = {}; wrongMap = new Map(); classLogWritten = false;
       // 아이템 로컬 상태 초기화 (새로고침 복원이면 들고 있던 아이템은 DB 값을 그대로 둔다)
       if(!restoring) heldItem = null;
       myBoost = 0; myShield = false;
