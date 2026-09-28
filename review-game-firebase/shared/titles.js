@@ -197,6 +197,11 @@ function addCss(){
   .tt-chip.rep{ box-shadow:0 0 0 3px #111827 inset; }
   .tt-chip small{ font-weight:600; font-size:.7rem; opacity:.8; }
   .tt-hint{ font-size:.72rem; color:#9ca3af; margin-top:3px; }
+  /* 페이지의 전역 button 스타일(가로 100%·큰 글씨·그라데이션 배경)이 도감 안 버튼에 번지지 않게 되돌린다 */
+  .tt-overlay .tt-head > div:first-child{ flex:1; min-width:0; }
+  .tt-overlay button.tt-close{ width:auto; flex:0 0 auto; padding:8px 12px; font-size:.9rem; color:#374151; background:#f3f4f6; border-radius:10px; }
+  .tt-overlay button.tt-chip{ width:auto; flex:0 0 auto; padding:5px 11px; font-size:.84rem; border-radius:999px; background:#f3f4f6; color:#9ca3af; transition:none; }
+  .tt-overlay button.tt-chip:disabled{ opacity:1; }
   .tt-toasts{ position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:9100; display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none; }
   .tt-toast{ background:#111827; color:#fff; border-radius:14px; padding:10px 18px; font-weight:800; font-size:1rem; box-shadow:0 10px 30px rgba(0,0,0,.35); animation:ttIn .35s ease; text-align:center; }
   .tt-toast small{ display:block; font-size:.74rem; font-weight:600; opacity:.8; }
