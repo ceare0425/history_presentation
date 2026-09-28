@@ -586,6 +586,7 @@ let myWaterballoonUntil = 0;   // '물풍선' — 얼음과 동일(이름만 다
 function isFrozen(){ return serverNow() < myIceUntil || serverNow() < myWaterballoonUntil; }
 // '지뢰' 카드 창이 떠 있는 동안에도 제출 불가 — 카드를 골라야만 문제를 풀 수 있다
 function mineOpen(){ return !el('mineOverlay').classList.contains('hidden'); }
+let lastItemEvents = {};   // 가장 최근에 받은 item_events 전체 — 라운드 준비 전에 도착한 이벤트를 나중에 처리하기 위해 보관
 const seenItemEvents = new Map();   // 처리한 이벤트 key → 이벤트 시각(ms) — 새로고침 뒤 같은 이벤트를 또 처리하지 않도록 저장해 둠
 let minePending = null;    // 지뢰 카드 창이 떠 있는 동안 { attackerId, label } — 새로고침 뒤 다시 띄우기용
 let comboPending = null;   // 콤보 스파크 카드 창이 떠 있는 동안 연속 정답 수 — 새로고침 뒤 다시 띄우기용
@@ -1190,6 +1191,7 @@ function tick(){
       minePending = null; comboPending = null;
       if(restoring) restoreFxState(saved);
       renderItemBar();
+      handleItemEvents(lastItemEvents);   // 라운드 준비(초기화·복원)를 마치기 전에 도착해 미뤄 둔 이벤트를 이제 처리
     }
     el('timerVal').textContent = fmtTime(remaining);
     if(currentQid === null && Object.keys(questionsObj).length>0){
@@ -1381,7 +1383,8 @@ function startListening(){
     updateRankBadge();
   });
   onValue(roomRef(ROOM, 'item_events'), (snap)=>{
-    handleItemEvents(snap.val() || {});
+    lastItemEvents = snap.val() || {};
+    handleItemEvents(lastItemEvents);
   });
 
   renderItemBar();
@@ -1922,11 +1925,14 @@ async function useItem(){
 
 function handleItemEvents(obj){
   const now = serverNow();
+  // 게임이 진행 중이 아니거나(끝남·라운드 정보 수신 전), 이번 라운드 준비(tick의 초기화·새로고침 복원)가
+  // 아직이면 처리하지 않고 '안 본 이벤트'로 남겨 둔다 — 준비가 끝나면 tick이 다시 불러 처리한다.
+  // (새로고침 직후 라운드 정보보다 이벤트가 먼저 도착해도 그 사이 맞은 공격이 사라지지 않게)
+  if(roundState.status !== 'running' || roundEnded() || lastSeenToken !== roundState.token) return;
   Object.entries(obj).forEach(([k, e])=>{
     if(seenItemEvents.has(k)) return;
     seenItemEvents.set(k, (e && e.at) || now);
     if(!e || !e.at || now - e.at > 12000) return;  // 오래된 이벤트(재접속 등)는 무시
-    if(roundState.status !== 'running' || roundEnded()) return;   // 게임이 끝난 뒤에는 어떤 아이템 효과도 적용하지 않음
     // 교사가 뿌린 '랜덤박스': 아이템이 없으면 바로 지급, 이미 있으면 교체 여부를 물어본다
     if(e.type === 'randombox_offer'){
       if(!itemsOn() || roundState.status !== 'running' || roundEnded()) return;
