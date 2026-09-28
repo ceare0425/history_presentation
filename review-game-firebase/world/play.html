@@ -1932,13 +1932,14 @@ function handleItemEvents(obj){
       return;
     }
     if(now < myImmuneUntil){
-      // 무적은 막아도 소멸하지 않는다 — 맞은 뒤 3초까지 모든 방해를 계속 막는다
+      // 무적은 막아도 소멸하지 않는다 — 무적이 끝날 때까지 모든 방해를 계속 막는다
       tellStealBlocked('immune');
       showItemAlert('🛡️ 무적 상태로 방해를 막아냈다!');
       return;
     }
-    // 무적은 맞은 순간부터 3초 — 시간형 방해(안개 5초 등)가 걸려 있어도 3초가 지나면 다른 방해가 겹쳐 들어올 수 있다
-    myImmuneUntil = now + ITEM_FX_MS.immunity;
+    // 무적은 맞은 순간부터 — 시간형 방해(안개·얼음·물풍선·지진·벌떼)는 4초, 즉시형(미끄럼틀·강탈 등)은 3초. 시간형이 걸려 있어도 4초가 지나면 다른 방해가 겹칠 수 있다
+    const timedFx = ['fog', 'ice', 'waterballoon', 'earthquake', 'bee'].includes(e.type);
+    myImmuneUntil = now + (timedFx ? ITEM_FX_MS.immunityTimed : ITEM_FX_MS.immunity);
     update(roomRef(ROOM, 'players', playerId), { immuneUntil: myImmuneUntil });   // 공격자가 무적 여부를 미리 볼 수 있게 동기화
     applyIncomingFx(e.type, e.by, !!e.reflected);
   });
