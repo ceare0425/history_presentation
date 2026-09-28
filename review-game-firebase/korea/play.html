@@ -1419,8 +1419,7 @@ function itemDescFor(k, it, nanta){
     return `선두권 문제가 ${s}초간 벌떼에 가려짐`;
   }
   if(k === 'slide'){
-    if(nanta) return '선두권 -5층 (0층까지 내려갈 수 있음)';
-    if(itemsMode === 'spicy') return '선두권 -4층 (0층까지 내려갈 수 있음)';
+    return '선두권 -3층 (0층까지 내려갈 수 있음)';
   }
   return it.desc;
 }
@@ -1511,7 +1510,7 @@ function renderItemBar(){
       if(heldItem === 'ladder') desc = `즉시 +2${u}`;
       else if(heldItem === 'rocket') desc = `즉시 +5${u}`;
       else if(heldItem === 'steal') desc = `상대 팀 1등 -3${u}, 나 +3${u}`;
-      else if(heldItem === 'slide') desc = `상대 팀 1등 -${itemsMode === 'nanta' ? 5 : itemsMode === 'spicy' ? 4 : 3}${u}`;
+      else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u} (0${u}까지 내려갈 수 있음)`;
       else if(heldItem === 'banana') desc = `상대 팀 1등이 바나나를 밟아 즉시 -2${u}`;
       else if(heldItem === 'mine') desc = `상대 팀 1등에게 설치 — 카드 3장 중 1장만 생존, 나머지는 -1~-4${u}`;
       else if(heldItem === 'goldenbell') desc = `다음 정답 ×3! 틀리면 연속 끊김 -2${u}`;
@@ -2213,7 +2212,7 @@ function applyIncomingFx(type, attackerId, reflected, durOverride){
 
 async function slideDown(label){
   if(roundEnded()) return;   // 게임이 끝난 뒤에는 층수가 바뀌지 않음
-  const drop = itemsMode === 'nanta' ? 5 : itemsMode === 'spicy' ? 4 : 3;   // 난타전 -5층 / 매운맛 -4층 — 모든 모드에서 보호 없이 0층까지
+  const drop = 3;   // 모든 모드·팀전 공통 -3층, 보호 없이 0층까지
   let actualDrop = 0;
   const nf = await changeFloor(f => {
     const v = Math.max(f - drop, 0);
