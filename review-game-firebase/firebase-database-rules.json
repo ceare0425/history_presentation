@@ -82,6 +82,16 @@
         }
       }
     },
+    "titles": {
+      ".read": true,
+      "$room": {
+        "$classKey": {
+          "$name": {
+            ".write": true
+          }
+        }
+      }
+    },
     "museum": {
       ".read": true,
       "$tour": {

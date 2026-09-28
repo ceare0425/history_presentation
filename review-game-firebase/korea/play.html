@@ -427,6 +427,7 @@
       <div class="big pulse">🕐</div>
       <div id="waitName" style="font-weight:700; margin-bottom:4px; font-size:1.1rem;"></div>
       <div class="sub">선생님이 게임을 시작하기를 기다리는 중...</div>
+      <button type="button" id="titlesBtnWait">🏅 칭호 도감</button>
       <details id="itemGuide" class="item-guide hidden">
         <summary>🎒 아이템 설명 보기</summary>
         <div class="item-guide-intro" id="itemGuideIntro"></div>
@@ -496,6 +497,7 @@
       <div class="big"><span id="finalFloor">0</span><span class="u-unit">층</span></div>
       <div class="sub" id="finalStat"></div>
       <div class="rival-result" id="rivalResult"></div>
+      <button type="button" id="titlesBtnEnd">🏅 칭호 도감</button>
     </div>
   </div>
 </div>
@@ -527,7 +529,8 @@ import {
   recencyWeightFn, weightedQueue,
   teamInfo, teamStandings, activeBonus,
   ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
-} from '../shared/lib.js?v=20260928f';
+} from '../shared/lib.js?v=20260928g';
+import { mountTitles } from '../shared/titles.js?v=20260928a';
 
 const ROOM = 'korea';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
@@ -554,6 +557,14 @@ async function checkRosterAllowed(cls, name){
 }
 
 let questionsObj = {};
+// 🏅 칭호 수집 (shared/titles.js) — 대표 칭호는 players/<id>/title로 올려 전광판 이름 위에 띄운다
+const titles = mountTitles({ db, ref, get, update, onValue, runTransaction, serverNow, escapeHtml }, {
+  room: ROOM,
+  getQuestions: () => questionsObj,
+  onRep: (info) => { if(playerId) update(roomRef(ROOM, 'players', playerId), { title: info }).catch(()=>{}); }
+});
+let roundHits = 0;        // 이번 라운드에 실제로 맞은 방해 수 (숨은 칭호 '불굴의 의지')
+let lastNotFirstAt = 0;   // 이번 라운드에서 마지막으로 1등이 아니었던 시각 (숨은 칭호 '극장골')
 let roundState = { status: 'idle', units: [], duration_sec: 300, end_time: null, token: 0, order: 'random', weight: 'even', qids: [], team_mode:false, team_count:4, bonus:[], items_mode:'off' };
 
 // 진행 단위: 개인전=탑 오르기(층), 2팀=줄다리기(cm), 3팀 이상=땅따먹기(평)
@@ -1016,6 +1027,7 @@ async function submitAnswerCore(){
   const wasRetry = currentIsRetry;
   const elapsed = (serverNow() - currentStartedAt) / 1000;
   const correct = isCorrect(text, q.answers);
+  titles.recordAnswer(answeredQid, correct);
   myUndoAvailable = false;   // 새 답을 제출하면 직전 오답 '되돌리기' 기회는 사라짐
 
   const uName = q.unit || '(기타)';
@@ -1148,6 +1160,7 @@ async function submitAnswerCore(){
   el('streakVal').textContent = p.streak >= 2 ? `🔥 ${p.streak}연속 정답!` : '';
   if(p.floor > lastFloor) popFloorBadge();
   lastFloor = p.floor;
+  if(p.floor >= 10 && (p.wrong||0) === 0) titles.unlockHidden('flawless');   // 숨은 칭호 '무결점'
   flashFeedback(correct, q.answers[0], gain, bonusApplied, wasRetry);
   playCharacterReaction(correct);
   renderItemBar();
@@ -1247,6 +1260,12 @@ async function showEndedView(){
     rankEl.classList.remove('rank1');
   }
 
+  // 🏅 숨은 칭호: 극장골(마지막 10초 안에 1등으로 올라서서 우승) · 불굴의 의지(방해 3번 이상 맞고도 1등)
+  if(!roundState.team_mode && rank === 1 && (me.floor||0) > 0){
+    if(lastNotFirstAt && roundState.end_time && lastNotFirstAt >= roundState.end_time - 10000) titles.unlockHidden('buzzer');
+    if(roundHits >= 3) titles.unlockHidden('indomitable');
+  }
+
   // ⚔️ 라이벌 결과 (종료 순간의 층수 기준)
   const rid = !roundState.team_mode ? (roundState.rivals || {})[playerId] : null;
   const rival = rid ? players.find(p => p.id === rid) : null;
@@ -1288,6 +1307,7 @@ function tick(){
       const restoring = !!(saved && saved.pid === playerId && saved.token === roundState.token);
       queue = []; retryList = []; retryMiss = {}; lastQid = null; currentQid = null; currentQuestion = null; currentStartedAt = null;
       unitStats = {}; qStats = {}; wrongMap = new Map(); classLogWritten = false;
+      roundHits = 0; lastNotFirstAt = 0;
       // 아이템 로컬 상태 초기화 (새로고침 복원이면 들고 있던 아이템은 DB 값을 그대로 둔다)
       if(!restoring) heldItem = null;
       myBoost = 0; myShield = false;
@@ -1427,6 +1447,10 @@ function stopRoundEffects(){
 
 function startListening(){
   showView('waitingView');
+  titles.bindButton(el('titlesBtnWait'));
+  titles.bindButton(el('titlesBtnEnd'));
+  titles.setIdentity(classKey(), playerName);
+  titles.syncRep();   // 새로 만든(또는 초기화 뒤 다시 만든) 내 players 노드에 대표 칭호를 다시 올린다
   // 새로고침 직전까지 처리한 이벤트는 다시 처리하지 않도록 먼저 채워 둔다 (item_events 첫 수신보다 앞서야 함)
   const savedFx = loadFxState();
   if(savedFx && savedFx.pid === playerId && savedFx.seen){
@@ -1435,6 +1459,7 @@ function startListening(){
 
   onValue(roomRef(ROOM, 'questions'), (snap)=>{
     questionsObj = snap.val() || {};
+    titles.refresh();
   });
 
   onValue(roomRef(ROOM, 'round'), (snap)=>{
@@ -1503,6 +1528,10 @@ function startListening(){
   // 아이템전: 전체 명단(방해 대상 계산) + 아이템 이벤트 수신
   onValue(roomRef(ROOM, 'players'), (snap)=>{
     allPlayers = Object.entries(snap.val() || {}).map(([id,p])=>({ id, ...p }));
+    if(roundState.status === 'running' && !roundState.team_mode && !roundEnded()){
+      const top = rankedPlayers(allPlayers)[0];
+      if(!top || top.id !== playerId) lastNotFirstAt = serverNow();
+    }
     checkMyOvertake();
     updateRankBadge();
     updateRivalLine();
@@ -2192,6 +2221,7 @@ function handleItemEvents(obj){
     const timedFx = ['fog', 'ice', 'waterballoon', 'earthquake', 'bee'].includes(e.type);
     myImmuneUntil = now + (timedFx ? ITEM_FX_MS.immunityTimed : ITEM_FX_MS.immunity);
     update(roomRef(ROOM, 'players', playerId), { immuneUntil: myImmuneUntil });   // 공격자가 무적 여부를 미리 볼 수 있게 동기화
+    roundHits++;
     applyIncomingFx(e.type, e.by, !!e.reflected);
   });
 }
