@@ -99,6 +99,17 @@
   .rank-badge:empty{ display:none; }
   .timer{ font-weight:700; color:var(--sky1); font-variant-numeric:tabular-nums; font-size:1.25rem; }
   .streak{ font-size:.9rem; color:var(--sub); text-align:right; min-height:1.3em; flex:0 0 auto; }
+  /* ⚔️ 라이벌 대결: 나와 라이벌의 층수 차이 */
+  .rival-line{
+    display:flex; align-items:center; justify-content:center; gap:6px; flex:0 0 auto;
+    font-size:.9rem; font-weight:700; border-radius:10px; padding:5px 12px; margin-bottom:.6vh;
+    background:#eef1f7; color:var(--ink); border:2px solid #d7ddea;
+  }
+  .rival-line.ahead{ background:#e7f6ec; border-color:#9fd6b1; color:#1d6b3a; }
+  .rival-line.behind{ background:#fdecea; border-color:#f2b1a9; color:#a4321f; }
+  .rival-line.hidden{ display:none; }
+  .rival-result{ margin-top:.6rem; font-weight:700; font-size:1.05rem; }
+  .rival-result:empty{ display:none; }
 
   .qbox{
     position:relative;
@@ -458,6 +469,7 @@
         <span class="team-badge hidden" id="teamBadge"></span>
         <div class="timer">⏱ <span id="timerVal">--:--</span></div>
       </div>
+      <div class="rival-line hidden" id="rivalLine"></div>
       <div class="streak" id="streakVal"></div>
     </div>
 
@@ -483,6 +495,7 @@
       <div>🏁 게임 종료!</div>
       <div class="big"><span id="finalFloor">0</span><span class="u-unit">층</span></div>
       <div class="sub" id="finalStat"></div>
+      <div class="rival-result" id="rivalResult"></div>
     </div>
   </div>
 </div>
@@ -766,6 +779,43 @@ function updateRankBadge(){
     const idx = ranked.findIndex(p=>p.id===playerId);
     badge.textContent = idx>=0 ? `${idx+1}등 / ${ranked.length}명 중` : '';
   }
+}
+
+// ── ⚔️ 라이벌 대결 (개인전): 관리자가 게임 시작 때 round.rivals에 { pid: 라이벌 pid }로 짝을 정해 준다 ──
+let rivalLead = null;        // 직전에 본 나와 라이벌의 관계: 1 앞섬 / 0 동점 / -1 뒤짐 (역전 알림용)
+let rivalLeadToken = null;   // rivalLead가 어느 라운드 기준인지
+
+// 지금 라운드의 내 라이벌과 나를 찾는다. 라이벌이 없거나(팀전·중간 참여) 나갔으면 null.
+function currentRivalPair(){
+  if(roundState.team_mode) return null;
+  const rid = (roundState.rivals || {})[playerId];
+  if(!rid) return null;
+  const rival = allPlayers.find(p => p.id === rid);
+  const me = allPlayers.find(p => p.id === playerId);
+  if(!rival || !me) return null;
+  return { me, rival };
+}
+
+function updateRivalLine(){
+  const line = el('rivalLine');
+  if(!line) return;
+  const pair = roundState.status === 'running' ? currentRivalPair() : null;
+  if(!pair){ line.classList.add('hidden'); return; }
+  const diff = (pair.me.floor||0) - (pair.rival.floor||0);
+  const lead = Math.sign(diff);
+  line.classList.remove('hidden', 'ahead', 'behind');
+  if(lead > 0) line.classList.add('ahead');
+  if(lead < 0) line.classList.add('behind');
+  line.textContent = `⚔️ 라이벌 ${pair.rival.name || '?'} · ` +
+    (lead > 0 ? `${diff}층 앞섬` : lead < 0 ? `${-diff}층 뒤짐` : '동점');
+
+  // 앞서거니 뒤서거니 할 때만 알림 (라운드 첫 표시·동점으로 바뀔 때는 조용히)
+  if(rivalLeadToken !== roundState.token){ rivalLeadToken = roundState.token; rivalLead = lead; return; }
+  if(lead !== rivalLead && lead !== 0){
+    if(lead > 0 && !roundEnded()) showItemAlert(`⚔️ 라이벌 ${pair.rival.name} 님을 제쳤어요!`);
+    else if(lead < 0 && !roundEnded()) showItemAlert(`⚔️ 라이벌 ${pair.rival.name} 님에게 역전당했어요!`);
+  }
+  rivalLead = lead;
 }
 
 function roundEnded(){
@@ -1188,6 +1238,20 @@ async function showEndedView(){
     rankEl.textContent = '';
     rankEl.classList.remove('rank1');
   }
+
+  // ⚔️ 라이벌 결과 (종료 순간의 층수 기준)
+  const rid = !roundState.team_mode ? (roundState.rivals || {})[playerId] : null;
+  const rival = rid ? players.find(p => p.id === rid) : null;
+  const rv = el('rivalResult');
+  if(rival){
+    const mf = me.floor||0, rf = rival.floor||0;
+    const nm = rival.name || '?';
+    rv.textContent = mf > rf ? `⚔️ 라이벌 ${nm} 님에게 승리! (${mf}층 vs ${rf}층) 🎉`
+      : mf < rf ? `⚔️ 라이벌 ${nm} 님에게 아쉽게 졌어요 (${mf}층 vs ${rf}층) — 다음 판에 설욕!`
+      : `⚔️ 라이벌 ${nm} 님과 무승부! (${mf}층 vs ${rf}층)`;
+  } else {
+    rv.textContent = '';
+  }
   showView('endedView');
 }
 
@@ -1375,8 +1439,9 @@ function startListening(){
       weight: r.order === 'recent' ? 'recent' : (r.weight || 'even'),
       qids: r.qids || [],
       team_mode: !!r.team_mode, team_count: r.team_count || 4, bonus: r.bonus || [],
-      items_mode: (r.items_mode === 'mild' ? 'nanta' : r.items_mode) || 'off'   // 구버전 '순한맛' 값 호환
-    } : { status:'idle', units:[], duration_sec:300, end_time:null, token:0, order:'random', weight:'even', qids:[], team_mode:false, team_count:4, bonus:[], items_mode:'off' };
+      items_mode: (r.items_mode === 'mild' ? 'nanta' : r.items_mode) || 'off',   // 구버전 '순한맛' 값 호환
+      rivals: r.rivals || {}
+    } : { status:'idle', units:[], duration_sec:300, end_time:null, token:0, order:'random', weight:'even', qids:[], team_mode:false, team_count:4, bonus:[], items_mode:'off', rivals:{} };
     itemsMode = roundState.items_mode;
     refreshUnitLabels();
     el('avatarChar').hidden = roundState.team_mode;   // 팀전에서는 개인 캐릭터 숨김
@@ -1384,6 +1449,7 @@ function startListening(){
     renderItemBar();
     renderItemGuide();
     updateRankBadge();
+    updateRivalLine();
   });
 
   onValue(roomRef(ROOM, 'players', playerId), (snap)=>{
@@ -1431,6 +1497,7 @@ function startListening(){
     allPlayers = Object.entries(snap.val() || {}).map(([id,p])=>({ id, ...p }));
     checkMyOvertake();
     updateRankBadge();
+    updateRivalLine();
   });
   onValue(roomRef(ROOM, 'item_events'), (snap)=>{
     lastItemEvents = snap.val() || {};
