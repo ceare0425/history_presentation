@@ -390,7 +390,7 @@
 </div>
 
 <script type="module">
-import { roomRef, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers, teamInfo, teamStandings, activeBonus, ITEMS, ITEM_FX_MS, TEAM_OPTIONS } from '../shared/lib.js?v=20260928a';
+import { roomRef, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers, teamInfo, teamStandings, activeBonus, ITEMS, ITEM_FX_MS, TEAM_OPTIONS, sweepOfflinePlayers } from '../shared/lib.js?v=20260928b';
 
 const ROOM = 'korea';
 const el = (id) => document.getElementById(id);
@@ -1169,6 +1169,7 @@ onValue(roomRef(ROOM,'players'), (snap)=>{
 
 buildBackground();
 setInterval(render, 500);
+setInterval(()=> sweepOfflinePlayers(ROOM, playersObj), 2000);   // 연결이 10초 넘게 끊긴 학생 자동 내보내기
 </script>
 </body>
 </html>

@@ -474,12 +474,13 @@
 
 <script type="module">
 import {
-  roomRef, ref, db, onValue, get, set, update, push, runTransaction, serverNow, escapeHtml,
+  roomRef, ref, db, onValue, get, set, update, push, runTransaction, onDisconnect, serverNow, escapeHtml,
+  OFFLINE_MARK, isOffline, sweepOfflinePlayers,
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   teamInfo, teamStandings, activeBonus,
   ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
-} from '../shared/lib.js?v=20260928a';
+} from '../shared/lib.js?v=20260928b';
 
 const ROOM = 'korea';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
@@ -1371,10 +1372,12 @@ function startListening(){
     updateRankBadge();
   });
 
-  // 연결이 끊겨도(스마트폰 화면 잠금·앱 전환·와이파이↔LTE 전환 등) 학생을 명단에서 자동으로
-  // 지우지 않는다. 예전에는 onDisconnect().remove()로 지웠는데, 폰에서 잠깐 끊길 때마다
-  // 학생 노드가 사라져 "내보내졌어요" 알림과 함께 점수까지 날아가는 문제가 있었다.
-  // 학생을 뺄 때는 관리자 화면의 "내보내기" / "전체 초기화" 버튼을 쓴다.
+  // 게임 화면을 나가거나 연결이 끊기면 서버가 offlineAt(끊긴 시각)을 남기고, 10초(OFFLINE_KICK_MS) 안에
+  // 다시 연결되지 않으면 접속해 있는 다른 화면이 이 학생을 자동으로 내보낸다(sweepOfflinePlayers).
+  // 예전처럼 끊기는 즉시 지우면(onDisconnect().remove()) 폰 화면이 잠깐 꺼지거나 와이파이↔LTE가 바뀔 때마다
+  // 점수가 날아가서, 10초 유예를 둔다. 다시 연결되면 offlineAt을 지워 유예를 취소한다.
+  armPresence();
+  setInterval(()=> sweepOfflinePlayers(ROOM, allPlayers), 2000);
 
   // 아이템전: 전체 명단(방해 대상 계산) + 아이템 이벤트 수신
   onValue(roomRef(ROOM, 'players'), (snap)=>{
@@ -1809,7 +1812,7 @@ async function useItem(){
       // 미끄럼틀·강탈·바나나·지뢰는 상대 팀 전원이 아니라 그 팀 1등에게만 적용 — 아이템 소모 전에 먼저 대상을 구한다
       let topMemberId = null;
       if(key === 'slide' || key === 'steal' || key === 'banana' || key === 'mine'){
-        const topMember = rankedPlayers(allPlayers.filter(p=> p.team === targetTeam))[0];
+        const topMember = rankedPlayers(allPlayers.filter(p=> p.team === targetTeam && !isOffline(p)))[0];   // 연결 끊긴 학생은 건너뜀
         if(topMember) topMemberId = topMember.id;
         // 이미 다른 학생에게 강탈당해 방어 창이 열려 있는 상대는 또 강탈할 수 없음(아이템은 소모하지 않고 되돌림)
         if(key === 'steal' && topMember && topMember.stealActive){
@@ -2232,15 +2235,33 @@ async function slideDown(label){
 
 let joinedAlready = false;
 
+// 연결될 때마다 '끊기면 offlineAt 기록'을 서버에 예약하고, 지금은 연결돼 있으니 offlineAt을 지운다
+let presenceArmed = false;
+function armPresence(){
+  if(presenceArmed) return;
+  presenceArmed = true;
+  onValue(ref(db, '.info/connected'), (snap)=>{
+    if(snap.val() === true) registerDisconnect();
+  });
+}
+function registerDisconnect(){
+  if(!playerId) return;
+  const pRef = roomRef(ROOM, 'players', playerId);
+  onDisconnect(pRef).update({ offlineAt: OFFLINE_MARK })
+    .then(()=> update(pRef, { offlineAt: null }))
+    .catch(()=>{});
+}
+
 function handleRemovedFromRoster(){
   if(kicked) return; // 중복 알림 방지
   kicked = true;
+  if(playerId) onDisconnect(roomRef(ROOM, 'players', playerId)).cancel().catch(()=>{});
   localStorage.removeItem(STORAGE_ID_KEY);
   clearFxState();
   playerId = '';
   joinedAlready = false;
   showView('joinView');
-  alert('선생님이 참여 목록에서 내보냈어요. 이름을 확인하고 다시 참여해주세요.');
+  alert('게임에서 나가졌어요. (선생님이 내보냈거나, 연결이 10초 넘게 끊겼어요)\n이름을 확인하고 다시 참여해주세요.');
 }
 
 async function join(name){
@@ -2264,6 +2285,7 @@ async function join(name){
       joinedAt: serverNow(), lastActive: serverNow()
     });
   }
+  registerDisconnect();   // 내보내졌다가 다시 참여하면 새 id로 다시 예약해야 함(.info/connected는 이미 연결 상태라 다시 안 불림)
   startListening();
 }
 
