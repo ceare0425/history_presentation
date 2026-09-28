@@ -235,6 +235,14 @@
         <button type="button" class="secondary" id="teamShuffleBtn">🎲 팀 자동 배정 (실력 균형)</button>
       </div>
       <div class="msg" id="teamShuffleMsg"></div>
+      <div id="rivalModeBox">
+        <label>⚔️ 라이벌 대결 (개인전 · 비슷한 실력끼리 1:1 짝)</label>
+        <div class="toggle-row" id="rivalModeToggle">
+          <button type="button" class="active" data-rv="off">끄기</button>
+          <button type="button" data-rv="on">켜기</button>
+        </div>
+        <div class="sub" style="margin:4px 0 0; font-size:.76rem;">게임 시작 때 직전 판 성적이 비슷한 학생끼리 짝지어 줍니다(첫 판은 무작위). 인원이 홀수면 한 명은 바로 위 학생을 라이벌로 받습니다.</div>
+      </div>
       <label>아이템전 (정답을 맞히면 아이템 획득 · 팀전에서도 동작)</label>
       <div class="toggle-row" id="itemsModeToggle">
         <button type="button" class="active" data-im="off">끄기</button>
@@ -439,6 +447,11 @@ let questionWeight = 'even'; // 'even' | 'recent' — 주제별 출제 비중
 let teamModeState = false;
 let teamCountState = 4;
 let itemsModeState = 'off'; // 'off' | 'nanta' | 'spicy'
+let rivalModeState = false;  // 라이벌 대결 (개인전 전용)
+function syncRivalModeUI(){
+  el('rivalModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', (b.dataset.rv==='on')===rivalModeState));
+  el('rivalModeBox').classList.toggle('hidden', teamModeState);
+}
 let teamStateHydrated = false; // round 리스너에서 한 번이라도 값을 읽어왔는지 (버튼 초기 상태 복원용)
 
 const ITEMS_MODE_HINT = {
@@ -478,6 +491,7 @@ el('teamModeToggle').querySelectorAll('button').forEach(btn=>{
     el('teamModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
     el('teamCountRow').classList.toggle('hidden', !teamModeState);
     el('teamShuffleRow').classList.toggle('hidden', !teamModeState);
+    syncRivalModeUI();
     await update(roomRef(ROOM,'round'), { team_mode: teamModeState, team_count: teamCountState });
     // 팀전을 끄면 남아있던 팀 배정을 즉시 지운다 (전광판·학생 화면에 이전 팀이 남는 문제 방지)
     if(!teamModeState){
@@ -502,6 +516,34 @@ el('itemsModeToggle').querySelectorAll('button').forEach(btn=>{
     await update(roomRef(ROOM,'round'), { items_mode: itemsModeState });
   };
 });
+
+el('rivalModeToggle').querySelectorAll('button').forEach(btn=>{
+  btn.onclick = async () => {
+    rivalModeState = btn.dataset.rv === 'on';
+    syncRivalModeUI();
+    await update(roomRef(ROOM,'round'), { rival_mode: rivalModeState });
+  };
+});
+
+// 라이벌 짝 배정: 직전 판 성적(층수 > 정답 수 > 최고 연속) 순으로 줄 세워 이웃끼리 1:1로 묶는다.
+// 성적이 없으면(첫 판) 무작위. 홀수면 마지막 한 명은 바로 위 학생을 라이벌로 받는다(한쪽 방향).
+// 반환: { pid: 라이벌 pid }
+function buildRivals(){
+  const pids = Object.keys(playersObj);
+  if(pids.length < 2) return {};
+  const score = (p)=> (p.floor||0)*1000 + (p.correct||0)*10 + (p.bestStreak||0);
+  const hasScore = pids.some(pid=> score(playersObj[pid]) > 0);
+  const ordered = hasScore
+    ? shuffle(pids).sort((a,b)=> score(playersObj[b]) - score(playersObj[a]))
+    : shuffle(pids);
+  const rivals = {};
+  for(let i=0; i+1<ordered.length; i+=2){
+    rivals[ordered[i]] = ordered[i+1];
+    rivals[ordered[i+1]] = ordered[i];
+  }
+  if(ordered.length % 2) rivals[ordered[ordered.length-1]] = ordered[ordered.length-2];
+  return rivals;
+}
 
 el('teamShuffleBtn').onclick = async () => {
   const msg = el('teamShuffleMsg');
@@ -584,6 +626,7 @@ el('startBtn').onclick = async () => {
   try{
     const bonus = [];
     const updates = {};
+    const rivals = (rivalModeState && !teamModeState) ? buildRivals() : {};
     updates[`rooms/${ROOM}/round`] = {
       status: 'running', units, duration_sec,
       end_time: serverNow() + duration_sec*1000,
@@ -594,7 +637,9 @@ el('startBtn').onclick = async () => {
       team_mode: teamModeState,
       team_count: teamCountState,
       bonus,
-      items_mode: itemsModeState
+      items_mode: itemsModeState,
+      rival_mode: rivalModeState,
+      rivals
     };
     updates[`rooms/${ROOM}/item_events`] = null;
     Object.keys(playersObj).forEach(pid=>{
@@ -607,7 +652,9 @@ el('startBtn').onclick = async () => {
       if(!teamModeState) updates[`rooms/${ROOM}/players/${pid}/team`] = null;
     });
     await update(ref(db), updates);
-    const bonusNote = bonus.length ? ` · 🔥 2배 찬스 ${bonus.length}회 예정` : '';
+    const rivalCount = Object.keys(rivals).length;
+    const bonusNote = (bonus.length ? ` · 🔥 2배 찬스 ${bonus.length}회 예정` : '')
+      + (rivalModeState && !teamModeState ? (rivalCount ? ` · ⚔️ 라이벌 ${rivalCount}명 배정` : ' · ⚔️ 학생이 2명 이상이어야 라이벌이 배정돼요') : '');
     msg.className='msg ok'; msg.textContent = `시작! 출제 문항 ${qids.length}개 (선택 범위 ${pool.length}개 중)${bonusNote}`;
   } catch(err){
     msg.className='msg err'; msg.textContent = '시작 실패: ' + err.message;
@@ -628,7 +675,7 @@ el('resetBtn').onclick = async () => {
     updates[`rooms/${ROOM}/players/${pid}`] = null;
   });
   updates[`rooms/${ROOM}/item_events`] = null;
-  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null, team_mode: teamModeState, team_count: teamCountState, items_mode: itemsModeState };
+  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null, team_mode: teamModeState, team_count: teamCountState, items_mode: itemsModeState, rival_mode: rivalModeState };
   try{
     await update(ref(db), updates);
     msg.className='msg ok'; msg.textContent = '전체 초기화 완료! 접속해 있던 학생은 모두 내보내졌습니다.';
@@ -1024,10 +1071,12 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
     teamCountState = roundState.team_count;
     itemsModeState = roundState.items_mode;
     syncItemsModeUI();
+    rivalModeState = !!(r && r.rival_mode);
     el('teamModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', (b.dataset.mode==='on')===teamModeState));
     el('teamCountRow').classList.toggle('hidden', !teamModeState);
     el('teamShuffleRow').classList.toggle('hidden', !teamModeState);
     el('teamCountRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.count,10)===teamCountState));
+    syncRivalModeUI();
   }
 });
 
