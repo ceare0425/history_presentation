@@ -1937,7 +1937,7 @@ function handleItemEvents(obj){
       showItemAlert('🛡️ 무적 상태로 방해를 막아냈다!');
       return;
     }
-    // 무적은 맞은 순간부터 — 시간형 방해(안개·얼음·물풍선·지진·벌떼)는 4초, 즉시형(미끄럼틀·강탈 등)은 3초. 시간형이 걸려 있어도 4초가 지나면 다른 방해가 겹칠 수 있다
+    // 무적은 맞은 순간부터 — 시간형 방해(안개·얼음·물풍선·지진·벌떼)는 4초, 즉시형(미끄럼틀·강탈 등)은 2초. 시간형이 걸려 있어도 4초가 지나면 다른 방해가 겹칠 수 있다
     const timedFx = ['fog', 'ice', 'waterballoon', 'earthquake', 'bee'].includes(e.type);
     myImmuneUntil = now + (timedFx ? ITEM_FX_MS.immunityTimed : ITEM_FX_MS.immunity);
     update(roomRef(ROOM, 'players', playerId), { immuneUntil: myImmuneUntil });   // 공격자가 무적 여부를 미리 볼 수 있게 동기화
