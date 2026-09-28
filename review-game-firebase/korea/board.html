@@ -1012,8 +1012,8 @@ function showItemEvent(e){
   }
   if(e.type === 'steal_result'){
     const attacker = playersObj[e.target];
-    const attackerName = escapeHtml(attacker?.name || '누군가');
-    const victimName = escapeHtml(e.victimName || '상대');
+    const attackerName = attacker?.name || '누군가';   // itemToast는 textContent로 넣으므로 escape하지 않음(하면 &amp; 등이 그대로 보임)
+    const victimName = e.victimName || '상대';
     if(e.outcome === 'vest'){
       itemToast(`🛟 ${victimName} 님이 구명조끼로 ${attackerName} 님의 강탈을 완전히 막아냈다!`);
     } else if(e.outcome === 'cure'){
@@ -1039,7 +1039,7 @@ function showItemEvent(e){
   }
   const it = ITEMS[e.type];
   if(!it) return;
-  const who = escapeHtml(e.byName || '누군가');
+  const who = e.byName || '누군가';
   if(it.kind === 'global'){
     if(e.type === 'anthem'){
       const at = e.byTeam ? teamInfo(e.byTeam) : null;
