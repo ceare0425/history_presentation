@@ -750,7 +750,10 @@ function itemsOn(){ return itemsMode !== 'off'; }
 //         맞을 확률(80/15/5)에 비례해 1등이 가장 자주, 3등은 아주 가끔 방어 계열을 받는다(견제 확률 자체는 등수 무관 동일).
 function itemRollOpts(){
   const nanta = itemsMode === 'nanta';
-  const canAttack = nanta || (itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId)));
+  // 라이벌전: 등수와 관계없이 라이벌이 있으면 방해 아이템이 나오고(서로만 공격), 라이벌이 없는 학생(중간 참여)에겐 안 나옴
+  const canAttack = rivalRound()
+    ? (itemsMode !== 'off' && !!(roundState.rivals || {})[playerId])
+    : nanta || (itemsMode === 'spicy' && (roundState.team_mode || !inTopGroup(allPlayers, playerId)));
   // 2팀전은 팀이 둘뿐이라 "뒤처진 팀만 견제를 몰아 받고 선두 팀은 아예 못 받는" 편중이
   // 의미가 없다는 사용자 판단으로, 격차/순위에 따른 편중을 끄고 양 팀에 동률로 견제 아이템이 나오게 한다.
   const twoTeam = roundState.team_mode && (roundState.team_count || 4) === 2;
@@ -784,6 +787,11 @@ function updateRankBadge(){
 // ── ⚔️ 라이벌 대결 (개인전): 관리자가 게임 시작 때 round.rivals에 { pid: 라이벌 pid }로 짝을 정해 준다 ──
 let rivalLead = null;        // 직전에 본 나와 라이벌의 관계: 1 앞섬 / 0 동점 / -1 뒤짐 (역전 알림용)
 let rivalLeadToken = null;   // rivalLead가 어느 라운드 기준인지
+
+// 이번 라운드가 라이벌전인지 (개인전 + 짝이 배정됨) — 라이벌전에서는 방해 아이템을 라이벌에게만 쓸 수 있다
+function rivalRound(){
+  return !roundState.team_mode && Object.keys(roundState.rivals || {}).length > 0;
+}
 
 // 지금 라운드의 내 라이벌과 나를 찾는다. 라이벌이 없거나(팀전·중간 참여) 나갔으면 null.
 function currentRivalPair(){
@@ -1440,7 +1448,7 @@ function startListening(){
       qids: r.qids || [],
       team_mode: !!r.team_mode, team_count: r.team_count || 4, bonus: r.bonus || [],
       items_mode: (r.items_mode === 'mild' ? 'nanta' : r.items_mode) || 'off',   // 구버전 '순한맛' 값 호환
-      rivals: r.rivals || {}
+      rivals: r.rivals || {}, rival_mode: !!r.rival_mode
     } : { status:'idle', units:[], duration_sec:300, end_time:null, token:0, order:'random', weight:'even', qids:[], team_mode:false, team_count:4, bonus:[], items_mode:'off', rivals:{} };
     itemsMode = roundState.items_mode;
     refreshUnitLabels();
@@ -1543,15 +1551,20 @@ function itemDescFor(k, it, nanta){
   }
   return it.desc;
 }
+// 라이벌전에서는 방해 아이템 설명의 대상(선두권·상위권)을 '라이벌'로 바꿔 보여준다
+function rivalizeDesc(d){
+  return String(d || '').replace(/선두권\(또는 지목된 상대\)|선두권|상위권/g, '라이벌');
+}
 function renderItemGuide(){
   const box = el('itemGuide');
   if(!box) return;
   if(!itemsOn()){ box.classList.add('hidden'); return; }
   box.classList.remove('hidden');
   const nanta = itemsMode === 'nanta';
-  el('itemGuideIntro').textContent = nanta
+  const rivalGuide = !roundState.team_mode && (roundState.rival_mode || rivalRound());   // 라이벌전: 방해는 라이벌에게만
+  el('itemGuideIntro').textContent = (rivalGuide ? '⚔️ 라이벌전이라 방해 아이템은 내 라이벌에게만 날아가요. ' : '') + (nanta
     ? '정답을 맞힐 때마다 아이템을 1개 받아요 (최대 1개 보유, 버리기도 가능)'
-    : '3연속 정답마다 아이템을 1개 받아요 (최대 1개 보유, 버리기도 가능)';
+    : '3연속 정답마다 아이템을 1개 받아요 (최대 1개 보유, 버리기도 가능)');
   const groups = {};
   Object.entries(ITEMS).forEach(([k, it])=>{
     if(k === 'randombox') return;   // 랜덤박스는 스스로 뽑지 못하고 선생님이 뿌릴 때만 받음
@@ -1563,7 +1576,7 @@ function renderItemGuide(){
     .map(kind => `
       <div class="item-guide-group">
         <h4>${ITEM_KIND_LABEL[kind]}</h4>
-        ${groups[kind].map(([k, it]) => `<div class="item-guide-row">${it.emoji} <b>${escapeHtml(it.name)}</b> — ${escapeHtml(itemDescFor(k, it, nanta))}</div>`).join('')}
+        ${groups[kind].map(([k, it]) => `<div class="item-guide-row">${it.emoji} <b>${escapeHtml(it.name)}</b> — ${escapeHtml(rivalGuide && it.kind === 'attack' ? rivalizeDesc(itemDescFor(k, it, nanta)) : itemDescFor(k, it, nanta))}</div>`).join('')}
       </div>`).join('');
 }
 
@@ -1630,7 +1643,7 @@ function renderItemBar(){
       if(heldItem === 'ladder') desc = `즉시 +2${u}`;
       else if(heldItem === 'rocket') desc = `즉시 +5${u}`;
       else if(heldItem === 'steal') desc = `상대 팀 1등 -3${u}, 나 +3${u}`;
-      else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u} (0${u}까지 내려갈 수 있음)`;
+      else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u}`;
       else if(heldItem === 'banana') desc = `상대 팀 1등이 바나나를 밟아 즉시 -2${u}`;
       else if(heldItem === 'mine') desc = `상대 팀 1등에게 설치 — 카드 3장 중 1장만 생존, 나머지는 -1~-4${u}`;
       else if(heldItem === 'goldenbell') desc = `다음 정답 ×3! 틀리면 연속 끊김 -2${u}`;
@@ -1641,6 +1654,7 @@ function renderItemBar(){
       else if(heldItem === 'roulette') desc = `즉시 +1 ~ +8${u} 랜덤!`;
       else if(heldItem === 'lottery') desc = `즉시 +3 ~ +10${u} 랜덤! (+10은 4%)`;
     }
+    if(rivalRound() && it.kind === 'attack') desc = rivalizeDesc(desc);
     setItemBarHtml(bar,
       `<button type="button" class="item-btn" id="useItemBtn">${it.emoji} ${it.name} 사용<small>${desc}</small></button>` +
       `<button type="button" class="item-discard-btn" id="discardItemBtn">버리기</button>`);
@@ -1969,21 +1983,30 @@ async function useItem(){
       return;
     }
     const nanta = itemsMode === 'nanta';
-    // 난타전은 1등도 저격 가능 (나보다 위가 없으면 나 빼고 아무나) — 상위권이라고 막지 않는다
-    if(!nanta && inTopGroup(allPlayers, playerId)){
-      heldItem = null; await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
-      renderItemBar();
-      showItemAlert('선두라서 방해 대신 🪜 사다리!');
-      return applySelfItem('ladder');
+    const rivalMode = rivalRound();
+    let target = null;
+    if(rivalMode){
+      // 라이벌전: 등수와 관계없이 방해는 오직 내 라이벌에게만 (라이벌이 없거나 나갔거나 연결이 끊기면 사다리로 전환)
+      const rid = (roundState.rivals || {})[playerId];
+      const rival = rid ? allPlayers.find(p => p.id === rid && !isOffline(p)) : null;
+      if(rival) target = { ...rival, rank: rankedPlayers(allPlayers).findIndex(p => p.id === rival.id) + 1 };
+    } else {
+      // 난타전은 1등도 저격 가능 (나보다 위가 없으면 나 빼고 아무나) — 상위권이라고 막지 않는다
+      if(!nanta && inTopGroup(allPlayers, playerId)){
+        heldItem = null; await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
+        renderItemBar();
+        showItemAlert('선두라서 방해 대신 🪜 사다리!');
+        return applySelfItem('ladder');
+      }
+      const atkCandidates = attackCandidates(allPlayers, playerId, itemsMode === 'spicy', nanta);
+      // 내가 1등이면 견제는 무조건 2등에게 — 후보 목록은 랭킹 순이라 내가 1등일 때 후보[0]이 항상 2등
+      const myAtkRank = rankedPlayers(allPlayers).findIndex(p => p.id === playerId) + 1;
+      target = myAtkRank === 1 ? (atkCandidates[0] || null) : pickAttackTarget(atkCandidates, nanta);
     }
-    const atkCandidates = attackCandidates(allPlayers, playerId, itemsMode === 'spicy', nanta);
-    // 내가 1등이면 견제는 무조건 2등에게 — 후보 목록은 랭킹 순이라 내가 1등일 때 후보[0]이 항상 2등
-    const myAtkRank = rankedPlayers(allPlayers).findIndex(p => p.id === playerId) + 1;
-    const target = myAtkRank === 1 ? (atkCandidates[0] || null) : pickAttackTarget(atkCandidates, nanta);
     if(!target){
       heldItem = null; await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
       renderItemBar();
-      showItemAlert('겨눌 상대가 없어 견제 대신 🪜 사다리!');
+      showItemAlert(rivalMode ? '라이벌이 없어 견제 대신 🪜 사다리!' : '겨눌 상대가 없어 견제 대신 🪜 사다리!');
       return applySelfItem('ladder');
     }
     // 이미 다른 학생에게 강탈당해 방어 창이 열려 있는 상대는 또 강탈할 수 없음(아이템은 소모하지 않고 되돌림)
@@ -2003,10 +2026,11 @@ async function useItem(){
     await update(pRef, { item: null, name: playerName, lastActive: serverNow() });
     await push(roomRef(ROOM, 'item_events'), {
       type: key, by: playerId, byName: playerName,
-      target: target.id, targetRank: target.rank, at: serverNow()
+      target: target.id, targetRank: target.rank, at: serverNow(),
+      ...(rivalMode ? { rival: true } : {})   // 전광판이 '선두권' 대신 '라이벌'로 표시
     });
     renderItemBar();
-    const tgtLabel = nanta ? (target.name || '상대') : '선두권';
+    const tgtLabel = rivalMode ? `라이벌 ${target.name || ''}` : nanta ? (target.name || '상대') : '선두권';
     if(key === 'steal'){
       myStealAttackUntil = serverNow() + ITEM_FX_MS.stealDefenseMs;   // 내가 얻는 층수는 steal_result 이벤트로 결과가 정해진 뒤에 반영됨
     } else if(key === 'mine'){
