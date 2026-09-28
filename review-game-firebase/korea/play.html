@@ -1347,6 +1347,8 @@ function startListening(){
       handleRemovedFromRoster();
       return;
     }
+    // 같은 학생이 두 탭으로 열어 두었다가 한쪽을 닫으면 그 탭의 끊김 기록이 남는다 — 이 탭은 아직 연결돼 있으니 지우고 다시 예약
+    if(p.offlineAt && fbConnected) registerDisconnect();
     lastFloor = p.floor||0;
     myAnswered = ((p.correct||0) + (p.wrong||0)) > 0;
     heldItem = p.item || null;
@@ -2237,11 +2239,13 @@ let joinedAlready = false;
 
 // 연결될 때마다 '끊기면 offlineAt 기록'을 서버에 예약하고, 지금은 연결돼 있으니 offlineAt을 지운다
 let presenceArmed = false;
+let fbConnected = false;
 function armPresence(){
   if(presenceArmed) return;
   presenceArmed = true;
   onValue(ref(db, '.info/connected'), (snap)=>{
-    if(snap.val() === true) registerDisconnect();
+    fbConnected = snap.val() === true;
+    if(fbConnected) registerDisconnect();
   });
 }
 function registerDisconnect(){
