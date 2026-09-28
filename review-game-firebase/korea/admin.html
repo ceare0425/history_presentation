@@ -402,7 +402,7 @@ import {
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, renderUnitGroups, shuffle,
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS,
   presenceRef, chatRef, isOffline, sweepOfflinePlayers, watchForUpdate
-} from '../shared/lib.js?v=20260928d';
+} from '../shared/lib.js?v=20260928e';
 
 const ROOM = 'korea';
 // 학년+반 구분(명단 관리, 학년별 solo_log 기록)을 넣기 전에는 한국사=1학년, 세계사=2학년만 썼으므로,
@@ -963,10 +963,7 @@ el('roster').addEventListener('click', async (e)=>{
     if(roundState.status !== 'running' || itemsModeState === 'off') return;
     giftBtn.disabled = true;
     try{
-      await push(roomRef(ROOM, 'item_events'), { type: 'randombox_gift', target: giftBtn.dataset.id, at: serverNow() });
-      const rbMsg = el('giveRandomboxMsg');
-      rbMsg.textContent = `🎁 ${giftBtn.dataset.name || '학생'} 학생에게 몰래 랜덤박스를 줬어요`;
-      setTimeout(()=>{ rbMsg.textContent=''; }, 3000);
+      await push(roomRef(ROOM, 'item_events'), { type: 'randombox_gift', target: giftBtn.dataset.id, at: serverNow() });   // 관리자 화면에도 따로 안내 문구를 띄우지 않음
     }catch(err){ alert('랜덤박스 주기 실패: ' + err.message); }
     return;
   }
