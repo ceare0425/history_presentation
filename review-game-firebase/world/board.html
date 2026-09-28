@@ -1064,7 +1064,7 @@ function showItemEvent(e){
       itemToast(`${it.emoji} ${who} → ${tgt ? tgt.label : '상대 팀'}에 ${it.name}!`);
       flashTeamFx(e.targetTeam, e.type);
     } else {
-      itemToast(`${it.emoji} ${who} → 선두권에게 ${it.name}!`);
+      itemToast(e.rival ? `⚔️ ${who} → 라이벌에게 ${it.emoji} ${it.name}!` : `${it.emoji} ${who} → 선두권에게 ${it.name}!`);
       flashClimberFx(e.target, e.type);
     }
     return;
