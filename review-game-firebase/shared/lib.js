@@ -466,10 +466,10 @@ export const ITEMS = {
 };
 
 // 방해(안개·얼음·물풍선·지진·벌떼) 지속시간은 매운맛·난타전 모두 5초로 통일.
-// 피격 후 무적은 맞은 순간부터(모드 무관) — 시간형 방해(안개·얼음·물풍선·지진·벌떼)는 4초, 즉시형은 3초. 시간형이 걸려 있어도 4초가 지나면 다른 방해가 겹칠 수 있다.
+// 피격 후 무적은 맞은 순간부터(모드 무관) — 시간형 방해(안개·얼음·물풍선·지진·벌떼)는 4초, 즉시형은 2초. 시간형이 걸려 있어도 4초가 지나면 다른 방해가 겹칠 수 있다.
 // 무적 중 공격을 막아도 무적은 사라지지 않는다.
 export const ITEM_FX_MS = {
-  fog: 5000, ice: 5000, waterballoon: 5000, earthquake: 5000, bee: 5000, festival: 20000, immunity: 3000, immunityTimed: 4000,
+  fog: 5000, ice: 5000, waterballoon: 5000, earthquake: 5000, bee: 5000, festival: 20000, immunity: 2000, immunityTimed: 4000,
   fogSpicy: 5000, iceSpicy: 5000, waterballoonSpicy: 5000, earthquakeSpicy: 5000, beeSpicy: 5000,
   fogNanta: 5000, iceNanta: 5000, waterballoonNanta: 5000, earthquakeNanta: 5000, beeNanta: 5000,
   soloFest: 30000, soloFestLast: 60000, clover: 30000, mirror: 10000, mirrorNanta: 10000, siren: 10000, sirenNanta: 10000, vest: 20000, barrier: 5000,
