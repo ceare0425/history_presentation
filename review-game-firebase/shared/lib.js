@@ -510,7 +510,7 @@ export const ITEMS = {
   earthquake:{ emoji: '📳', name: '지진',      kind: 'attack',  desc: '선두권 문제 화면이 흔들리고 글자가 5초간 뒤섞임' },
   bee:      { emoji: '🐝',  name: '벌떼',      kind: 'attack',  desc: '선두권 문제가 5초간 벌떼에 가려짐' },
   snail:    { emoji: '🐌',  name: '느림보',    kind: 'attack',  desc: '선두권 다음 정답이 +1층만' },
-  slide:    { emoji: '⬇️',  name: '미끄럼틀',  kind: 'attack',  desc: '선두권 -3층 (0층까지 내려갈 수 있음)' },
+  slide:    { emoji: '⬇️',  name: '미끄럼틀',  kind: 'attack',  desc: '선두권 -3층' },
   steal:    { emoji: '🥷',  name: '강탈',      kind: 'attack',  desc: '선두권 -5층, 나 +5층 (7초 안에 맞히면 방어 · 팀전은 상대 팀 1등만 -3)' },
   banana:   { emoji: '🍌',  name: '바나나',    kind: 'attack',  desc: '선두권이 바나나를 밟아 즉시 -2층' },
   mine:     { emoji: '💣',  name: '지뢰',      kind: 'attack',  desc: '카드 3장 중 1장만 생존, 나머지는 -1~-4층' },
