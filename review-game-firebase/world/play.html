@@ -479,7 +479,7 @@ import {
   recencyWeightFn, weightedQueue,
   teamInfo, teamStandings, activeBonus,
   ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
-} from '../shared/lib.js?v=20260923d';
+} from '../shared/lib.js?v=20260928a';
 
 const ROOM = 'world';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
@@ -586,7 +586,9 @@ let myWaterballoonUntil = 0;   // '물풍선' — 얼음과 동일(이름만 다
 function isFrozen(){ return serverNow() < myIceUntil || serverNow() < myWaterballoonUntil; }
 // '지뢰' 카드 창이 떠 있는 동안에도 제출 불가 — 카드를 골라야만 문제를 풀 수 있다
 function mineOpen(){ return !el('mineOverlay').classList.contains('hidden'); }
-const seenItemEvents = new Set();
+const seenItemEvents = new Map();   // 처리한 이벤트 key → 이벤트 시각(ms) — 새로고침 뒤 같은 이벤트를 또 처리하지 않도록 저장해 둠
+let minePending = null;    // 지뢰 카드 창이 떠 있는 동안 { attackerId, label } — 새로고침 뒤 다시 띄우기용
+let comboPending = null;   // 콤보 스파크 카드 창이 떠 있는 동안 연속 정답 수 — 새로고침 뒤 다시 띄우기용
 
 const el = (id) => document.getElementById(id);
 
@@ -784,6 +786,7 @@ function renderQuestion(q){
     return;
   }
   el('unitTag').textContent = q.unit + (q.page ? ' · ' + q.page : '');
+  bindPendingStealDefenses(q.id);   // 문제를 기다리는 사이 맞은 강탈은 이 문제를 맞혀야 방어됨
   stopScramble();   // 이전 문제의 뒤섞기 상태를 먼저 정리
   el('qText').innerHTML = q.text.replace(/____/g, '<span class="blank-mark"></span>');
   if(el('qbox').classList.contains('shaking')) startScramble();   // 지진 피격 중 새 문제가 나와도 계속 뒤섞이게 재적용
@@ -1153,6 +1156,7 @@ function tick(){
   const remaining = roundState.end_time!=null ? Math.max(0, Math.round((roundState.end_time - serverNow())/1000)) : null;
   let effective = roundState.status;
   if(roundState.status === 'running' && remaining!==null && remaining<=0) effective = 'ended';
+  if(effective === 'ended' && prevEffective !== 'ended') stopRoundEffects();
 
   if(effective === 'idle'){
     el('waitName').textContent = playerName + '님';
@@ -1160,10 +1164,14 @@ function tick(){
   } else if(effective === 'running'){
     if(lastSeenToken !== roundState.token){
       lastSeenToken = roundState.token;
+      // 같은 라운드 도중 새로고침한 경우면 저장해 둔 아이템 효과·방해 상태를 되살린다
+      const saved = loadFxState();
+      const restoring = !!(saved && saved.pid === playerId && saved.token === roundState.token);
       queue = []; retryList = []; retryMiss = {}; lastQid = null; currentQid = null; currentQuestion = null; currentStartedAt = null;
       unitStats = {}; qStats = {}; classLogWritten = false;
-      // 아이템 로컬 상태 초기화
-      heldItem = null; myBoost = 0; myShield = false;
+      // 아이템 로컬 상태 초기화 (새로고침 복원이면 들고 있던 아이템은 DB 값을 그대로 둔다)
+      if(!restoring) heldItem = null;
+      myBoost = 0; myShield = false;
       mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myComboSparkUntil = 0; myImmuneUntil = 0;
       myFogUntil = 0; myIceUntil = 0; myEarthquakeUntil = 0; myBeeUntil = 0; myWaterballoonUntil = 0;
       myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myShieldUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0; mySirenUntil = 0;
@@ -1175,15 +1183,19 @@ function tick(){
       el('beeLayer').innerHTML = '';
       stopScramble();
       clearItemAlert();
-      seenItemEvents.clear();
-      renderItemBar();
+      // 이벤트 key는 매번 새로 생기는 push id라 라운드가 바뀌어도 비울 필요가 없다
+      // (비우면 새로고침 직후 이미 처리한 최근 공격이 한 번 더 적용됨)
       el('comboOverlay').classList.add('hidden');
       el('mineOverlay').classList.add('hidden');
+      minePending = null; comboPending = null;
+      if(restoring) restoreFxState(saved);
+      renderItemBar();
     }
     el('timerVal').textContent = fmtTime(remaining);
     if(currentQid === null && Object.keys(questionsObj).length>0){
       assignNextQuestion();
     }
+    saveFxState();
     const bonus = activeBonus(roundState, serverNow());
     updateBanner('bonusBanner', !!bonus, ()=> el('bonusRemain').textContent = bonus.remaining);
     updateBanner('festivalBanner', serverNow() < festivalUntil, ()=>{
@@ -1224,8 +1236,82 @@ function tick(){
   prevEffective = effective;
 }
 
+// ── 새로고침 대비: 이번 라운드의 아이템 효과·방해 상태를 이 기기에 저장해 두었다가 되살린다 ──
+const FX_STORE_KEY = 'rg_fb_' + ROOM + '_fx';
+const TIMED_FX = ['fog', 'ice', 'waterballoon', 'earthquake', 'bee'];
+function loadFxState(){
+  try{ return JSON.parse(localStorage.getItem(FX_STORE_KEY) || 'null'); }catch(_e){ return null; }
+}
+function clearFxState(){
+  try{ localStorage.removeItem(FX_STORE_KEY); }catch(_e){}
+}
+function saveFxState(){
+  if(!playerId || lastSeenToken !== roundState.token) return;
+  const now = serverNow();
+  const seen = {};
+  seenItemEvents.forEach((at, k) => { if(now - at <= 15000) seen[k] = at; else seenItemEvents.delete(k); });
+  const state = {
+    pid: playerId, token: roundState.token,
+    boost: myBoost, shield: myShield, snail: mySnailNext,
+    festivalUntil, festivalBy, soloFest: mySoloFestUntil, comboSpark: myComboSparkUntil,
+    goldenbell: myGoldenbellArmed, jackpot: myJackpotArmed, snowball: mySnowballArmed,
+    vest: myVestUntil, barrier: myShieldUntil, clover: myCloverUntil, anthem: myAnthemNext,
+    mirror: myMirrorUntil, siren: mySirenUntil, immune: myImmuneUntil, stealAtk: myStealAttackUntil,
+    undo: myUndoAvailable, undoStreak: myUndoStreak, undoFloor: myUndoFloorDelta,
+    fx: { fog: myFogUntil, ice: myIceUntil, waterballoon: myWaterballoonUntil, earthquake: myEarthquakeUntil, bee: myBeeUntil },
+    steals: myStealDefenses.map(d => ({ amt: d.amt, deadline: d.deadline, attackerId: d.attackerId || null })),
+    mine: minePending, combo: comboPending, seen
+  };
+  try{ localStorage.setItem(FX_STORE_KEY, JSON.stringify(state)); }catch(_e){}
+}
+function restoreFxState(s){
+  const now = serverNow();
+  myBoost = s.boost || 0; myShield = !!s.shield; mySnailNext = s.snail || 0;
+  festivalUntil = s.festivalUntil || 0; festivalBy = s.festivalBy || '';
+  mySoloFestUntil = s.soloFest || 0; myComboSparkUntil = s.comboSpark || 0;
+  myGoldenbellArmed = !!s.goldenbell; myJackpotArmed = !!s.jackpot; mySnowballArmed = !!s.snowball;
+  myVestUntil = s.vest || 0; myShieldUntil = s.barrier || 0; myCloverUntil = s.clover || 0; myAnthemNext = s.anthem || 0;
+  myMirrorUntil = s.mirror || 0; mySirenUntil = s.siren || 0; myImmuneUntil = s.immune || 0; myStealAttackUntil = s.stealAtk || 0;
+  myUndoAvailable = !!s.undo; myUndoStreak = s.undoStreak || 0; myUndoFloorDelta = s.undoFloor || 0;
+  // 시간형 방해는 남은 시간만큼 다시 건다 (문제는 곧이어 새로 나오며, renderQuestion이 지진·얼음 상태를 이어받는다)
+  TIMED_FX.forEach(t => {
+    const until = (s.fx && s.fx[t]) || 0;
+    if(until > now) applyIncomingFx(t, null, false, until - now);
+  });
+  // 강탈 방어 창: 마감 시각은 그대로, 방어 대상은 새로 나올 문제로 연결 (이미 마감이 지났으면 곧바로 방어 실패 처리)
+  (s.steals || []).forEach(d => armStealDefense({ amt: d.amt, qid: null, deadline: d.deadline, attackerId: d.attackerId, timer: null }));
+  syncStealActive();
+  if(s.mine) openMineOverlay(s.mine.attackerId, s.mine.label);
+  if(s.combo != null) openComboSparkPicker(s.combo, () => {});
+}
+
+// 게임이 끝나면 모든 아이템 효과와 진행 중인 상태(방해·강탈 방어·지뢰·카드 뽑기)를 즉시 멈춘다
+function stopRoundEffects(){
+  myStealDefenses.forEach(d => clearTimeout(d.timer)); myStealDefenses = []; myStealAttackUntil = 0;
+  if(playerId) syncStealActive();
+  clearTimeout(iceTimer); clearTimeout(fogTimer); clearTimeout(earthquakeTimer); clearTimeout(beeTimer); clearTimeout(waterballoonTimer);
+  el('qbox').classList.remove('fogged', 'shaking', 'beeswarm');
+  el('beeLayer').innerHTML = '';
+  stopScramble();
+  myFogUntil = 0; myIceUntil = 0; myEarthquakeUntil = 0; myBeeUntil = 0; myWaterballoonUntil = 0;
+  mySnailNext = 0; festivalUntil = 0; festivalBy = ''; mySoloFestUntil = 0; myComboSparkUntil = 0;
+  myBoost = 0; myShield = false; myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false;
+  myVestUntil = 0; myShieldUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0; mySirenUntil = 0;
+  myImmuneUntil = 0; myUndoAvailable = false; myUndoFloorDelta = 0; randomboxOfferPending = false;
+  el('comboOverlay').classList.add('hidden');
+  el('mineOverlay').classList.add('hidden');
+  minePending = null; comboPending = null;
+  clearItemAlert();
+  clearFxState();
+}
+
 function startListening(){
   showView('waitingView');
+  // 새로고침 직전까지 처리한 이벤트는 다시 처리하지 않도록 먼저 채워 둔다 (item_events 첫 수신보다 앞서야 함)
+  const savedFx = loadFxState();
+  if(savedFx && savedFx.pid === playerId && savedFx.seen){
+    Object.entries(savedFx.seen).forEach(([k, at]) => seenItemEvents.set(k, at));
+  }
 
   onValue(roomRef(ROOM, 'questions'), (snap)=>{
     questionsObj = snap.val() || {};
@@ -1333,8 +1419,8 @@ function itemDescFor(k, it, nanta){
     return `선두권 문제가 ${s}초간 벌떼에 가려짐`;
   }
   if(k === 'slide'){
-    if(nanta) return '선두권 -5층 (보호 없이 0층까지 내려갈 수 있음)';
-    if(itemsMode === 'spicy') return '선두권 -4층 (2등보다 1층 아래까지만 허용)';
+    if(nanta) return '선두권 -5층 (0층까지 내려갈 수 있음)';
+    if(itemsMode === 'spicy') return '선두권 -4층 (0층까지 내려갈 수 있음)';
   }
   return it.desc;
 }
@@ -1417,13 +1503,15 @@ function renderItemBar(){
     } else if(heldItem === 'bee'){
       const s = (itemsMode === 'nanta' ? ITEM_FX_MS.beeNanta : itemsMode === 'spicy' ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee) / 1000;
       desc = `선두권 문제가 ${s}초간 벌떼에 가려짐`;
+    } else if(heldItem === 'slide'){
+      desc = itemDescFor('slide', it, itemsMode === 'nanta');
     }
     if(roundState.team_mode){
       const u = unitLabel();
       if(heldItem === 'ladder') desc = `즉시 +2${u}`;
       else if(heldItem === 'rocket') desc = `즉시 +5${u}`;
       else if(heldItem === 'steal') desc = `상대 팀 1등 -3${u}, 나 +3${u}`;
-      else if(heldItem === 'slide') desc = `상대 팀 1등 -3${u} (그 팀 2등 층수 아래로는 안 내려감)`;
+      else if(heldItem === 'slide') desc = `상대 팀 1등 -${itemsMode === 'nanta' ? 5 : itemsMode === 'spicy' ? 4 : 3}${u}`;
       else if(heldItem === 'banana') desc = `상대 팀 1등이 바나나를 밟아 즉시 -2${u}`;
       else if(heldItem === 'mine') desc = `상대 팀 1등에게 설치 — 카드 3장 중 1장만 생존, 나머지는 -1~-4${u}`;
       else if(heldItem === 'goldenbell') desc = `다음 정답 ×3! 틀리면 연속 끊김 -2${u}`;
@@ -1542,6 +1630,7 @@ async function changeFloor(fn){
 function addFloor(n){ return n ? changeFloor(f => f + n) : changeFloor(f => f); }
 
 async function bumpFloor(n){
+  if(roundEnded()) return;   // 게임이 끝난 뒤에는 아이템·방해로 층수가 바뀌지 않음
   const nf = await addFloor(n);
   el('floorVal').textContent = nf;
   if(nf > lastFloor) popFloorBadge();
@@ -1559,6 +1648,7 @@ function openComboSparkPicker(streak, onDone){
   cardsEl.innerHTML = values.map((v) => `<button type="button" class="combo-card" data-v="${v}">✨</button>`).join('');
   el('comboResult').textContent = '';
   el('comboOverlay').classList.remove('hidden');
+  comboPending = streak;
   const btns = Array.from(cardsEl.querySelectorAll('.combo-card'));
   const flip = (btn) => {
     const v = Number(btn.dataset.v);
@@ -1568,6 +1658,7 @@ function openComboSparkPicker(streak, onDone){
   btns.forEach((btn) => {
     btn.onclick = () => {
       btns.forEach((b) => { b.onclick = null; });
+      comboPending = null;
       const chosenVal = Number(btn.dataset.v);
       btn.classList.add('chosen');
       flip(btn);
@@ -1834,8 +1925,9 @@ function handleItemEvents(obj){
   const now = serverNow();
   Object.entries(obj).forEach(([k, e])=>{
     if(seenItemEvents.has(k)) return;
-    seenItemEvents.add(k);
+    seenItemEvents.set(k, (e && e.at) || now);
     if(!e || !e.at || now - e.at > 12000) return;  // 오래된 이벤트(재접속 등)는 무시
+    if(roundState.status !== 'running' || roundEnded()) return;   // 게임이 끝난 뒤에는 어떤 아이템 효과도 적용하지 않음
     // 교사가 뿌린 '랜덤박스': 아이템이 없으면 바로 지급, 이미 있으면 교체 여부를 물어본다
     if(e.type === 'randombox_offer'){
       if(!itemsOn() || roundState.status !== 'running' || roundEnded()) return;
@@ -1965,6 +2057,7 @@ function openMineOverlay(attackerId, mineLabel){
   cardsEl.innerHTML = cards.map((c, i) => `<button type="button" class="combo-card" data-i="${i}" data-key="${i+1}">💣</button>`).join('');
   el('mineResult').textContent = '';
   el('mineOverlay').classList.remove('hidden');
+  minePending = { attackerId: attackerId || null, label: mineLabel };
   el('submitBtn').disabled = true;   // 카드를 고르기 전에는 제출 불가
   const btns = Array.from(cardsEl.querySelectorAll('.combo-card'));
   const reveal = (btn, c) => {
@@ -1974,6 +2067,7 @@ function openMineOverlay(attackerId, mineLabel){
   btns.forEach((btn, i) => {
     btn.onclick = () => {
       btns.forEach((b) => { b.onclick = null; });
+      minePending = null;
       const c = cards[i];
       btn.classList.add('chosen');
       reveal(btn, c);
@@ -1987,7 +2081,7 @@ function openMineOverlay(attackerId, mineLabel){
           showItemAlert(`💥 지뢰를 밟았다! -${c.amt}${unitLabel()}`);
           bumpFloor(-c.amt);
         }
-        notifyMineResult(attackerId, c.survive);
+        if(!roundEnded()) notifyMineResult(attackerId, c.survive);
       }, 500);
       setTimeout(() => {
         el('mineOverlay').classList.add('hidden');
@@ -2003,14 +2097,33 @@ function syncStealActive(){
   update(roomRef(ROOM, 'players', playerId), { stealActive: myStealDefenses.length > 0 });
 }
 
-function applyIncomingFx(type, attackerId, reflected){
+// 강탈 방어 창 하나를 등록하고 마감(deadline)에 방어 실패를 처리하는 타이머를 건다 (새로고침 뒤 복원에도 사용)
+function armStealDefense(entry){
+  entry.timer = setTimeout(()=>{
+    myStealDefenses = myStealDefenses.filter(d => d !== entry);
+    syncStealActive();
+    if(roundEnded()) return;   // 게임이 끝났으면 강탈 결과도 반영하지 않음
+    bumpFloor(-entry.amt);
+    showItemAlert(`😭 방어 실패! -${entry.amt}${unitLabel()} 당했다`);
+    notifyStealResult(entry.attackerId, 'success', entry.amt);
+  }, Math.max(0, entry.deadline - serverNow()));
+  myStealDefenses.push(entry);
+}
+
+// 다음 문제를 기다리는 동안(또는 새로고침 직후) 맞은 강탈은 새로 나온 문제를 맞혀야 방어되도록 연결
+function bindPendingStealDefenses(qid){
+  myStealDefenses.forEach(d => { if(d.qid == null) d.qid = qid; });
+}
+
+// fog·ice·waterballoon·earthquake·bee는 durOverride(ms)가 있으면 그만큼만 건다 — 새로고침 뒤 남은 시간 복원용
+function applyIncomingFx(type, attackerId, reflected, durOverride){
   const spicy = itemsMode === 'spicy' || itemsMode === 'nanta';   // 난타전도 방해 효과는 세게(매운맛과 동일)
   const stealVerb = reflected ? '반사당한 강탈' : '강탈당했다';
   // fog·ice는 debuff-banner(fogBanner/iceBanner)가 이미 남은 시간과 함께 계속 표시하므로
   // item-alert 토스트는 따로 띄우지 않는다 (안 그러면 알림이 2개씩 뜸)
   if(type === 'fog'){
     const box = el('qbox');
-    const dur = itemsMode === 'nanta' ? ITEM_FX_MS.fogNanta : spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog;
+    const dur = durOverride || (itemsMode === 'nanta' ? ITEM_FX_MS.fogNanta : spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog);
     el('fogLabel').textContent = reflected ? '반사당한 안개' : '안개';
     box.classList.add('fogged');
     myFogUntil = serverNow() + dur;
@@ -2020,7 +2133,7 @@ function applyIncomingFx(type, attackerId, reflected){
       myFogUntil = 0;
     }, dur);
   } else if(type === 'ice'){
-    const dur = itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice;
+    const dur = durOverride || (itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice);
     el('iceLabel').textContent = reflected ? '반사당한 얼음' : '얼음';
     myIceUntil = serverNow() + dur;
     el('submitBtn').disabled = true;   // 입력은 그대로 두고 제출만 막음
@@ -2030,7 +2143,7 @@ function applyIncomingFx(type, attackerId, reflected){
       if(!roundEnded() && !isFrozen()){ el('answerInput').disabled = false; el('submitBtn').disabled = mineOpen(); }
     }, dur);
   } else if(type === 'waterballoon'){   // 얼음과 완전히 동일한 효과(이름·멘트만 다름)
-    const dur = itemsMode === 'nanta' ? ITEM_FX_MS.waterballoonNanta : spicy ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon;
+    const dur = durOverride || (itemsMode === 'nanta' ? ITEM_FX_MS.waterballoonNanta : spicy ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon);
     el('waterballoonLabel').textContent = reflected ? '반사당한 물풍선' : '물풍선';
     myWaterballoonUntil = serverNow() + dur;
     el('submitBtn').disabled = true;   // 입력은 그대로 두고 제출만 막음
@@ -2041,7 +2154,7 @@ function applyIncomingFx(type, attackerId, reflected){
     }, dur);
   } else if(type === 'earthquake'){
     const box = el('qbox');
-    const dur = itemsMode === 'nanta' ? ITEM_FX_MS.earthquakeNanta : spicy ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake;
+    const dur = durOverride || (itemsMode === 'nanta' ? ITEM_FX_MS.earthquakeNanta : spicy ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake);
     el('earthquakeLabel').textContent = reflected ? '반사당한 지진' : '지진';
     box.classList.add('shaking');
     startScramble();
@@ -2054,7 +2167,7 @@ function applyIncomingFx(type, attackerId, reflected){
     }, dur);
   } else if(type === 'bee'){
     const box = el('qbox');
-    const dur = itemsMode === 'nanta' ? ITEM_FX_MS.beeNanta : spicy ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee;
+    const dur = durOverride || (itemsMode === 'nanta' ? ITEM_FX_MS.beeNanta : spicy ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee);
     el('beeLabel').textContent = reflected ? '반사당한 벌떼' : '벌떼';
     // 휴대폰(터치 기기·좁은 화면)은 벌집 가림막 + 벌 18마리로 렉을 막고, PC는 원래대로 벌 900마리
     const lowPower = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || window.innerWidth < 700;
@@ -2076,18 +2189,12 @@ function applyIncomingFx(type, attackerId, reflected){
     slideDown(slideLabel);
   } else if(type === 'steal'){
     const amt = roundState.team_mode ? 3 : ITEM_FX_MS.stealAmt;   // 개인전은 방어 실패 시 -5층, 팀전은 상대 팀 1등만 -3층 (둘 다 7초 방어 창 적용)
-    if(currentQid){
-      const ms = ITEM_FX_MS.stealDefenseMs;
-      // 짧은 시간에 여러 명에게 저격당할 수 있어(주로 난타전) 방어 창을 배열에 각자 독립적으로 담는다
-      const entry = { amt, qid: currentQid, deadline: serverNow() + ms, attackerId, timer: null };
-      entry.timer = setTimeout(()=>{
-        myStealDefenses = myStealDefenses.filter(d => d !== entry);
-        syncStealActive();
-        bumpFloor(-entry.amt);
-        showItemAlert(`😭 방어 실패! -${entry.amt}${unitLabel()} 당했다`);
-        notifyStealResult(entry.attackerId, 'success', entry.amt);
-      }, ms);
-      myStealDefenses.push(entry);
+    if(currentQid || submitBusy){
+      // 짧은 시간에 여러 명에게 저격당할 수 있어(주로 난타전) 방어 창을 배열에 각자 독립적으로 담는다.
+      // 답을 내고 다음 문제를 기다리는 중(submitBusy)에 맞으면 지금 문제는 이미 풀었으므로,
+      // 방어 대상을 '다음에 나올 문제'로 미뤄 둔다(qid=null → renderQuestion에서 연결)
+      const entry = { amt, qid: submitBusy ? null : currentQid, deadline: serverNow() + ITEM_FX_MS.stealDefenseMs, attackerId, timer: null };
+      armStealDefense(entry);
       syncStealActive();
     } else {
       notifyStealResult(attackerId, 'success', amt);
@@ -2105,25 +2212,11 @@ function applyIncomingFx(type, attackerId, reflected){
 }
 
 async function slideDown(label){
-  const pRef = roomRef(ROOM, 'players', playerId);
-  const snap = await get(pRef);
-  const cur = snap.val() || {};
-  const spicy = itemsMode === 'spicy';
-  const nanta = itemsMode === 'nanta';
-  const drop = nanta ? 5 : spicy ? 4 : 3;   // 난타전 -5층 / 매운맛 -4층
-  // '2등 층수 아래로는 안 내려감' 가드(매운맛은 2등보다 1층 아래까지 허용, 난타전은 가드 없이 0층까지).
-  // 개인전=전체 2등, 팀전=미끄럼틀 맞은 팀의 2등(1등만 맞으므로) 기준.
-  let floorGuard = 0;
-  const guardPool = roundState.team_mode
-    ? rankedPlayers(allPlayers.filter(p=> p.team && p.team === cur.team))
-    : rankedPlayers(allPlayers);
-  const second = guardPool[1] ? (guardPool[1].floor || 0) : 0;
-  floorGuard = nanta ? 0 : spicy ? Math.max(0, second - 1) : second;
-  // 가드가 현재 층수보다 높으면(반사 등 예외) 올라가 버리지 않도록 clamp
+  if(roundEnded()) return;   // 게임이 끝난 뒤에는 층수가 바뀌지 않음
+  const drop = itemsMode === 'nanta' ? 5 : itemsMode === 'spicy' ? 4 : 3;   // 난타전 -5층 / 매운맛 -4층 — 모든 모드에서 보호 없이 0층까지
   let actualDrop = 0;
   const nf = await changeFloor(f => {
-    const guard = Math.min(floorGuard, f);
-    const v = Math.max(f - drop, guard, 0);
+    const v = Math.max(f - drop, 0);
     actualDrop = f - v;
     return v;
   });
@@ -2138,6 +2231,7 @@ function handleRemovedFromRoster(){
   if(kicked) return; // 중복 알림 방지
   kicked = true;
   localStorage.removeItem(STORAGE_ID_KEY);
+  clearFxState();
   playerId = '';
   joinedAlready = false;
   showView('joinView');
