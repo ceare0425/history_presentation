@@ -93,7 +93,7 @@ const HIDDEN_TITLES = [
   { id:'buzzer',      emoji:'⏱️', name:'극장골',     desc:'수업 게임 종료 10초 전 안에 1등으로 올라서서 우승' },
   { id:'indomitable', emoji:'🦾', name:'불굴의 의지', desc:'수업 게임 한 판에서 방해를 3번 이상 맞고도 1등' },
   { id:'owl',         emoji:'🦉', name:'올빼미',     desc:'밤 10시가 넘어서 문제 풀기' },
-  { id:'marathon',    emoji:'🏃', name:'마라토너',   desc:'혼자 연습 한 판에서 30문제 이상 맞히기' }
+  { id:'marathon',    emoji:'🏃', name:'마라토너',   desc:'혼자 연습 한 판에서 100문제 이상 맞히기' }
 ];
 
 function topicNum(unit){
