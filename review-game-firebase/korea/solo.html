@@ -403,7 +403,7 @@
       <button id="submitBtn">제출</button>
     </div>
     <div class="hint-row">
-      <button type="button" id="hintBtn" class="secondary">💡 힌트 (초성)</button>
+      <button type="button" id="hintBtn" class="secondary">💡 힌트 (초성) · Ctrl</button>
       <span class="hint-text" id="hintText"></span>
       <button type="button" id="endPracticeBtn" class="secondary">■ 연습 종료</button>
     </div>
@@ -966,6 +966,16 @@ el('hintBtn').onclick = () => {
   el('hintBtn').disabled = true;
   el('answerInput').focus();
 };
+// Ctrl 키만 눌렀다 떼면 초성 힌트 보기 (Ctrl+V 같은 조합키로 쓴 경우는 무시)
+let ctrlAlone = false;
+document.addEventListener('keydown', e=>{ ctrlAlone = (e.key === 'Control'); });
+document.addEventListener('keyup', e=>{
+  if(e.key !== 'Control' || !ctrlAlone) return;
+  ctrlAlone = false;
+  const btn = el('hintBtn');
+  if(btn.disabled || !btn.offsetParent) return;
+  btn.click();
+});
 
 // 제한 시간이 남았어도 학생이 직접 연습을 끝낼 수 있다.
 // showEndedView() → syncSoloLog(true) 가 end_ts 를 지금 시각으로 남기므로
