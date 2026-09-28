@@ -185,6 +185,28 @@
   @keyframes rank1Pop{ 0%{ transform:scale(.5); opacity:0; } 100%{ transform:scale(1); opacity:1; } }
 
   .hidden{ display:none !important; }
+  /* ── 선생님과 쪽지 (게임 중에도) ── */
+  .msg-open-btn{ position:absolute; top:12px; right:16px; z-index:5; width:auto; padding:6px 12px; font-size:.8rem; font-weight:800;
+    background:#dbe6fb; color:var(--sky1); border:none; border-radius:999px; cursor:pointer; }
+  .msg-open-btn.has-unread{ background:#ffe08a; color:#5a4300; animation:msgPulse 1.2s ease-in-out infinite; }
+  @keyframes msgPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
+  .msg-open-btn .unread-badge{ position:absolute; top:-6px; right:-6px; background:var(--bad); color:#fff; font-size:.65rem; font-weight:800; border-radius:999px; padding:1px 5px; min-width:16px; text-align:center; }
+  .chat-panel{ position:absolute; inset:0; z-index:60; background:#fff; border-radius:22px; display:flex; flex-direction:column; padding:2.4vh 4vw; }
+  .chat-panel-head{ display:flex; align-items:center; gap:8px; flex:0 0 auto; margin-bottom:1.4vh; }
+  .chat-panel-head .title{ font-size:1.1rem; font-weight:800; color:var(--sky1); }
+  .chat-panel-head .close{ margin-left:auto; width:auto; flex:0 0 auto; background:#e6e9f0; color:var(--sub); padding:8px 14px; font-size:.9rem; border-radius:10px; border:none; cursor:pointer; }
+  .chat-log{ flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; border:1px solid #dde3ee; border-radius:12px; padding:10px; background:#f4f6fb; display:flex; flex-direction:column; gap:8px; }
+  .chat-row{ display:flex; align-items:flex-end; gap:6px; }
+  .chat-row.me{ justify-content:flex-end; }
+  .chat-row.admin{ justify-content:flex-start; }
+  .chat-unread{ font-size:.68rem; font-weight:800; color:var(--gold-dark); flex:0 0 auto; }
+  .chat-msg{ max-width:78%; padding:8px 12px; border-radius:12px; font-size:.92rem; line-height:1.5; word-break:break-word; }
+  .chat-msg.me{ background:var(--sky1); color:#fff; border-bottom-right-radius:3px; }
+  .chat-msg.admin{ background:#fff; border:1px solid #dde3ee; border-bottom-left-radius:3px; }
+  .chat-msg .ct{ font-size:.68rem; opacity:.7; margin-top:3px; }
+  .chat-input-row{ display:flex; gap:8px; flex:0 0 auto; margin-top:10px; }
+  .chat-input-row input[type=text]{ flex:1; margin:0; }
+  .chat-input-row button{ width:auto; flex:0 0 auto; padding:12px 20px; }
   .conn-warn{ position:fixed; left:0; right:0; bottom:0; background:#d9534f; color:#fff; text-align:center;
     font-size:.8rem; padding:6px; z-index:5; display:none; }
   .conn-warn.show{ display:block; }
@@ -348,6 +370,18 @@
 
 <div class="card">
   <h1>🌍 세계사 탑 오르기</h1>
+  <button type="button" id="msgOpenBtn" class="msg-open-btn hidden">💬 쪽지<span class="unread-badge hidden" id="msgUnreadBadge"></span></button>
+  <div id="chatPanel" class="chat-panel hidden">
+    <div class="chat-panel-head">
+      <div class="title">💬 선생님과 쪽지</div>
+      <button type="button" class="close" id="chatPanelClose">닫기 ✕</button>
+    </div>
+    <div class="chat-log" id="chatLog"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="메시지 입력 후 Enter" maxlength="300" autocomplete="off">
+      <button type="button" id="chatSendBtn">보내기</button>
+    </div>
+  </div>
 
   <div id="joinView" class="view center hidden">
     <div class="inner">
@@ -474,13 +508,13 @@
 
 <script type="module">
 import {
-  roomRef, ref, db, onValue, get, set, update, push, runTransaction, onDisconnect, serverNow, escapeHtml,
+  roomRef, ref, db, onValue, onChildAdded, onChildChanged, get, set, update, push, runTransaction, onDisconnect, serverNow, escapeHtml, chatRef,
   OFFLINE_MARK, isOffline, sweepOfflinePlayers, watchForUpdate,
   isCorrect, computeGain, fmtTime, shuffle, pickAvatarEmoji, rankedPlayers,
   recencyWeightFn, weightedQueue,
   teamInfo, teamStandings, activeBonus,
   ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
-} from '../shared/lib.js?v=20260928c';
+} from '../shared/lib.js?v=20260928d';
 
 const ROOM = 'world';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
@@ -1039,7 +1073,7 @@ async function submitAnswerCore(){
     correct: p.correct, wrong: p.wrong,
     streak: p.streak, bestStreak: p.bestStreak, lastActive: serverNow()
   };
-  if(!existed){ payload.name = playerName; payload.avatar = AVATAR_IDLE; payload.floor = 0; }
+  if(!existed){ payload.name = playerName; payload.cls = classKey(); payload.avatar = AVATAR_IDLE; payload.floor = 0; }
   if(itemsOn()) payload.item = heldItem || null;
   await update(pRef, payload);
   // 제출 처리 중(get~update 사이)에 바나나·강탈 등으로 층수가 바뀌었을 수 있어, 읽어둔 층수로 덮어쓰지 않고 변화량만 더한다
@@ -1069,6 +1103,7 @@ el('answerInput').addEventListener('keydown', e=>{ if(e.key==='Enter') submitAns
 document.addEventListener('keydown', e=>{
   if(e.repeat) return;
   if(el('playView').classList.contains('hidden')) return;   // 게임 화면이 아닐 때(종료·대기 화면)는 단축키 무시
+  if(chatPanelOpen){ if(e.key === 'Escape') closeChatPanel(); return; }   // 쪽지창이 열려 있으면 Ctrl·Esc가 아이템을 쓰거나 버리지 않게 (Esc는 창만 닫음)
   if(e.key === 'Control'){
     const btn = el('useItemBtn');
     if(btn && !btn.disabled) btn.click();
@@ -1081,6 +1116,7 @@ document.addEventListener('keydown', e=>{
 // 지뢰 카드가 떠 있을 때는 숫자키 1·2·3으로도 고를 수 있게
 document.addEventListener('keydown', e=>{
   if(el('mineOverlay').classList.contains('hidden')) return;
+  if(chatPanelOpen) return;
   const idx = { '1': 0, '2': 1, '3': 2 }[e.key];
   if(idx === undefined) return;
   e.preventDefault();   // 카드 고르는 숫자가 답 입력칸에 찍히지 않게
@@ -1954,6 +1990,19 @@ function handleItemEvents(obj){
       }
       return;
     }
+    // 선생님이 이 학생에게만 몰래 준 랜덤박스 — 안내 팝업 없이 아이템 칸에만 조용히 넣는다
+    // (이미 아이템이 있으면 아이템 칸에 '바꾸기/유지' 선택만 뜬다)
+    if(e.type === 'randombox_gift'){
+      if(e.target !== playerId || !itemsOn()) return;
+      if(!heldItem){
+        heldItem = 'randombox';
+        update(roomRef(ROOM, 'players', playerId), { item: 'randombox', name: playerName, lastActive: serverNow() });
+      } else if(heldItem !== 'randombox'){
+        randomboxOfferPending = true;
+      }
+      renderItemBar();
+      return;
+    }
     // 강탈 공격 결과 통보: 공격자에게만 성공/방어 여부를 알려준다
     if(e.type === 'steal_result'){
       if(e.target !== playerId) return;
@@ -2238,6 +2287,123 @@ async function slideDown(label){
 
 let joinedAlready = false;
 
+// ── 선생님과 쪽지 (혼자 연습과 같은 messages/<방>/<학년-반>/<이름> 경로를 쓴다) ──
+// 대화창이 닫혀 있을 때 선생님 쪽지가 오면 게임을 가리지 않도록 팝업 대신 '💬 쪽지' 버튼만 반짝이며 숫자를 올린다.
+let chatPanelOpen = false;
+let chatMsgs = {};
+let chatSeenKeys = null;
+let chatUnsubs = [];
+let chatPath = null;          // { cls, name } — 지금 구독 중인 대화
+let pendingAdminMsgKeys = [];
+function startChat(){
+  const cls = classKey();
+  if(!cls || !playerName) return;
+  if(chatPath && chatPath.cls === cls && chatPath.name === playerName) return;
+  stopChat();
+  const myPath = chatPath = { cls, name: playerName };
+  el('msgOpenBtn').classList.remove('hidden');
+  const cRef = chatRef(ROOM, cls, playerName);
+  chatSeenKeys = new Set();
+  chatMsgs = {};
+  get(cRef).then(snap => {
+    if(chatPath !== myPath) return;
+    snap.forEach(ms => {
+      chatSeenKeys.add(ms.key);
+      const m = ms.val();
+      chatMsgs[ms.key] = m;
+      if(m && m.from === 'admin' && !m.read) pendingAdminMsgKeys.push(ms.key);   // 참여 전에 와 있던 안 읽은 쪽지도 표시
+    });
+    updateMsgBadge();
+  }).catch(()=>{}).finally(() => {
+    if(chatPath !== myPath) return;
+    chatUnsubs.push(onChildAdded(cRef, (ms) => {
+      if(!chatSeenKeys || chatSeenKeys.has(ms.key)) return;
+      chatSeenKeys.add(ms.key);
+      const m = ms.val();
+      if(!m) return;
+      chatMsgs[ms.key] = m;
+      if(m.from === 'admin'){
+        if(chatPanelOpen) update(ref(db, `messages/${ROOM}/${cls}/${myPath.name}/${ms.key}`), { read: true }).catch(()=>{});
+        else { pendingAdminMsgKeys.push(ms.key); updateMsgBadge(); }
+      }
+      if(chatPanelOpen) renderChatPanel();
+    }));
+    chatUnsubs.push(onChildChanged(cRef, (ms) => {
+      const m = ms.val();
+      if(!m) return;
+      chatMsgs[ms.key] = m;
+      if(chatPanelOpen) renderChatPanel();
+    }));
+  });
+}
+function stopChat(){
+  chatUnsubs.forEach(u => { try{ u(); }catch(_e){} });
+  chatUnsubs = [];
+  chatPath = null; chatSeenKeys = null; chatMsgs = {}; pendingAdminMsgKeys = [];
+  chatPanelOpen = false;
+  el('chatPanel').classList.add('hidden');
+  el('msgOpenBtn').classList.add('hidden');
+  updateMsgBadge();
+}
+function updateMsgBadge(){
+  const n = pendingAdminMsgKeys.length;
+  const badge = el('msgUnreadBadge');
+  badge.textContent = n;
+  badge.classList.toggle('hidden', n === 0);
+  el('msgOpenBtn').classList.toggle('has-unread', n > 0);
+}
+function chatBubbleHtml(msg){
+  const who = msg.from === 'student' ? 'me' : 'admin';
+  const label = msg.from === 'admin' ? '선생님' : '나';
+  const t = msg.ts ? new Date(msg.ts) : null;
+  const tLabel = t ? `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}` : '';
+  // 내가 보낸 말풍선을 선생님이 아직 안 읽었으면 "1"을 붙여둔다(카카오톡 방식)
+  const unreadTick = (who === 'me' && !msg.read) ? '<span class="chat-unread">1</span>' : '';
+  return `<div class="chat-row ${who}">${unreadTick}<div class="chat-msg ${who}">${escapeHtml(msg.text||'')}<div class="ct">${label} · ${tLabel}</div></div></div>`;
+}
+function renderChatPanel(){
+  const keys = Object.keys(chatMsgs).sort();
+  const log = el('chatLog');
+  log.innerHTML = keys.length ? keys.map(k => chatBubbleHtml(chatMsgs[k])).join('') : '<div style="color:var(--sub);">아직 대화가 없습니다.</div>';
+  log.scrollTop = log.scrollHeight;
+}
+el('msgOpenBtn').onclick = () => {
+  if(!chatPath) return;
+  chatPanelOpen = true;
+  el('chatPanel').classList.remove('hidden');
+  pendingAdminMsgKeys.forEach(key => {
+    if(chatMsgs[key]) chatMsgs[key] = { ...chatMsgs[key], read: true };
+    update(ref(db, `messages/${ROOM}/${chatPath.cls}/${chatPath.name}/${key}`), { read: true }).catch(()=>{});
+  });
+  pendingAdminMsgKeys = [];
+  updateMsgBadge();
+  renderChatPanel();
+  el('chatInput').focus();
+};
+function closeChatPanel(){
+  chatPanelOpen = false;
+  el('chatPanel').classList.add('hidden');
+  if(!el('answerInput').disabled && !el('playView').classList.contains('hidden')) el('answerInput').focus();
+}
+el('chatPanelClose').onclick = closeChatPanel;
+el('chatInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){ e.preventDefault(); sendChatMsg(); }
+  // Esc가 문서 전체의 '아이템 버리기' 단축키까지 전달되지 않게 여기서 멈춘다 (창이 닫히는 순간 아이템이 버려지던 문제)
+  else if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); closeChatPanel(); }
+});
+function sendChatMsg(){
+  const text = el('chatInput').value.trim();
+  if(!text || !chatPath) return;
+  const newRef = push(chatRef(ROOM, chatPath.cls, chatPath.name));
+  const msgObj = { from:'student', text: text.slice(0,300), ts: Date.now(), read:false };
+  if(chatSeenKeys) chatSeenKeys.add(newRef.key);
+  chatMsgs[newRef.key] = msgObj;
+  set(newRef, msgObj).catch(()=>{});
+  el('chatInput').value = '';
+  renderChatPanel();
+}
+el('chatSendBtn').onclick = sendChatMsg;
+
 // 연결될 때마다 '끊기면 offlineAt 기록'을 서버에 예약하고, 지금은 연결돼 있으니 offlineAt을 지운다
 let presenceArmed = false;
 let fbConnected = false;
@@ -2261,6 +2427,7 @@ function handleRemovedFromRoster(){
   if(kicked) return; // 중복 알림 방지
   kicked = true;
   if(playerId) onDisconnect(roomRef(ROOM, 'players', playerId)).cancel().catch(()=>{});
+  stopChat();
   localStorage.removeItem(STORAGE_ID_KEY);
   clearFxState();
   playerId = '';
@@ -2280,16 +2447,17 @@ async function join(name){
   const pRef = roomRef(ROOM, 'players', playerId);
   const snap = await get(pRef);
   if(snap.exists()){
-    await update(pRef, { name: playerName, lastActive: serverNow() });
+    await update(pRef, { name: playerName, cls: classKey(), lastActive: serverNow() });
   } else {
     const existingSnap = await get(roomRef(ROOM, 'players'));
     const existingAvatars = Object.values(existingSnap.val()||{}).map(pp=>pp.avatar).filter(Boolean);
     const avatar = pickAvatarEmoji(existingAvatars);
     await set(pRef, {
-      name: playerName, avatar, floor:0, correct:0, wrong:0, streak:0, bestStreak:0,
+      name: playerName, cls: classKey(), avatar, floor:0, correct:0, wrong:0, streak:0, bestStreak:0,
       joinedAt: serverNow(), lastActive: serverNow()
     });
   }
+  startChat();
   registerDisconnect();   // 내보내졌다가 다시 참여하면 새 id로 다시 예약해야 함(.info/connected는 이미 연결 상태라 다시 안 불림)
   startListening();
 }

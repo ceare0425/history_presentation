@@ -122,6 +122,17 @@
   .team-bar-row .tval{ width:52px; text-align:right; flex-shrink:0; color:var(--sub); }
 
   .kick-btn{ padding:5px 10px; font-size:.76rem; background:var(--bad); }
+  /* 랜덤박스 뿌리기 — 눈에 잘 띄게 보라~분홍 그라데이션 */
+  .rb-btn{ flex:0 0 auto; width:auto; padding:7px 14px; font-size:.84rem; font-weight:800; color:#fff; border:none; border-radius:10px;
+    background:linear-gradient(135deg,#8b5cf6,#ec4899); box-shadow:0 3px 10px rgba(139,92,246,.35); cursor:pointer; }
+  .rb-btn:hover:not(:disabled){ filter:brightness(1.08); }
+  .rb-btn:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
+  /* 명단의 학생별 쪽지 · 몰래 랜덤박스 버튼 */
+  .row-btn{ width:auto; padding:5px 8px; font-size:.76rem; margin-right:4px; border-radius:6px; border:none; cursor:pointer; vertical-align:middle; }
+  .row-chat-btn{ background:#dbe6fb; color:#1e3c72; position:relative; }
+  .row-chat-btn .unread{ position:absolute; top:-6px; right:-6px; background:var(--bad); color:#fff; font-size:.62rem; font-weight:800; border-radius:999px; padding:1px 5px; }
+  .row-gift-btn{ background:linear-gradient(135deg,#8b5cf6,#ec4899); color:#fff; }
+  .row-btn:disabled{ opacity:.4; cursor:not-allowed; }
   .team-sel{ width:auto; max-width:130px; padding:4px 6px; font-size:.76rem; border:1px solid #ccd2e0; border-radius:6px; background:#fff; margin-right:6px; vertical-align:middle; }
   .manage-cell{ white-space:nowrap; width:1%; }
   .msg{ font-size:.82rem; margin-top:8px; min-height:1.2em; }
@@ -272,10 +283,7 @@
       <span class="pill idle" id="statusPill">대기중</span>
       <span class="timer-big" id="timerBig">--:--</span>
       <span class="muted" id="poolInfo"></span>
-      <button type="button" id="bonusNowBtn" class="secondary" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;" disabled>🔥 지금 2배 찬스 발동</button>
-      <input type="number" id="bonusDurationInput" value="20" min="5" max="300" step="5" style="width:60px; flex:0 0 auto;" title="2배 찬스 지속 시간(초)">초
-      <span class="muted" id="bonusNowMsg"></span>
-      <button type="button" id="giveRandomboxBtn" class="secondary" style="flex:0 0 auto; padding:6px 12px; font-size:.82rem;" disabled>🎁 랜덤박스 뿌리기</button>
+      <button type="button" id="giveRandomboxBtn" class="rb-btn" disabled>🎁 랜덤박스 뿌리기</button>
       <span class="muted" id="giveRandomboxMsg"></span>
     </div>
     <div class="team-standings hidden" id="teamStandingsBox"></div>
@@ -394,7 +402,7 @@ import {
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, renderUnitGroups, shuffle,
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS,
   presenceRef, chatRef, isOffline, sweepOfflinePlayers, watchForUpdate
-} from '../shared/lib.js?v=20260928c';
+} from '../shared/lib.js?v=20260928d';
 
 const ROOM = 'korea';
 // 학년+반 구분(명단 관리, 학년별 solo_log 기록)을 넣기 전에는 한국사=1학년, 세계사=2학년만 썼으므로,
@@ -626,24 +634,6 @@ el('resetBtn').onclick = async () => {
     msg.className='msg ok'; msg.textContent = '전체 초기화 완료! 접속해 있던 학생은 모두 내보내졌습니다.';
   } catch(err){
     msg.className='msg err'; msg.textContent = '초기화 실패: ' + err.message;
-  }
-};
-
-el('bonusNowBtn').onclick = async () => {
-  const r = roundState;
-  if(r.status !== 'running' || r.end_time == null) return;
-  const bonusMsg = el('bonusNowMsg');
-  const elapsedNow = r.duration_sec - Math.max(0, Math.round((r.end_time - serverNow())/1000));
-  const durationSec = Math.max(5, Math.min(300, Math.round(parseFloat(el('bonusDurationInput').value)) || 20));
-  const newWindow = { start: elapsedNow, end: elapsedNow + durationSec, mult: 2 };
-  const bonus = [...(r.bonus||[]), newWindow];
-  el('bonusNowBtn').disabled = true;
-  try{
-    await update(roomRef(ROOM,'round'), { bonus });
-    bonusMsg.textContent = `🔥 발동! ${durationSec}초간 2배`;
-    setTimeout(()=>{ bonusMsg.textContent=''; }, 4000);
-  } catch(err){
-    bonusMsg.textContent = '발동 실패: ' + err.message;
   }
 };
 
@@ -884,14 +874,8 @@ function renderRoster(){
     : ((r.weight === 'recent' || r.order === 'recent') ? '랜덤 · 최근 주제 우선' : '랜덤');
   el('poolInfo').textContent = effective!=='idle' ? `출제 문항 ${poolCount}개 · ${orderLabel} 출제` : '';
 
-  el('bonusNowBtn').disabled = effective !== 'running';
   el('giveRandomboxBtn').disabled = effective !== 'running' || itemsModeState === 'off';
-  const bonus = activeBonus(r, serverNow());
-  if(bonus && !el('bonusNowMsg').textContent){
-    el('bonusNowMsg').textContent = `🔥 2배 찬스 진행 중 (${bonus.remaining}초)`;
-  } else if(!bonus && el('bonusNowMsg').textContent.startsWith('🔥 2배 찬스 진행')){
-    el('bonusNowMsg').textContent = '';
-  }
+  const giftOk = effective === 'running' && itemsModeState !== 'off';
 
   const players = Object.entries(playersObj).map(([id,p])=>({id,...p}));
   players.sort((a,b)=> (b.floor||0)-(a.floor||0) || (b.correct||0)-(a.correct||0));
@@ -961,12 +945,31 @@ function renderRoster(){
       <td class="${accClass}">${accuracy===null?'-':accuracy+'%'}</td>
       <td>${(p.streak||0)>=2 ? '🔥'+p.streak : (p.streak||0)}</td>
       ${itemCell}
-      <td class="manage-cell">${teamSel}<button class="kick-btn" data-id="${p.id}" data-name="${nameAttr}">내보내기</button></td>
+      <td class="manage-cell">${teamSel}<button type="button" class="row-btn row-chat-btn" data-cls="${escapeHtml(p.cls||'')}" data-name="${nameAttr}"${p.cls ? '' : ' disabled title="예전 버전으로 참여해 반 정보가 없어요 (학생이 새로고침하면 가능)"'} title="이 학생과 쪽지">💬${p.cls && threadUnread(p.cls, p.name) ? `<span class="unread">${threadUnread(p.cls, p.name)}</span>` : ''}</button><button type="button" class="row-btn row-gift-btn" data-id="${p.id}" data-name="${nameAttr}"${giftOk ? '' : ' disabled'} title="이 학생에게만 알림 없이 랜덤박스 주기">🎁</button><button class="kick-btn" data-id="${p.id}" data-name="${nameAttr}">내보내기</button></td>
     </tr>`;
   }).join('');
 }
 
 el('roster').addEventListener('click', async (e)=>{
+  // 💬 이 학생과 쪽지 (게임 중인 학생도 혼자 연습 학생과 같은 대화창을 쓴다)
+  const chatBtn = e.target.closest('.row-chat-btn');
+  if(chatBtn){
+    if(chatBtn.dataset.cls) openChatModal(chatBtn.dataset.cls, chatBtn.dataset.name);
+    return;
+  }
+  // 🎁 이 학생에게만 몰래 랜덤박스 — 전광판·다른 학생에게 알리지 않고, 받는 학생 화면에도 안내 팝업 없이 아이템 칸에만 들어감
+  const giftBtn = e.target.closest('.row-gift-btn');
+  if(giftBtn){
+    if(roundState.status !== 'running' || itemsModeState === 'off') return;
+    giftBtn.disabled = true;
+    try{
+      await push(roomRef(ROOM, 'item_events'), { type: 'randombox_gift', target: giftBtn.dataset.id, at: serverNow() });
+      const rbMsg = el('giveRandomboxMsg');
+      rbMsg.textContent = `🎁 ${giftBtn.dataset.name || '학생'} 학생에게 몰래 랜덤박스를 줬어요`;
+      setTimeout(()=>{ rbMsg.textContent=''; }, 3000);
+    }catch(err){ alert('랜덤박스 주기 실패: ' + err.message); }
+    return;
+  }
   const btn = e.target.closest('.kick-btn');
   if(!btn) return;
   const pid = btn.dataset.id;
@@ -1034,6 +1037,12 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
 onValue(roomRef(ROOM,'players'), (snap)=>{
   playersObj = snap.val() || {};
 });
+// 게임 중인 학생이 보낸 쪽지도 '확인 못한 쪽지' 목록에 뜨도록 명단이 바뀌면 목록을 다시 그림
+let lastPlayersSig = '';
+setInterval(()=>{
+  const sig = Object.values(playersObj).map(p => (p && p.cls) + '/' + (p && p.name)).join('|');
+  if(sig !== lastPlayersSig){ lastPlayersSig = sig; renderPresenceList(); }
+}, 3000);
 
 // ── ⑤ 온라인 연습 학생 · 실시간 쪽지 ────────────────────
 let presenceObj = {}; // { "학년-반": { 이름: {since} } }
@@ -1135,7 +1144,8 @@ function renderPresenceList(){
   rows.sort((a,b)=> (b.online - a.online) || clsLabelShort(a.cls).localeCompare(clsLabelShort(b.cls),'ko') || a.name.localeCompare(b.name,'ko'));
   box.innerHTML = rows.map(r=>{
     const unread = threadUnread(r.cls, r.name);
-    const timeLabel = r.online ? fmtPresenceTime(r.since) : `오프라인 · 쪽지 ${fmtAgo(r.lastTs)}`;
+    const inGame = !r.online && Object.values(playersObj).some(p => p && p.cls === r.cls && p.name === r.name);
+    const timeLabel = r.online ? fmtPresenceTime(r.since) : inGame ? `🎮 게임 참여 중 · 쪽지 ${fmtAgo(r.lastTs)}` : `오프라인 · 쪽지 ${fmtAgo(r.lastTs)}`;
     return `<div class="presence-row${r.online?'':' offline'}">
       <span class="pname">${escapeHtml(r.name)}</span>
       <span class="pcls">${escapeHtml(clsLabelShort(r.cls))}</span>
