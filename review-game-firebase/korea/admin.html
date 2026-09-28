@@ -393,8 +393,8 @@ import {
   roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, renderUnitGroups, shuffle,
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS,
-  presenceRef, chatRef, isOffline, sweepOfflinePlayers
-} from '../shared/lib.js?v=20260928b';
+  presenceRef, chatRef, isOffline, sweepOfflinePlayers, watchForUpdate
+} from '../shared/lib.js?v=20260928c';
 
 const ROOM = 'korea';
 // 학년+반 구분(명단 관리, 학년별 solo_log 기록)을 넣기 전에는 한국사=1학년, 세계사=2학년만 썼으므로,
@@ -1542,6 +1542,14 @@ el('soloClearBtn').onclick = async () => {
 
 setInterval(renderRoster, 500);
 setInterval(()=> sweepOfflinePlayers(ROOM, playersObj), 2000);   // 연결이 10초 넘게 끊긴 학생 자동 내보내기
+// 새 버전이 올라오면 화면 위에 새로고침 안내를 띄운다 (관리자 화면은 설정 중일 수 있어 자동 새로고침은 하지 않음)
+watchForUpdate(()=>{
+  const bar = document.createElement('div');
+  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:200;background:#c5a028;color:#fff;font-weight:700;text-align:center;padding:10px 16px;';
+  bar.innerHTML = '🔄 게임이 업데이트됐어요. 새 기능이 제대로 동작하도록 <button type="button" style="margin-left:8px;padding:4px 12px;font-weight:700;cursor:pointer;">새로고침</button>';
+  bar.querySelector('button').onclick = () => location.reload();
+  document.body.appendChild(bar);
+});
 setInterval(renderSoloStats, 15000); // '연습 중' → '중단' 표시가 시간이 지나면 갱신되도록
 
 // ── ⑦ 학생 명단 관리 (혼자 연습 이름 제한용) ──────────────

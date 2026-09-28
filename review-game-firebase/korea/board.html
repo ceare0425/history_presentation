@@ -390,7 +390,7 @@
 </div>
 
 <script type="module">
-import { roomRef, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers, teamInfo, teamStandings, activeBonus, ITEMS, ITEM_FX_MS, TEAM_OPTIONS, sweepOfflinePlayers } from '../shared/lib.js?v=20260928b';
+import { roomRef, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers, teamInfo, teamStandings, activeBonus, ITEMS, ITEM_FX_MS, TEAM_OPTIONS, sweepOfflinePlayers, watchForUpdate } from '../shared/lib.js?v=20260928c';
 
 const ROOM = 'korea';
 const el = (id) => document.getElementById(id);
@@ -1169,6 +1169,14 @@ onValue(roomRef(ROOM,'players'), (snap)=>{
 
 buildBackground();
 setInterval(render, 500);
+// 새 버전이 올라오면 게임이 진행 중이 아닐 때 자동 새로고침 (진행 중이면 끝날 때까지 미룸)
+let updatePending = false;
+watchForUpdate(()=>{ updatePending = true; });
+setInterval(()=>{
+  if(!updatePending) return;
+  const running = roundState.status === 'running' && !(roundState.end_time != null && serverNow() >= roundState.end_time);
+  if(!running) location.reload();
+}, 1000);
 setInterval(()=> sweepOfflinePlayers(ROOM, playersObj), 2000);   // 연결이 10초 넘게 끊긴 학생 자동 내보내기
 </script>
 </body>

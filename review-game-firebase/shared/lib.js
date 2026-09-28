@@ -56,6 +56,26 @@ export function serverNow() {
   return Date.now() + serverOffsetMs;
 }
 
+// ── 새 버전 감지 ──────────────────────────────────
+// 수업 중 열어 둔 화면(학생·관리자·전광판)은 새로고침하기 전까지 예전 코드로 계속 돈다. 그러면 새로 넣은 기능
+// (예: 연결 끊김 자동 내보내기)이 그 화면들에서는 동작하지 않으므로, 1분마다 서버의 최신 페이지를 받아
+// 거기 적힌 lib.js 버전이 지금 쓰는 버전과 다르면 onNew()를 불러 새로고침하게 한다.
+export const LIB_VERSION = new URL(import.meta.url).searchParams.get("v") || "";
+export function watchForUpdate(onNew, intervalMs = 60000) {
+  if (!LIB_VERSION) return;
+  let notified = false;
+  const check = async () => {
+    if (notified) return;
+    try {
+      const res = await fetch(location.pathname + "?_upd=" + Date.now(), { cache: "no-store" });
+      if (!res.ok) return;
+      const m = (await res.text()).match(/shared\/lib\.js\?v=([\w-]+)/);
+      if (m && m[1] !== LIB_VERSION) { notified = true; onNew(); }
+    } catch (_e) { /* 네트워크 오류는 다음 확인 때 다시 */ }
+  };
+  setInterval(check, intervalMs);
+}
+
 // ── 연결 끊김 자동 내보내기 ──────────────────────────
 // 학생 화면(play.html)은 연결이 끊기면 서버가 players/<id>/offlineAt(서버 시각)을 남기도록 onDisconnect를 걸고,
 // 다시 연결되면 offlineAt을 지운다. offlineAt이 OFFLINE_KICK_MS보다 오래 남아 있으면 접속해 있는 아무 화면
