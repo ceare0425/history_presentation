@@ -93,6 +93,9 @@ const THEMES = {
 // 모든 난이도에 공통인 규칙
 const RAID_BASE = {
   limitMs: 180000,           // 제한 시간 3분
+  // 보스가 한 번에 노리는 학생 비율 (전체 학생 수 기준, 최소 1명): 평소 · 분노(50% 이하) · 광폭화(25% 이하)
+  // 예) 20명이면 곤봉 5명 → 10명 → 15명, 호루라기 10명
+  attackFrac: [0.25, 0.5, 0.75], whistleFrac: 0.5,
   firstAttackMs: 6000,
   telegraphMs: 1000,         // 공격 전 ⚠ 표시 시간
   whistleStunMs: 3000,
@@ -107,24 +110,24 @@ const RAID_BASE = {
   barricadeMs: 4000,         // 바리케이드: 모든 공격을 막는다
   minionAt: [0.75, 0.4], minionShotShare: 0.6, minionBossDmg: 0.5   // 헌병이 있으면 공격 60%가 헌병에게 가고 순사는 피해 절반
 };
-// 난이도 단계: 특수 공격까지 넣은 실제 게임 코드로 난이도마다 40판씩 돌려 맞춘 값.
+// 난이도 단계: 실제 게임 코드로 난이도마다 30~40판씩 돌려 맞춘 값 (2026-09-29, 공격 인원 비율 적용 뒤 20명·30명 모두 측정).
 // 승률 메모는 '학생마다 약 9초에 한 번 답하는 속도' 기준: [정답률 70% / 82% / 90%] (빠름 = 약 4.5초에 한 번)
-//   attackGapMs·attackTargets: 평소 · 분노(50% 이하) · 광폭화(25% 이하), regenPerSec: 초당 최대 체력 대비 회복(광폭화 때 2배)
+//   attackGapMs: 곤봉 공격 간격 [평소 · 분노(50% 이하) · 광폭화(25% 이하)] (공격 인원은 RAID_BASE의 비율), regenPerSec: 초당 최대 체력 대비 회복(광폭화 때 2배)
 const DIFFS = [
   { name: '쉬움', emoji: '🙂', color: '#3ec46d', desc: '처음 해 보는 반', note: '거의 누구나 이겨요',   // 100 / 100 / 100%
-    p: { hp: 25000, hearts: 5, reviveMs: 8000,  attackGapMs: [8000, 6500, 5500], attackTargets: [1, 2, 2], whistleGapMs: 12000, whistleTargets: 3, regenPerSec: 0.001,  healNeed: 15, healAmount: 0.06,
+    p: { hp: 22000, hearts: 7, reviveMs: 5000,  attackGapMs: [11000, 9500, 8500], whistleGapMs: 15000, regenPerSec: 0.001,  healNeed: 15, healAmount: 0.06,
          specialGapMs: 22000, arrestNeed: 6,  censorCount: 6,  minionHp: 0.05 } },
-  { name: '보통', emoji: '😐', color: '#3d8bfd', desc: '대부분 맞히면 이겨요', note: '정답률 80%면 충분',   // 약 10 / 88 / 100%
-    p: { hp: 28000, hearts: 3, reviveMs: 10000, attackGapMs: [6000, 4500, 3500], attackTargets: [1, 2, 3], whistleGapMs: 10000, whistleTargets: 4, regenPerSec: 0.002,  healNeed: 22, healAmount: 0.09,
+  { name: '보통', emoji: '😐', color: '#3d8bfd', desc: '대부분 맞히면 이겨요', note: '정답률 80%면 충분',   // 약 20 / 88 / 100%
+    p: { hp: 26500, hearts: 6, reviveMs: 6000,  attackGapMs: [9000, 8000, 7000],  whistleGapMs: 13000, regenPerSec: 0.002,  healNeed: 22, healAmount: 0.09,
          specialGapMs: 17000, arrestNeed: 8,  censorCount: 8,  minionHp: 0.06 } },
-  { name: '어려움', emoji: '😠', color: '#ffb020', desc: '거의 다 맞혀야 해요', note: '정답률 90%는 되어야',   // 약 0 / 30 / 80%
-    p: { hp: 28000, hearts: 3, reviveMs: 12000, attackGapMs: [5500, 4000, 3000], attackTargets: [2, 3, 3], whistleGapMs: 9000,  whistleTargets: 5, regenPerSec: 0.0022, healNeed: 24, healAmount: 0.10,
+  { name: '어려움', emoji: '😠', color: '#ffb020', desc: '거의 다 맞혀야 해요', note: '정답률 90%는 되어야',   // 약 0 / 23 / 70%
+    p: { hp: 26000, hearts: 5, reviveMs: 8000,  attackGapMs: [8000, 7000, 6000],  whistleGapMs: 12000,  regenPerSec: 0.0022, healNeed: 24, healAmount: 0.10,
          specialGapMs: 15000, arrestNeed: 10, censorCount: 10, minionHp: 0.07 } },
-  { name: '매우 어려움', emoji: '🔥', color: '#ff5a4a', desc: '빠르고 정확해야 해요', note: '보통 속도로는 거의 불가능',   // 0 / 0 / 5% · 빠름 82%면 100%
-    p: { hp: 34000, hearts: 3, reviveMs: 12000, attackGapMs: [5000, 3500, 2500], attackTargets: [2, 3, 4], whistleGapMs: 9000,  whistleTargets: 6, regenPerSec: 0.0025, healNeed: 25, healAmount: 0.12,
+  { name: '매우 어려움', emoji: '🔥', color: '#ff5a4a', desc: '빠르고 정확해야 해요', note: '보통 속도로는 거의 불가능',   // 0 / 0 / 3% · 빠름 82%면 100%
+    p: { hp: 30000, hearts: 5, reviveMs: 9000,  attackGapMs: [7000, 6000, 5000],  whistleGapMs: 11000,  regenPerSec: 0.0025, healNeed: 25, healAmount: 0.12,
          specialGapMs: 13000, arrestNeed: 12, censorCount: 12, minionHp: 0.08 } },
-  { name: '지옥', emoji: '💀', color: '#b86bff', desc: '빨라도 버티기 힘들어요', note: '목숨 2개 · 도전 과제용',   // 0 / 0 / 0% · 빠름 82%도 0%
-    p: { hp: 43000, hearts: 2, reviveMs: 15000, attackGapMs: [4500, 3200, 2500], attackTargets: [2, 3, 4], whistleGapMs: 8000,  whistleTargets: 6, regenPerSec: 0.0028, healNeed: 28, healAmount: 0.14,
+  { name: '지옥', emoji: '💀', color: '#b86bff', desc: '빨라도 버티기 힘들어요', note: '도전 과제용',   // 0 / 0 / 0% · 빠름 82% 5% · 빠름 90% 25%
+    p: { hp: 40000, hearts: 4, reviveMs: 11000, attackGapMs: [6000, 5000, 4000],  whistleGapMs: 10000,  regenPerSec: 0.0028, healNeed: 28, healAmount: 0.14,
          specialGapMs: 11000, arrestNeed: 14, censorCount: 14, minionHp: 0.09 } }
 ];
 let diffIdx = 3;
@@ -658,8 +661,6 @@ function scaleForClass(){
   RAID.arrestNeed = Math.max(3, Math.round(RAID.arrestNeed * k));
   RAID.healNeed = Math.max(5, Math.round(RAID.healNeed * k));
   RAID.censorCount = Math.max(1, Math.round(RAID.censorCount * k));
-  RAID.whistleTargets = Math.max(1, Math.round(RAID.whistleTargets * k));
-  RAID.attackTargets = RAID.attackTargets.map(v => Math.max(1, Math.round(v * k)));
   S.hp = S.max = S.ghost = RAID.hp;
 }
 function startFight(){
@@ -810,7 +811,8 @@ function basicAttack(){
   const lvl = S.enrage ? 2 : S.rage ? 1 : 0;
   const pool = S.students.filter(s => !isKo(s));
   const targets = [];
-  for(let k = 0; k < RAID.attackTargets[lvl] && pool.length; k++) targets.push(pool.splice(randi(0, pool.length - 1), 1)[0]);
+  const count = Math.max(1, Math.round(S.students.length * RAID.attackFrac[lvl]));
+  for(let k = 0; k < count && pool.length; k++) targets.push(pool.splice(randi(0, pool.length - 1), 1)[0]);
   for(const st of targets) st.targetUntil = S.clock + RAID.telegraphMs;
   sfx('warn');
   S.timers.push({ at: S.clock + RAID.telegraphMs, fn: () => {
@@ -852,7 +854,7 @@ function counterAttack(){
     S.rings.push({ x: BOSS_X, y: BOSS_FEET - 260, t: 0, life: 0.8, r: 1300, color: 'rgba(255,70,50,.9)', w: 26 });
     S.rings.push({ x: BOSS_X, y: BOSS_FEET - 260, t: -0.12, life: 0.8, r: 1100, color: 'rgba(255,200,120,.7)', w: 12 });
     const pool = S.students.filter(s => !isKo(s));
-    const n = Math.min(RAID.whistleTargets, pool.length);
+    const n = Math.min(Math.max(1, Math.round(S.students.length * RAID.whistleFrac)), pool.length);
     for(let k = 0; k < n; k++){
       const st = pool.splice(randi(0, pool.length - 1), 1)[0];
       hurtStudent({ st, label: '😵 기절!', stunMs: RAID.whistleStunMs });
@@ -1187,7 +1189,8 @@ function update(dt){
   if(S.phase === 'victory' && Math.random() < dt * 30) confetti(false);
 
   // 예약된 동작
-  for(let i = S.timers.length - 1; i >= 0; i--) if(now >= S.timers[i].at){ const tm = S.timers.splice(i, 1)[0]; tm.fn(); }
+  // 예약된 동작이 게임을 끝내면 S.timers가 새 배열로 비워지므로, 매번 있는지 확인하며 돈다
+  for(let i = S.timers.length - 1; i >= 0; i--){ const tm = S.timers[i]; if(!tm || now < tm.at) continue; S.timers.splice(i, 1); tm.fn(); }
 
   // 날아가는 공격 (학생 → 보스, 보스 → 학생)
   // 한 발이 보스를 쓰러뜨리면 S.shots가 새 배열로 비워지므로, 이번 프레임은 원래 배열을 끝까지 돈다
@@ -1510,16 +1513,28 @@ function drawTags(){
       ctx.fillText('⚠', infoX, cy + 1);
     } else {
       // 목숨 하트: 남은 것은 빨강, 잃은 것은 흐리게 (왼쪽부터 첫째 하트)
-      const n = RAID.hearts, step = n > 3 ? 16 : 21;
-      ctx.font = `900 ${n > 3 ? 17 : 22}px ${FONT}`;
-      for(let h = 0; h < n; h++){
-        const hx = st.left ? infoX - (n - 1 - h) * step : infoX + h * step;
-        ctx.fillStyle = h < st.hearts ? '#ff4d5e' : 'rgba(255,255,255,.2)';
-        ctx.fillText('♥', hx, cy + 1);
+      // 목숨이 4개 이하면 하트 아이콘, 5개 이상이면 이름과 겹치지 않게 '♥ 남은/전체' 숫자로
+      const n = RAID.hearts;
+      let used;
+      if(n <= 4){
+        const step = n > 3 ? 16 : 21;
+        ctx.font = `900 ${n > 3 ? 17 : 22}px ${FONT}`;
+        for(let h = 0; h < n; h++){
+          const hx = st.left ? infoX - (n - 1 - h) * step : infoX + h * step;
+          ctx.fillStyle = h < st.hearts ? '#ff4d5e' : 'rgba(255,255,255,.2)';
+          ctx.fillText('♥', hx, cy + 1);
+        }
+        used = n * step;
+      } else {
+        ctx.font = `900 20px ${FONT}`;
+        ctx.fillStyle = st.hearts <= 2 ? '#ff8a80' : '#ff4d5e';
+        const label = `♥ ${st.hearts}/${n}`;
+        ctx.fillText(label, infoX, cy + 1);
+        used = ctx.measureText(label).width;
       }
       if(stunned){
         ctx.font = `800 17px ${FONT}`;
-        ctx.fillText('😵', st.left ? infoX - n * step - 4 : infoX + n * step + 4, cy + 1);
+        ctx.fillText('😵', st.left ? infoX - used - 6 : infoX + used + 6, cy + 1);
       }
     }
     if(censored){
@@ -1880,7 +1895,7 @@ function drawReady(){
   ctx.font = `600 25px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.85)';
   const lines = [
     `보스 체력 ${fmtNum(RAID.hp)} · 제한 시간 ${RAID.limitMs / 60000}분 · 학생 목숨 ♥${RAID.hearts} · 쓰러지면 ${RAID.reviveMs / 1000}초 뒤 부활`,
-    `오답을 내면 보스가 곧바로 반격 · 분노하면 호루라기로 ${RAID.whistleTargets}명을 기절시킵니다`,
+    `오답을 내면 보스가 곧바로 반격 · 분노하면 호루라기로 학생 ${Math.round(RAID.whistleFrac * 100)}%를 기절시킵니다`,
     `보스는 계속 회복합니다 · 회복 의식은 ${RAID.healCastMs / 1000}초 안에 ${RAID.healNeed}번 때려야 끊을 수 있어요 (못 끊으면 ${Math.round(RAID.healAmount * 100)}% 회복)`,
     '특수 공격: 🔗체포(구출) · 👮헌병 증원 · 📰신문 검열 · 📋불심 검문 · 🚧바리케이드',
     '5연속 정답 = 치명타 · 시간이 다 되거나 전원이 쓰러지면 실패'
