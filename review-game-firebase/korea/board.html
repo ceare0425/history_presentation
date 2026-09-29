@@ -355,9 +355,13 @@
   .title-badge .tb-label{ opacity:.85; }
   .title-badge .tb-name{ color:var(--gold); font-weight:900; }
   .title-badge .tb-detail{ opacity:.7; font-size:.85rem; }
+  /* 보스 레이드 화면 (전광판 전체를 덮는다) */
+  .raid-frame{ position:fixed; inset:0; width:100vw; height:100vh; border:0; z-index:500; background:#06060b; }
+  .raid-frame.hidden{ display:none; }
 </style>
 </head>
 <body>
+<iframe id="raidFrame" class="raid-frame hidden" title="보스 레이드" allow="autoplay"></iframe>
 
 <div class="sky-layer" id="skyLayer">
   <div class="sun"></div>
@@ -1247,7 +1251,7 @@ function render(){
   imb.classList.toggle('hidden', !im || im === 'off');
   imb.textContent = im === 'spicy' ? '⚔️ 아이템전 · 매운맛' : (im && im !== 'off') ? '🥊 아이템전 · 난타전 (난투)' : '';
 
-  if(effective === 'ended' && prevEffective !== 'ended'){
+  if(effective === 'ended' && prevEffective !== 'ended' && !roundState.raid_mode){
     showEndCelebration(players, ranked);
   } else if(effective !== 'ended' && prevEffective === 'ended'){
     hideEndCelebration();
@@ -1255,13 +1259,25 @@ function render(){
   prevEffective = effective;
 }
 
+// 보스 레이드를 켜면 레이드 화면(raid.html)을 띄우고, 끄면 원래 전광판으로 돌아온다
+function syncRaidFrame(){
+  const f = el('raidFrame');
+  if(roundState.raid_mode){
+    if(!f.getAttribute('src')) f.setAttribute('src', `../raid.html?room=${ROOM}`);
+    f.classList.remove('hidden');
+  } else if(f.getAttribute('src')){
+    f.classList.add('hidden');
+    f.removeAttribute('src');
+  }
+}
 onValue(roomRef(ROOM,'round'), (snap)=>{
   const r = snap.val();
   roundState = r ? {
     status: r.status||'idle', end_time: r.end_time ?? null, duration_sec: r.duration_sec||420,
     bonus: r.bonus||[], team_mode: !!r.team_mode, team_count: r.team_count||4,
-    items_mode: r.items_mode||'off', rivals: r.rivals||{}, token: r.token||0
+    items_mode: r.items_mode||'off', rivals: r.rivals||{}, token: r.token||0, raid_mode: !!r.raid_mode
   } : { status:'idle', end_time:null, duration_sec:420, bonus:[], team_mode:false, team_count:4, items_mode:'off' };
+  syncRaidFrame();
 });
 onValue(roomRef(ROOM,'item_events'), (snap)=>{
   const obj = snap.val() || {};

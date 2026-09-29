@@ -49,13 +49,37 @@ def shim(code):
 def parse(code, module):
     code = shim(code)
     if module:
-        esprima.parseModule(code, {'tolerant': False})
-    else:
-        try:
-            esprima.parseScript(code, {'tolerant': False})
-        except esprima.Error:
-            # type 없는 스크립트라도 import/export를 쓰면 모듈로 한 번 더 확인
-            esprima.parseModule(code, {'tolerant': False})
+        return esprima.parseModule(code, {'tolerant': False, 'loc': True}), True
+    try:
+        return esprima.parseScript(code, {'tolerant': False, 'loc': True}), False
+    except esprima.Error:
+        # type 없는 스크립트라도 import/export를 쓰면 모듈로 한 번 더 확인
+        return esprima.parseModule(code, {'tolerant': False, 'loc': True}), True
+
+
+def duplicate_decls(tree, module):
+    """최상위에서 같은 이름을 두 번 선언한 곳을 찾는다 (브라우저에서 'already been declared' 오류가 나는 경우).
+    예: import { update } 와 function update() 를 같은 모듈에 둔 경우. esprima 자체는 이것을 잡지 못한다."""
+    seen = {}   # 이름 -> (종류, 줄)
+    found = []
+    for node in tree.body:
+        items = []
+        if node.type == 'ImportDeclaration':
+            items = [(sp.local.name, 'import', sp.loc.start.line) for sp in node.specifiers]
+        elif node.type in ('FunctionDeclaration', 'ClassDeclaration') and node.id:
+            items = [(node.id.name, 'function' if node.type == 'FunctionDeclaration' else 'class', node.loc.start.line)]
+        elif node.type == 'VariableDeclaration':
+            items = [(d.id.name, node.kind, d.loc.start.line) for d in node.declarations if d.id.type == 'Identifier']
+        for name, kind, line in items:
+            if name in seen:
+                k0, l0 = seen[name]
+                lexical = {'let', 'const', 'class', 'import'}
+                clash = (k0 in lexical or kind in lexical) if not module else not (k0 == 'var' and kind == 'var')
+                if clash:
+                    found.append((line, name, k0, l0, kind))
+            else:
+                seen[name] = (kind, line)
+    return found
 
 
 def check_text(path, text):
@@ -73,7 +97,12 @@ def check_text(path, text):
             blocks.append((text.count('\n', 0, m.start(2)), body, t == 'module'))
     for offset, body, module in blocks:
         try:
-            parse(body, module)
+            tree, is_module = parse(body, module)
+            lines = text.split('\n')
+            for line, name, k0, l0, kind in duplicate_decls(tree, is_module):
+                real = offset + line
+                src_line = lines[real - 1].strip()[:120] if 0 < real <= len(lines) else ''
+                errors.append((path, real, f"'{name}' 중복 선언 ({offset + l0}번째 줄의 {k0}와 겹침, 여기서 다시 {kind})", src_line))
         except esprima.Error as e:
             line = getattr(e, 'lineNumber', None)
             real = offset + line if line else '?'

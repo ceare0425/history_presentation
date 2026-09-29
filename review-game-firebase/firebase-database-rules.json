@@ -31,6 +31,17 @@
             ".validate": "!newData.exists() || (newData.hasChild('name') && newData.hasChild('ts') && newData.child('name').val().length <= 20)"
           }
         },
+        "raid_hits": {
+          ".read": true,
+          ".write": true,
+          "$hit": {
+            ".validate": "!newData.exists() || (newData.hasChild('pid') && newData.hasChild('at'))"
+          }
+        },
+        "raid_state": {
+          ".read": true,
+          ".write": true
+        },
         "class_log": {
           ".read": true,
           ".write": true,
