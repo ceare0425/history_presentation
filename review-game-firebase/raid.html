@@ -114,9 +114,6 @@ const RAID_BASE = {
 // 승률 메모는 '학생마다 약 9초에 한 번 답하는 속도' 기준: [정답률 70% / 82% / 90%] (빠름 = 약 4.5초에 한 번)
 //   attackGapMs: 곤봉 공격 간격 [평소 · 분노(50% 이하) · 광폭화(25% 이하)] (공격 인원은 RAID_BASE의 비율), regenPerSec: 초당 최대 체력 대비 회복(광폭화 때 2배)
 const DIFFS = [
-  { name: '쉬움', emoji: '🙂', color: '#3ec46d', desc: '처음 해 보는 반', note: '거의 누구나 이겨요',   // 100 / 100 / 100%
-    p: { hp: 22000, hearts: 7, reviveMs: 5000,  attackGapMs: [11000, 9500, 8500], whistleGapMs: 15000, regenPerSec: 0.001,  healNeed: 15, healAmount: 0.06,
-         specialGapMs: 22000, arrestNeed: 6,  censorCount: 6,  minionHp: 0.05 } },
   { name: '보통', emoji: '😐', color: '#3d8bfd', desc: '대부분 맞히면 이겨요', note: '정답률 80%면 충분',   // 약 20 / 88 / 100%
     p: { hp: 26500, hearts: 6, reviveMs: 6000,  attackGapMs: [9000, 8000, 7000],  whistleGapMs: 13000, regenPerSec: 0.002,  healNeed: 22, healAmount: 0.09,
          specialGapMs: 17000, arrestNeed: 8,  censorCount: 8,  minionHp: 0.06 } },
@@ -130,7 +127,9 @@ const DIFFS = [
     p: { hp: 40000, hearts: 4, reviveMs: 11000, attackGapMs: [6000, 5000, 4000],  whistleGapMs: 10000,  regenPerSec: 0.0028, healNeed: 28, healAmount: 0.14,
          specialGapMs: 11000, arrestNeed: 14, censorCount: 14, minionHp: 0.09 } }
 ];
-let diffIdx = 3;
+let diffIdx = 2;   // 0 보통 · 1 어려움 · 2 매우 어려움 · 3 지옥
+// round.raid_diff는 예전 번호(1 보통 ~ 4 지옥, 0 쉬움은 삭제됨)를 그대로 쓰므로 1을 빼서 DIFFS 순서로 바꾼다
+function diffFromRound(r){ return clamp((Number(r.raid_diff ?? 3) || 0) - 1, 0, DIFFS.length - 1); }
 let RAID = null;   // reset() 때 RAID_BASE + 고른 난이도로 채운다
 const SPEEDS = [
   { label: '보통', mean: 9000 },
@@ -1879,7 +1878,7 @@ function drawReady(){
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   outlinedText(ctx, '⚔️ 보스 레이드 시연', 960, 210, 92, '#ffe14d', '#3a1a00', 14);
   ctx.font = `700 26px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.85)';
-  ctx.fillText('난이도를 고르세요  (카드 클릭 또는 숫자 키 1~5)', 960, 296);
+  ctx.fillText('난이도를 고르세요  (카드 클릭 또는 숫자 키 1~4)', 960, 296);
   DIFFS.forEach((d, i) => {
     const x = diffCardX(i), y = DIFF_CARD.y, sel = i === diffIdx;
     rr(ctx, x, y, DIFF_CARD.w, DIFF_CARD.h, 18);
@@ -1906,7 +1905,7 @@ function drawReady(){
   outlinedText(ctx, '스페이스바 또는 ▶ 시작', 960, 740, 46, '#fff');
   ctx.globalAlpha = 1;
   ctx.font = `600 22px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.6)';
-  ctx.fillText('단축키: Space 시작·일시정지 · H 수동 타격 · 1~5 난이도', 960, 810);
+  ctx.fillText('단축키: Space 시작·일시정지 · H 수동 타격 · 1~4 난이도', 960, 810);
 }
 function drawPaused(){
   ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, 0, W, H);
@@ -1971,7 +1970,7 @@ function drainHits(){
 // 새 레이드 시작 (관리자가 보스 레이드로 게임을 시작하면)
 function beginRaid(r){
   roundToken = r.token || 0;
-  diffIdx = clamp(Number(r.raid_diff ?? 3) || 0, 0, DIFFS.length - 1);
+  diffIdx = diffFromRound(r);
   hitQueue.length = 0;
   for(const k of Object.keys(lastPub)) delete lastPub[k];
   lastBossPub = '';
@@ -2039,8 +2038,8 @@ function initLive(m){
     const live = raidOn && roundStatus === 'running' && roundEnd > serverNow();
     if(live && (r.token || 0) !== roundToken && !r.raid_result) beginRaid(r);
     else if(!raidOn || roundStatus === 'idle'){
-      if(S.phase !== 'ready' || roundToken){ roundToken = 0; diffIdx = clamp(Number(r.raid_diff ?? 3) || 0, 0, DIFFS.length - 1); reset(); }
-      else if(S.phase === 'ready'){ const d = clamp(Number(r.raid_diff ?? 3) || 0, 0, DIFFS.length - 1); if(d !== diffIdx){ diffIdx = d; reset(); } }
+      if(S.phase !== 'ready' || roundToken){ roundToken = 0; diffIdx = diffFromRound(r); reset(); }
+      else if(S.phase === 'ready'){ const d = diffFromRound(r); if(d !== diffIdx){ diffIdx = d; reset(); } }
     }
   });
   onValue(roomRef(ROOM, 'players'), snap => { livePlayers = snap.val() || {}; syncStudents(); });
@@ -2076,7 +2075,7 @@ function frame(now){
   } catch(e){ console.error(e); }
 }
 reset();
-// 주소 옵션: ?diff=1~5 난이도 · ?boss=world 세계사 보스로 시작 · ?auto 바로 시작(+&skip 등장 연출 생략) · ?hp=0.4 체력 비율을 정해 두고 시작(화면 점검용)
+// 주소 옵션: ?diff=1~4 난이도(1 보통 ~ 4 지옥) · ?boss=world 세계사 보스로 시작 · ?auto 바로 시작(+&skip 등장 연출 생략) · ?hp=0.4 체력 비율을 정해 두고 시작(화면 점검용)
 if(!LIVE) (() => {
   const q = Q;
   const dq = parseInt(q.get('diff'), 10);
