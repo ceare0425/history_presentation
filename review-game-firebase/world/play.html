@@ -563,7 +563,7 @@ import {
   teamInfo, teamStandings, activeBonus,
   ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
 } from '../shared/lib.js?v=20260928g';
-import { mountTitles } from '../shared/titles.js?v=20260928c';
+import { mountTitles } from '../shared/titles.js?v=20260929a';
 
 const ROOM = 'world';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
@@ -1297,7 +1297,7 @@ async function showEndedView(){
   }
 
   // 🏅 숨은 칭호: 극장골(마지막 10초 안에 1등으로 올라서서 우승) · 불굴의 의지(방해 10번 이상 맞고도 1등)
-  if(!roundState.team_mode && rank === 1 && (me.floor||0) > 0){
+  if(!roundState.team_mode && !roundState.raid_mode && rank === 1 && (me.floor||0) > 0){
     if(lastNotFirstAt && roundState.end_time && lastNotFirstAt >= roundState.end_time - 10000) titles.unlockHidden('buzzer');
     if(roundHits >= 10) titles.unlockHidden('indomitable');
   }

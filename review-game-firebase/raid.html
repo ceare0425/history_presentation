@@ -2108,6 +2108,34 @@ function onRaidEnd(res){
     [`rooms/${ROOM}/round/end_time`]: serverNow(),
     [`rooms/${ROOM}/round/raid_result`]: res
   }).catch(() => {});
+  recordRaidTitles(res);
+}
+
+// 🏅 레이드 칭호 기록: 학생별 titles/<room>/<반>/<이름>/에 남기면 학생 화면(shared/titles.js)이 칭호로 바꿔 알려 준다.
+// 키에 라운드 token을 넣어, 전광판을 여러 개 띄우거나 새로고침해도 한 판은 한 번만 센다.
+function recordRaidTitles(res){
+  if(!roundToken) return;
+  const ups = {};
+  const now = serverNow();
+  const base = st => {
+    const p = st && livePlayers[st.pid];
+    return (p && p.cls && p.name) ? `titles/${ROOM}/${p.cls}/${String(p.name).trim().slice(0, 20)}` : null;
+  };
+  if(res === 'win'){
+    for(const st of S.students){
+      const b = base(st);
+      if(!b || st.correct < 1) continue;   // 이긴 판에서 정답을 하나도 못 낸 학생은 빼기
+      ups[`${b}/log/${roundToken}_raidwin`] = true;
+      for(let d = 2; d <= diffIdx + 1; d++) ups[`${b}/log/${roundToken}_raidd${d}`] = true;   // 어려움(2)~지옥(4): 그 난이도 이하 칭호도 함께
+      if(st.kos === 0) ups[`${b}/hidden/ironwall`] = now;   // 숨은 칭호 '불사신'
+    }
+    const lb = base(S.lastHitter);
+    if(lb) ups[`${lb}/hidden/lasthit`] = now;   // 숨은 칭호 '마무리 일격'
+  }
+  const mvp = S.students.reduce((m, s) => s.dmg > (m ? m.dmg : 0) ? s : m, null);
+  const mb = base(mvp);
+  if(mb) ups[`${mb}/log/${roundToken}_raidmvp`] = true;
+  if(Object.keys(ups).length) FB.update(FB.ref(FB.db), ups).catch(() => {});
 }
 
 // 학생별 상태·보스 상태를 raid_state로 내보낸다 (바뀐 것만)
