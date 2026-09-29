@@ -59,7 +59,7 @@ const sprOff = document.createElement('canvas');
 sprOff.width = SPRITE_W; sprOff.height = SPRITE_H;
 const sctx = sprOff.getContext('2d');
 const POLICE = {};
-['idle', 'hit', 'rage', 'hurt', 'down', 'whistle', 'swing', 'rope'].forEach(k => { const im = new Image(); im.src = 'assets/boss/police_' + k + '.webp'; POLICE[k] = im; });
+['idle', 'hit', 'rage', 'hurt', 'down', 'whistle', 'swing', 'rope', 'stun', 'heal', 'guard'].forEach(k => { const im = new Image(); im.src = 'assets/boss/police_' + k + '.webp'; POLICE[k] = im; });
 function imgOk(im){ return im.complete && im.naturalWidth > 0; }
 function spritesReady(){ return Object.values(POLICE).every(imgOk); }
 // 부하(헌병)와 바리케이드 그림
@@ -567,12 +567,17 @@ function swingAngle(p, base){
 }
 
 // 한국사 보스 그림 고르기 (위에서부터 우선)
-//   쓰러짐: 격파 연출 후반·승리 화면 / 맞음: 격파 폭발 중·치명타 직후·기절 / 공격 동작: 호루라기·곤봉 휘두르기
+//   쓰러짐: 격파 연출 후반·승리 화면 / 맞음: 격파 폭발 중 / 기절: 기절 중(눈 돌아감)
+//   치료: 회복 의식 중(부하가 치료) / 방어: 바리케이드 중 / 맞음: 치명타 직후 / 공격 동작: 호루라기·곤봉 휘두르기·회복 성공(치료)
 //   크게 다침: 체력 25% 이하 / 분노: 50% 이하·실패 화면 / 그 외: 평소
 function policePose(){
   if(S.phase === 'victory' || (S.phase === 'dying' && S.dyingT >= 2.2)) return 'down';
   if(S.phase === 'lose') return 'rage';
-  if(S.phase === 'dying' || S.hitPose > 0 || bossStunned()) return 'hit';
+  if(S.phase === 'dying') return 'hit';
+  if(bossStunned()) return 'stun';
+  if(S.cast) return 'heal';
+  if(barricadeUp()) return 'guard';
+  if(S.hitPose > 0) return 'hit';
   if(S.poseUntil > S.clock && S.poseKind) return S.poseKind;
   if(S.hp <= S.max * 0.25) return 'hurt';
   if(S.rage) return 'rage';
@@ -1041,6 +1046,7 @@ function finishCastFail(){
   const T = THEMES[themeKey];
   S.cast = null;
   healBoss(S.max * RAID.healAmount, true);
+  showPose('heal', 1800);   // 치료를 마치고 회복하는 모습
   S.banner = { txt: T.bossName + ' 회복!', sub: `체력 ${Math.round(RAID.healAmount * 100)}% 회복 · 다음엔 더 빨리 공격하세요`, t: 0, life: 1.8, color: '#6dff9e', red: true };
   sfx('heal');
 }
