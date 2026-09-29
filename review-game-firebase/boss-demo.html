@@ -51,13 +51,15 @@ cv.width = W; cv.height = H;
 const off = document.createElement('canvas');   // 보스를 먼저 그려 두고 번쩍임·분노 색을 입히는 캔버스
 off.width = 700; off.height = 780;
 const octx = off.getContext('2d');
-// 한국사 보스 그림: 배경이 투명한 900×900 네 장(평소·맞음·분노·크게 다침). 네 장 모두 발끝 위치가 같다.
-const SPRITE_SIZE = 720, SPRITE_FEET = 715;   // 원본 1254px 기준 발끝이 약 1245px
+// 한국사 보스 그림 7장: 평소·맞음·분노·크게 다침·쓰러짐·호루라기·곤봉 휘두르기.
+// 모두 배경이 투명한 1005×900 틀에 발끝(가운데 아래)이 같은 자리에 오도록 맞춰 두었다.
+const SPRITE_W = 804, SPRITE_H = 720;
+const SPRITE_FEET_X = 402, SPRITE_FEET_Y = 714;   // 틀 안에서 발끝 위치
 const sprOff = document.createElement('canvas');
-sprOff.width = SPRITE_SIZE; sprOff.height = SPRITE_SIZE;
+sprOff.width = SPRITE_W; sprOff.height = SPRITE_H;
 const sctx = sprOff.getContext('2d');
 const POLICE = {};
-['idle', 'hit', 'rage', 'hurt'].forEach(k => { const im = new Image(); im.src = 'assets/boss/police_' + k + '.webp'; POLICE[k] = im; });
+['idle', 'hit', 'rage', 'hurt', 'down', 'whistle', 'swing'].forEach(k => { const im = new Image(); im.src = 'assets/boss/police_' + k + '.webp'; POLICE[k] = im; });
 function spritesReady(){ return Object.values(POLICE).every(im => im.complete && im.naturalWidth > 0); }
 const FONT = '"Malgun Gothic","Pretendard",sans-serif';
 const OUT = '#0b0b12';
@@ -521,23 +523,30 @@ function swingAngle(p, base){
   return lerp(-0.5, base, easeOut((p - 0.5) / 0.5));
 }
 
-// 한국사 보스 그림 고르기: 치명타에 맞은 직후·쓰러질 때 → 맞음, 체력 25% 이하 → 크게 다침, 분노 → 분노, 그 외 → 평소
+// 한국사 보스 그림 고르기 (위에서부터 우선)
+//   쓰러짐: 격파 연출 후반·승리 화면 / 맞음: 격파 폭발 중·치명타 직후·기절 / 공격 동작: 호루라기·곤봉 휘두르기
+//   크게 다침: 체력 25% 이하 / 분노: 50% 이하·실패 화면 / 그 외: 평소
 function policePose(){
+  if(S.phase === 'victory' || (S.phase === 'dying' && S.dyingT >= 2.2)) return 'down';
   if(S.phase === 'lose') return 'rage';
   if(S.phase === 'dying' || S.hitPose > 0 || bossStunned()) return 'hit';
+  if(S.poseUntil > S.clock && S.poseKind) return S.poseKind;
   if(S.hp <= S.max * 0.25) return 'hurt';
-  if(S.rage || S.attack > 0) return 'rage';
+  if(S.rage) return 'rage';
   return 'idle';
 }
+// 공격 동작 그림을 잠깐 보여 준다
+function showPose(kind, ms){ S.poseKind = kind; S.poseUntil = S.clock + ms; }
+function useSprite(){ return themeKey === 'korea' && spritesReady(); }
 
 // 보스를 따로 그린 뒤 번쩍임·분노 색을 입히고, 본 화면에 붙일 캔버스와 발끝 기준점을 돌려준다
 function renderBoss(){
-  const useSprite = themeKey === 'korea' && spritesReady();
-  const g = useSprite ? sctx : octx, cvs = useSprite ? sprOff : off;
+  const sprite = useSprite();
+  const g = sprite ? sctx : octx, cvs = sprite ? sprOff : off;
   g.setTransform(1, 0, 0, 1, 0, 0);
   g.clearRect(0, 0, cvs.width, cvs.height);
-  if(useSprite){
-    g.drawImage(POLICE[policePose()], 0, 0, SPRITE_SIZE, SPRITE_SIZE);
+  if(sprite){
+    g.drawImage(POLICE[policePose()], 0, 0, SPRITE_W, SPRITE_H);
   } else {
     // 그림 파일을 아직 못 불러왔거나 세계사 보스일 때는 코드로 그린 캐릭터
     const p = { t: S.clock / 1000, rage: S.rage, attack: S.attack };
@@ -545,12 +554,12 @@ function renderBoss(){
   }
   // 맞은 순간 하얗게 번쩍, 분노 땐 붉은 기운, 쓰러질 땐 점점 하얗게
   let white = S.bossFlash;
-  if(S.phase === 'dying') white = Math.max(white, 0.25 + 0.35 * Math.abs(Math.sin(S.clock / 60)));
+  if(S.phase === 'dying' && S.dyingT < 2.2) white = Math.max(white, 0.25 + 0.35 * Math.abs(Math.sin(S.clock / 60)));
   g.globalCompositeOperation = 'source-atop';
-  if(S.rage){ g.fillStyle = `rgba(255,30,20,${0.1 + 0.06 * Math.sin(S.clock / 120)})`; g.fillRect(0, 0, cvs.width, cvs.height); }
+  if(S.rage && S.phase === 'fight'){ g.fillStyle = `rgba(255,30,20,${0.1 + 0.06 * Math.sin(S.clock / 120)})`; g.fillRect(0, 0, cvs.width, cvs.height); }
   if(white > 0){ g.fillStyle = `rgba(255,255,255,${clamp(white, 0, 1) * 0.85})`; g.fillRect(0, 0, cvs.width, cvs.height); }
   g.globalCompositeOperation = 'source-over';
-  return useSprite ? { cvs, ax: SPRITE_SIZE / 2, ay: SPRITE_FEET } : { cvs, ax: 350, ay: 740 };
+  return sprite ? { cvs, ax: SPRITE_FEET_X, ay: SPRITE_FEET_Y } : { cvs, ax: 350, ay: 740 };
 }
 
 // ── 게임 상태 ─────────────────────────────────────────
@@ -568,7 +577,7 @@ function reset(){
     clock: 0, phase: 'ready', introT: 0, landed: false,
     hp: RAID.hp, ghost: RAID.hp, max: RAID.hp,
     rage: false, enrage: false, counterAt: 0, attack: 0, hitPose: 0,
-    attackAt: 0, regenAcc: 0, regenShowAt: 0, healFlash: 0,
+    attackAt: 0, poseKind: '', poseUntil: 0, fallen: false, regenAcc: 0, regenShowAt: 0, healFlash: 0,
     cast: null, healsDone: [], nextHealAt: 0, bossStunUntil: 0,
     students: NAMES.map((name, i) => Object.assign({
       name, i, dmg: 0, correct: 0, streak: 0, next: 0, flash: 0, flashColor: '', stunUntil: 0, wrongT: 0,
@@ -601,7 +610,7 @@ function answer(st){
   if(Math.random() > 0.82){      // 오답: 공격하지 못하고, 보스가 곧바로 그 학생을 반격한다
     st.streak = 0; S.wrong++;
     st.flash = 1; st.flashColor = '#e0483c'; st.wrongT = 1;
-    if(!bossStunned()) bossStrike(st, 0.35, T.wrongText);
+    if(!bossStunned()){ bossStrike(st, 0.35, T.wrongText); if(!(S.poseUntil > S.clock)) showPose('swing', 450); }
     return;
   }
   st.streak++; st.correct++; S.correct++;
@@ -713,6 +722,7 @@ function basicAttack(){
   S.timers.push({ at: S.clock + RAID.telegraphMs, fn: () => {
     if(S.phase !== 'fight' || bossStunned()) return;
     S.attack = 0.55;
+    showPose('swing', 650);   // 곤봉 휘두르기
     for(const st of targets) bossStrike(st, 0.4, T.attackName);
   }});
   S.attackAt = S.clock + RAID.attackGapMs[lvl];
@@ -740,6 +750,7 @@ function enterEnrage(){
 function counterAttack(){
   const T = THEMES[themeKey];
   S.attack = 1;
+  showPose('whistle', 1300);   // 호루라기 불기
   sfx('counter');
   S.timers.push({ at: S.clock + 380, fn: () => {
     if(S.phase !== 'fight' || bossStunned()) return;
@@ -884,11 +895,18 @@ function update(dt){
       sfx('explode');
     }
     if(S.dyingT >= 2.2){
-      const k = clamp((S.dyingT - 2.2) / 0.8, 0, 1);
-      S.bossRot = (themeKey === 'korea' ? -1 : 1) * 0.45 * easeOut(k);
-      S.bossY = 80 * k; S.bossAlpha = 1 - k;
+      if(useSprite()){
+        if(!S.fallen){
+          S.fallen = true; S.shake = 36; S.squash = 0.8; sfx('drop');
+          for(let i = 0; i < 60; i++) S.parts.push({ x: BOSS_X + rand(-380, 380), y: BOSS_FEET - 10, vx: rand(-520, 520), vy: rand(-360, -60), life: rand(0.5, 1.1), t: 0, size: rand(6, 16), color: '#6b5a50', g: 700, kind: 'dot' });
+        }
+      } else {
+        const k = clamp((S.dyingT - 2.2) / 0.8, 0, 1);
+        S.bossRot = 0.45 * easeOut(k);
+        S.bossY = 80 * k; S.bossAlpha = 1 - k;
+      }
     }
-    if(S.dyingT >= 3.1){
+    if(S.dyingT >= (useSprite() ? 4.4 : 3.1)){
       S.phase = 'victory';
       updateButtons();
       sfx('win');
@@ -988,10 +1006,10 @@ function draw(){
 }
 
 function drawBossLayer(){
-  if(S.phase === 'victory') return;
+  if(S.phase === 'victory' && !useSprite()) return;
   const t = S.clock / 1000;
-  // 분노 오라
-  if(S.rage){
+  // 분노 오라 (싸우는 중·실패 화면에서만)
+  if(S.rage && (S.phase === 'fight' || S.phase === 'lose')){
     const aura = ctx.createRadialGradient(BOSS_X, BOSS_FEET - 330, 60, BOSS_X, BOSS_FEET - 330, 420 + Math.sin(t * 6) * 20);
     aura.addColorStop(0, S.enrage ? 'rgba(255,20,20,.5)' : 'rgba(255,60,30,.35)'); aura.addColorStop(1, 'rgba(255,60,30,0)');
     ctx.fillStyle = aura; ctx.fillRect(BOSS_X - 520, BOSS_FEET - 820, 1040, 900);
