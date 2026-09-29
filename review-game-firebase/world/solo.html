@@ -540,7 +540,6 @@ let currentStartedAt = null;
 const IDLE_LIMIT_MS = 60000;
 let lastActiveAt = 0;
 let idleEnded = false;
-let idleSince = 0; // 무응답이 시작된 시각 — 자동 종료 때 이 시각을 종료 시각으로 기록 (무응답 1분은 연습 시간에서 뺌)
 let relearnEnded = false; // 연습 중 '다시 배우기'(새 탭)를 열어 연습을 끝냈는지
 let lastQid = null;
 
@@ -1033,7 +1032,7 @@ function syncSoloLog(final){
     cls: sessionClassKey || null,
     ts: serverNow(),
     started_ts: sessionStartedAt || null,
-    end_ts: final ? ((idleEnded && idleSince) ? idleSince : serverNow()) : null,
+    end_ts: final ? serverNow() : null,
     ended: !!final,
     idle_end: (final && idleEnded) || null,
     relearn_end: (final && relearnEnded) || null,
@@ -1328,7 +1327,6 @@ function checkIdle(){
   const left = IDLE_LIMIT_MS - (serverNow() - lastActiveAt);
   if(left <= 0){
     idleEnded = true;
-    idleSince = lastActiveAt;
     showEndedView();
     return;
   }
@@ -1384,7 +1382,7 @@ el('startBtn').onclick = async () => {
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
   hintCount = 0; soloLogRef = null; unitStats = {}; qStats = {}; wrongMap = new Map();
   lastWrongInfo = null; reportedQids = new Set();
-  clearedQids = new Set(); allClearedPrompted = false; paused = false; idleEnded = false; idleSince = 0; relearnEnded = false;
+  clearedQids = new Set(); allClearedPrompted = false; paused = false; idleEnded = false; relearnEnded = false;
   el('clearPrompt').classList.add('hidden');
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
 
@@ -1429,7 +1427,7 @@ function startReviewSession(qids, label){
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
   hintCount = 0; soloLogRef = null; unitStats = {}; qStats = {}; wrongMap = new Map();
   lastWrongInfo = null; reportedQids = new Set();
-  clearedQids = new Set(); allClearedPrompted = false; paused = false; idleEnded = false; idleSince = 0; relearnEnded = false;
+  clearedQids = new Set(); allClearedPrompted = false; paused = false; idleEnded = false; relearnEnded = false;
   el('clearPrompt').classList.add('hidden');
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
 
