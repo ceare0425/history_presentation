@@ -1160,7 +1160,7 @@ async function submitAnswerCore(){
   el('streakVal').textContent = p.streak >= 2 ? `🔥 ${p.streak}연속 정답!` : '';
   if(p.floor > lastFloor) popFloorBadge();
   lastFloor = p.floor;
-  if(p.floor >= 10 && (p.wrong||0) === 0) titles.unlockHidden('flawless');   // 숨은 칭호 '무결점'
+  if(p.floor >= 20 && (p.wrong||0) === 0) titles.unlockHidden('flawless');   // 숨은 칭호 '무결점'
   flashFeedback(correct, q.answers[0], gain, bonusApplied, wasRetry);
   playCharacterReaction(correct);
   renderItemBar();
@@ -1260,10 +1260,10 @@ async function showEndedView(){
     rankEl.classList.remove('rank1');
   }
 
-  // 🏅 숨은 칭호: 극장골(마지막 10초 안에 1등으로 올라서서 우승) · 불굴의 의지(방해 3번 이상 맞고도 1등)
+  // 🏅 숨은 칭호: 극장골(마지막 10초 안에 1등으로 올라서서 우승) · 불굴의 의지(방해 10번 이상 맞고도 1등)
   if(!roundState.team_mode && rank === 1 && (me.floor||0) > 0){
     if(lastNotFirstAt && roundState.end_time && lastNotFirstAt >= roundState.end_time - 10000) titles.unlockHidden('buzzer');
-    if(roundHits >= 3) titles.unlockHidden('indomitable');
+    if(roundHits >= 10) titles.unlockHidden('indomitable');
   }
 
   // ⚔️ 라이벌 결과 (종료 순간의 층수 기준)
