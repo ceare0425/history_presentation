@@ -703,10 +703,7 @@ function updateRelearnBtn(){
 el('relearnBtn').onclick = () => {
   if(!currentRelearnUrl) return;
   if(!ended){
-    const ok = confirm('다시 배우기를 열면 지금 연습이 종료돼요.
-지금까지의 기록은 선생님 화면에 저장됩니다.
-
-그래도 다시 배우기를 할까요?');
+    const ok = confirm('다시 배우기를 열면 지금 연습이 종료돼요.\n지금까지의 기록은 선생님 화면에 저장됩니다.\n\n그래도 다시 배우기를 할까요?');
     lastActiveAt = serverNow(); // 알림창을 보는 동안 흐른 시간은 무응답으로 세지 않는다
     if(!ok) return;
     window.open(currentRelearnUrl, '_blank');
