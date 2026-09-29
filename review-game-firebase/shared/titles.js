@@ -87,13 +87,26 @@ const HONOR_KINDS = [
   { key:'overtake', emoji:'🔥', what:'종료 화면 역전왕',     steps:[[1,'역전왕','common'],[3,'역전의 명수','rare'],[10,'역전 드라마 작가','epic']] },
   { key:'rivalwin', emoji:'⚔️', what:'라이벌전 승리',        steps:[[1,'첫 승리','common'],[5,'맞수','rare'],[20,'천하무적','legend']] }
 ];
+// 👹 보스 레이드 칭호: 레이드 화면(raid.html)이 끝날 때 log/<token>_<key>로 남긴다
+//   raidwin: 이긴 판에서 정답 1개 이상 · raidmvp: 피해량 1위(승패 무관) · raidd2~4: 그 난이도 이상에서 승리
+const RAID_KINDS = [
+  { key:'raidwin', emoji:'👹', what:'보스 레이드 승리',        steps:[[1,'첫 토벌','common'],[5,'토벌대 정예','rare'],[15,'보스 사냥꾼','epic']] },
+  { key:'raidmvp', emoji:'🗡️', what:'보스 레이드 MVP(피해량 1위)', steps:[[1,'레이드 MVP','rare'],[3,'최전방 돌격대장','epic'],[10,'전장의 전설','legend']] }
+];
+const RAID_DIFF_TITLES = [
+  { key:'raidd2', emoji:'😠', name:'강적 격파',     rarity:'rare',   desc:'😠 어려움 이상 보스 레이드 승리' },
+  { key:'raidd3', emoji:'🔥', name:'불굴의 토벌대', rarity:'epic',   desc:'🔥 매우 어려움 이상 보스 레이드 승리' },
+  { key:'raidd4', emoji:'💀', name:'지옥의 정복자', rarity:'legend', desc:'💀 지옥 난이도 보스 레이드 승리' }
+];
 const DAY_STEPS = [[3,'작심삼일 돌파','common'],[7,'개근상','rare'],[20,'역사 덕후','epic']];
 const HIDDEN_TITLES = [
   { id:'flawless',    emoji:'💎', name:'무결점',     desc:'한 판에서 한 번도 틀리지 않고 20층 도달' },
   { id:'buzzer',      emoji:'⏱️', name:'극장골',     desc:'수업 게임 종료 10초 전 안에 1등으로 올라서서 우승' },
   { id:'indomitable', emoji:'🦾', name:'불굴의 의지', desc:'수업 게임 한 판에서 방해 아이템을 10번 이상 맞고도 1등' },
   { id:'owl',         emoji:'🦉', name:'올빼미',     desc:'밤 10시가 넘어서 문제 풀기' },
-  { id:'marathon',    emoji:'🏃', name:'마라토너',   desc:'혼자 연습 한 판에서 100문제 이상 맞히기' }
+  { id:'marathon',    emoji:'🏃', name:'마라토너',   desc:'혼자 연습 한 판에서 100문제 이상 맞히기' },
+  { id:'lasthit',     emoji:'💥', name:'마무리 일격', desc:'보스 레이드에서 보스에게 마지막 일격을 날리기' },
+  { id:'ironwall',    emoji:'🧱', name:'불사신',     desc:'이긴 보스 레이드에서 한 번도 쓰러지지 않기(정답 1개 이상)' }
 ];
 
 function topicNum(unit){
@@ -157,6 +170,17 @@ export function buildTitleBook(room, data, questionsObj){
     })) };
   });
 
+  // 👹 보스 레이드
+  const raidKinds = RAID_KINDS.map(h => {
+    const count = logKeys.filter(k => k.endsWith('_' + h.key)).length;
+    return { kind:h, count, items: h.steps.map(([need, nm, rar], i) => add({
+      id:`r_${h.key}_${i+1}`, name:nm, emoji:h.emoji, rarity:rar, ok: count >= need, desc:`${h.what} ${need}회`
+    })) };
+  });
+  const raidDiffs = RAID_DIFF_TITLES.map(t => add({
+    id:`r_${t.key}`, name:t.name, emoji:t.emoji, rarity:t.rarity, ok: logKeys.some(k => k.endsWith('_' + t.key)), desc:t.desc
+  }));
+
   // 📅 꾸준함
   const daySet = new Set([...Object.keys(data.days || {}), ...Object.keys((data.hist && data.hist.days) || {})]);
   const dayItems = DAY_STEPS.map(([need, nm, rar], i) => add({
@@ -166,7 +190,7 @@ export function buildTitleBook(room, data, questionsObj){
   // ❓ 숨은 칭호
   const hidden = HIDDEN_TITLES.map(h => add({ id:`x_${h.id}`, name:h.name, emoji:h.emoji, rarity:'epic', ok: !!(data.hidden && data.hidden[h.id]), desc:h.desc, secret:true }));
 
-  return { unitRows, grand, honors, dayItems, dayCount: daySet.size, hidden, all, byId };
+  return { unitRows, grand, honors, raidKinds, raidDiffs, dayItems, dayCount: daySet.size, hidden, all, byId };
 }
 
 // ── 화면 (도감 창·획득 알림) ─────────────────────────────
@@ -339,6 +363,12 @@ export function mountTitles(deps, opts){
     book.honors.forEach(g => {
       h += `<div class="tt-unit"><div class="tt-unit-name">${g.kind.emoji} ${escapeHtml(g.kind.what)}<span class="tt-prog">${g.count}회</span></div><div class="tt-chips">${g.items.map(t => chip(t, repId)).join('')}</div><div class="tt-hint">${g.items.map(t => escapeHtml(t.name + ' ' + t.desc.replace(g.kind.what + ' ', ''))).join(' · ')}</div></div>`;
     });
+    h += `</div>`;
+    h += `<div class="tt-sec"><h4>👹 보스 레이드</h4><div class="tt-note">레이드가 끝날 때 전광판이 기록해요 · 승리 칭호는 그 판에서 정답을 1개 이상 맞혀야 받아요</div>`;
+    book.raidKinds.forEach(g => {
+      h += `<div class="tt-unit"><div class="tt-unit-name">${g.kind.emoji} ${escapeHtml(g.kind.what)}<span class="tt-prog">${g.count}회</span></div><div class="tt-chips">${g.items.map(t => chip(t, repId)).join('')}</div><div class="tt-hint">${g.items.map(t => escapeHtml(t.name + ' ' + t.desc.replace(g.kind.what + ' ', ''))).join(' · ')}</div></div>`;
+    });
+    h += `<div class="tt-unit"><div class="tt-unit-name">⚔️ 높은 난이도 격파</div><div class="tt-chips">${book.raidDiffs.map(t => chip(t, repId)).join('')}</div><div class="tt-hint">${book.raidDiffs.map(t => escapeHtml(t.name + ': ' + t.desc)).join(' · ')}</div></div>`;
     h += `</div>`;
     h += `<div class="tt-sec"><h4>📅 꾸준함</h4><div class="tt-note">문제를 푼 날: ${book.dayCount}일 (수업 게임 + 혼자 연습)</div><div class="tt-chips">${book.dayItems.map(t => chip(t, repId)).join('')}</div><div class="tt-hint">${book.dayItems.map(t => escapeHtml(t.name + ' ' + t.desc)).join(' · ')}</div></div>`;
     const hiddenGot = book.hidden.filter(t => t.earned).length;
