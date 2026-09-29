@@ -706,9 +706,14 @@ el('relearnBtn').onclick = () => {
     const ok = confirm('다시 배우기를 열면 지금 연습이 종료돼요.\n지금까지의 기록은 선생님 화면에 저장됩니다.\n\n그래도 다시 배우기를 할까요?');
     lastActiveAt = serverNow(); // 알림창을 보는 동안 흐른 시간은 무응답으로 세지 않는다
     if(!ok) return;
-    window.open(currentRelearnUrl, '_blank');
+    const url = currentRelearnUrl;
+    const win = window.open(url, '_blank');
     relearnEnded = true;
     showEndedView();
+    if(!win){ // 확인창을 오래 보면 브라우저가 팝업으로 보고 막을 수 있다
+      el('endReason').innerHTML = '📖 다시 배우기를 열어 연습이 끝났어요. '
+        + `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">여기를 눌러 다시 배우기 열기</a>`;
+    }
     return;
   }
   window.open(currentRelearnUrl, '_blank');
@@ -1013,7 +1018,9 @@ document.addEventListener('keyup', e=>{
 // 선생님 화면에는 '중단'이 아니라 버튼을 누른 시각이 종료 시각으로 표시된다.
 el('endPracticeBtn').onclick = () => {
   if(ended) return;
-  if(!confirm('연습을 종료할까요? 지금까지의 기록이 선생님 화면에 저장됩니다.')) return;
+  const ok = confirm('연습을 종료할까요? 지금까지의 기록이 선생님 화면에 저장됩니다.');
+  lastActiveAt = serverNow(); // 확인창을 보는 동안 흐른 시간은 무응답으로 세지 않는다
+  if(!ok) return;
   showEndedView();
 };
 
