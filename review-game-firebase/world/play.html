@@ -211,6 +211,10 @@
 
   .ended{ text-align:center; }
   .ended .big{ font-size:3.4rem; font-weight:800; color:var(--sky1); margin:6px 0; }
+  /* 보스 레이드: 탑 오르기 층수·등수 대신 레이드 결과를 크게 */
+  body.raid-on .floor-badge, body.raid-on .rank-badge{ display:none !important; }
+  #endedView.raid #finalRank, #endedView.raid .big{ display:none; }
+  #endedView.raid #raidResult{ font-size:1.5rem; font-weight:900; margin:14px 0; line-height:1.5; }
   .final-rank{ font-size:1.1rem; font-weight:700; color:var(--sub); margin-bottom:.4rem; min-height:1.4em; }
   .final-rank.rank1{ font-size:1.6rem; color:var(--gold-dark); animation:rank1Pop .7s cubic-bezier(.34,1.56,.64,1); }
   @keyframes rank1Pop{ 0%{ transform:scale(.5); opacity:0; } 100%{ transform:scale(1); opacity:1; } }
@@ -1313,10 +1317,11 @@ async function showEndedView(){
   }
   // 보스 레이드 결과
   const rr = el('raidResult');
+  el('endedView').classList.toggle('raid', !!roundState.raid_mode);
   if(roundState.raid_mode){
     const m = raidMine();
     const res = roundState.raid_result;
-    rr.textContent = (res === 'win' ? '🎉 보스 격파! 반 전체 승리!' : res === 'lose' ? '💀 레이드 실패… 다음엔 꼭 이겨요!' : '👹 보스 레이드 종료') + (m ? ` · 내가 준 피해 ${Number(m.dmg || 0).toLocaleString('ko-KR')}` : '');
+    rr.innerHTML = (res === 'win' ? '🎉 보스 격파!<br>반 전체 승리!' : res === 'lose' ? '💀 레이드 실패…<br>다음엔 꼭 이겨요!' : '👹 보스 레이드 종료') + (m ? `<br><span style="font-size:1.05rem; font-weight:700;">내가 준 피해 ${Number(m.dmg || 0).toLocaleString('ko-KR')}</span>` : '');
     rr.classList.remove('hidden');
   } else rr.classList.add('hidden');
   showView('endedView');
@@ -1608,6 +1613,7 @@ function raidBlockInfo(){
 }
 function updateRaidUI(){
   const on = raidOn();
+  document.body.classList.toggle('raid-on', !!roundState.raid_mode && roundState.status === 'running');
   el('raidHud').classList.toggle('hidden', !on);
   const m = raidMine();
   const now = serverNow();

@@ -37,7 +37,8 @@ let serverNow = () => Date.now();
 const Q = new URLSearchParams(location.search);
 const SIM_N = parseInt(Q.get('sim'), 10);
 const LIVE = !(SIM_N > 0);                     // 실제 게임 연결 여부 (?sim=숫자 면 가짜 학생 점검 모드)
-const ROOM = Q.get('room') === 'korea' ? 'korea' : 'world';
+// 방 이름: world·korea (점검할 때는 raidtest 같은 다른 이름도 쓸 수 있다)
+const ROOM = /^[a-z0-9_]{1,20}$/.test(Q.get('room') || '') ? Q.get('room') : 'world';
 // ─────────────────────────────────────────────────────────────
 // 보스전 시연 페이지 — 실제 게임(Firebase)과 연결되지 않은 단독 데모.
 // 가짜 학생 30명이 일정 확률로 "정답"을 내며 보스를 공격하고,
@@ -134,7 +135,7 @@ const SPEEDS = [
   { label: '폭주', mean: 1600 }
 ];
 
-let themeKey = Q.get('boss') === 'world' ? 'world' : Q.get('boss') === 'korea' ? 'korea' : ROOM, speedIdx = 0, running = false, soundOn = true;
+let themeKey = Q.get('boss') === 'world' ? 'world' : Q.get('boss') === 'korea' ? 'korea' : (ROOM === 'korea' ? 'korea' : 'world'), speedIdx = 0, running = false, soundOn = true;
 let FAKE_ACC = 0.82;   // 가짜 학생의 정답률 (시연용)
 let S = null;
 
@@ -1910,8 +1911,8 @@ let lastBossPub = '', lastBossPubAt = 0;
 const toServer = t => t > 0 ? Math.round((S.serverBase || 0) + t) : 0;
 // 남은 시간: 싸우는 중엔 라운드 종료 시각까지, 끝난 뒤엔 끝난 순간의 남은 시간
 function liveLeftMs(){
-  const at = (S.phase === 'fight' || S.phase === 'intro') ? serverNow() : (S.endServer || serverNow());
-  return Math.max(0, roundEnd - at);
+  if(S.phase === 'fight' || S.phase === 'intro') return Math.max(0, roundEnd - serverNow());
+  return S.leftAtEnd != null ? S.leftAtEnd : Math.max(0, roundEnd - serverNow());   // 끝난 뒤엔 끝난 순간의 남은 시간
 }
 
 function toggleRun(){   // 점검 모드(?sim)에서만 쓴다
@@ -1928,7 +1929,7 @@ function syncStudents(){
   const have = new Map(S.students.map(st => [st.pid, st]));
   let changed = false;
   for(const id of ids){
-    const nm = String(livePlayers[id].name).slice(0, 8);
+    const nm = String(livePlayers[id].name).slice(0, 5);   // 이름표에 하트와 겹치지 않게 최대 5글자
     if(!have.has(id)){ S.students.push(newStudent(nm, S.students.length, id)); changed = true; }
     else if(have.get(id).name !== nm){ have.get(id).name = nm; }
   }
@@ -1970,6 +1971,7 @@ function onRaidEnd(res){
   if(!LIVE || S.result) return;
   S.result = res;
   S.endServer = serverNow();
+  S.leftAtEnd = Math.max(0, roundEnd - S.endServer);   // 라운드 종료 시각을 지금으로 바꾸기 전에 남은 시간을 기억
   publish(true);
   FB.update(FB.ref(FB.db), {
     [`rooms/${ROOM}/round/end_time`]: serverNow(),
