@@ -966,12 +966,19 @@ el('hintBtn').onclick = () => {
   el('hintBtn').disabled = true;
   el('answerInput').focus();
 };
-// Ctrl 키만 눌렀다 떼면 초성 힌트 보기 (Ctrl+V 같은 조합키로 쓴 경우는 무시)
+// Ctrl 키만 눌렀다 떼면 초성 힌트 보기
+// - Ctrl+V 같은 조합키, Ctrl+휠(화면 확대)·Ctrl+클릭으로 쓴 경우는 무시
+// - 채팅·답장 입력칸에 커서가 있을 때도 무시 (정답 입력칸만 허용)
 let ctrlAlone = false;
 document.addEventListener('keydown', e=>{ ctrlAlone = (e.key === 'Control'); });
+document.addEventListener('mousedown', ()=>{ ctrlAlone = false; });
+document.addEventListener('wheel', ()=>{ ctrlAlone = false; }, { passive:true });
+window.addEventListener('blur', ()=>{ ctrlAlone = false; });
 document.addEventListener('keyup', e=>{
   if(e.key !== 'Control' || !ctrlAlone) return;
   ctrlAlone = false;
+  const ae = document.activeElement;
+  if(ae && ae !== el('answerInput') && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
   const btn = el('hintBtn');
   if(btn.disabled || !btn.offsetParent) return;
   btn.click();
