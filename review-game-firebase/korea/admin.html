@@ -1272,6 +1272,7 @@ el('presenceList').addEventListener('click', (e)=>{
 onValue(ref(db, 'presence/'+ROOM), (snap)=>{
   presenceObj = snap.val() || {};
   renderPresenceList();
+  renderSoloStats(); // 접속이 끊기거나 다시 들어오면 혼자 연습 현황의 '연습 중/중단'도 바로 바뀌게
 });
 // 학생 쪽지 기록은 presence(접속 여부)와 별개로 항상 남아 있으므로 room 전체를 구독해
 // 오프라인 학생의 "확인 못한 쪽지"도 놓치지 않고 목록에 띄운다(텍스트만이라 용량 부담 없음).
@@ -1361,10 +1362,19 @@ function soloDurLabel(sec){
   return (Number.isInteger(m) ? m : Math.round(m*10)/10) + '분';
 }
 
+// solo_log의 ts는 학생이 답을 낼 때만 갱신되므로, 한 문제를 오래 고민하거나 쪽지·안내를 보는 동안에는
+// 90초가 금방 지나 버린다. 그래서 지금 온라인(presence)인 학생이면 그 학생의 가장 최근 기록을 '연습 중'으로 본다.
+function isSoloLiveNow(e){
+  if(!e.cls || !e.name || !(presenceObj[e.cls] && presenceObj[e.cls][e.name])) return false;
+  const start = e.started_ts || e.ts || 0;
+  return !Object.values(soloLogObj).some(o => o && o !== e && o.cls === e.cls && o.name === e.name
+    && (o.started_ts || o.ts || 0) > start);
+}
+
 function soloEndLabel(e){
   if(e.end_ts) return fmtSoloTime(e.end_ts);
   if(e.ended === false){
-    return (Date.now() - (e.ts||0) < 90000)
+    return (isSoloLiveNow(e) || Date.now() - (e.ts||0) < 90000)
       ? '<span class="muted">연습 중</span>'
       : '<span class="acc-bad">중단</span>';
   }
