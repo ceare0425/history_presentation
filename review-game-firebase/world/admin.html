@@ -221,7 +221,7 @@
         <button type="button" data-weight="recent" title="주제 번호가 큰(최근) 주제일수록 더 자주 출제 (순서대로에서는 무시됨)">🆕 최근 우선</button>
       </div>
       <div id="raidModeBox">
-        <label>👹 보스 레이드 (반 전체가 힘을 합쳐 보스와 싸움 · 제한 시간 3분 · 전광판 필수)</label>
+        <label>👹 보스 레이드 (반 전체가 힘을 합쳐 보스와 싸움 · 제한 시간 5분 · 전광판 필수)</label>
         <div class="toggle-row" id="raidModeToggle">
           <button type="button" class="active" data-rd="off">끄기</button>
           <button type="button" data-rd="on">켜기</button>
@@ -232,7 +232,7 @@
           <button type="button" data-diff="3">🔥 매우 어려움</button>
           <button type="button" data-diff="4">💀 지옥</button>
         </div>
-        <div class="sub hidden" id="raidHint" style="margin:4px 0 0; font-size:.76rem;">정답을 맞히면 보스를 공격하고, 틀리면 보스가 반격합니다. 학생마다 목숨 ♥가 있고, 보스는 곤봉·호루라기·체포·헌병 증원·신문 검열·불심 검문·바리케이드로 공격하며 체력을 회복합니다. <b>보스는 전광판 화면이 움직이므로 전광판을 꼭 켜 두세요.</b> 레이드 중에는 팀전·라이벌·아이템전이 꺼지고 제한 시간은 3분으로 고정됩니다. 보스 체력은 참가 인원에 맞춰 자동으로 조절됩니다.</div>
+        <div class="sub hidden" id="raidHint" style="margin:4px 0 0; font-size:.76rem;">정답을 맞히면 보스를 공격하고, 틀리면 보스가 반격합니다. 학생마다 목숨 ♥가 있고, 보스는 곤봉·호루라기·체포·헌병 증원·신문 검열·불심 검문·바리케이드로 공격하며 체력을 회복합니다. <b>보스는 전광판 화면이 움직이므로 전광판을 꼭 켜 두세요.</b> 레이드 중에는 팀전·라이벌·아이템전이 꺼지고 제한 시간은 5분으로 고정됩니다. 보스 체력은 참가 인원에 맞춰 자동으로 조절됩니다.</div>
       </div>
       <div id="nonRaidOpts">
       <label>팀전 모드 (학생이 참여 화면에서 팀을 고릅니다)</label>
@@ -556,7 +556,7 @@ el('rivalModeToggle').querySelectorAll('button').forEach(btn=>{
   };
 });
 
-// 보스 레이드를 켜면 팀전·라이벌·아이템전을 끄고 제한 시간을 3분으로 맞춘다
+// 보스 레이드를 켜면 팀전·라이벌·아이템전을 끄고 제한 시간을 5분으로 맞춘다
 el('raidModeToggle').querySelectorAll('button').forEach(btn=>{
   btn.onclick = async () => {
     raidModeState = btn.dataset.rd === 'on';
@@ -567,7 +567,7 @@ el('raidModeToggle').querySelectorAll('button').forEach(btn=>{
       el('teamCountRow').classList.add('hidden');
       el('teamShuffleRow').classList.add('hidden');
       syncItemsModeUI(); syncRivalModeUI();
-      el('durationInput').value = 3;
+      el('durationInput').value = 5;
       Object.assign(upd, { team_mode: false, items_mode: 'off', rival_mode: false, rivals: null });
       const clr = {};
       Object.keys(playersObj).forEach(pid=>{ clr[`rooms/${ROOM}/players/${pid}/team`] = null; });
@@ -700,7 +700,7 @@ el('startBtn').onclick = async () => {
   const msg = el('startMsg');
   const units = Array.from(selectedUnits);
   const minutes = parseFloat(el('durationInput').value) || 5;
-  const duration_sec = raidModeState ? 180 : Math.max(30, Math.min(3600, Math.round(minutes*60)));   // 보스 레이드는 3분 고정
+  const duration_sec = raidModeState ? 300 : Math.max(30, Math.min(3600, Math.round(minutes*60)));   // 보스 레이드는 5분 고정
 
   const pool = poolFromQuestions(questionsObj, units);
   if(pool.length===0){ msg.className='msg err'; msg.textContent = '선택한 범위에 문제가 없습니다.'; return; }
