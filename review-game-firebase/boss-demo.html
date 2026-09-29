@@ -67,15 +67,33 @@ const NAMES = ['김민준','이서연','박지호','최하은','정도윤','강�
 
 const THEMES = {
   korea: {
-    label: '한국사 · 일제 순사', bossName: '일제 순사', sub: '무단 통치의 앞잡이', maxHp: 30000,
-    critText: '대한 독립 만세!', rageText: '분노! 순사가 곤봉을 휘두른다', counterText: '호루라기 반격!', hurtText: '순사가 크게 다쳤다!',
-    shots: ['torch', 'ink'], winLine: '반 전체가 힘을 모아 일제 순사를 물리쳤습니다!'
+    label: '한국사 · 일제 순사', bossName: '일제 순사', sub: '무단 통치의 앞잡이', maxHp: 45000,
+    critText: '대한 독립 만세!', rageText: '분노! 순사가 곤봉을 휘두른다', counterText: '호루라기 반격!',
+    attackName: '곤봉 내려치기', wrongText: '오답 반격!', healName: '헌병대 지원 요청', enrageText: '광폭화! 공격이 거세진다',
+    shots: ['torch', 'ink'], winLine: '반 전체가 힘을 모아 일제 순사를 물리쳤습니다!', loseLine: '순사가 버텨 냈습니다… 다시 도전하세요!'
   },
   world: {
-    label: '세계사 · 크세르크세스', bossName: '크세르크세스 대왕', sub: '페르시아 제국의 왕', maxHp: 30000,
-    critText: '스파르타!', rageText: '분노! 불사 부대가 깨어났다', counterText: '불사 부대 돌격!', hurtText: '대왕이 비틀거린다!',
-    shots: ['arrow', 'spear'], winLine: '반 전체가 힘을 모아 크세르크세스 대왕을 물리쳤습니다!'
+    label: '세계사 · 크세르크세스', bossName: '크세르크세스 대왕', sub: '페르시아 제국의 왕', maxHp: 45000,
+    critText: '스파르타!', rageText: '분노! 불사 부대가 깨어났다', counterText: '불사 부대 돌격!',
+    attackName: '창 투척', wrongText: '오답 반격!', healName: '불사 부대 교대', enrageText: '광폭화! 공격이 거세진다',
+    shots: ['arrow', 'spear'], winLine: '반 전체가 힘을 모아 크세르크세스 대왕을 물리쳤습니다!', loseLine: '대왕이 버텨 냈습니다… 다시 도전하세요!'
   }
+};
+// 난이도 (시뮬레이션으로 맞춘 값): 보통 속도(학생마다 약 9초에 한 번 답)에서는 정답률 90%여도 이기기 힘들고,
+// 빠른 속도에 정답률 80%대는 되어야 안정적으로 이긴다.
+const RAID = {
+  limitMs: 180000,           // 제한 시간 3분
+  hearts: 3,                 // 학생 목숨
+  reviveMs: 12000,           // 쓰러지면 12초 뒤 부활
+  firstAttackMs: 6000,
+  attackGapMs: [5000, 3500, 2500],   // 평소 · 분노(50% 이하) · 광폭화(25% 이하)
+  attackTargets: [2, 3, 4],
+  telegraphMs: 1000,         // 공격 전 ⚠ 표시 시간
+  whistleGapMs: 9000, whistleTargets: 6, whistleStunMs: 3000,
+  regenPerSec: 0.0025,       // 초당 최대 체력의 0.25% 회복 (광폭화 때 2배)
+  healAt: [0.6, 0.3], healRepeatMs: 35000,   // 회복 의식: 60%·30% 도달 때, 25% 이하에선 35초마다
+  healNeed: 25, healCastMs: 8000, healAmount: 0.12,
+  breakStunMs: 4000          // 회복 의식을 끊으면 보스 기절 (피해 2배)
 };
 const SPEEDS = [
   { label: '보통', mean: 9000 },
@@ -164,7 +182,7 @@ function noise(dur, vol, filterType, f0, f1, when){
 function sfx(kind){
   if(!soundOn || !audio()) return;
   const now = performance.now();
-  const gap = { hit: 55, crit: 90, explode: 120 }[kind] || 0;
+  const gap = { hit: 55, crit: 90, explode: 120, ouch: 70, ko: 150, warn: 200 }[kind] || 0;
   if(gap && now - (lastSfx[kind] || 0) < gap) return;   // 한꺼번에 많이 맞아도 소리가 뭉개지지 않게
   lastSfx[kind] = now;
   switch(kind){
@@ -199,6 +217,33 @@ function sfx(kind){
       noise(0.8, 0.6, 'lowpass', 2500, 80);
       tone('sine', 80, 25, 0.7, 0.5);
       break;
+    case 'warn':      // 보스 공격 예고
+      tone('square', 880, 880, 0.08, 0.08); tone('square', 660, 660, 0.08, 0.08, 0.11);
+      break;
+    case 'ouch':      // 학생이 맞음
+      tone('square', 330, 140, 0.14, 0.12);
+      noise(0.08, 0.2, 'bandpass', 900, 400);
+      break;
+    case 'ko':        // 학생이 쓰러짐
+      tone('triangle', 440, 110, 0.5, 0.2);
+      tone('sine', 120, 40, 0.4, 0.3, 0.1);
+      break;
+    case 'cast':      // 회복 의식 시작
+      [392, 523, 659].forEach((f, i) => tone('sine', f, f * 1.01, 0.5, 0.12, i * 0.12));
+      break;
+    case 'break':     // 회복 의식 끊음
+      noise(0.5, 0.5, 'highpass', 4000, 600);
+      tone('sawtooth', 700, 90, 0.5, 0.2);
+      break;
+    case 'heal':      // 보스 큰 회복
+      [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, f, 0.35, 0.12, i * 0.08));
+      break;
+    case 'lose': {
+      const notes = [392, 349, 311, 262];
+      notes.forEach((f, i) => tone('triangle', f, f * 0.98, i === notes.length - 1 ? 1.2 : 0.35, 0.18, i * 0.35));
+      tone('sine', 80, 40, 1.5, 0.3, 1.05);
+      break;
+    }
     case 'win': {
       const notes = [523, 659, 784, 1047, 784, 1047];
       notes.forEach((f, i) => tone('square', f, f, i === notes.length - 1 ? 0.8 : 0.16, 0.12, i * 0.14));
@@ -466,7 +511,8 @@ function swingAngle(p, base){
 
 // 한국사 보스 그림 고르기: 치명타에 맞은 직후·쓰러질 때 → 맞음, 체력 25% 이하 → 크게 다침, 분노 → 분노, 그 외 → 평소
 function policePose(){
-  if(S.phase === 'dying' || S.hitPose > 0) return 'hit';
+  if(S.phase === 'lose') return 'rage';
+  if(S.phase === 'dying' || S.hitPose > 0 || bossStunned()) return 'hit';
   if(S.hp <= S.max * 0.25) return 'hurt';
   if(S.rage || S.attack > 0) return 'rage';
   return 'idle';
@@ -508,12 +554,18 @@ function reset(){
   S = {
     clock: 0, phase: 'ready', introT: 0, landed: false,
     hp: THEMES[themeKey].maxHp, ghost: THEMES[themeKey].maxHp, max: THEMES[themeKey].maxHp,
-    rage: false, counterAt: 0, attack: 0, hitPose: 0, hurtAnnounced: false,
-    students: NAMES.map((name, i) => Object.assign({ name, i, dmg: 0, correct: 0, streak: 0, next: 0, flash: 0, flashColor: '', stunUntil: 0, wrongT: 0 }, tagPos(i))),
+    rage: false, enrage: false, counterAt: 0, attack: 0, hitPose: 0,
+    attackAt: 0, regenAcc: 0, regenShowAt: 0, healFlash: 0,
+    cast: null, healsDone: [], nextHealAt: 0, bossStunUntil: 0,
+    students: NAMES.map((name, i) => Object.assign({
+      name, i, dmg: 0, correct: 0, streak: 0, next: 0, flash: 0, flashColor: '', stunUntil: 0, wrongT: 0,
+      hearts: RAID.hearts, koUntil: 0, targetUntil: 0, hurtT: 0, kos: 0
+    }, tagPos(i))),
     shots: [], parts: [], texts: [], rings: [], bolts: [], banner: null, timers: [],
     shake: 0, bossFlash: 0, knock: 0, squash: 0, bossY: -900, bossRot: 0, bossAlpha: 1,
     combo: 0, comboT: -9999, comboPop: 0,
-    correct: 0, wrong: 0, lastHitter: null, fightStart: 0, endClock: 0, dyingT: 0, nextBoom: 0
+    correct: 0, wrong: 0, lastHitter: null, fightStart: 0, endClock: 0, dyingT: 0, nextBoom: 0,
+    loseReason: ''
   };
   running = false;
   updateButtons();
@@ -521,15 +573,22 @@ function reset(){
 
 function startFight(){
   S.phase = 'fight'; S.fightStart = S.clock;
+  S.attackAt = S.clock + RAID.firstAttackMs;
+  S.regenShowAt = S.clock + 1000;   // 회복 숫자는 1초 분량씩 모아서 보여 준다
   const mean = SPEEDS[speedIdx].mean;
   for(const st of S.students) st.next = S.clock + rand(200, mean);
 }
 
+const isKo = st => st.koUntil > S.clock;
+const canAct = st => !isKo(st) && st.stunUntil <= S.clock;
+const bossStunned = () => S.bossStunUntil > S.clock;
+
 function answer(st){
   const T = THEMES[themeKey];
-  if(Math.random() > 0.82){      // 오답: 공격 없이 이름표만 빨갛게
+  if(Math.random() > 0.82){      // 오답: 공격하지 못하고, 보스가 곧바로 그 학생을 반격한다
     st.streak = 0; S.wrong++;
     st.flash = 1; st.flashColor = '#e0483c'; st.wrongT = 1;
+    if(!bossStunned()) bossStrike(st, 0.35, T.wrongText);
     return;
   }
   st.streak++; st.correct++; S.correct++;
@@ -546,8 +605,10 @@ function impact(sh){
   const T = THEMES[themeKey];
   if(S.phase !== 'fight') return;
   const x = sh.x1, y = sh.y1, st = sh.st;
-  S.hp = Math.max(0, S.hp - sh.dmg);
-  st.dmg += sh.dmg; S.lastHitter = st;
+  const weak = bossStunned();                 // 회복 의식을 끊어 기절한 동안엔 피해 2배
+  const dmg = weak ? sh.dmg * 2 : sh.dmg;
+  S.hp = Math.max(0, S.hp - dmg);
+  st.dmg += dmg; S.lastHitter = st;
   const dir = st.left ? 1 : -1;
   S.bossFlash = sh.crit ? 1 : 0.7;
   S.knock += dir * (sh.crit ? 30 : 9);
@@ -555,20 +616,23 @@ function impact(sh){
   S.shake = Math.max(S.shake, sh.crit ? 24 : 7);
   if(S.clock - S.comboT < 1600) S.combo++; else S.combo = 1;
   S.comboT = S.clock; S.comboPop = 1;
-  S.texts.push({ x: x + rand(-70, 70), y: y - 20 + rand(-30, 30), txt: fmtNum(sh.dmg), crit: sh.crit, t: 0 });
+  S.texts.push({ x: x + rand(-70, 70), y: y - 20 + rand(-30, 30), txt: fmtNum(dmg) + (weak ? '!' : ''), crit: sh.crit, t: 0 });
   burst(x, y, sh.type, sh.crit ? 46 : 16, dir);
   S.rings.push({ x, y, t: 0, life: sh.crit ? 0.5 : 0.3, r: sh.crit ? 190 : 70, color: sh.crit ? '#ffe98a' : 'rgba(255,255,255,.9)', w: sh.crit ? 10 : 5 });
   if(sh.crit){
     S.hitPose = 0.4;   // 치명타를 맞으면 잠깐 휘청이는 그림으로
     S.bolts.push({ x, y, t: 0, pts: boltPath(x + rand(-80, 80), -20, x, y) });
-    S.banner = { txt: T.critText, sub: st.name + ' 치명타!', t: 0, life: 1.4, color: '#ffe14d' };
+    if(!S.cast) S.banner = { txt: T.critText, sub: st.name + ' 치명타!', t: 0, life: 1.4, color: '#ffe14d' };
     sfx('crit');
   } else sfx('hit');
-  if(!S.rage && S.hp <= S.max / 2) enterRage();
-  if(!S.hurtAnnounced && S.hp > 0 && S.hp <= S.max * 0.25){
-    S.hurtAnnounced = true;
-    S.banner = { txt: T.hurtText, sub: '체력 25% 이하 · 조금만 더!', t: 0, life: 1.8, color: '#ffd23f' };
+  // 회복 의식 끊기
+  if(S.cast){
+    S.cast.got++;
+    if(S.cast.got >= S.cast.need) breakCast();
   }
+  if(!S.rage && S.hp <= S.max / 2) enterRage();
+  if(!S.enrage && S.hp <= S.max * 0.25) enterEnrage();
+  checkHealTrigger();
   if(S.hp <= 0) startDying();
 }
 
@@ -578,7 +642,9 @@ function burst(x, y, type, n, dir){
     ink: ['#10142c', '#23306e', '#3b4db0', '#e8ecff'],
     arrow: ['#f2d27a', '#c9a15a', '#8a5a2b', '#fff'],
     spear: ['#e0e6f0', '#a9b3c4', '#f2d27a', '#fff'],
-    crit: ['#fff', '#fff3a0', '#ffd23f', '#7fd8ff']
+    crit: ['#fff', '#fff3a0', '#ffd23f', '#7fd8ff'],
+    boss: ['#ff3b30', '#b3121f', '#ff8a65', '#2a0a0a'],
+    heal: ['#7dffb0', '#3ee07a', '#c8ffe0', '#fff']
   }[type] || ['#fff'];
   for(let i = 0; i < n; i++){
     const ang = rand(0, Math.PI * 2), sp = rand(180, type === 'crit' ? 900 : 600);
@@ -592,47 +658,154 @@ function boltPath(x0, y0, x1, y1){
   return pts;
 }
 
+// ── 보스의 공격 ─────────────────────────────────────
+// 보스 손에서 학생 이름표로 날아가는 공격. 맞으면 목숨 1개가 줄고, 다 잃으면 쓰러진다.
+function bossStrike(st, dur, label, stunMs){
+  const hand = { x: BOSS_X + (st.left ? -150 : 150), y: BOSS_FEET - 420 };
+  const a = anchor(st);
+  S.shots.push({ type: 'boss', enemy: true, x0: hand.x, y0: hand.y, x1: a.x, y1: a.y, cx: (hand.x + a.x) / 2, cy: Math.min(hand.y, a.y) - rand(80, 200), t: 0, dur, st, label, stunMs: stunMs || 0, trail: 0 });
+}
+function hurtStudent(sh){
+  const st = sh.st;
+  if(S.phase !== 'fight' || isKo(st)) return;
+  const a = anchor(st);
+  st.hearts--; st.hurtT = 1; st.streak = 0;
+  st.flash = 1; st.flashColor = '#ff2d2d';
+  if(sh.stunMs) st.stunUntil = Math.max(st.stunUntil, S.clock + sh.stunMs);
+  burst(a.x, a.y, 'boss', 18, st.left ? -1 : 1);
+  S.rings.push({ x: a.x, y: a.y, t: 0, life: 0.35, r: 80, color: 'rgba(255,60,50,.9)', w: 8 });
+  S.shake = Math.max(S.shake, 8);
+  const tx = a.x + (st.left ? 90 : -90);
+  if(st.hearts <= 0){
+    st.koUntil = S.clock + RAID.reviveMs; st.kos++;
+    st.hearts = 0; st.stunUntil = 0;
+    S.texts.push({ x: tx, y: a.y, txt: '💀 쓰러짐', stun: true, t: 0 });
+    sfx('ko');
+    const alive = S.students.filter(s => !isKo(s)).length;
+    if(alive === 0) startLose('전원 쓰러짐');
+  } else {
+    S.texts.push({ x: tx, y: a.y, txt: (sh.label ? sh.label + ' ' : '') + '-1 ❤', stun: true, t: 0 });
+    sfx('ouch');
+  }
+}
+// 평소 공격: 목표를 ⚠로 1초 먼저 알려 준 뒤 내려친다
+function basicAttack(){
+  const T = THEMES[themeKey];
+  const lvl = S.enrage ? 2 : S.rage ? 1 : 0;
+  const pool = S.students.filter(s => !isKo(s));
+  const targets = [];
+  for(let k = 0; k < RAID.attackTargets[lvl] && pool.length; k++) targets.push(pool.splice(randi(0, pool.length - 1), 1)[0]);
+  for(const st of targets) st.targetUntil = S.clock + RAID.telegraphMs;
+  sfx('warn');
+  S.timers.push({ at: S.clock + RAID.telegraphMs, fn: () => {
+    if(S.phase !== 'fight' || bossStunned()) return;
+    S.attack = 0.55;
+    for(const st of targets) bossStrike(st, 0.4, T.attackName);
+  }});
+  S.attackAt = S.clock + RAID.attackGapMs[lvl];
+}
+
 function enterRage(){
   const T = THEMES[themeKey];
   S.rage = true;
-  S.banner = { txt: T.rageText, sub: '체력 50% 이하 · 반격을 조심하세요!', t: 0, life: 2.2, color: '#ff5a4a', red: true };
+  S.banner = { txt: T.rageText, sub: '체력 50% 이하 · 호루라기 반격으로 여러 명이 기절합니다!', t: 0, life: 2.2, color: '#ff5a4a', red: true };
   S.shake = Math.max(S.shake, 30);
-  S.counterAt = S.clock + 5000;
+  S.counterAt = S.clock + 4000;
   for(let i = 0; i < 40; i++) S.parts.push({ x: BOSS_X + rand(-200, 200), y: BOSS_FEET - rand(0, 500), vx: rand(-60, 60), vy: rand(-420, -160), life: rand(0.8, 1.6), t: 0, size: rand(4, 10), color: Math.random() < 0.5 ? '#ff4d2e' : '#ffb347', g: -50, kind: 'dot' });
   sfx('roar');
 }
+function enterEnrage(){
+  const T = THEMES[themeKey];
+  S.enrage = true;
+  S.banner = { txt: T.enrageText, sub: '체력 25% 이하 · 회복 속도 2배 · 더 자주, 더 많이 공격합니다', t: 0, life: 2.2, color: '#ff3b30', red: true };
+  S.shake = Math.max(S.shake, 36);
+  S.nextHealAt = S.clock + RAID.healRepeatMs;
+  sfx('roar');
+}
 
+// 분노 광역기: 호루라기로 여러 명을 한꺼번에 기절시키고 목숨도 깎는다
 function counterAttack(){
   const T = THEMES[themeKey];
   S.attack = 1;
   sfx('counter');
   S.timers.push({ at: S.clock + 380, fn: () => {
-    if(S.phase !== 'fight') return;
+    if(S.phase !== 'fight' || bossStunned()) return;
     S.shake = Math.max(S.shake, 34);
     S.rings.push({ x: BOSS_X, y: BOSS_FEET - 260, t: 0, life: 0.8, r: 1300, color: 'rgba(255,70,50,.9)', w: 26 });
     S.rings.push({ x: BOSS_X, y: BOSS_FEET - 260, t: -0.12, life: 0.8, r: 1100, color: 'rgba(255,200,120,.7)', w: 12 });
-    const pool = S.students.filter(s => s.stunUntil <= S.clock);
-    for(let k = 0; k < 3 && pool.length; k++){
+    const pool = S.students.filter(s => !isKo(s));
+    const n = Math.min(RAID.whistleTargets, pool.length);
+    for(let k = 0; k < n; k++){
       const st = pool.splice(randi(0, pool.length - 1), 1)[0];
-      st.stunUntil = S.clock + 3500; st.streak = 0;
-      st.flash = 1; st.flashColor = '#ff4d2e';
-      const a = anchor(st);
-      S.texts.push({ x: a.x + (st.left ? 70 : -70), y: a.y, txt: '기절!', crit: false, stun: true, t: 0 });
+      hurtStudent({ st, label: '😵 기절!', stunMs: RAID.whistleStunMs });
     }
-    S.banner = { txt: T.counterText, sub: '학생 3명이 잠시 기절했습니다', t: 0, life: 1.6, color: '#ff7a5a', red: true };
+    S.banner = { txt: T.counterText, sub: `${n}명이 ${RAID.whistleStunMs / 1000}초 동안 기절했습니다`, t: 0, life: 1.6, color: '#ff7a5a', red: true };
   }});
-  S.counterAt = S.clock + rand(7000, 10000);
+  S.counterAt = S.clock + RAID.whistleGapMs;
+}
+
+// ── 보스 회복 ───────────────────────────────────────
+function checkHealTrigger(){
+  if(S.cast || S.phase !== 'fight') return;
+  const frac = S.hp / S.max;
+  for(const th of RAID.healAt){
+    if(frac <= th && !S.healsDone.includes(th)){ S.healsDone.push(th); startCast(); return; }
+  }
+}
+function startCast(){
+  const T = THEMES[themeKey];
+  S.cast = { need: RAID.healNeed, got: 0, start: S.clock, end: S.clock + RAID.healCastMs };
+  S.banner = { txt: '🩹 ' + T.healName + '!', sub: `${RAID.healCastMs / 1000}초 안에 ${RAID.healNeed}번 공격해서 끊어라!`, t: 0, life: 2, color: '#6dff9e', red: true };
+  sfx('cast');
+}
+function breakCast(){
+  S.cast = null;
+  S.bossStunUntil = S.clock + RAID.breakStunMs;
+  S.hitPose = 0.6;
+  S.banner = { txt: '회복 차단!', sub: `보스 ${RAID.breakStunMs / 1000}초 기절 · 받는 피해 2배!`, t: 0, life: 1.8, color: '#ffe14d' };
+  S.shake = Math.max(S.shake, 26);
+  sfx('break');
+}
+function healBoss(amount, big){
+  const before = S.hp;
+  S.hp = Math.min(S.max, S.hp + amount);
+  const got = S.hp - before;
+  if(got <= 0) return;
+  S.ghost = Math.max(S.ghost, S.hp);
+  S.healFlash = big ? 1 : Math.max(S.healFlash, 0.4);
+  if(big){
+    for(let i = 0; i < 60; i++) S.parts.push({ x: BOSS_X + rand(-220, 220), y: BOSS_FEET - rand(0, 600), vx: rand(-40, 40), vy: rand(-300, -80), life: rand(0.8, 1.5), t: 0, size: rand(5, 12), color: ['#7dffb0', '#3ee07a', '#c8ffe0'][randi(0, 2)], g: -40, kind: 'dot' });
+    S.texts.push({ x: BOSS_X, y: BOSS_FEET - 620, txt: '+' + fmtNum(got), heal: true, big: true, t: 0 });
+  } else {
+    S.texts.push({ x: BOSS_X + rand(-150, 150), y: BOSS_FEET - rand(500, 640), txt: '+' + fmtNum(got), heal: true, t: 0 });
+  }
+  // 회복으로 분노 기준선 위로 올라가도 한 번 시작한 분노·광폭화는 풀리지 않는다
+}
+function finishCastFail(){
+  const T = THEMES[themeKey];
+  S.cast = null;
+  healBoss(S.max * RAID.healAmount, true);
+  S.banner = { txt: T.bossName + ' 회복!', sub: `체력 ${Math.round(RAID.healAmount * 100)}% 회복 · 다음엔 더 빨리 공격하세요`, t: 0, life: 1.8, color: '#6dff9e', red: true };
+  sfx('heal');
 }
 
 function startDying(){
   S.phase = 'dying'; S.dyingT = 0; S.endClock = S.clock; S.nextBoom = 0;
-  S.shots = [];
+  S.shots = []; S.cast = null; S.timers = [];
   S.banner = null;
+}
+function startLose(reason){
+  if(S.phase !== 'fight') return;
+  S.phase = 'lose'; S.loseReason = reason; S.endClock = S.clock;
+  S.shots = []; S.cast = null; S.timers = [];
+  S.banner = null;
+  sfx('lose');
+  updateButtons();
 }
 
 function manualHit(){
   if(S.phase !== 'fight' || !running) return;
-  const pool = S.students.filter(s => s.stunUntil <= S.clock);
+  const pool = S.students.filter(canAct);
   if(!pool.length) return;
   const st = pool[randi(0, pool.length - 1)];
   st.streak = 4;   // 수동 타격은 치명타가 나오도록 5연속 정답으로 만든다
@@ -659,12 +832,32 @@ function update(dt){
 
   if(S.phase === 'fight'){
     for(const st of S.students){
+      // 부활
+      if(st.koUntil && now >= st.koUntil){
+        st.koUntil = 0; st.hearts = RAID.hearts;
+        st.flash = 1; st.flashColor = '#48d17a';
+        const a = anchor(st);
+        S.texts.push({ x: a.x + (st.left ? 90 : -90), y: a.y, txt: '부활!', stun: true, revive: true, t: 0 });
+      }
       if(now < st.next) continue;
       st.next = now + Math.max(700, expRand(mean));
-      if(st.stunUntil > now) continue;
+      if(!canAct(st)) continue;
       answer(st);
     }
-    if(S.rage && now >= S.counterAt) counterAttack();
+    if(!bossStunned()){
+      if(now >= S.attackAt) basicAttack();
+      if(S.rage && now >= S.counterAt) counterAttack();
+      // 초당 회복 (광폭화 땐 2배), 1초마다 모아서 숫자로 보여 준다
+      S.regenAcc += S.max * RAID.regenPerSec * (S.enrage ? 2 : 1) * dt;
+      if(now >= S.regenShowAt){ S.regenShowAt = now + 1000; if(S.regenAcc >= 1){ healBoss(S.regenAcc, false); S.regenAcc = 0; } }
+      if(S.enrage && !S.cast && S.healsDone.length >= RAID.healAt.length && now >= S.nextHealAt){ S.nextHealAt = now + RAID.healRepeatMs; startCast(); }
+    } else {
+      // 기절한 동안엔 회복 의식·공격 예약이 밀린다
+      S.attackAt = Math.max(S.attackAt, S.bossStunUntil + 1200);
+      S.counterAt = Math.max(S.counterAt, S.bossStunUntil + 2500);
+    }
+    if(S.cast && now >= S.cast.end) finishCastFail();
+    if(now - S.fightStart >= RAID.limitMs) startLose('시간 초과');
   }
 
   if(S.phase === 'dying'){
@@ -684,6 +877,7 @@ function update(dt){
     }
     if(S.dyingT >= 3.1){
       S.phase = 'victory';
+      updateButtons();
       sfx('win');
       for(let i = 0; i < 160; i++) confetti(true);
     }
@@ -693,7 +887,7 @@ function update(dt){
   // 예약된 동작
   for(let i = S.timers.length - 1; i >= 0; i--) if(now >= S.timers[i].at){ const tm = S.timers.splice(i, 1)[0]; tm.fn(); }
 
-  // 날아가는 공격
+  // 날아가는 공격 (학생 → 보스, 보스 → 학생)
   for(let i = S.shots.length - 1; i >= 0; i--){
     const sh = S.shots[i];
     sh.t += dt / sh.dur;
@@ -703,7 +897,7 @@ function update(dt){
       sh.trail -= 0.012;
       trailParticle(sh, p);
     }
-    if(sh.t >= 1){ S.shots.splice(i, 1); impact(sh); }
+    if(sh.t >= 1){ S.shots.splice(i, 1); if(sh.enemy) hurtStudent(sh); else impact(sh); }
   }
   // 파편
   for(let i = S.parts.length - 1; i >= 0; i--){
@@ -721,13 +915,14 @@ function update(dt){
 
   // 감쇠
   S.bossFlash = Math.max(0, S.bossFlash - dt * 5);
+  S.healFlash = Math.max(0, S.healFlash - dt * 2);
   S.knock += (0 - S.knock) * Math.min(1, dt * 9);
   S.squash = Math.max(0, S.squash - dt * 5);
   S.shake = Math.max(0, S.shake - dt * 70);
   S.comboPop = Math.max(0, S.comboPop - dt * 5);
   S.attack = Math.max(0, S.attack - dt * 1.4);
   S.hitPose = Math.max(0, S.hitPose - dt);
-  for(const st of S.students){ st.flash = Math.max(0, st.flash - dt * 2.5); st.wrongT = Math.max(0, st.wrongT - dt * 2); }
+  for(const st of S.students){ st.flash = Math.max(0, st.flash - dt * 2.5); st.wrongT = Math.max(0, st.wrongT - dt * 2); st.hurtT = Math.max(0, st.hurtT - dt * 2.5); }
   S.ghost += (S.hp - S.ghost) * Math.min(1, dt * 2.2);
 }
 
@@ -743,6 +938,7 @@ function trailParticle(sh, p){
   if(sh.type === 'torch') S.parts.push({ x: p.x + rand(-6, 6), y: p.y + rand(-6, 6), vx: rand(-40, 40), vy: rand(-80, -20), life: rand(0.25, 0.45), t: 0, size: rand(6, 13), color: ['#fff2a8', '#ffd166', '#ff8c42', '#ff4d2e'][randi(0, 3)], g: -60, kind: 'dot' });
   else if(sh.type === 'ink') S.parts.push({ x: p.x, y: p.y, vx: rand(-30, 30), vy: rand(-20, 40), life: rand(0.3, 0.5), t: 0, size: rand(4, 9), color: ['#10142c', '#23306e', '#3b4db0'][randi(0, 2)], g: 500, kind: 'dot' });
   else if(sh.type === 'crit') S.parts.push({ x: p.x + rand(-8, 8), y: p.y + rand(-8, 8), vx: rand(-60, 60), vy: rand(-60, 60), life: rand(0.2, 0.4), t: 0, size: rand(5, 11), color: ['#fff', '#fff3a0', '#7fd8ff'][randi(0, 2)], g: 0, kind: 'dot' });
+  else if(sh.type === 'boss') S.parts.push({ x: p.x + rand(-10, 10), y: p.y + rand(-10, 10), vx: rand(-40, 40), vy: rand(-40, 40), life: rand(0.2, 0.4), t: 0, size: rand(5, 10), color: ['#ff3b30', '#b3121f', '#ff8a65'][randi(0, 2)], g: 0, kind: 'dot' });
   else if(Math.random() < 0.4) S.parts.push({ x: p.x, y: p.y, vx: 0, vy: 0, life: 0.18, t: 0, size: 3, color: 'rgba(255,255,255,.6)', g: 0, kind: 'dot' });
 }
 function confetti(big){
@@ -766,24 +962,33 @@ function draw(){
 
   drawTags();
   drawHpBar();
+  drawCastBar();
   drawCombo();
   drawStats();
   drawBanner();
   if(S.phase === 'intro') drawIntro();
   if(S.phase === 'victory') drawVictory();
+  if(S.phase === 'lose') drawLose();
   drawParticles(true);
   if(S.phase === 'ready') drawReady();
-  else if(!running && S.phase !== 'victory') drawPaused();
+  else if(!running && S.phase !== 'victory' && S.phase !== 'lose') drawPaused();
 }
 
 function drawBossLayer(){
   if(S.phase === 'victory') return;
+  const t = S.clock / 1000;
   // 분노 오라
   if(S.rage){
-    const t = S.clock / 1000;
     const aura = ctx.createRadialGradient(BOSS_X, BOSS_FEET - 330, 60, BOSS_X, BOSS_FEET - 330, 420 + Math.sin(t * 6) * 20);
-    aura.addColorStop(0, 'rgba(255,60,30,.35)'); aura.addColorStop(1, 'rgba(255,60,30,0)');
+    aura.addColorStop(0, S.enrage ? 'rgba(255,20,20,.5)' : 'rgba(255,60,30,.35)'); aura.addColorStop(1, 'rgba(255,60,30,0)');
     ctx.fillStyle = aura; ctx.fillRect(BOSS_X - 520, BOSS_FEET - 820, 1040, 900);
+  }
+  // 회복 의식 중: 초록 기운
+  if(S.cast){
+    const aura = ctx.createRadialGradient(BOSS_X, BOSS_FEET - 330, 40, BOSS_X, BOSS_FEET - 330, 380 + Math.sin(t * 8) * 30);
+    aura.addColorStop(0, 'rgba(80,255,150,.45)'); aura.addColorStop(1, 'rgba(80,255,150,0)');
+    ctx.fillStyle = aura; ctx.fillRect(BOSS_X - 520, BOSS_FEET - 820, 1040, 900);
+    if(Math.random() < 0.5) S.parts.push({ x: BOSS_X + rand(-200, 200), y: BOSS_FEET - rand(0, 200), vx: rand(-20, 20), vy: rand(-260, -120), life: rand(0.8, 1.4), t: 0, size: rand(4, 9), color: ['#7dffb0', '#3ee07a', '#c8ffe0'][randi(0, 2)], g: -30, kind: 'dot' });
   }
   // 발밑 그림자
   const shadowScale = S.phase === 'intro' ? clamp(1 + S.bossY / 900, 0.2, 1) : 1;
@@ -793,14 +998,23 @@ function drawBossLayer(){
   const bi = renderBoss();
   ctx.save();
   ctx.globalAlpha = S.bossAlpha;
+  const stunWobble = bossStunned() ? Math.sin(t * 9) * 0.03 : 0;
   ctx.translate(BOSS_X + S.knock, BOSS_FEET + S.bossY);
-  ctx.rotate(S.bossRot);
+  ctx.rotate(S.bossRot + stunWobble);
   const sq = S.squash;
-  const breath = Math.sin(S.clock / 1000 * 2.2) * 0.008;              // 숨쉬기
-  const lunge = S.attack > 0 ? Math.sin(Math.PI * (1 - S.attack)) : 0;  // 반격 때 앞으로 달려드는 느낌
+  const breath = Math.sin(t * 2.2) * 0.008;                             // 숨쉬기
+  const lunge = S.attack > 0 ? Math.sin(Math.PI * (1 - S.attack)) : 0;  // 공격할 때 앞으로 달려드는 느낌
   ctx.scale((1 + sq * 0.07) * (1 + lunge * 0.12), (1 - sq * 0.07 + breath) * (1 + lunge * 0.12));
   ctx.drawImage(bi.cvs, -bi.ax, -bi.ay);
   ctx.restore();
+  // 기절: 머리 위로 별이 빙글빙글
+  if(bossStunned() && S.phase === 'fight'){
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for(let i = 0; i < 5; i++){
+      const a = t * 4 + i * Math.PI * 2 / 5;
+      outlinedText(ctx, '★', BOSS_X + S.knock + Math.cos(a) * 110, BOSS_FEET - 735 + Math.sin(a) * 26, 40, '#ffe14d', '#5a3a00', 6);
+    }
+  }
 }
 
 function drawShots(){
@@ -808,7 +1022,23 @@ function drawShots(){
     const p = shotPos(sh, Math.min(1, sh.t));
     ctx.save();
     ctx.translate(p.x, p.y);
-    if(sh.type === 'torch' || sh.type === 'crit'){
+    if(sh.type === 'boss'){
+      // 보스 공격: 붉은 기운을 두른 곤봉(한국사) / 창(세계사)
+      const gr = ctx.createRadialGradient(0, 0, 2, 0, 0, 56);
+      gr.addColorStop(0, 'rgba(255,90,70,.9)'); gr.addColorStop(1, 'rgba(160,0,0,0)');
+      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, 0, 56, 0, Math.PI * 2); ctx.fill();
+      if(themeKey === 'korea'){
+        ctx.rotate(S.clock / 40);
+        rr(ctx, -50, -9, 100, 18, 9); paint(ctx, '#6b3a24', 5);
+        rr(ctx, 30, -11, 22, 22, 6); paint(ctx, '#3a2014', 4);
+      } else {
+        ctx.rotate(p.a);
+        ctx.strokeStyle = '#5a3620'; ctx.lineWidth = 8; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(-110, 0); ctx.lineTo(0, 0); ctx.stroke();
+        ctx.fillStyle = '#ffb3a8'; ctx.strokeStyle = OUT; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(32, 0); ctx.lineTo(-6, -12); ctx.lineTo(-6, 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+    } else if(sh.type === 'torch' || sh.type === 'crit'){
       const r = sh.type === 'crit' ? 34 : 22;
       const gr = ctx.createRadialGradient(0, 0, 2, 0, 0, r * 2.2);
       if(sh.type === 'crit'){ gr.addColorStop(0, '#fff'); gr.addColorStop(0.3, 'rgba(255,240,140,.95)'); gr.addColorStop(1, 'rgba(120,200,255,0)'); }
@@ -884,9 +1114,10 @@ function drawTexts(){
     const k = tx.t / (tx.life || 1);
     const pop = tx.t < 0.12 ? 0.6 + (tx.t / 0.12) * 0.6 : 1.2 - Math.min(0.2, (tx.t - 0.12) * 0.6);
     ctx.globalAlpha = k > 0.7 ? 1 - (k - 0.7) / 0.3 : 1;
-    const y = tx.y - easeOut(Math.min(1, k * 1.3)) * 90;
+    const y = tx.y - easeOut(Math.min(1, k * 1.3)) * (tx.stun ? 40 : 90);
     ctx.save(); ctx.translate(tx.x, y); ctx.scale(pop, pop);
-    if(tx.stun) outlinedText(ctx, '😵 ' + tx.txt, 0, 0, 34, '#ffd0c8');
+    if(tx.heal) outlinedText(ctx, tx.txt, 0, 0, tx.big ? 76 : 36, '#6dff9e', '#063a18', tx.big ? 12 : 6);
+    else if(tx.stun) outlinedText(ctx, tx.txt, 0, 0, 30, tx.revive ? '#8dffb5' : '#ffd0c8');
     else if(tx.crit){
       outlinedText(ctx, 'CRITICAL!', 0, -52, 32, '#7fd8ff');
       outlinedText(ctx, tx.txt, 0, 0, 78, '#ffe14d', '#5a1a00', 12);
@@ -900,35 +1131,57 @@ function drawTags(){
   const top = S.students.reduce((m, s) => s.dmg > (m ? m.dmg : 0) ? s : m, null);
   ctx.textBaseline = 'middle';
   for(const st of S.students){
-    const stunned = st.stunUntil > S.clock;
-    const shakeX = st.wrongT > 0 ? Math.sin(st.wrongT * 40) * 8 * st.wrongT : 0;
-    const x = st.tx + shakeX, y = st.ty;
+    const ko = isKo(st), stunned = !ko && st.stunUntil > S.clock;
+    const targeted = !ko && st.targetUntil > S.clock;
+    const shakeT = Math.max(st.wrongT, st.hurtT);
+    const shakeX = shakeT > 0 ? Math.sin(shakeT * 40) * 10 * shakeT : 0;
+    const x = st.tx + shakeX, y = st.ty, cy = y + TAG_H / 2;
     ctx.save();
-    ctx.globalAlpha = stunned ? 0.55 : 0.92;
+    ctx.globalAlpha = ko ? 0.5 : stunned ? 0.7 : 0.92;
     rr(ctx, x, y, TAG_W, TAG_H, 12);
-    ctx.fillStyle = stunned ? '#3a3a44' : 'rgba(18,20,40,.88)'; ctx.fill();
+    ctx.fillStyle = ko ? '#2a2a30' : stunned ? '#3a3a50' : 'rgba(18,20,40,.88)'; ctx.fill();
     if(st.flash > 0){ ctx.globalAlpha = st.flash * 0.75; ctx.fillStyle = st.flashColor; ctx.fill(); }
     ctx.globalAlpha = 1;
-    ctx.lineWidth = 2; ctx.strokeStyle = top === st && st.dmg > 0 ? '#ffd23f' : 'rgba(255,255,255,.18)'; ctx.stroke();
+    if(targeted){
+      // 보스가 노리는 중: 붉은 테두리가 깜빡인다
+      ctx.lineWidth = 5; ctx.strokeStyle = `rgba(255,50,40,${0.55 + 0.45 * Math.sin(S.clock / 45)})`;
+    } else {
+      ctx.lineWidth = 2; ctx.strokeStyle = top === st && st.dmg > 0 ? '#ffd23f' : 'rgba(255,255,255,.18)';
+    }
+    ctx.stroke();
     // 이름 첫 글자 동그라미
-    const cx = st.left ? x + 26 : x + TAG_W - 26;
-    ctx.beginPath(); ctx.arc(cx, y + TAG_H / 2, 17, 0, Math.PI * 2);
-    ctx.fillStyle = `hsl(${st.i * 37 % 360} 60% 52%)`; ctx.fill();
+    const ccx = st.left ? x + 26 : x + TAG_W - 26;
+    ctx.beginPath(); ctx.arc(ccx, cy, 17, 0, Math.PI * 2);
+    ctx.fillStyle = ko ? '#555' : `hsl(${st.i * 37 % 360} 60% 52%)`; ctx.fill();
     ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = `800 18px ${FONT}`;
-    ctx.fillText(st.name[0], cx, y + TAG_H / 2 + 1);
-    // 이름·누적 피해
+    ctx.fillText(ko ? '💀' : st.name[0], ccx, cy + 1);
+    // 이름
     ctx.textAlign = st.left ? 'left' : 'right';
-    ctx.font = `800 23px ${FONT}`; ctx.fillStyle = '#fff';
+    ctx.font = `800 23px ${FONT}`; ctx.fillStyle = ko ? '#999' : '#fff';
     const nameX = st.left ? x + 52 : x + TAG_W - 52;
-    ctx.fillText((top === st && st.dmg > 0 ? '👑 ' : '') + st.name, nameX, y + TAG_H / 2 + 1);
+    ctx.fillText((top === st && st.dmg > 0 && !ko ? '👑 ' : '') + st.name, nameX, cy + 1);
+    // 오른쪽 정보: 쓰러짐 카운트다운 · 기절 · ⚠ · 목숨
     ctx.textAlign = st.left ? 'right' : 'left';
-    ctx.font = `700 17px ${FONT}`;
     const infoX = st.left ? x + TAG_W - 12 : x + 12;
-    if(stunned){ ctx.fillStyle = '#ffb0a0'; ctx.fillText('😵 기절', infoX, y + TAG_H / 2 + 1); }
-    else if(st.wrongT > 0){ ctx.fillStyle = '#ff8a80'; ctx.fillText('✗ 오답', infoX, y + TAG_H / 2 + 1); }
-    else {
-      ctx.fillStyle = st.streak >= 3 ? '#ffcf5a' : 'rgba(255,255,255,.6)';
-      ctx.fillText((st.streak >= 3 ? '🔥' + st.streak + ' ' : '') + fmtNum(st.dmg), infoX, y + TAG_H / 2 + 1);
+    if(ko){
+      ctx.font = `800 18px ${FONT}`; ctx.fillStyle = '#ff8a80';
+      ctx.fillText(`부활 ${Math.ceil((st.koUntil - S.clock) / 1000)}초`, infoX, cy + 1);
+    } else if(targeted){
+      ctx.font = `900 24px ${FONT}`; ctx.fillStyle = '#ff5a4a';
+      ctx.fillText('⚠', infoX, cy + 1);
+    } else {
+      // 목숨 하트: 남은 것은 빨강, 잃은 것은 흐리게 (왼쪽부터 첫째 하트)
+      ctx.font = `900 22px ${FONT}`;
+      const n = RAID.hearts, step = 21;
+      for(let h = 0; h < n; h++){
+        const hx = st.left ? infoX - (n - 1 - h) * step : infoX + h * step;
+        ctx.fillStyle = h < st.hearts ? '#ff4d5e' : 'rgba(255,255,255,.2)';
+        ctx.fillText('♥', hx, cy + 1);
+      }
+      if(stunned){
+        ctx.font = `800 17px ${FONT}`;
+        ctx.fillText('😵', st.left ? infoX - n * step - 4 : infoX + n * step + 4, cy + 1);
+      }
     }
     ctx.restore();
   }
@@ -939,18 +1192,26 @@ function drawHpBar(){
   const x = 440, y = 62, w = 1040, h = 38;
   ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
   outlinedText(ctx, T.bossName, x, y - 14, 44, '#fff');
-  ctx.font = `700 22px ${FONT}`;
   const nameW = (() => { ctx.font = `900 44px ${FONT}`; return ctx.measureText(T.bossName).width; })();
   ctx.font = `700 22px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.75)';
   ctx.fillText(T.sub, x + nameW + 16, y - 18);
-  if(S.rage){
-    const blink = 0.6 + 0.4 * Math.sin(S.clock / 90);
-    ctx.globalAlpha = blink;
-    rr(ctx, x + w - 120, y - 50, 120, 36, 8); ctx.fillStyle = '#d7263d'; ctx.fill();
-    ctx.globalAlpha = 1; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = `900 22px ${FONT}`;
-    ctx.fillText('😡 분노', x + w - 60, y - 24);
-    ctx.textAlign = 'left';
+  // 상태 배지 (오른쪽 위)
+  const badges = [];
+  if(bossStunned() && S.phase === 'fight') badges.push(['💫 기절 · 피해 2배', '#c79a00']);
+  if(S.enrage) badges.push(['🔥 광폭화', '#b3001b']);
+  else if(S.rage) badges.push(['😡 분노', '#d7263d']);
+  let bx = x + w;
+  ctx.font = `900 22px ${FONT}`;
+  for(const [label, color] of badges){
+    const bw = ctx.measureText(label).width + 28;
+    bx -= bw;
+    ctx.globalAlpha = 0.7 + 0.3 * Math.sin(S.clock / 90);
+    rr(ctx, bx, y - 50, bw, 36, 8); ctx.fillStyle = color; ctx.fill();
+    ctx.globalAlpha = 1; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+    ctx.fillText(label, bx + bw / 2, y - 24);
+    bx -= 10;
   }
+  ctx.textAlign = 'left';
   rr(ctx, x - 5, y - 5, w + 10, h + 10, 12); ctx.fillStyle = OUT; ctx.fill();
   rr(ctx, x, y, w, h, 9); ctx.fillStyle = '#2a1a1a'; ctx.fill();
   const gw = w * clamp(S.ghost / S.max, 0, 1), hw = w * clamp(S.hp / S.max, 0, 1);
@@ -961,11 +1222,38 @@ function drawHpBar(){
     else { gr.addColorStop(0, '#ff6b5a'); gr.addColorStop(1, '#b0172a'); }
     rr(ctx, x, y, hw, h, 9); ctx.fillStyle = gr; ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(x + 6, y + 5, Math.max(0, hw - 12), 6);
+    if(S.healFlash > 0){ ctx.globalAlpha = S.healFlash * 0.8; rr(ctx, x, y, hw, h, 9); ctx.fillStyle = '#6dff9e'; ctx.fill(); ctx.globalAlpha = 1; }
   }
   ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 2;
   for(let i = 1; i < 10; i++){ ctx.beginPath(); ctx.moveTo(x + w * i / 10, y); ctx.lineTo(x + w * i / 10, y + h); ctx.stroke(); }
+  // 회복 의식이 시작되는 선(60%·30%) 표시
+  for(const th of RAID.healAt){
+    if(S.healsDone.includes(th)) continue;
+    const lx = x + w * th;
+    ctx.fillStyle = '#6dff9e'; ctx.fillRect(lx - 2, y - 4, 4, h + 8);
+  }
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   outlinedText(ctx, `${fmtNum(S.hp)} / ${fmtNum(S.max)}`, x + w / 2, y + h / 2 + 2, 24, '#fff', OUT, 5);
+}
+
+// 회복 의식 진행 막대: 남은 시간(초록)과 끊기까지 남은 공격 수(노랑)
+function drawCastBar(){
+  const c = S.cast;
+  if(!c || S.phase !== 'fight') return;
+  const T = THEMES[themeKey];
+  const w = 700, h = 30, x = 960 - w / 2, y = 196;
+  const timeLeft = clamp((c.end - S.clock) / (c.end - c.start), 0, 1);
+  const hitK = clamp(c.got / c.need, 0, 1);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const blink = 0.75 + 0.25 * Math.sin(S.clock / 70);
+  ctx.globalAlpha = blink;
+  outlinedText(ctx, `🩹 ${T.healName} — 공격해서 끊어라!  ${c.got} / ${c.need}`, 960, y - 26, 30, '#6dff9e', '#032a10', 6);
+  ctx.globalAlpha = 1;
+  rr(ctx, x - 4, y - 4, w + 8, h + 8, 10); ctx.fillStyle = OUT; ctx.fill();
+  rr(ctx, x, y, w, h, 8); ctx.fillStyle = '#10301c'; ctx.fill();
+  if(timeLeft > 0){ rr(ctx, x, y, w * timeLeft, h, 8); ctx.fillStyle = '#3ee07a'; ctx.fill(); }
+  if(hitK > 0){ rr(ctx, x, y + h - 10, w * hitK, 10, 5); ctx.fillStyle = '#ffe14d'; ctx.fill(); }
+  outlinedText(ctx, `${((c.end - S.clock) / 1000).toFixed(1)}초`, 960, y + h / 2 + 1, 20, '#fff', OUT, 4);
 }
 
 function drawCombo(){
@@ -984,9 +1272,14 @@ function drawCombo(){
 
 function drawStats(){
   if(S.phase === 'ready') return;
-  const elapsed = S.phase === 'fight' ? S.clock - S.fightStart : S.phase === 'intro' ? 0 : S.endClock - S.fightStart;
+  const used = S.phase === 'fight' ? S.clock - S.fightStart : S.phase === 'intro' ? 0 : S.endClock - S.fightStart;
+  const left = Math.max(0, RAID.limitMs - used);
+  const kos = S.students.filter(isKo).length;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  outlinedText(ctx, `⏱ ${fmtTime(Math.max(0, elapsed))}   ✔ 정답 ${S.correct}   ✗ 오답 ${S.wrong}`, 960, 132, 26, 'rgba(255,255,255,.9)', OUT, 5);
+  const hurry = left <= 30000 && S.phase === 'fight';
+  const timeColor = hurry ? (Math.sin(S.clock / 120) > 0 ? '#ff5a4a' : '#fff') : 'rgba(255,255,255,.95)';
+  outlinedText(ctx, `⏳ ${fmtTime(Math.ceil(left / 1000) * 1000)}`, 800, 132, hurry ? 34 : 28, timeColor, OUT, 5);
+  outlinedText(ctx, `✔ ${S.correct}   ✗ ${S.wrong}   💀 ${kos}명`, 1090, 132, 26, 'rgba(255,255,255,.9)', OUT, 5);
 }
 
 function drawBanner(){
@@ -1026,8 +1319,24 @@ function drawIntro(){
   ctx.globalAlpha = a * blink;
   outlinedText(ctx, '⚠ WARNING ⚠  보스 등장', 960, y + h / 2 - 8, 70, '#ff4d3a', '#000', 12);
   ctx.globalAlpha = a;
-  outlinedText(ctx, THEMES[themeKey].bossName, 960, y + h / 2 + 46, 30, '#fff');
+  outlinedText(ctx, THEMES[themeKey].bossName + ' · 난이도 매우 어려움', 960, y + h / 2 + 46, 30, '#fff');
   ctx.restore();
+}
+
+function drawMvp(px, pw, y0){
+  outlinedText(ctx, '🏆 MVP (피해량 순위)', 960, y0, 38, '#fff');
+  const top = S.students.slice().sort((a, b) => b.dmg - a.dmg).slice(0, 5);
+  const medals = ['🥇', '🥈', '🥉', '4', '5'];
+  top.forEach((st, i) => {
+    const y = y0 + 75 + i * 70;
+    rr(ctx, px + 150, y - 28, pw - 300, 56, 14);
+    ctx.fillStyle = i === 0 ? 'rgba(255,210,63,.25)' : 'rgba(255,255,255,.07)'; ctx.fill();
+    ctx.textAlign = 'left'; ctx.font = `900 30px ${FONT}`; ctx.fillStyle = '#fff';
+    ctx.fillText(medals[i] + '  ' + st.name, px + 185, y + 2);
+    ctx.textAlign = 'right'; ctx.font = `800 28px ${FONT}`; ctx.fillStyle = '#ffd23f';
+    ctx.fillText(fmtNum(st.dmg) + ' 피해 · 정답 ' + st.correct, px + pw - 185, y + 2);
+  });
+  ctx.textAlign = 'center';
 }
 
 function drawVictory(){
@@ -1043,31 +1352,44 @@ function drawVictory(){
   ctx.fillText(T.winLine, 960, py + 180);
   ctx.font = `700 26px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.8)';
   ctx.fillText(`걸린 시간 ${fmtTime(S.endClock - S.fightStart)}  ·  정답 ${S.correct}개  ·  마지막 일격 ${S.lastHitter ? S.lastHitter.name : '-'}`, 960, py + 230);
-  outlinedText(ctx, '🏆 MVP (피해량 순위)', 960, py + 305, 38, '#fff');
-  const top = S.students.slice().sort((a, b) => b.dmg - a.dmg).slice(0, 5);
-  const medals = ['🥇', '🥈', '🥉', '4', '5'];
-  top.forEach((st, i) => {
-    const y = py + 380 + i * 70;
-    rr(ctx, px + 150, y - 28, pw - 300, 56, 14);
-    ctx.fillStyle = i === 0 ? 'rgba(255,210,63,.25)' : 'rgba(255,255,255,.07)'; ctx.fill();
-    ctx.textAlign = 'left'; ctx.font = `900 30px ${FONT}`; ctx.fillStyle = '#fff';
-    ctx.fillText(medals[i] + '  ' + st.name, px + 185, y + 2);
-    ctx.textAlign = 'right'; ctx.font = `800 28px ${FONT}`; ctx.fillStyle = '#ffd23f';
-    ctx.fillText(fmtNum(st.dmg) + ' 피해 · 정답 ' + st.correct, px + pw - 185, y + 2);
-  });
+  drawMvp(px, pw, py + 305);
+}
+
+function drawLose(){
+  const T = THEMES[themeKey];
+  ctx.fillStyle = 'rgba(30,0,0,.7)'; ctx.fillRect(0, 0, W, H);
+  const px = 460, py = 150, pw = 1000, ph = 760;
+  rr(ctx, px, py, pw, ph, 28); ctx.fillStyle = 'rgba(40,14,18,.95)'; ctx.fill();
+  ctx.lineWidth = 4; ctx.strokeStyle = '#ff4d4d'; ctx.stroke();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  outlinedText(ctx, '💀 레이드 실패', 960, py + 90, 92, '#ff5a4a', '#2a0000', 14);
+  ctx.font = `700 30px ${FONT}`; ctx.fillStyle = '#fff';
+  ctx.fillText(T.loseLine, 960, py + 180);
+  ctx.font = `700 26px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.85)';
+  const pct = Math.max(1, Math.round(S.hp / S.max * 100));
+  const totalKo = S.students.reduce((n, s) => n + s.kos, 0);
+  ctx.fillText(`${S.loseReason}  ·  보스 체력 ${pct}% 남음  ·  정답 ${S.correct}개  ·  쓰러진 횟수 ${totalKo}번`, 960, py + 230);
+  drawMvp(px, pw, py + 305);
 }
 
 function drawReady(){
-  ctx.fillStyle = 'rgba(5,5,15,.6)'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(5,5,15,.66)'; ctx.fillRect(0, 0, W, H);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  outlinedText(ctx, '⚔️ 보스전 시연', 960, 380, 100, '#ffe14d', '#3a1a00', 14);
-  ctx.font = `700 34px ${FONT}`; ctx.fillStyle = '#fff';
-  ctx.fillText('가짜 학생 30명이 문제를 맞힐 때마다 보스를 공격합니다', 960, 500);
-  ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.font = `600 28px ${FONT}`;
-  ctx.fillText('5연속 정답 = 치명타 · 체력 50% 이하 = 분노 모드와 반격', 960, 560);
+  outlinedText(ctx, '⚔️ 보스 레이드 시연', 960, 300, 100, '#ffe14d', '#3a1a00', 14);
+  outlinedText(ctx, '난이도: 매우 어려움 🔥🔥🔥', 960, 400, 40, '#ff6b5a', '#2a0000', 8);
+  ctx.font = `700 32px ${FONT}`; ctx.fillStyle = '#fff';
+  ctx.fillText('가짜 학생 30명이 문제를 맞힐 때마다 보스를 공격합니다', 960, 480);
+  ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.font = `600 26px ${FONT}`;
+  const lines = [
+    `제한 시간 ${RAID.limitMs / 60000}분 · 학생 목숨 ♥${RAID.hearts} · 오답을 내면 보스가 곧바로 반격`,
+    '보스는 ⚠로 노린 학생을 내려치고, 분노하면 호루라기로 여러 명을 기절시킵니다',
+    `보스는 계속 회복합니다 · 회복 의식은 ${RAID.healCastMs / 1000}초 안에 ${RAID.healNeed}번 때려야 끊을 수 있어요`,
+    '5연속 정답 = 치명타 · 시간이 다 되거나 전원이 쓰러지면 실패'
+  ];
+  lines.forEach((l, i) => ctx.fillText(l, 960, 540 + i * 42));
   const blink = 0.6 + 0.4 * Math.sin(performance.now() / 300);
   ctx.globalAlpha = blink;
-  outlinedText(ctx, '스페이스바 또는 ▶ 시작', 960, 680, 46, '#fff');
+  outlinedText(ctx, '스페이스바 또는 ▶ 시작', 960, 760, 46, '#fff');
   ctx.globalAlpha = 1;
 }
 function drawPaused(){
@@ -1079,14 +1401,15 @@ function drawPaused(){
 // ── 조작 ─────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 function updateButtons(){
-  $('startBtn').textContent = running ? '⏸ 일시정지 (Space)' : '▶ 시작 (Space)';
+  $('startBtn').textContent = (S && (S.phase === 'victory' || S.phase === 'lose')) ? '↺ 다시 도전 (Space)'
+    : running ? '⏸ 일시정지 (Space)' : '▶ 시작 (Space)';
   $('themeBtn').textContent = '보스: ' + THEMES[themeKey].label;
   $('speedBtn').textContent = '속도: ' + SPEEDS[speedIdx].label;
   $('soundBtn').textContent = soundOn ? '🔊 소리 켜짐' : '🔇 소리 꺼짐';
 }
 function toggleRun(){
   audio();   // 브라우저 정책상 소리는 사용자가 누른 뒤에만 켤 수 있다
-  if(S.phase === 'victory'){ reset(); }
+  if(S.phase === 'victory' || S.phase === 'lose'){ reset(); }
   if(S.phase === 'ready'){ S.phase = 'intro'; S.introT = 0; }
   running = !running;
   updateButtons();
@@ -1136,8 +1459,11 @@ reset();
   if(hp > 0 && hp < 1){
     S.hp = S.ghost = S.max * hp;
     if(hp <= 0.5){ S.rage = true; S.counterAt = 5000; }
-    if(hp <= 0.25) S.hurtAnnounced = true;
+    if(hp <= 0.25){ S.enrage = true; S.nextHealAt = 35000; }
   }
+  // ?ff=초 : 그만큼 게임을 미리 진행시킨 상태로 보여 준다 (화면 점검용)
+  const ff = parseFloat(q.get('ff'));
+  if(ff > 0 && running){ for(let i = 0; i < ff * 60; i++){ update(1 / 60); if(S.phase === 'victory' || S.phase === 'lose') break; } }
 })();
 requestAnimationFrame(frame);
 </script>
