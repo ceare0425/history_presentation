@@ -14,12 +14,12 @@
   #cv{ display:block; width:min(100vw, 177.78vh); height:min(56.25vw, 100vh); }
   #ctrl{
     position:fixed; left:50%; bottom:12px; transform:translateX(-50%); z-index:5;
-    display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+    display:flex; gap:6px; flex-wrap:nowrap; justify-content:center; max-width:calc(100vw - 16px);
     background:rgba(10,10,22,.78); padding:8px 10px; border-radius:14px; transition:opacity .35s;
   }
   #ctrl button{
     font:inherit; font-size:15px; font-weight:700; color:#fff; background:#2c3354;
-    border:0; border-radius:9px; padding:9px 14px; cursor:pointer; white-space:nowrap;
+    border:0; border-radius:9px; padding:8px 12px; cursor:pointer; white-space:nowrap;
   }
   #ctrl button:hover{ background:#3b4470; }
   #ctrl button.primary{ background:#c9563c; }
@@ -30,11 +30,12 @@
 <body>
 <div id="wrap"><canvas id="cv"></canvas></div>
 <div id="ctrl">
-  <button type="button" id="startBtn" class="primary">▶ 시작 (Space)</button>
+  <button type="button" id="startBtn" class="primary">▶ 시작</button>
   <button type="button" id="themeBtn">보스: 한국사 · 일제 순사</button>
+  <button type="button" id="diffBtn">난이도: 매우 어려움</button>
   <button type="button" id="speedBtn">속도: 보통</button>
-  <button type="button" id="hitBtn">⚡ 수동 타격 (H)</button>
-  <button type="button" id="soundBtn">🔊 소리 켜짐</button>
+  <button type="button" id="hitBtn">⚡ 수동 타격</button>
+  <button type="button" id="soundBtn">🔊 소리</button>
   <button type="button" id="resetBtn">↺ 처음부터</button>
 </div>
 <script>
@@ -67,34 +68,45 @@ const NAMES = ['김민준','이서연','박지호','최하은','정도윤','강�
 
 const THEMES = {
   korea: {
-    label: '한국사 · 일제 순사', bossName: '일제 순사', sub: '무단 통치의 앞잡이', maxHp: 45000,
+    label: '한국사 · 일제 순사', bossName: '일제 순사', sub: '무단 통치의 앞잡이',
     critText: '대한 독립 만세!', rageText: '분노! 순사가 곤봉을 휘두른다', counterText: '호루라기 반격!',
     attackName: '곤봉 내려치기', wrongText: '오답 반격!', healName: '헌병대 지원 요청', enrageText: '광폭화! 공격이 거세진다',
     shots: ['torch', 'ink'], winLine: '반 전체가 힘을 모아 일제 순사를 물리쳤습니다!', loseLine: '순사가 버텨 냈습니다… 다시 도전하세요!'
   },
   world: {
-    label: '세계사 · 크세르크세스', bossName: '크세르크세스 대왕', sub: '페르시아 제국의 왕', maxHp: 45000,
+    label: '세계사 · 크세르크세스', bossName: '크세르크세스 대왕', sub: '페르시아 제국의 왕',
     critText: '스파르타!', rageText: '분노! 불사 부대가 깨어났다', counterText: '불사 부대 돌격!',
     attackName: '창 투척', wrongText: '오답 반격!', healName: '불사 부대 교대', enrageText: '광폭화! 공격이 거세진다',
     shots: ['arrow', 'spear'], winLine: '반 전체가 힘을 모아 크세르크세스 대왕을 물리쳤습니다!', loseLine: '대왕이 버텨 냈습니다… 다시 도전하세요!'
   }
 };
-// 난이도 (시뮬레이션으로 맞춘 값): 보통 속도(학생마다 약 9초에 한 번 답)에서는 정답률 90%여도 이기기 힘들고,
-// 빠른 속도에 정답률 80%대는 되어야 안정적으로 이긴다.
-const RAID = {
+// 모든 난이도에 공통인 규칙
+const RAID_BASE = {
   limitMs: 180000,           // 제한 시간 3분
-  hearts: 3,                 // 학생 목숨
-  reviveMs: 12000,           // 쓰러지면 12초 뒤 부활
   firstAttackMs: 6000,
-  attackGapMs: [5000, 3500, 2500],   // 평소 · 분노(50% 이하) · 광폭화(25% 이하)
-  attackTargets: [2, 3, 4],
   telegraphMs: 1000,         // 공격 전 ⚠ 표시 시간
-  whistleGapMs: 9000, whistleTargets: 6, whistleStunMs: 3000,
-  regenPerSec: 0.0025,       // 초당 최대 체력의 0.25% 회복 (광폭화 때 2배)
+  whistleStunMs: 3000,
   healAt: [0.6, 0.3], healRepeatMs: 35000,   // 회복 의식: 60%·30% 도달 때, 25% 이하에선 35초마다
-  healNeed: 25, healCastMs: 8000, healAmount: 0.12,
+  healCastMs: 8000,
   breakStunMs: 4000          // 회복 의식을 끊으면 보스 기절 (피해 2배)
 };
+// 난이도 단계 (학생 30명 가짜 시뮬레이션으로 맞춘 값).
+// 승률 메모는 '학생마다 약 9초에 한 번 답하는 속도' 기준: [정답률 70% / 82% / 90%]
+//   attackGapMs·attackTargets: 평소 · 분노(50% 이하) · 광폭화(25% 이하), regenPerSec: 초당 최대 체력 대비 회복(광폭화 때 2배)
+const DIFFS = [
+  { name: '쉬움', emoji: '🙂', color: '#3ec46d', desc: '처음 해 보는 반', note: '거의 누구나 이겨요',   // 100 / 100 / 100%
+    p: { hp: 25000, hearts: 5, reviveMs: 8000,  attackGapMs: [8000, 6500, 5500], attackTargets: [1, 2, 2], whistleGapMs: 12000, whistleTargets: 3, regenPerSec: 0.001,  healNeed: 15, healAmount: 0.06 } },
+  { name: '보통', emoji: '😐', color: '#3d8bfd', desc: '대부분 맞히면 이겨요', note: '정답률 80%면 충분',   // 13 / 99 / 100%
+    p: { hp: 36000, hearts: 3, reviveMs: 10000, attackGapMs: [6000, 4500, 3500], attackTargets: [1, 2, 3], whistleGapMs: 10000, whistleTargets: 4, regenPerSec: 0.002,  healNeed: 22, healAmount: 0.09 } },
+  { name: '어려움', emoji: '😠', color: '#ffb020', desc: '거의 다 맞혀야 해요', note: '정답률 90%는 되어야',   // 0 / 11 / 94%
+    p: { hp: 40000, hearts: 3, reviveMs: 12000, attackGapMs: [5500, 4000, 3000], attackTargets: [2, 3, 3], whistleGapMs: 9000,  whistleTargets: 5, regenPerSec: 0.0022, healNeed: 24, healAmount: 0.10 } },
+  { name: '매우 어려움', emoji: '🔥', color: '#ff5a4a', desc: '빠르고 정확해야 해요', note: '보통 속도로는 거의 불가능',   // 0 / 0 / 7%
+    p: { hp: 45000, hearts: 3, reviveMs: 12000, attackGapMs: [5000, 3500, 2500], attackTargets: [2, 3, 4], whistleGapMs: 9000,  whistleTargets: 6, regenPerSec: 0.0025, healNeed: 25, healAmount: 0.12 } },
+  { name: '지옥', emoji: '💀', color: '#b86bff', desc: '빨라도 버티기 힘들어요', note: '목숨 2개 · 도전 과제용',   // 0 / 0 / 0% (2배 빠르게 90%여도 25%)
+    p: { hp: 48000, hearts: 2, reviveMs: 15000, attackGapMs: [4500, 3200, 2500], attackTargets: [2, 3, 4], whistleGapMs: 8000,  whistleTargets: 6, regenPerSec: 0.0028, healNeed: 28, healAmount: 0.14 } }
+];
+let diffIdx = 3;
+let RAID = null;   // reset() 때 RAID_BASE + 고른 난이도로 채운다
 const SPEEDS = [
   { label: '보통', mean: 9000 },
   { label: '빠름', mean: 4500 },
@@ -551,9 +563,10 @@ function tagPos(i){
 function anchor(st){ return { x: st.left ? st.tx + TAG_W : st.tx, y: st.ty + TAG_H / 2 }; }
 
 function reset(){
+  RAID = Object.assign({}, RAID_BASE, DIFFS[diffIdx].p);
   S = {
     clock: 0, phase: 'ready', introT: 0, landed: false,
-    hp: THEMES[themeKey].maxHp, ghost: THEMES[themeKey].maxHp, max: THEMES[themeKey].maxHp,
+    hp: RAID.hp, ghost: RAID.hp, max: RAID.hp,
     rage: false, enrage: false, counterAt: 0, attack: 0, hitPose: 0,
     attackAt: 0, regenAcc: 0, regenShowAt: 0, healFlash: 0,
     cast: null, healsDone: [], nextHealAt: 0, bossStunUntil: 0,
@@ -1171,8 +1184,8 @@ function drawTags(){
       ctx.fillText('⚠', infoX, cy + 1);
     } else {
       // 목숨 하트: 남은 것은 빨강, 잃은 것은 흐리게 (왼쪽부터 첫째 하트)
-      ctx.font = `900 22px ${FONT}`;
-      const n = RAID.hearts, step = 21;
+      const n = RAID.hearts, step = n > 3 ? 16 : 21;
+      ctx.font = `900 ${n > 3 ? 17 : 22}px ${FONT}`;
       for(let h = 0; h < n; h++){
         const hx = st.left ? infoX - (n - 1 - h) * step : infoX + h * step;
         ctx.fillStyle = h < st.hearts ? '#ff4d5e' : 'rgba(255,255,255,.2)';
@@ -1319,7 +1332,7 @@ function drawIntro(){
   ctx.globalAlpha = a * blink;
   outlinedText(ctx, '⚠ WARNING ⚠  보스 등장', 960, y + h / 2 - 8, 70, '#ff4d3a', '#000', 12);
   ctx.globalAlpha = a;
-  outlinedText(ctx, THEMES[themeKey].bossName + ' · 난이도 매우 어려움', 960, y + h / 2 + 46, 30, '#fff');
+  outlinedText(ctx, THEMES[themeKey].bossName + ' · 난이도 ' + DIFFS[diffIdx].name, 960, y + h / 2 + 46, 30, '#fff');
   ctx.restore();
 }
 
@@ -1372,25 +1385,44 @@ function drawLose(){
   drawMvp(px, pw, py + 305);
 }
 
+// 준비 화면의 난이도 카드 위치 (클릭 판정에도 쓴다)
+const DIFF_CARD = { w: 250, h: 132, gap: 18, y: 330 };
+function diffCardX(i){
+  const total = DIFFS.length * DIFF_CARD.w + (DIFFS.length - 1) * DIFF_CARD.gap;
+  return 960 - total / 2 + i * (DIFF_CARD.w + DIFF_CARD.gap);
+}
 function drawReady(){
-  ctx.fillStyle = 'rgba(5,5,15,.66)'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(5,5,15,.7)'; ctx.fillRect(0, 0, W, H);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  outlinedText(ctx, '⚔️ 보스 레이드 시연', 960, 300, 100, '#ffe14d', '#3a1a00', 14);
-  outlinedText(ctx, '난이도: 매우 어려움 🔥🔥🔥', 960, 400, 40, '#ff6b5a', '#2a0000', 8);
-  ctx.font = `700 32px ${FONT}`; ctx.fillStyle = '#fff';
-  ctx.fillText('가짜 학생 30명이 문제를 맞힐 때마다 보스를 공격합니다', 960, 480);
-  ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.font = `600 26px ${FONT}`;
+  outlinedText(ctx, '⚔️ 보스 레이드 시연', 960, 210, 92, '#ffe14d', '#3a1a00', 14);
+  ctx.font = `700 26px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.fillText('난이도를 고르세요  (카드 클릭 또는 숫자 키 1~5)', 960, 296);
+  DIFFS.forEach((d, i) => {
+    const x = diffCardX(i), y = DIFF_CARD.y, sel = i === diffIdx;
+    rr(ctx, x, y, DIFF_CARD.w, DIFF_CARD.h, 18);
+    ctx.fillStyle = sel ? 'rgba(255,255,255,.16)' : 'rgba(20,22,44,.85)'; ctx.fill();
+    ctx.lineWidth = sel ? 6 : 2; ctx.strokeStyle = sel ? d.color : 'rgba(255,255,255,.2)'; ctx.stroke();
+    outlinedText(ctx, d.emoji + ' ' + d.name, x + DIFF_CARD.w / 2, y + 40, 34, sel ? d.color : '#fff', OUT, 6);
+    ctx.font = `700 19px ${FONT}`; ctx.fillStyle = sel ? '#fff' : 'rgba(255,255,255,.7)';
+    ctx.fillText(d.desc, x + DIFF_CARD.w / 2, y + 84);
+    ctx.font = `600 16px ${FONT}`; ctx.fillStyle = sel ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.5)';
+    ctx.fillText(d.note, x + DIFF_CARD.w / 2, y + 110);
+  });
+  // 고른 난이도의 규칙 요약
+  ctx.font = `600 25px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.85)';
   const lines = [
-    `제한 시간 ${RAID.limitMs / 60000}분 · 학생 목숨 ♥${RAID.hearts} · 오답을 내면 보스가 곧바로 반격`,
-    '보스는 ⚠로 노린 학생을 내려치고, 분노하면 호루라기로 여러 명을 기절시킵니다',
-    `보스는 계속 회복합니다 · 회복 의식은 ${RAID.healCastMs / 1000}초 안에 ${RAID.healNeed}번 때려야 끊을 수 있어요`,
+    `보스 체력 ${fmtNum(RAID.hp)} · 제한 시간 ${RAID.limitMs / 60000}분 · 학생 목숨 ♥${RAID.hearts} · 쓰러지면 ${RAID.reviveMs / 1000}초 뒤 부활`,
+    `오답을 내면 보스가 곧바로 반격 · 분노하면 호루라기로 ${RAID.whistleTargets}명을 기절시킵니다`,
+    `보스는 계속 회복합니다 · 회복 의식은 ${RAID.healCastMs / 1000}초 안에 ${RAID.healNeed}번 때려야 끊을 수 있어요 (못 끊으면 ${Math.round(RAID.healAmount * 100)}% 회복)`,
     '5연속 정답 = 치명타 · 시간이 다 되거나 전원이 쓰러지면 실패'
   ];
-  lines.forEach((l, i) => ctx.fillText(l, 960, 540 + i * 42));
+  lines.forEach((l, i) => ctx.fillText(l, 960, 530 + i * 42));
   const blink = 0.6 + 0.4 * Math.sin(performance.now() / 300);
   ctx.globalAlpha = blink;
-  outlinedText(ctx, '스페이스바 또는 ▶ 시작', 960, 760, 46, '#fff');
+  outlinedText(ctx, '스페이스바 또는 ▶ 시작', 960, 740, 46, '#fff');
   ctx.globalAlpha = 1;
+  ctx.font = `600 22px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.6)';
+  ctx.fillText('단축키: Space 시작·일시정지 · H 수동 타격 · 1~5 난이도', 960, 810);
 }
 function drawPaused(){
   ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, 0, W, H);
@@ -1401,11 +1433,12 @@ function drawPaused(){
 // ── 조작 ─────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 function updateButtons(){
-  $('startBtn').textContent = (S && (S.phase === 'victory' || S.phase === 'lose')) ? '↺ 다시 도전 (Space)'
-    : running ? '⏸ 일시정지 (Space)' : '▶ 시작 (Space)';
-  $('themeBtn').textContent = '보스: ' + THEMES[themeKey].label;
+  $('startBtn').textContent = (S && (S.phase === 'victory' || S.phase === 'lose')) ? '↺ 다시 도전'
+    : running ? '⏸ 일시정지' : '▶ 시작';
+  $('themeBtn').textContent = '보스: ' + THEMES[themeKey].bossName;
   $('speedBtn').textContent = '속도: ' + SPEEDS[speedIdx].label;
-  $('soundBtn').textContent = soundOn ? '🔊 소리 켜짐' : '🔇 소리 꺼짐';
+  $('diffBtn').textContent = '난이도: ' + DIFFS[diffIdx].emoji + ' ' + DIFFS[diffIdx].name;
+  $('soundBtn').textContent = soundOn ? '🔊 소리' : '🔇 소리';
 }
 function toggleRun(){
   audio();   // 브라우저 정책상 소리는 사용자가 누른 뒤에만 켤 수 있다
@@ -1422,12 +1455,32 @@ $('speedBtn').onclick = () => {
   if(S.phase === 'fight') for(const st of S.students) st.next = Math.min(st.next, S.clock + expRand(SPEEDS[speedIdx].mean));
   updateButtons();
 };
+// 난이도를 바꾸면 처음(준비 화면)으로 돌아간다. 레이드 도중이면 한 번 물어본다.
+function setDifficulty(i){
+  if(i === diffIdx && S.phase === 'ready') return;
+  if(S.phase === 'fight' || S.phase === 'intro' || S.phase === 'dying'){
+    if(!confirm('난이도를 바꾸면 지금 레이드가 처음부터 다시 시작됩니다. 바꿀까요?')) return;
+  }
+  diffIdx = i;
+  reset();
+}
+$('diffBtn').onclick = () => setDifficulty((diffIdx + 1) % DIFFS.length);
+cv.addEventListener('click', e => {
+  if(S.phase !== 'ready') return;
+  const r = cv.getBoundingClientRect();
+  const x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height;
+  DIFFS.forEach((d, i) => {
+    const cx = diffCardX(i);
+    if(x >= cx && x <= cx + DIFF_CARD.w && y >= DIFF_CARD.y && y <= DIFF_CARD.y + DIFF_CARD.h) setDifficulty(i);
+  });
+});
 $('hitBtn').onclick = manualHit;
 $('soundBtn').onclick = () => { soundOn = !soundOn; if(soundOn) audio(); updateButtons(); };
 $('resetBtn').onclick = () => reset();
 document.addEventListener('keydown', e => {
   if(e.code === 'Space'){ e.preventDefault(); toggleRun(); }
   else if(e.key === 'h' || e.key === 'H' || e.key === 'ㅗ') manualHit();
+  else if(S.phase === 'ready' && /^[1-5]$/.test(e.key)) setDifficulty(Number(e.key) - 1);
 });
 // 마우스를 3초 동안 움직이지 않으면 조작 버튼을 숨겨 전광판 화면을 깨끗하게
 let idleTimer = null;
@@ -1437,6 +1490,13 @@ function wake(){
   idleTimer = setTimeout(() => document.body.classList.add('idle'), 3000);
 }
 document.addEventListener('mousemove', wake);
+cv.addEventListener('mousemove', e => {
+  if(!S || S.phase !== 'ready'){ cv.style.cursor = ''; return; }
+  const r = cv.getBoundingClientRect();
+  const x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height;
+  const on = DIFFS.some((d, i) => x >= diffCardX(i) && x <= diffCardX(i) + DIFF_CARD.w && y >= DIFF_CARD.y && y <= DIFF_CARD.y + DIFF_CARD.h);
+  cv.style.cursor = on ? 'pointer' : '';
+});
 document.addEventListener('touchstart', wake, { passive: true });
 wake();
 
@@ -1449,9 +1509,11 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 reset();
-// 주소 옵션: ?boss=world 세계사 보스로 시작 · ?auto 바로 시작(+&skip 등장 연출 생략) · ?hp=0.4 체력 비율을 정해 두고 시작(화면 점검용)
+// 주소 옵션: ?diff=1~5 난이도 · ?boss=world 세계사 보스로 시작 · ?auto 바로 시작(+&skip 등장 연출 생략) · ?hp=0.4 체력 비율을 정해 두고 시작(화면 점검용)
 (() => {
   const q = new URLSearchParams(location.search);
+  const dq = parseInt(q.get('diff'), 10);
+  if(dq >= 1 && dq <= DIFFS.length){ diffIdx = dq - 1; reset(); }
   if(q.get('boss') === 'world'){ themeKey = 'world'; reset(); }
   if(q.has('auto')) toggleRun();
   if(q.has('auto') && q.has('skip')){ S.introT = 3; S.bossY = 0; S.landed = true; startFight(); }   // 등장 연출 건너뛰기
