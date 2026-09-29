@@ -176,43 +176,112 @@ function outlinedText(g, txt, x, y, size, fill, stroke, lw){
 }
 
 // ── 효과음 (파일 없이 브라우저에서 합성) ─────────────────
-let AC = null, master = null, noiseBuf = null;
+// 거친 소리(찌그러뜨림) + 묵직한 저음 + 울림을 섞고 압축기로 크게 만든다.
+// 전광판 배경음(유튜브 볼륨 30)보다 확실히 크게 들리도록 최대 음량으로 두고 압축 뒤 한 번 더 키운다.
+const SFX_VOLUME = 1.0;
+let AC = null, master = null, dirty = null, verb = null, noiseBuf = null;
 const lastSfx = {};
 function audio(){
   if(!AC){
     const Ctor = window.AudioContext || window.webkitAudioContext;
     if(!Ctor) return null;
     AC = new Ctor();
-    master = AC.createGain(); master.gain.value = 0.5; master.connect(AC.destination);
-    noiseBuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate);
+    const comp = AC.createDynamicsCompressor();
+    comp.threshold.value = -20; comp.knee.value = 6; comp.ratio.value = 8;
+    comp.attack.value = 0.003; comp.release.value = 0.25;
+    master = AC.createGain(); master.gain.value = SFX_VOLUME;
+    const makeup = AC.createGain(); makeup.gain.value = 1.6;   // 압축으로 줄어든 만큼 다시 키움
+    master.connect(comp); comp.connect(makeup); makeup.connect(AC.destination);
+    // 찌그러뜨림(디스토션): 들어온 소리를 과하게 증폭해 모서리를 깎아 거칠게
+    const ws = AC.createWaveShaper(), n = 2048, curve = new Float32Array(n), k = 40;
+    for(let i = 0; i < n; i++){ const x = i * 2 / n - 1; curve[i] = (1 + k) * x / (1 + k * Math.abs(x)); }
+    ws.curve = curve; ws.oversample = '4x';
+    const dlp = AC.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 6000;
+    const dout = AC.createGain(); dout.gain.value = 0.45;
+    dirty = AC.createGain(); dirty.connect(ws); ws.connect(dlp); dlp.connect(dout); dout.connect(master);
+    // 울림(잔향): 넓은 공간에서 터지는 느낌
+    const sr = AC.sampleRate, len = sr * 2.5, ir = AC.createBuffer(2, len, sr);
+    for(let c = 0; c < 2; c++){ const d = ir.getChannelData(c); for(let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+    verb = AC.createConvolver(); verb.buffer = ir;
+    const vout = AC.createGain(); vout.gain.value = 0.5; verb.connect(vout); vout.connect(master);
+    noiseBuf = AC.createBuffer(1, sr * 2, sr);
     const d = noiseBuf.getChannelData(0);
     for(let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
   }
   if(AC.state === 'suspended') AC.resume();
   return AC;
 }
-function tone(type, f0, f1, dur, vol, when){
+// op: a=서서히 커지는 시간, dirt=거친 소리로, rev=울림 양, fall=음높이가 떨어지는 시간 비율, trem=떨림(Hz), q=필터 날카로움
+function out(node, op){
+  node.connect(op.dirt ? dirty : master);
+  if(op.rev){ const s = AC.createGain(); s.gain.value = op.rev; node.connect(s); s.connect(verb); }
+}
+function amp(g, t, v, a, dur){
+  if(a){ g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + a); }
+  else g.gain.setValueAtTime(v, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+}
+function tone(type, f0, f1, dur, v, when, op){
+  op = op || {};
   const a = AC, t = a.currentTime + (when || 0);
   const o = a.createOscillator(), g = a.createGain();
   o.type = type;
   o.frequency.setValueAtTime(f0, t);
-  o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
-  g.gain.setValueAtTime(vol, t);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g); g.connect(master);
-  o.start(t); o.stop(t + dur + 0.02);
-  return o;
+  o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur * (op.fall || 1));
+  amp(g, t, v, op.a, dur);
+  if(op.trem){
+    const am = a.createGain(); am.gain.value = 0.6;
+    const lfo = a.createOscillator(), lg = a.createGain();
+    lfo.frequency.value = op.trem; lg.gain.value = 0.4;
+    lfo.connect(lg); lg.connect(am.gain); o.connect(am); am.connect(g);
+    lfo.start(t); lfo.stop(t + dur + 0.05);
+  } else o.connect(g);
+  out(g, op);
+  o.start(t); o.stop(t + dur + 0.05);
 }
-function noise(dur, vol, filterType, f0, f1, when){
+function noise(dur, v, filterType, f0, f1, when, op){
+  op = op || {};
   const a = AC, t = a.currentTime + (when || 0);
   const s = a.createBufferSource(); s.buffer = noiseBuf;
   const f = a.createBiquadFilter(); f.type = filterType; f.frequency.setValueAtTime(f0, t);
+  if(op.q) f.Q.value = op.q;
   f.frequency.exponentialRampToValueAtTime(Math.max(30, f1), t + dur);
   const g = a.createGain();
-  g.gain.setValueAtTime(vol, t);
+  amp(g, t, v, op.a, dur);
+  s.connect(f); f.connect(g); out(g, op);
+  s.start(t, Math.random()); s.stop(t + dur + 0.05);
+}
+// 쿵: 낮은 사인파가 빠르게 뚝 떨어지는 몸통 타격음
+const thump = (f0, dur, v, when, op) => tone('sine', f0, 28, dur, v, when, Object.assign({ fall: 0.3 }, op));
+// 호루라기: 안의 구슬이 굴러 음이 빠르게 떨리는(트릴) 높은 소리 + 바람 새는 소리
+function whistle(dur, v, when, f){
+  f = f || 3150;
+  const a = AC, t = a.currentTime + (when || 0);
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(v, t + 0.012);          // 훅 불어 넣는 순간 바로 최대
+  g.gain.setValueAtTime(v, t + dur - 0.04);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  s.connect(f); f.connect(g); g.connect(master);
-  s.start(t, Math.random()); s.stop(t + dur + 0.02);
+  const am = a.createGain(); am.gain.value = 0.6;             // 구슬 때문에 소리 크기도 드르르 떨림
+  const o = a.createOscillator(), o2 = a.createOscillator(), h = a.createGain();
+  o.type = 'sine'; o2.type = 'sine'; h.gain.value = 0.18;     // 배음을 조금 섞어 쨍하게
+  o.frequency.setValueAtTime(f * 0.9, t); o.frequency.linearRampToValueAtTime(f, t + 0.03);
+  o2.frequency.setValueAtTime(f * 1.8, t); o2.frequency.linearRampToValueAtTime(f * 2, t + 0.03);
+  const trill = a.createOscillator(); trill.type = 'square'; trill.frequency.value = 34;
+  const fm = a.createGain(); fm.gain.value = f * 0.06;
+  const fm2 = a.createGain(); fm2.gain.value = f * 0.12;
+  const amL = a.createGain(); amL.gain.value = 0.4;
+  trill.connect(fm); fm.connect(o.frequency); trill.connect(fm2); fm2.connect(o2.frequency); trill.connect(amL); amL.connect(am.gain);
+  o.connect(am); o2.connect(h); h.connect(am); am.connect(g);
+  const s = a.createBufferSource(); s.buffer = noiseBuf;      // 바람 소리
+  const bf = a.createBiquadFilter(); bf.type = 'bandpass'; bf.frequency.value = f; bf.Q.value = 5;
+  const ng = a.createGain(); ng.gain.value = 0.5;
+  s.connect(bf); bf.connect(ng); ng.connect(g);
+  const edge = a.createGain(); edge.gain.value = 0.25;        // 살짝 찌그러뜨려 귀를 찌르게
+  g.connect(master); g.connect(edge); edge.connect(dirty);
+  const rv = a.createGain(); rv.gain.value = 0.2; g.connect(rv); rv.connect(verb);
+  [o, o2, trill].forEach(x => { x.start(t); x.stop(t + dur + 0.05); });
+  s.start(t, Math.random()); s.stop(t + dur + 0.05);
 }
 function sfx(kind){
   if(!soundOn || !audio()) return;
@@ -221,90 +290,132 @@ function sfx(kind){
   if(gap && now - (lastSfx[kind] || 0) < gap) return;   // 한꺼번에 많이 맞아도 소리가 뭉개지지 않게
   lastSfx[kind] = now;
   switch(kind){
-    case 'hit':
-      noise(0.09, 0.35, 'bandpass', 1800, 600);
-      tone('sine', 160, 55, 0.12, 0.35);
+    case 'hit':       // 퍼억! 묵직하고 거친 타격
+      thump(230, 0.3, 1, 0, { fall: 0.25 });                        // 몸통을 치는 낮은 쿵
+      tone('sine', 70, 30, 0.25, 0.8, 0.01);                         // 바닥까지 울리는 저음
+      tone('sawtooth', 420, 60, 0.18, 0.6, 0, { dirt: 1 });          // 찌그러진 으깨지는 소리
+      tone('square', 160, 50, 0.16, 0.5, 0, { dirt: 1 });
+      noise(0.16, 1, 'lowpass', 4500, 250, 0, { dirt: 1 });          // 퍽 하고 터지는 잡음
+      noise(0.04, 0.9, 'highpass', 5000, 2500, 0, { dirt: 1 });      // 맞는 순간의 날카로운 딱
+      noise(0.25, 0.3, 'bandpass', 800, 200, 0.03, { dirt: 1, rev: 0.15 });
       break;
-    case 'crit':
-      tone('sawtooth', 900, 120, 0.35, 0.18);
-      noise(0.45, 0.5, 'highpass', 3000, 400);
-      tone('sine', 90, 35, 0.4, 0.5);
+    case 'crit':      // 콰직! 크게 터지는 한 방
+      thump(240, 0.6, 1, 0, { rev: 0.3 });
+      tone('sawtooth', 700, 55, 0.45, 0.5, 0, { dirt: 1 });
+      noise(0.06, 0.9, 'highpass', 5000, 2000, 0, { dirt: 1 });
+      noise(0.8, 0.7, 'lowpass', 2500, 80, 0.02, { dirt: 1, rev: 0.4 });
       break;
-    case 'roar':
-      if(themeKey === 'korea'){ tone('sawtooth', 140, 70, 1.1, 0.25); noise(0.9, 0.25, 'lowpass', 900, 150); }
-      else { tone('sawtooth', 110, 55, 1.3, 0.28); tone('square', 55, 40, 1.3, 0.12); }
-      break;
-    case 'counter':
+    case 'roar':      // 크아아: 떨리는 낮은 괴성
       if(themeKey === 'korea'){
-        // 호루라기: 높은 음을 빠르게 떨리게
-        for(let i = 0; i < 9; i++) tone('sine', i % 2 ? 2650 : 2950, i % 2 ? 2600 : 2900, 0.06, 0.18, i * 0.06);
+        [0, 7, -5].forEach(d => tone('sawtooth', 150 + d, 70 + d, 1.4, 0.35, 0, { a: 0.12, dirt: 1, trem: 28, rev: 0.4 }));
+        noise(1.3, 0.5, 'bandpass', 900, 250, 0, { a: 0.1, dirt: 1, q: 1.5, rev: 0.3 });
       } else {
-        tone('sawtooth', 196, 190, 0.5, 0.2); tone('sawtooth', 294, 290, 0.5, 0.14, 0.05);
+        [0, 5, -4].forEach(d => tone('sawtooth', 100 + d, 42 + d, 1.8, 0.4, 0, { a: 0.15, dirt: 1, trem: 22, rev: 0.5 }));
+        tone('sine', 55, 30, 1.8, 0.8, 0, { a: 0.1 });
+        noise(1.6, 0.5, 'bandpass', 600, 150, 0, { a: 0.15, dirt: 1, q: 1.5, rev: 0.4 });
       }
-      tone('sine', 70, 30, 0.5, 0.5, 0.35);
-      noise(0.6, 0.35, 'lowpass', 1500, 100, 0.35);
       break;
-    case 'drop':
-      tone('sine', 110, 30, 0.6, 0.7);
-      noise(0.5, 0.35, 'lowpass', 800, 80);
+    case 'counter':   // 날카로운 신호 뒤 충격파 쾅 (반격 판정이 0.38초 뒤라 거기에 맞춤)
+      if(themeKey === 'korea'){
+        whistle(0.36, 0.55, 0);   // 삐리리익! 한 번 길게
+      } else {
+        tone('sawtooth', 196, 190, 0.5, 0.35, 0, { a: 0.04, dirt: 1 }); tone('sawtooth', 294, 290, 0.5, 0.3, 0.05, { a: 0.04, dirt: 1 });
+      }
+      thump(120, 1.4, 1, 0.38, { rev: 0.5 });
+      noise(1.4, 0.9, 'lowpass', 3000, 50, 0.38, { dirt: 1, rev: 0.5 });
+      noise(0.08, 0.8, 'highpass', 4000, 1500, 0.38, { dirt: 1 });
       break;
-    case 'explode':
-      noise(0.8, 0.6, 'lowpass', 2500, 80);
-      tone('sine', 80, 25, 0.7, 0.5);
+    case 'drop':      // 보스 착지: 땅이 울리는 쿠웅
+      tone('sine', 95, 20, 1.8, 1, 0, { fall: 0.5, rev: 0.6 });
+      noise(1.5, 0.9, 'lowpass', 1400, 40, 0, { dirt: 1, rev: 0.5 });
+      tone('sawtooth', 60, 30, 1.0, 0.4, 0, { dirt: 1 });
       break;
-    case 'warn':      // 보스 공격 예고
-      tone('square', 880, 880, 0.08, 0.08); tone('square', 660, 660, 0.08, 0.08, 0.11);
+    case 'explode':   // 콰광 + 파편 튀는 소리
+      noise(1.4, 1, 'lowpass', 5000, 60, 0, { dirt: 1, rev: 0.5 });
+      thump(130, 1.0, 1, 0, { fall: 0.35 });
+      noise(0.05, 0.8, 'highpass', 6000, 3000, 0, { dirt: 1 });
+      for(let i = 0; i < 6; i++) noise(0.04, 0.4, 'highpass', 3000, 2000, 0.15 + Math.random() * 0.6, { dirt: 1 });
       break;
-    case 'ouch':      // 학생이 맞음
-      tone('square', 330, 140, 0.14, 0.12);
-      noise(0.08, 0.2, 'bandpass', 900, 400);
+    case 'warn':      // 보스 공격 예고: 불길한 경고음 두 번
+      tone('sawtooth', 220, 215, 0.14, 0.35, 0, { dirt: 1 }); tone('sawtooth', 233, 228, 0.14, 0.35, 0, { dirt: 1 });
+      tone('sawtooth', 185, 181, 0.16, 0.35, 0.18, { dirt: 1 }); tone('sawtooth', 196, 192, 0.16, 0.35, 0.18, { dirt: 1 });
+      thump(120, 0.2, 0.6, 0.18);
       break;
-    case 'ko':        // 학생이 쓰러짐
-      tone('triangle', 440, 110, 0.5, 0.2);
-      tone('sine', 120, 40, 0.4, 0.3, 0.1);
+    case 'ouch':      // 학생이 맞음: 둔탁하게 퍽
+      thump(220, 0.18, 0.8, 0, { fall: 0.4 });
+      tone('square', 280, 90, 0.16, 0.3, 0, { dirt: 1 });
+      noise(0.1, 0.5, 'bandpass', 1200, 400, 0, { dirt: 1 });
       break;
-    case 'cast':      // 회복 의식 시작
-      [392, 523, 659].forEach((f, i) => tone('sine', f, f * 1.01, 0.5, 0.12, i * 0.12));
+    case 'ko':        // 학생 기절: 힘 빠지며 쓰러짐
+      tone('sawtooth', 320, 40, 0.9, 0.45, 0, { dirt: 1, rev: 0.3 });
+      thump(150, 0.6, 0.9, 0.12, { fall: 0.4 });
+      noise(0.5, 0.5, 'lowpass', 1200, 60, 0.12, { dirt: 1 });
       break;
-    case 'break':     // 회복 의식 끊음
-      noise(0.5, 0.5, 'highpass', 4000, 600);
-      tone('sawtooth', 700, 90, 0.5, 0.2);
+    case 'cast':      // 회복 의식 시작: 음산한 화음이 차오름
+      [110, 131, 156].forEach(f => tone('sawtooth', f, f * 1.02, 1.2, 0.25, 0, { a: 0.6, dirt: 1, rev: 0.5 }));
+      tone('sine', 55, 55, 1.2, 0.5, 0, { a: 0.6 });
       break;
-    case 'heal':      // 보스 큰 회복
-      [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, f, 0.35, 0.12, i * 0.08));
+    case 'break':     // 의식 끊음: 쩌억 깨지는 소리
+      noise(0.08, 1, 'highpass', 6000, 2500, 0, { dirt: 1 });
+      noise(0.7, 0.7, 'bandpass', 3500, 500, 0.02, { dirt: 1, rev: 0.4, q: 0.8 });
+      tone('sawtooth', 900, 50, 0.6, 0.4, 0, { dirt: 1 });
+      thump(200, 0.4, 0.9);
       break;
-    case 'rope':      // 포승줄 휘두르기
-      noise(0.5, 0.35, 'bandpass', 600, 2400);
-      tone('sine', 300, 700, 0.4, 0.08);
+    case 'heal':      // 보스 회복: 기분 나쁘게 치솟는 소리
+      [110, 138, 165].forEach(f => tone('sawtooth', f, f * 2, 1.0, 0.25, 0, { a: 0.3, dirt: 1, rev: 0.5 }));
+      noise(1.0, 0.4, 'bandpass', 300, 3000, 0, { a: 0.4, rev: 0.4 });
       break;
-    case 'check':     // 불심 검문 호루라기 두 번
-      tone('sine', 2900, 2850, 0.12, 0.18); tone('sine', 2900, 2850, 0.3, 0.18, 0.18);
+    case 'rope':      // 포승줄: 휘잉~ 짝!
+      noise(0.45, 0.8, 'bandpass', 300, 2500, 0, { a: 0.3, q: 2 });
+      noise(0.05, 1, 'highpass', 4000, 2000, 0.4, { dirt: 1, rev: 0.3 });
+      tone('square', 2500, 600, 0.04, 0.3, 0.4, { dirt: 1 });
       break;
-    case 'censor':    // 쾅! 도장 + 종이
-      tone('sine', 120, 50, 0.25, 0.5);
-      noise(0.6, 0.25, 'highpass', 2500, 800, 0.05);
+    case 'check':     // 불심 검문: 삑 삐이익! + 발 구름
+      whistle(0.13, 0.55, 0); whistle(0.42, 0.55, 0.2);
+      thump(140, 0.3, 0.9, 0.6);
       break;
-    case 'barricade': // 나무 기둥이 쿵쿵
-      tone('sine', 140, 60, 0.2, 0.5); tone('sine', 120, 50, 0.2, 0.5, 0.15);
-      noise(0.3, 0.3, 'lowpass', 900, 200);
+    case 'censor':    // 쾅! 무거운 도장 + 종이
+      thump(160, 0.5, 1, 0, { fall: 0.25, rev: 0.3 });
+      noise(0.05, 0.9, 'highpass', 3000, 1500, 0, { dirt: 1 });
+      noise(0.6, 0.4, 'highpass', 2500, 800, 0.08);
       break;
-    case 'block':     // 공격이 막힘
-      tone('square', 1400, 900, 0.05, 0.06);
+    case 'barricade': // 나무 기둥이 쾅 쾅 쾅
+      for(let i = 0; i < 3; i++){
+        thump(150, 0.35, 1, i * 0.2, i === 2 ? { rev: 0.4 } : {});
+        noise(0.25, 0.7, 'bandpass', 500, 150, i * 0.2, { dirt: 1, q: 1.2 });
+      }
       break;
-    case 'summon':    // 헌병 증원: 호루라기 + 발소리
-      tone('sine', 2700, 2700, 0.5, 0.15);
-      for(let i = 0; i < 4; i++) tone('sine', 110, 60, 0.12, 0.35, 0.5 + i * 0.18);
+    case 'block':     // 공격이 막힘: 쨍! 쇠 소리
+      [620, 1047, 1580, 2310].forEach((f, i) => tone('sine', f, f * 0.99, 0.5 - i * 0.08, 0.3, 0, { rev: 0.3 }));
+      noise(0.03, 0.8, 'highpass', 5000, 3000, 0, { dirt: 1 });
       break;
-    case 'lose': {
-      const notes = [392, 349, 311, 262];
-      notes.forEach((f, i) => tone('triangle', f, f * 0.98, i === notes.length - 1 ? 1.2 : 0.35, 0.18, i * 0.35));
-      tone('sine', 80, 40, 1.5, 0.3, 1.05);
+    case 'summon':    // 헌병 증원: 호루라기 + 군홧발 행진
+      whistle(0.5, 0.55, 0, 2950);
+      for(let i = 0; i < 6; i++){
+        thump(120, 0.18, 0.9, 0.55 + i * 0.16);
+        noise(0.08, 0.5, 'bandpass', 800, 300, 0.55 + i * 0.16, { dirt: 1 });
+      }
+      break;
+    case 'lose': {    // 패배: 무겁게 가라앉는 음 + 징
+      const n = [196, 185, 165, 147];
+      n.forEach((f, i) => tone('sawtooth', f, f * 0.97, i === n.length - 1 ? 2 : 0.45, 0.35, i * 0.45, { dirt: 1, rev: 0.5 }));
+      tone('sine', 55, 40, 2.5, 0.9, 1.35, { rev: 0.6 });
+      noise(2, 0.5, 'lowpass', 600, 40, 1.35, { rev: 0.6 });
       break;
     }
-    case 'win': {
-      const notes = [523, 659, 784, 1047, 784, 1047];
-      notes.forEach((f, i) => tone('square', f, f, i === notes.length - 1 ? 0.8 : 0.16, 0.12, i * 0.14));
-      tone('triangle', 262, 262, 1.2, 0.18, 0.7);
+    case 'win': {     // 승리: 콰광 뒤 금관 팡파르
+      thump(140, 1.2, 1, 0, { rev: 0.5 });
+      noise(1, 0.8, 'lowpass', 3000, 60, 0, { dirt: 1, rev: 0.5 });
+      const n = [262, 330, 392, 523, 392, 523];
+      n.forEach((f, i) => {
+        const last = i === n.length - 1, d = last ? 1.4 : 0.2, w = 0.35 + i * 0.16;
+        tone('sawtooth', f, f, d, 0.3, w, { a: 0.02, dirt: 1, rev: 0.3 });
+        tone('sawtooth', f * 1.005, f * 1.005, d, 0.3, w, { a: 0.02, dirt: 1 });
+      });
+      const end = 0.35 + 5 * 0.16;
+      tone('sawtooth', 131, 131, 1.4, 0.35, end, { a: 0.02, dirt: 1, rev: 0.4 });
+      tone('sawtooth', 196, 196, 1.4, 0.3, end, { a: 0.02, dirt: 1 });
+      thump(100, 1.0, 0.9, end, { rev: 0.4 });
       break;
     }
   }
