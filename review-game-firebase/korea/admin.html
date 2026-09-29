@@ -1026,6 +1026,9 @@ function renderRoster(){
   el('poolInfo').textContent = effective!=='idle' ? `출제 문항 ${poolCount}개 · ${orderLabel} 출제` : '';
 
   el('giveRandomboxBtn').disabled = effective !== 'running' || itemsModeState === 'off';
+  // 레이드 진행 중에 난이도를 바꾸면 화면만 바뀌고 진행 중인 판에는 적용되지 않으므로 끝날 때까지 잠근다
+  const raidDiffLocked = effective === 'running' && raidModeState;
+  el('raidDiffRow').querySelectorAll('button').forEach(b=>{ b.disabled = raidDiffLocked; b.title = raidDiffLocked ? '레이드가 끝난 뒤에 바꿀 수 있어요' : ''; });
   const giftOk = effective === 'running' && itemsModeState !== 'off';
 
   const players = Object.entries(playersObj).map(([id,p])=>({id,...p}));
