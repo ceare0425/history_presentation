@@ -478,7 +478,7 @@
 import {
   roomRef, ref, db, onValue, get, push, update, set, remove, onDisconnect, onChildAdded, onChildChanged, runTransaction, serverNow,
   isCorrect, computeGain, fmtTime, escapeHtml, shuffle, choseongHint,
-  unitsFromQuestions, poolFromQuestions, renderUnitGroups, recencyWeightFn, weightedQueue,
+  unitsFromQuestions, poolFromQuestions, renderUnitGroups, recencyWeightFn, weightedQueue, weightedSample,
   presenceRef, chatRef, bookmarksRef, bookmarkRef, findLessonForUnit
 } from '../shared/lib.js?v=20260928g';
 import { mountTitles } from '../shared/titles.js?v=20260929a';
@@ -791,6 +791,10 @@ function assignNextQuestion(){
     return;
   }
 
+  // 선택 범위를 한 번씩 다 맞히기 전까지는 아직 못 맞힌 문제만 낸다 ('계속 연습하기' 뒤부터 전체 범위 복습)
+  const firstPass = !allClearedPrompted;
+  if(firstPass) retryList = retryList.filter(r=>!clearedQids.has(r.qid));   // 복습 차례 전에 이미 맞힌 문제는 빼기
+
   // 오답 복습: 다시 낼 때가 된 문제가 있으면 그 문제를 먼저 출제한다
   retryList.forEach(r=>r.wait--);
   const dueIdx = retryList.findIndex(r=> r.wait<=0 && questionsObj[r.qid] && r.qid!==lastQid);
@@ -807,13 +811,17 @@ function assignNextQuestion(){
   }
   currentIsRetry = false;
 
+  if(firstPass) queue = queue.filter(qid=>!clearedQids.has(qid));
   if(queue.length===0){
+    const left = firstPass ? pool.filter(([qid])=>!clearedQids.has(qid)) : pool;
+    const src = left.length ? left : pool;
     if(roundState.order === 'sequential'){
-      queue = pool.map(([qid])=>qid);
+      queue = src.map(([qid])=>qid);
     } else {
-      queue = roundState.weight === 'recent'
-        ? weightedQueue(pool, recencyWeightFn(pool.map(([,q])=>q.unit)))
-        : shuffle(pool.map(([qid])=>qid));
+      const wFn = roundState.weight === 'recent' ? recencyWeightFn(pool.map(([,q])=>q.unit)) : null;
+      queue = !wFn ? shuffle(src.map(([qid])=>qid))
+        : firstPass ? weightedSample(src, wFn, src.length)   // 겹치지 않게 한 번씩, 최근 단원일수록 앞쪽에
+        : weightedQueue(src, wFn);
       if(queue.length>1 && queue[0]===lastQid){
         [queue[0],queue[1]] = [queue[1],queue[0]];
       }
@@ -974,6 +982,7 @@ function resumeFromClear(){
 
 el('clearContinueBtn').onclick = () => {
   resumeFromClear();
+  queue = [];   // 여기부터 전체 범위를 새로 섞어 복습
   if(!ended){
     el('submitBtn').disabled = false; el('answerInput').disabled = false;
     assignNextQuestion();
