@@ -156,6 +156,7 @@
   .hint-row{ display:flex; align-items:center; gap:10px; margin-top:8px; flex:0 0 auto; min-height:2.2em; }
   .hint-row button{ width:auto; flex:0 0 auto; padding:8px 14px; font-size:.9rem; }
   .hint-row #endPracticeBtn{ margin-left:auto; background:#c96f5b; }
+  .idle-warn{ font-size:.9rem; font-weight:800; color:#c96f5b; }
   .hint-text{ font-size:1.2rem; font-weight:800; letter-spacing:.18em; color:var(--sky1); }
 
   /* ── 선생님 실시간 쪽지 배너 ── */
@@ -405,6 +406,7 @@
     <div class="hint-row">
       <button type="button" id="hintBtn" class="secondary">💡 힌트 (초성) · Ctrl</button>
       <span class="hint-text" id="hintText"></span>
+      <span class="idle-warn" id="idleWarn"></span>
       <button type="button" id="endPracticeBtn" class="secondary">■ 연습 종료</button>
     </div>
   </div>
@@ -439,6 +441,7 @@
       <div class="big"><span id="finalFloor">0</span>층</div>
       <div class="final-stat" id="finalStat"></div>
       <div class="best-note" id="bestNote"></div>
+      <div class="best-note hidden" id="endReason" style="color:#c96f5b;"></div>
       <button type="button" id="reviewQuickBtnEnd" class="review-quick-btn hidden" style="margin-top:10px;"></button>
       <button id="retryBtn">↺ 다른 범위로 다시 연습하기</button>
       <button id="dashFromEndBtn" class="secondary" style="margin-top:10px;">📊 내 학습 기록 보기</button>
@@ -532,6 +535,11 @@ let hintUsed = false;       // 이번 문제에서 초성 힌트를 썼는지 (�
 let currentQid = null;
 let currentQuestion = null;
 let currentStartedAt = null;
+// 30초 동안 답을 내지 않으면 연습하지 않는 것으로 보고 연습을 자동 종료한다.
+// (선생님과 쪽지 창을 열어 둔 동안·문제 신고 중에는 세지 않는다)
+const IDLE_LIMIT_MS = 30000;
+let lastActiveAt = 0;
+let idleEnded = false;
 let lastQid = null;
 
 let floor = 0, correctCount = 0, wrongCount = 0, streak = 0;
@@ -728,6 +736,8 @@ async function loadBookmarks(){
 
 function renderQuestion(q){
   hintUsed = false;
+  lastActiveAt = serverNow();
+  el('idleWarn').textContent = '';
   el('hintText').textContent = '';
   el('hintBtn').disabled = !q;
   if(!q){
@@ -1007,6 +1017,7 @@ function syncSoloLog(final){
     started_ts: sessionStartedAt || null,
     end_ts: final ? serverNow() : null,
     ended: !!final,
+    idle_end: (final && idleEnded) || null,
     duration_sec: sessionDuration || null,
     order: sessionOrder || null,
     weight: sessionWeight || null,
@@ -1196,6 +1207,7 @@ function reportCurrentWrong(){
   if(!info || !sessionClassKey) return;
   if(reportedQids.has(info.qid)){ alert('이미 신고한 문제예요. 확인 감사합니다!'); return; }
   const reason = prompt('어떤 점이 이상했나요? (예: 오타가 있어요 / 정답을 입력했는데 오답 처리됨)', '');
+  lastActiveAt = serverNow();
   if(reason === null) return; // 취소
   if(!reason.trim()){ alert('간단히 이유를 적어야 신고할 수 있어요.'); return; }
   const name = (el('nameInput').value.trim() || '').slice(0, 20);
@@ -1209,6 +1221,7 @@ function reportCurrentWrong(){
   reportedQids.add(info.qid);
   if(lastWrongInfo && lastWrongInfo.qid === info.qid) lastWrongInfo = null;
   alert('신고했어요. 선생님께 전달됐어요. 감사합니다!');
+  lastActiveAt = serverNow();
 }
 el('reportWrongBtn').onclick = reportCurrentWrong;
 
@@ -1235,6 +1248,9 @@ function showEndedView(){
   } else {
     bestNote.textContent = `개인 최고 기록: ${prevBest}층`;
   }
+  el('idleWarn').textContent = '';
+  el('endReason').textContent = idleEnded ? '⏸ 30초 동안 답을 내지 않아 연습이 자동으로 끝났어요.' : '';
+  el('endReason').classList.toggle('hidden', !idleEnded);
   showView('endedView');
   refreshRecord(true); // 방금 끝낸 세션의 오답·정답까지 반영해 종료 화면의 복습 추천 버튼을 갱신
   if(missedKeys.length) showMissedMsgPopup(missedText, missedKeys);
@@ -1283,6 +1299,19 @@ function tick(){
   if(currentQid === null){
     assignNextQuestion();
   }
+  checkIdle();
+}
+
+function checkIdle(){
+  // 채점 중(입력창 잠김)이거나 쪽지 창을 보고 있는 동안은 세지 않는다
+  if(!currentQid || el('answerInput').disabled || chatPanelOpen){ lastActiveAt = serverNow(); el('idleWarn').textContent = ''; return; }
+  const left = IDLE_LIMIT_MS - (serverNow() - lastActiveAt);
+  if(left <= 0){
+    idleEnded = true;
+    showEndedView();
+    return;
+  }
+  el('idleWarn').textContent = left <= 10000 ? `⏳ ${Math.ceil(left/1000)}초 안에 답을 내지 않으면 연습이 끝나요` : '';
 }
 
 let tickHandle = null;
@@ -1334,7 +1363,7 @@ el('startBtn').onclick = async () => {
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
   hintCount = 0; soloLogRef = null; unitStats = {}; qStats = {}; wrongMap = new Map();
   lastWrongInfo = null; reportedQids = new Set();
-  clearedQids = new Set(); allClearedPrompted = false; paused = false;
+  clearedQids = new Set(); allClearedPrompted = false; paused = false; idleEnded = false;
   el('clearPrompt').classList.add('hidden');
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
 
@@ -1379,7 +1408,7 @@ function startReviewSession(qids, label){
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
   hintCount = 0; soloLogRef = null; unitStats = {}; qStats = {}; wrongMap = new Map();
   lastWrongInfo = null; reportedQids = new Set();
-  clearedQids = new Set(); allClearedPrompted = false; paused = false;
+  clearedQids = new Set(); allClearedPrompted = false; paused = false; idleEnded = false;
   el('clearPrompt').classList.add('hidden');
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
 
