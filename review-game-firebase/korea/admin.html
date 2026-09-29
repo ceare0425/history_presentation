@@ -227,9 +227,9 @@
           <button type="button" data-rd="on">켜기</button>
         </div>
         <div class="toggle-row hidden" id="raidDiffRow">
-          <button type="button" data-diff="1">😐 보통</button>
+          <button type="button" class="active" data-diff="1">😐 보통</button>
           <button type="button" data-diff="2">😠 어려움</button>
-          <button type="button" class="active" data-diff="3">🔥 매우 어려움</button>
+          <button type="button" data-diff="3">🔥 매우 어려움</button>
           <button type="button" data-diff="4">💀 지옥</button>
         </div>
         <div class="sub hidden" id="raidHint" style="margin:4px 0 0; font-size:.76rem;">정답을 맞히면 보스를 공격하고, 틀리면 보스가 반격합니다. 학생마다 목숨 ♥가 있고, 보스는 곤봉·호루라기·체포·헌병 증원·신문 검열·불심 검문·바리케이드로 공격하며 체력을 회복합니다. <b>보스는 전광판 화면이 움직이므로 전광판을 꼭 켜 두세요.</b> 레이드 중에는 팀전·라이벌·아이템전이 꺼지고 제한 시간은 3분으로 고정됩니다. 보스 체력은 참가 인원에 맞춰 자동으로 조절됩니다.</div>
@@ -469,7 +469,7 @@ let teamCountState = 4;
 let itemsModeState = 'off'; // 'off' | 'nanta' | 'spicy'
 let rivalModeState = false;  // 라이벌 대결 (개인전 전용)
 let raidModeState = false;   // 보스 레이드
-let raidDiffState = 3;       // 1 보통 · 2 어려움 · 3 매우 어려움 · 4 지옥
+let raidDiffState = 1;       // 1 보통 · 2 어려움 · 3 매우 어려움 · 4 지옥
 function syncRaidModeUI(){
   el('raidModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', (b.dataset.rd==='on')===raidModeState));
   el('raidDiffRow').classList.toggle('hidden', !raidModeState);
@@ -1197,7 +1197,7 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
     syncItemsModeUI();
     rivalModeState = !!(r && r.rival_mode);
     raidModeState = !!(r && r.raid_mode);
-    raidDiffState = (r && Number.isInteger(r.raid_diff)) ? Math.min(4, Math.max(1, r.raid_diff)) : 3;   // 0(쉬움)은 삭제됨
+    raidDiffState = (r && Number.isInteger(r.raid_diff)) ? Math.min(4, Math.max(1, r.raid_diff)) : 1;   // 0(쉬움)은 삭제됨
     el('teamModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', (b.dataset.mode==='on')===teamModeState));
     el('teamCountRow').classList.toggle('hidden', !teamModeState);
     el('teamShuffleRow').classList.toggle('hidden', !teamModeState);
