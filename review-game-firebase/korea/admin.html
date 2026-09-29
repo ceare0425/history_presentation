@@ -1379,7 +1379,7 @@ function soloIdleMs(cls, name){
 }
 
 function soloEndLabel(e){
-  if(e.end_ts) return fmtSoloTime(e.end_ts) + (e.idle_end ? ' <span class="acc-bad">(1분 무응답 자동 종료)</span>'
+  if(e.end_ts) return fmtSoloTime(e.end_ts) + (e.idle_end ? ' <span class="acc-bad">(무응답 자동 종료)</span>'
     : e.relearn_end ? ' <span class="acc-bad">(다시 배우기로 종료)</span>' : '');
   if(e.ended === false){
     return (Date.now() - (e.ts||0) < SOLO_IDLE_MS)
