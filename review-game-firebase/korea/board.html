@@ -590,7 +590,13 @@ function detectOvertakes(players, ranked, effective){
 const BGM_VIDEO_IDS = ['wjR4ObKmfOU', 'edoeWZuKYc8', 'iCaAWHlkLZs'];
 const BGM_VIDEO_ID = BGM_VIDEO_IDS[Math.floor(Math.random() * BGM_VIDEO_IDS.length)];
 // 보스 레이드 중에는 레이드 전용 곡으로 바꿔 틀고, 레이드를 끄면 원래 곡으로 돌아온다
-const RAID_BGM_VIDEO_ID = 'aap6-W8NNxY';   // 브금브금 BGMBGM — 타격감 좋은 웅장한 음악
+// 레이드를 켤 때마다 목록에서 랜덤으로 한 곡을 고른다 (모두 브금브금 BGMBGM)
+const RAID_BGM_VIDEO_IDS = [
+  'aap6-W8NNxY',   // 타격감 좋은 웅장한 음악
+  'ceYtWuWIOoE',   // 도전이 필요할 때 듣는 웅장한 브금
+];
+const pickRaidBgm = () => RAID_BGM_VIDEO_IDS[Math.floor(Math.random() * RAID_BGM_VIDEO_IDS.length)];
+let raidBgmId = pickRaidBgm();
 let bgmTrackId = BGM_VIDEO_ID;             // 지금 틀어야 할 곡
 const BGM_MUTE_KEY = 'rg_fb_bgm_muted';
 const BGM_VOLUME = 30;                 // 0~100, 교실 스피커 기준 낮게
@@ -1279,11 +1285,12 @@ function syncRaidFrame(){
   if(roundState.raid_mode){
     if(!f.getAttribute('src')){
       f.setAttribute('src', `../raid.html?room=${ROOM}`);
+      raidBgmId = pickRaidBgm();
       // 레이드 화면이 전광판을 덮으므로, 레이드 화면을 클릭해도 배경음이 시작되게 한다
       f.onload = () => { try{ const w = f.contentWindow; w.addEventListener('pointerdown', markGesture); w.addEventListener('keydown', markGesture); }catch(e){} };
     }
     f.classList.remove('hidden');
-    setBgmTrack(RAID_BGM_VIDEO_ID);
+    setBgmTrack(raidBgmId);
   } else if(f.getAttribute('src')){
     f.classList.add('hidden');
     f.removeAttribute('src');
