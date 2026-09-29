@@ -1253,10 +1253,7 @@ function renderPresenceList(){
   box.innerHTML = rows.map(r=>{
     const unread = threadUnread(r.cls, r.name);
     const inGame = !r.online && Object.values(playersObj).some(p => p && p.cls === r.cls && p.name === r.name);
-    const idle = r.online ? soloIdleMs(r.cls, r.name) : null;
-    const idleLabel = (idle !== null && idle >= SOLO_IDLE_MS)
-      ? ' · ⚠️ ' + (idle < 60000 ? Math.round(idle/1000) + '초' : Math.floor(idle/60000) + '분') + '째 답 없음' : '';
-    const timeLabel = r.online ? fmtPresenceTime(r.since) + idleLabel : inGame ? `🎮 게임 참여 중 · 쪽지 ${fmtAgo(r.lastTs)}` : `오프라인 · 쪽지 ${fmtAgo(r.lastTs)}`;
+    const timeLabel = r.online ? fmtPresenceTime(r.since) : inGame ? `🎮 게임 참여 중 · 쪽지 ${fmtAgo(r.lastTs)}` : `오프라인 · 쪽지 ${fmtAgo(r.lastTs)}`;
     return `<div class="presence-row${r.online?'':' offline'}">
       <span class="pname">${escapeHtml(r.name)}</span>
       <span class="pcls">${escapeHtml(clsLabelShort(r.cls))}</span>
@@ -1282,7 +1279,7 @@ onValue(ref(db, 'messages/'+ROOM), (snap)=>{
   allMsgObj = snap.val() || {};
   renderPresenceList();
 });
-setInterval(renderPresenceList, 10000); // "N분째 연습 중" · "N분 전" · "답 없음" 표시 갱신
+setInterval(renderPresenceList, 30000); // "N분째 연습 중" · "N분 전" 표시 갱신
 
 function chatMsgHtml(msg){
   const who = msg.from === 'admin' ? 'admin' : 'student';
@@ -1365,24 +1362,15 @@ function soloDurLabel(sec){
 }
 
 // 혼자 연습에서 1분 넘게 답을 내지 않으면 연습하지 않는 것(딴짓)으로 본다.
-// solo_log의 ts는 학생이 답을 낼 때마다 갱신되므로 '마지막 답 이후 경과 시간'이 된다.
-const SOLO_IDLE_MS = 60000;
-
-// 온라인 학생 목록용: 그 학생의 가장 최근 진행 중 기록 기준으로 답을 안 낸 지 몇 ms 지났는지 (기록 없으면 null)
-function soloIdleMs(cls, name){
-  let latest = null;
-  for(const o of Object.values(soloLogObj)){
-    if(!o || o.cls !== cls || o.name !== name || o.ended !== false) continue;
-    if(!latest || (o.ts||0) > (latest.ts||0)) latest = o;
-  }
-  return latest ? Math.max(0, Date.now() - (latest.ts||0)) : null;
-}
+// solo_log의 ts는 학생이 답을 낼 때마다 서버 보정 시각(serverNow)으로 갱신되므로 '마지막 답 이후 경과 시간'이 된다.
+// (학생 화면은 1분이 지나면 스스로 연습을 끝내므로, 여기서는 채점·다음 문제 대기 시간만큼 여유를 더 둔다)
+const SOLO_IDLE_MS = 60000 + 5000;
 
 function soloEndLabel(e){
   if(e.end_ts) return fmtSoloTime(e.end_ts) + (e.idle_end ? ' <span class="acc-bad">(무응답 자동 종료)</span>'
     : e.relearn_end ? ' <span class="acc-bad">(다시 배우기로 종료)</span>' : '');
   if(e.ended === false){
-    return (Date.now() - (e.ts||0) < SOLO_IDLE_MS)
+    return (serverNow() - (e.ts||0) < SOLO_IDLE_MS)
       ? '<span class="muted">연습 중</span>'
       : '<span class="acc-bad">중단</span>';
   }
@@ -1661,7 +1649,6 @@ el('soloModalDelAll').onclick = async () => {
 onValue(roomRef(ROOM,'solo_log'), (snap)=>{
   soloLogObj = snap.val() || {};
   renderSoloStats();
-  renderPresenceList(); // 답을 내면 온라인 목록의 '답 없음' 표시도 바로 사라지게
 });
 
 el('soloClearBtn').onclick = async () => {
