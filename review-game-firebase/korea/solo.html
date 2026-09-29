@@ -535,11 +535,12 @@ let hintUsed = false;       // 이번 문제에서 초성 힌트를 썼는지 (�
 let currentQid = null;
 let currentQuestion = null;
 let currentStartedAt = null;
-// 30초 동안 답을 내지 않으면 연습하지 않는 것으로 보고 연습을 자동 종료한다.
+// 1분 동안 답을 내지 않으면 연습하지 않는 것으로 보고 연습을 자동 종료한다.
 // (선생님과 쪽지 창을 열어 둔 동안·문제 신고 중에는 세지 않는다)
-const IDLE_LIMIT_MS = 30000;
+const IDLE_LIMIT_MS = 60000;
 let lastActiveAt = 0;
 let idleEnded = false;
+let relearnEnded = false; // 연습 중 '다시 배우기'(새 탭)를 열어 연습을 끝냈는지
 let lastQid = null;
 
 let floor = 0, correctCount = 0, wrongCount = 0, streak = 0;
@@ -698,7 +699,23 @@ function updateRelearnBtn(){
   currentRelearnUrl = lesson ? ('../../' + lesson.path) : null;
   btn.classList.toggle('hidden', !currentRelearnUrl);
 }
-el('relearnBtn').onclick = () => { if(currentRelearnUrl) window.open(currentRelearnUrl, '_blank'); };
+// 새 탭이 열리면 다시 배우기 말고 딴짓도 할 수 있으므로, 연습 중에 누르면 연습을 끝내고 연다.
+el('relearnBtn').onclick = () => {
+  if(!currentRelearnUrl) return;
+  if(!ended){
+    const ok = confirm('다시 배우기를 열면 지금 연습이 종료돼요.
+지금까지의 기록은 선생님 화면에 저장됩니다.
+
+그래도 다시 배우기를 할까요?');
+    lastActiveAt = serverNow(); // 알림창을 보는 동안 흐른 시간은 무응답으로 세지 않는다
+    if(!ok) return;
+    window.open(currentRelearnUrl, '_blank');
+    relearnEnded = true;
+    showEndedView();
+    return;
+  }
+  window.open(currentRelearnUrl, '_blank');
+};
 
 function updateBookmarkBtn(){
   const btn = el('bookmarkBtn');
@@ -1018,6 +1035,7 @@ function syncSoloLog(final){
     end_ts: final ? serverNow() : null,
     ended: !!final,
     idle_end: (final && idleEnded) || null,
+    relearn_end: (final && relearnEnded) || null,
     duration_sec: sessionDuration || null,
     order: sessionOrder || null,
     weight: sessionWeight || null,
@@ -1249,8 +1267,9 @@ function showEndedView(){
     bestNote.textContent = `개인 최고 기록: ${prevBest}층`;
   }
   el('idleWarn').textContent = '';
-  el('endReason').textContent = idleEnded ? '⏸ 30초 동안 답을 내지 않아 연습이 자동으로 끝났어요.' : '';
-  el('endReason').classList.toggle('hidden', !idleEnded);
+  el('endReason').textContent = idleEnded ? '⏸ 1분 동안 답을 내지 않아 연습이 자동으로 끝났어요.'
+    : relearnEnded ? '📖 다시 배우기를 열어 연습이 끝났어요.' : '';
+  el('endReason').classList.toggle('hidden', !idleEnded && !relearnEnded);
   showView('endedView');
   refreshRecord(true); // 방금 끝낸 세션의 오답·정답까지 반영해 종료 화면의 복습 추천 버튼을 갱신
   if(missedKeys.length) showMissedMsgPopup(missedText, missedKeys);
@@ -1363,7 +1382,7 @@ el('startBtn').onclick = async () => {
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
   hintCount = 0; soloLogRef = null; unitStats = {}; qStats = {}; wrongMap = new Map();
   lastWrongInfo = null; reportedQids = new Set();
-  clearedQids = new Set(); allClearedPrompted = false; paused = false; idleEnded = false;
+  clearedQids = new Set(); allClearedPrompted = false; paused = false; idleEnded = false; relearnEnded = false;
   el('clearPrompt').classList.add('hidden');
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
 
@@ -1408,7 +1427,7 @@ function startReviewSession(qids, label){
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
   hintCount = 0; soloLogRef = null; unitStats = {}; qStats = {}; wrongMap = new Map();
   lastWrongInfo = null; reportedQids = new Set();
-  clearedQids = new Set(); allClearedPrompted = false; paused = false; idleEnded = false;
+  clearedQids = new Set(); allClearedPrompted = false; paused = false; idleEnded = false; relearnEnded = false;
   el('clearPrompt').classList.add('hidden');
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
 
