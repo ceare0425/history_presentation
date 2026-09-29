@@ -1364,9 +1364,9 @@ function soloDurLabel(sec){
   return (Number.isInteger(m) ? m : Math.round(m*10)/10) + '분';
 }
 
-// 혼자 연습에서 30초 넘게 답을 내지 않으면 연습하지 않는 것(딴짓)으로 본다.
+// 혼자 연습에서 1분 넘게 답을 내지 않으면 연습하지 않는 것(딴짓)으로 본다.
 // solo_log의 ts는 학생이 답을 낼 때마다 갱신되므로 '마지막 답 이후 경과 시간'이 된다.
-const SOLO_IDLE_MS = 30000;
+const SOLO_IDLE_MS = 60000;
 
 // 온라인 학생 목록용: 그 학생의 가장 최근 진행 중 기록 기준으로 답을 안 낸 지 몇 ms 지났는지 (기록 없으면 null)
 function soloIdleMs(cls, name){
@@ -1379,7 +1379,8 @@ function soloIdleMs(cls, name){
 }
 
 function soloEndLabel(e){
-  if(e.end_ts) return fmtSoloTime(e.end_ts) + (e.idle_end ? ' <span class="acc-bad">(30초 무응답 자동 종료)</span>' : '');
+  if(e.end_ts) return fmtSoloTime(e.end_ts) + (e.idle_end ? ' <span class="acc-bad">(1분 무응답 자동 종료)</span>'
+    : e.relearn_end ? ' <span class="acc-bad">(다시 배우기로 종료)</span>' : '');
   if(e.ended === false){
     return (Date.now() - (e.ts||0) < SOLO_IDLE_MS)
       ? '<span class="muted">연습 중</span>'
@@ -1686,7 +1687,7 @@ watchForUpdate(()=>{
   bar.querySelector('button').onclick = () => location.reload();
   document.body.appendChild(bar);
 });
-setInterval(renderSoloStats, 5000); // '연습 중' → '중단'(30초 답 없음) 표시가 제때 바뀌도록
+setInterval(renderSoloStats, 5000); // '연습 중' → '중단'(1분 답 없음) 표시가 제때 바뀌도록
 
 // ── ⑦ 학생 명단 관리 (혼자 연습 이름 제한용) ──────────────
 // "학년-반"은 실제 학교 학급을 가리키는 값이라 과목과 무관하다(같은 1학년 3반이 세계사도
