@@ -596,6 +596,9 @@ const RAID_BGM_VIDEO_IDS = [
   'ceYtWuWIOoE',   // 도전이 필요할 때 듣는 웅장한 브금
   'ptyJ0tnwjiI',   // 슈퍼빌런을 위한 테마 등장 음악
 ];
+// 곡마다 시작 위치(초). 목록에 없는 곡은 처음(0초)부터 재생
+const BGM_START_SEC = { 'ptyJ0tnwjiI': 170 };   // 2:50부터
+const bgmStart = (id) => BGM_START_SEC[id] || 0;
 const pickRaidBgm = () => RAID_BGM_VIDEO_IDS[Math.floor(Math.random() * RAID_BGM_VIDEO_IDS.length)];
 let raidBgmId = pickRaidBgm();
 let bgmTrackId = BGM_VIDEO_ID;             // 지금 틀어야 할 곡
@@ -626,13 +629,13 @@ function onYouTubeIframeAPIReady(){
         ytReady = true;
         ytPlayer.setVolume(BGM_VOLUME);
         if(bgmMuted) ytPlayer.mute();
-        if(bgmTrackId !== BGM_VIDEO_ID) ytPlayer.cueVideoById(bgmTrackId);   // 플레이어가 준비되기 전에 레이드가 켜진 경우
+        if(bgmTrackId !== BGM_VIDEO_ID) ytPlayer.cueVideoById({ videoId: bgmTrackId, startSeconds: bgmStart(bgmTrackId) });   // 플레이어가 준비되기 전에 레이드가 켜진 경우
         updateBgmBtn();
         if(userGestured) startBgm();
       },
       onStateChange: (e) => {
-        // 3시간이라 사실상 안 끝나지만 혹시 끝나면 처음부터 다시
-        if(e.data === YT.PlayerState.ENDED){ ytPlayer.seekTo(0); ytPlayer.playVideo(); }
+        // 곡이 끝나면 그 곡의 시작 위치부터 다시
+        if(e.data === YT.PlayerState.ENDED){ ytPlayer.seekTo(bgmStart(bgmTrackId), true); ytPlayer.playVideo(); }
       },
     },
   });
@@ -676,8 +679,9 @@ function setBgmTrack(id){
   if(id === bgmTrackId) return;
   bgmTrackId = id;
   if(!ytReady) return;
-  if(bgmStarted) ytPlayer.loadVideoById(id);
-  else ytPlayer.cueVideoById(id);
+  const opts = { videoId: id, startSeconds: bgmStart(id) };
+  if(bgmStarted) ytPlayer.loadVideoById(opts);
+  else ytPlayer.cueVideoById(opts);
 }
 
 {
