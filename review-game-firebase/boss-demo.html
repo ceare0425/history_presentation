@@ -59,8 +59,14 @@ const sprOff = document.createElement('canvas');
 sprOff.width = SPRITE_W; sprOff.height = SPRITE_H;
 const sctx = sprOff.getContext('2d');
 const POLICE = {};
-['idle', 'hit', 'rage', 'hurt', 'down', 'whistle', 'swing'].forEach(k => { const im = new Image(); im.src = 'assets/boss/police_' + k + '.webp'; POLICE[k] = im; });
-function spritesReady(){ return Object.values(POLICE).every(im => im.complete && im.naturalWidth > 0); }
+['idle', 'hit', 'rage', 'hurt', 'down', 'whistle', 'swing', 'rope'].forEach(k => { const im = new Image(); im.src = 'assets/boss/police_' + k + '.webp'; POLICE[k] = im; });
+function imgOk(im){ return im.complete && im.naturalWidth > 0; }
+function spritesReady(){ return Object.values(POLICE).every(imgOk); }
+// 부하(헌병)와 바리케이드 그림
+const MP_IMG = new Image(); MP_IMG.src = 'assets/boss/mp.webp';
+const BARRICADE_IMG = new Image(); BARRICADE_IMG.src = 'assets/boss/barricade.webp';
+const mpOff = document.createElement('canvas');   // 헌병이 맞을 때 하얗게 번쩍이는 효과용
+const mpCtx = mpOff.getContext('2d');
 const FONT = '"Malgun Gothic","Pretendard",sans-serif';
 const OUT = '#0b0b12';
 
@@ -73,12 +79,14 @@ const THEMES = {
     label: '한국사 · 일제 순사', bossName: '일제 순사', sub: '무단 통치의 앞잡이',
     critText: '대한 독립 만세!', rageText: '분노! 순사가 곤봉을 휘두른다', counterText: '호루라기 반격!',
     attackName: '곤봉 내려치기', wrongText: '오답 반격!', healName: '헌병대 지원 요청', enrageText: '광폭화! 공격이 거세진다',
+    arrestName: '포승줄 체포', summonName: '헌병 증원', minionName: '헌병', censorName: '신문 검열', checkName: '불심 검문', barricadeName: '바리케이드',
     shots: ['torch', 'ink'], winLine: '반 전체가 힘을 모아 일제 순사를 물리쳤습니다!', loseLine: '순사가 버텨 냈습니다… 다시 도전하세요!'
   },
   world: {
     label: '세계사 · 크세르크세스', bossName: '크세르크세스 대왕', sub: '페르시아 제국의 왕',
     critText: '스파르타!', rageText: '분노! 불사 부대가 깨어났다', counterText: '불사 부대 돌격!',
     attackName: '창 투척', wrongText: '오답 반격!', healName: '불사 부대 교대', enrageText: '광폭화! 공격이 거세진다',
+    arrestName: '사슬 포획', summonName: '불사 부대 소환', minionName: '불사 부대', censorName: '공포 정치', checkName: '왕의 심문', barricadeName: '방패 벽',
     shots: ['arrow', 'spear'], winLine: '반 전체가 힘을 모아 크세르크세스 대왕을 물리쳤습니다!', loseLine: '대왕이 버텨 냈습니다… 다시 도전하세요!'
   }
 };
@@ -90,22 +98,34 @@ const RAID_BASE = {
   whistleStunMs: 3000,
   healAt: [0.6, 0.3], healRepeatMs: 35000,   // 회복 의식: 60%·30% 도달 때, 25% 이하에선 35초마다
   healCastMs: 8000,
-  breakStunMs: 4000          // 회복 의식을 끊으면 보스 기절 (피해 2배)
+  breakStunMs: 4000,         // 회복 의식을 끊으면 보스 기절 (피해 2배)
+  // 특수 공격 (체포·불심 검문·신문 검열·바리케이드는 번갈아, 헌병 증원은 체력 75%·40%에서)
+  specialFirstMs: 15000,
+  arrestMs: 10000,           // 체포: 이 시간 안에 반 전체가 arrestNeed번 공격하면 구출, 못 하면 그 학생 쓰러짐
+  checkMs: 5000, checkStunMs: 2500,   // 불심 검문: 지목된 학생이 5초 안에 정답 → 보스 2.5초 기절, 오답·시간 초과 → 목숨 2개
+  censorMs: 6000, censorAcc: 0.5,     // 신문 검열: 먹칠당한 학생은 문제가 잘 안 보여 정답률이 떨어진다 (가짜 학생 기준 50%)
+  barricadeMs: 4000,         // 바리케이드: 모든 공격을 막는다
+  minionAt: [0.75, 0.4], minionShotShare: 0.6, minionBossDmg: 0.5   // 헌병이 있으면 공격 60%가 헌병에게 가고 순사는 피해 절반
 };
-// 난이도 단계 (학생 30명 가짜 시뮬레이션으로 맞춘 값).
-// 승률 메모는 '학생마다 약 9초에 한 번 답하는 속도' 기준: [정답률 70% / 82% / 90%]
+// 난이도 단계: 특수 공격까지 넣은 실제 게임 코드로 난이도마다 40판씩 돌려 맞춘 값.
+// 승률 메모는 '학생마다 약 9초에 한 번 답하는 속도' 기준: [정답률 70% / 82% / 90%] (빠름 = 약 4.5초에 한 번)
 //   attackGapMs·attackTargets: 평소 · 분노(50% 이하) · 광폭화(25% 이하), regenPerSec: 초당 최대 체력 대비 회복(광폭화 때 2배)
 const DIFFS = [
   { name: '쉬움', emoji: '🙂', color: '#3ec46d', desc: '처음 해 보는 반', note: '거의 누구나 이겨요',   // 100 / 100 / 100%
-    p: { hp: 25000, hearts: 5, reviveMs: 8000,  attackGapMs: [8000, 6500, 5500], attackTargets: [1, 2, 2], whistleGapMs: 12000, whistleTargets: 3, regenPerSec: 0.001,  healNeed: 15, healAmount: 0.06 } },
-  { name: '보통', emoji: '😐', color: '#3d8bfd', desc: '대부분 맞히면 이겨요', note: '정답률 80%면 충분',   // 13 / 99 / 100%
-    p: { hp: 36000, hearts: 3, reviveMs: 10000, attackGapMs: [6000, 4500, 3500], attackTargets: [1, 2, 3], whistleGapMs: 10000, whistleTargets: 4, regenPerSec: 0.002,  healNeed: 22, healAmount: 0.09 } },
-  { name: '어려움', emoji: '😠', color: '#ffb020', desc: '거의 다 맞혀야 해요', note: '정답률 90%는 되어야',   // 0 / 11 / 94%
-    p: { hp: 40000, hearts: 3, reviveMs: 12000, attackGapMs: [5500, 4000, 3000], attackTargets: [2, 3, 3], whistleGapMs: 9000,  whistleTargets: 5, regenPerSec: 0.0022, healNeed: 24, healAmount: 0.10 } },
-  { name: '매우 어려움', emoji: '🔥', color: '#ff5a4a', desc: '빠르고 정확해야 해요', note: '보통 속도로는 거의 불가능',   // 0 / 0 / 7%
-    p: { hp: 45000, hearts: 3, reviveMs: 12000, attackGapMs: [5000, 3500, 2500], attackTargets: [2, 3, 4], whistleGapMs: 9000,  whistleTargets: 6, regenPerSec: 0.0025, healNeed: 25, healAmount: 0.12 } },
-  { name: '지옥', emoji: '💀', color: '#b86bff', desc: '빨라도 버티기 힘들어요', note: '목숨 2개 · 도전 과제용',   // 0 / 0 / 0% (2배 빠르게 90%여도 25%)
-    p: { hp: 48000, hearts: 2, reviveMs: 15000, attackGapMs: [4500, 3200, 2500], attackTargets: [2, 3, 4], whistleGapMs: 8000,  whistleTargets: 6, regenPerSec: 0.0028, healNeed: 28, healAmount: 0.14 } }
+    p: { hp: 25000, hearts: 5, reviveMs: 8000,  attackGapMs: [8000, 6500, 5500], attackTargets: [1, 2, 2], whistleGapMs: 12000, whistleTargets: 3, regenPerSec: 0.001,  healNeed: 15, healAmount: 0.06,
+         specialGapMs: 22000, arrestNeed: 6,  censorCount: 6,  minionHp: 0.05 } },
+  { name: '보통', emoji: '😐', color: '#3d8bfd', desc: '대부분 맞히면 이겨요', note: '정답률 80%면 충분',   // 약 10 / 88 / 100%
+    p: { hp: 28000, hearts: 3, reviveMs: 10000, attackGapMs: [6000, 4500, 3500], attackTargets: [1, 2, 3], whistleGapMs: 10000, whistleTargets: 4, regenPerSec: 0.002,  healNeed: 22, healAmount: 0.09,
+         specialGapMs: 17000, arrestNeed: 8,  censorCount: 8,  minionHp: 0.06 } },
+  { name: '어려움', emoji: '😠', color: '#ffb020', desc: '거의 다 맞혀야 해요', note: '정답률 90%는 되어야',   // 약 0 / 30 / 80%
+    p: { hp: 28000, hearts: 3, reviveMs: 12000, attackGapMs: [5500, 4000, 3000], attackTargets: [2, 3, 3], whistleGapMs: 9000,  whistleTargets: 5, regenPerSec: 0.0022, healNeed: 24, healAmount: 0.10,
+         specialGapMs: 15000, arrestNeed: 10, censorCount: 10, minionHp: 0.07 } },
+  { name: '매우 어려움', emoji: '🔥', color: '#ff5a4a', desc: '빠르고 정확해야 해요', note: '보통 속도로는 거의 불가능',   // 0 / 0 / 5% · 빠름 82%면 100%
+    p: { hp: 34000, hearts: 3, reviveMs: 12000, attackGapMs: [5000, 3500, 2500], attackTargets: [2, 3, 4], whistleGapMs: 9000,  whistleTargets: 6, regenPerSec: 0.0025, healNeed: 25, healAmount: 0.12,
+         specialGapMs: 13000, arrestNeed: 12, censorCount: 12, minionHp: 0.08 } },
+  { name: '지옥', emoji: '💀', color: '#b86bff', desc: '빨라도 버티기 힘들어요', note: '목숨 2개 · 도전 과제용',   // 0 / 0 / 0% · 빠름 82%도 0%
+    p: { hp: 43000, hearts: 2, reviveMs: 15000, attackGapMs: [4500, 3200, 2500], attackTargets: [2, 3, 4], whistleGapMs: 8000,  whistleTargets: 6, regenPerSec: 0.0028, healNeed: 28, healAmount: 0.14,
+         specialGapMs: 11000, arrestNeed: 14, censorCount: 14, minionHp: 0.09 } }
 ];
 let diffIdx = 3;
 let RAID = null;   // reset() 때 RAID_BASE + 고른 난이도로 채운다
@@ -116,6 +136,7 @@ const SPEEDS = [
 ];
 
 let themeKey = 'korea', speedIdx = 0, running = false, soundOn = true;
+let FAKE_ACC = 0.82;   // 가짜 학생의 정답률 (시연용)
 let S = null;
 
 // ── 유틸 ──────────────────────────────────────────────
@@ -196,7 +217,7 @@ function noise(dur, vol, filterType, f0, f1, when){
 function sfx(kind){
   if(!soundOn || !audio()) return;
   const now = performance.now();
-  const gap = { hit: 55, crit: 90, explode: 120, ouch: 70, ko: 150, warn: 200 }[kind] || 0;
+  const gap = { hit: 55, crit: 90, explode: 120, ouch: 70, ko: 150, warn: 200, block: 60 }[kind] || 0;
   if(gap && now - (lastSfx[kind] || 0) < gap) return;   // 한꺼번에 많이 맞아도 소리가 뭉개지지 않게
   lastSfx[kind] = now;
   switch(kind){
@@ -251,6 +272,28 @@ function sfx(kind){
       break;
     case 'heal':      // 보스 큰 회복
       [523, 659, 784, 1047].forEach((f, i) => tone('triangle', f, f, 0.35, 0.12, i * 0.08));
+      break;
+    case 'rope':      // 포승줄 휘두르기
+      noise(0.5, 0.35, 'bandpass', 600, 2400);
+      tone('sine', 300, 700, 0.4, 0.08);
+      break;
+    case 'check':     // 불심 검문 호루라기 두 번
+      tone('sine', 2900, 2850, 0.12, 0.18); tone('sine', 2900, 2850, 0.3, 0.18, 0.18);
+      break;
+    case 'censor':    // 쾅! 도장 + 종이
+      tone('sine', 120, 50, 0.25, 0.5);
+      noise(0.6, 0.25, 'highpass', 2500, 800, 0.05);
+      break;
+    case 'barricade': // 나무 기둥이 쿵쿵
+      tone('sine', 140, 60, 0.2, 0.5); tone('sine', 120, 50, 0.2, 0.5, 0.15);
+      noise(0.3, 0.3, 'lowpass', 900, 200);
+      break;
+    case 'block':     // 공격이 막힘
+      tone('square', 1400, 900, 0.05, 0.06);
+      break;
+    case 'summon':    // 헌병 증원: 호루라기 + 발소리
+      tone('sine', 2700, 2700, 0.5, 0.15);
+      for(let i = 0; i < 4; i++) tone('sine', 110, 60, 0.12, 0.35, 0.5 + i * 0.18);
       break;
     case 'lose': {
       const notes = [392, 349, 311, 262];
@@ -579,6 +622,8 @@ function reset(){
     rage: false, enrage: false, counterAt: 0, attack: 0, hitPose: 0,
     attackAt: 0, poseKind: '', poseUntil: 0, fallen: false, regenAcc: 0, regenShowAt: 0, healFlash: 0,
     cast: null, healsDone: [], nextHealAt: 0, bossStunUntil: 0,
+    specialAt: 0, lastSpecial: '', arrest: null, checkpoint: null, censor: null, barricadeUntil: 0, barricadeStart: 0,
+    minions: [], minionWaves: [],
     students: NAMES.map((name, i) => Object.assign({
       name, i, dmg: 0, correct: 0, streak: 0, next: 0, flash: 0, flashColor: '', stunUntil: 0, wrongT: 0,
       hearts: RAID.hearts, koUntil: 0, targetUntil: 0, hurtT: 0, kos: 0
@@ -597,29 +642,38 @@ function startFight(){
   S.phase = 'fight'; S.fightStart = S.clock;
   S.attackAt = S.clock + RAID.firstAttackMs;
   S.regenShowAt = S.clock + 1000;   // 회복 숫자는 1초 분량씩 모아서 보여 준다
+  S.specialAt = S.clock + RAID.specialFirstMs;
   const mean = SPEEDS[speedIdx].mean;
   for(const st of S.students) st.next = S.clock + rand(200, mean);
 }
 
 const isKo = st => st.koUntil > S.clock;
-const canAct = st => !isKo(st) && st.stunUntil <= S.clock;
+const isArrested = st => !!(S.arrest && S.arrest.st === st);
+const canAct = st => !isKo(st) && st.stunUntil <= S.clock && !isArrested(st);
+const barricadeUp = () => S.barricadeUntil > S.clock;
+const minionsAlive = () => S.minions.some(m => !m.dead);
 const bossStunned = () => S.bossStunUntil > S.clock;
 
 function answer(st){
   const T = THEMES[themeKey];
-  if(Math.random() > 0.82){      // 오답: 공격하지 못하고, 보스가 곧바로 그 학생을 반격한다
+  const censored = !!(S.censor && S.censor.set.has(st));
+  const checked = !!(S.checkpoint && S.checkpoint.st === st);
+  if(Math.random() > (censored ? RAID.censorAcc : FAKE_ACC)){      // 오답: 공격하지 못하고, 보스가 곧바로 그 학생을 반격한다
     st.streak = 0; S.wrong++;
     st.flash = 1; st.flashColor = '#e0483c'; st.wrongT = 1;
+    if(checked){ failCheckpoint(); return; }
     if(!bossStunned()){ bossStrike(st, 0.35, T.wrongText); if(!(S.poseUntil > S.clock)) showPose('swing', 450); }
     return;
   }
+  if(checked) passCheckpoint();
   st.streak++; st.correct++; S.correct++;
   const crit = Math.random() < 0.08 || st.streak % 5 === 0;   // 5연속 정답마다 치명타
   const dmg = Math.round(rand(90, 130) * (1 + Math.min(st.streak, 10) * 0.05) * (crit ? 2.6 : 1));
   const a = anchor(st);
-  const to = { x: BOSS_X + rand(-120, 120), y: BOSS_FEET - rand(260, 520) };
+  const minion = pickMinionTarget(st);     // 헌병이 있으면 공격 대부분이 헌병에게 막힌다
+  const to = minion ? { x: minion.x + rand(-45, 45), y: BOSS_FEET - rand(170, 380) } : { x: BOSS_X + rand(-120, 120), y: BOSS_FEET - rand(260, 520) };
   const type = crit ? 'crit' : T.shots[randi(0, T.shots.length - 1)];
-  S.shots.push({ type, x0: a.x, y0: a.y, x1: to.x, y1: to.y, cx: (a.x + to.x) / 2, cy: Math.min(a.y, to.y) - rand(120, 260), t: 0, dur: crit ? 0.42 : rand(0.45, 0.6), st, dmg, crit, trail: 0 });
+  S.shots.push({ type, x0: a.x, y0: a.y, x1: to.x, y1: to.y, cx: (a.x + to.x) / 2, cy: Math.min(a.y, to.y) - rand(120, 260), t: 0, dur: crit ? 0.42 : rand(0.45, 0.6), st, dmg, crit, trail: 0, minion });
   st.flash = 1; st.flashColor = crit ? '#ffd23f' : '#48d17a';
 }
 
@@ -627,8 +681,17 @@ function impact(sh){
   const T = THEMES[themeKey];
   if(S.phase !== 'fight') return;
   const x = sh.x1, y = sh.y1, st = sh.st;
-  const weak = bossStunned();                 // 회복 의식을 끊어 기절한 동안엔 피해 2배
-  const dmg = weak ? sh.dmg * 2 : sh.dmg;
+  if(sh.minion && !sh.minion.dead){ hitMinion(sh); return; }
+  if(barricadeUp()){
+    // 바리케이드에 막힘: 피해 없음
+    S.texts.push({ x: x + rand(-50, 50), y: y - 10, txt: '막힘!', block: true, t: 0 });
+    burst(x, y, 'block', 10, st.left ? -1 : 1);
+    sfx('block');
+    return;
+  }
+  const weak = bossStunned();                 // 회복 의식·검문으로 기절한 동안엔 피해 2배
+  const guarded = minionsAlive();             // 헌병이 지키는 동안엔 피해 절반
+  const dmg = Math.round(sh.dmg * (weak ? 2 : 1) * (guarded ? RAID.minionBossDmg : 1));
   S.hp = Math.max(0, S.hp - dmg);
   st.dmg += dmg; S.lastHitter = st;
   const dir = st.left ? 1 : -1;
@@ -638,7 +701,7 @@ function impact(sh){
   S.shake = Math.max(S.shake, sh.crit ? 24 : 7);
   if(S.clock - S.comboT < 1600) S.combo++; else S.combo = 1;
   S.comboT = S.clock; S.comboPop = 1;
-  S.texts.push({ x: x + rand(-70, 70), y: y - 20 + rand(-30, 30), txt: fmtNum(dmg) + (weak ? '!' : ''), crit: sh.crit, t: 0 });
+  S.texts.push({ x: x + rand(-70, 70), y: y - 20 + rand(-30, 30), txt: fmtNum(dmg) + (weak ? '!' : '') + (guarded ? ' ½' : ''), crit: sh.crit, t: 0 });
   burst(x, y, sh.type, sh.crit ? 46 : 16, dir);
   S.rings.push({ x, y, t: 0, life: sh.crit ? 0.5 : 0.3, r: sh.crit ? 190 : 70, color: sh.crit ? '#ffe98a' : 'rgba(255,255,255,.9)', w: sh.crit ? 10 : 5 });
   if(sh.crit){
@@ -652,9 +715,11 @@ function impact(sh){
     S.cast.got++;
     if(S.cast.got >= S.cast.need) breakCast();
   }
+  rescueProgress();
   if(!S.rage && S.hp <= S.max / 2) enterRage();
   if(!S.enrage && S.hp <= S.max * 0.25) enterEnrage();
   checkHealTrigger();
+  checkMinionTrigger();
   if(S.hp <= 0) startDying();
 }
 
@@ -666,7 +731,10 @@ function burst(x, y, type, n, dir){
     spear: ['#e0e6f0', '#a9b3c4', '#f2d27a', '#fff'],
     crit: ['#fff', '#fff3a0', '#ffd23f', '#7fd8ff'],
     boss: ['#ff3b30', '#b3121f', '#ff8a65', '#2a0a0a'],
-    heal: ['#7dffb0', '#3ee07a', '#c8ffe0', '#fff']
+    heal: ['#7dffb0', '#3ee07a', '#c8ffe0', '#fff'],
+    block: ['#a0d4ff', '#e0f0ff', '#8a5a2b', '#fff'],
+    rope: ['#c9a36a', '#8a5a2b', '#e8d3a8'],
+    paper: ['#f2ecd8', '#d8d0b8', '#222']
   }[type] || ['#fff'];
   for(let i = 0; i < n; i++){
     const ang = rand(0, Math.PI * 2), sp = rand(180, type === 'crit' ? 900 : 600);
@@ -768,6 +836,169 @@ function counterAttack(){
   S.counterAt = S.clock + RAID.whistleGapMs;
 }
 
+// ── 특수 공격 ───────────────────────────────────────
+function doSpecial(){
+  const pool = [];
+  if(!S.checkpoint) pool.push('check');
+  if(!barricadeUp()) pool.push('barricade');
+  if(!S.censor) pool.push('censor');
+  if(S.rage && !S.arrest) pool.push('arrest', 'arrest');   // 분노 뒤엔 체포가 더 자주
+  const choices = pool.filter(k => k !== S.lastSpecial);
+  const list = choices.length ? choices : pool;
+  if(!list.length) return;
+  const k = list[randi(0, list.length - 1)];
+  S.lastSpecial = k;
+  if(k === 'check') startCheckpoint();
+  else if(k === 'barricade') startBarricade();
+  else if(k === 'censor') startCensor();
+  else startArrest();
+}
+function pickStudent(){
+  const pool = S.students.filter(s => canAct(s) && !(S.checkpoint && S.checkpoint.st === s));
+  return pool.length ? pool[randi(0, pool.length - 1)] : null;
+}
+
+// 🔗 체포: 포승줄을 던져 한 명을 묶는다. 반 전체가 정해진 횟수만큼 공격하면 구출.
+function startArrest(){
+  const st = pickStudent();
+  if(!st) return;
+  showPose('rope', 1100);
+  sfx('rope');
+  const hand = { x: BOSS_X - 260, y: BOSS_FEET - 560 };
+  const a = anchor(st);
+  S.shots.push({ type: 'rope', enemy: true, onHit: 'arrest', x0: hand.x, y0: hand.y, x1: a.x, y1: a.y, cx: (hand.x + a.x) / 2, cy: Math.min(hand.y, a.y) - 220, t: 0, dur: 0.6, st, trail: 0 });
+}
+function bindStudent(st){
+  const T = THEMES[themeKey];
+  if(S.phase !== 'fight' || isKo(st) || S.arrest) return;
+  S.arrest = { st, got: 0, need: RAID.arrestNeed, start: S.clock, end: S.clock + RAID.arrestMs };
+  st.flash = 1; st.flashColor = '#8a5a2b'; st.hurtT = 1; st.streak = 0;
+  const a = anchor(st);
+  burst(a.x, a.y, 'rope', 20, st.left ? -1 : 1);
+  S.banner = { txt: '🔗 ' + T.arrestName + '!', sub: `${st.name} 체포 · ${RAID.arrestMs / 1000}초 안에 반 전체가 ${RAID.arrestNeed}번 공격하면 구출!`, t: 0, life: 2, color: '#e8b57a', red: true };
+  S.shake = Math.max(S.shake, 14);
+}
+function rescueProgress(){
+  if(!S.arrest) return;
+  S.arrest.got++;
+  if(S.arrest.got >= S.arrest.need) freeArrest(true);
+}
+function freeArrest(ok){
+  const st = S.arrest.st;
+  S.arrest = null;
+  const a = anchor(st), tx = a.x + (st.left ? 90 : -90);
+  if(ok){
+    st.flash = 1; st.flashColor = '#48d17a';
+    burst(a.x, a.y, 'rope', 24, st.left ? 1 : -1);
+    S.texts.push({ x: tx, y: a.y, txt: '구출!', stun: true, revive: true, t: 0 });
+    S.banner = { txt: '구출 성공!', sub: st.name + ' 학생이 풀려났습니다', t: 0, life: 1.4, color: '#6dff9e' };
+    sfx('break');
+  } else {
+    st.koUntil = S.clock + RAID.reviveMs; st.kos++; st.hearts = 0; st.stunUntil = 0;
+    S.texts.push({ x: tx, y: a.y, txt: '💀 연행됨', stun: true, t: 0 });
+    S.banner = { txt: '구출 실패…', sub: st.name + ' 학생이 끌려갔습니다', t: 0, life: 1.4, color: '#ff8a80', red: true };
+    sfx('ko');
+    if(!S.students.some(s => !isKo(s))) startLose('전원 쓰러짐');
+  }
+}
+
+// 📋 불심 검문: 한 명을 지목. 정해진 시간 안에 정답 → 보스 기절, 오답·시간 초과 → 목숨 2개
+function startCheckpoint(){
+  const T = THEMES[themeKey];
+  const st = pickStudent();
+  if(!st) return;
+  S.checkpoint = { st, start: S.clock, end: S.clock + RAID.checkMs };
+  showPose('whistle', 900);
+  sfx('check');
+  // 가짜 학생: 지목되면 서둘러 답한다 (가끔은 시간을 넘긴다)
+  st.next = S.clock + rand(700, RAID.checkMs + 1500);
+  S.banner = { txt: '📋 ' + T.checkName + '!', sub: `${st.name}, ${RAID.checkMs / 1000}초 안에 정답을 내라! (성공하면 보스 기절)`, t: 0, life: 1.8, color: '#ffe14d', red: true };
+}
+function passCheckpoint(){
+  const st = S.checkpoint.st;
+  S.checkpoint = null;
+  S.bossStunUntil = Math.max(S.bossStunUntil, S.clock + RAID.checkStunMs);
+  S.hitPose = 0.5;
+  S.banner = { txt: '검문 통과!', sub: `${st.name} 덕분에 보스 ${RAID.checkStunMs / 1000}초 기절 · 받는 피해 2배`, t: 0, life: 1.6, color: '#6dff9e' };
+  sfx('break');
+}
+function failCheckpoint(){
+  const st = S.checkpoint.st;
+  S.checkpoint = null;
+  hurtStudent({ st, label: '검문 실패' });
+  if(!isKo(st)) hurtStudent({ st, label: '검문 실패' });
+}
+
+// 📰 신문 검열: 여러 학생의 문제 화면을 먹칠해 정답률을 떨어뜨린다
+function startCensor(){
+  const T = THEMES[themeKey];
+  const pool = S.students.filter(s => !isKo(s));
+  const set = new Set();
+  while(set.size < Math.min(RAID.censorCount, pool.length)) set.add(pool[randi(0, pool.length - 1)]);
+  S.censor = { set, start: S.clock, end: S.clock + RAID.censorMs };
+  showPose('rage', 700);
+  sfx('censor');
+  for(let i = 0; i < 40; i++) S.parts.push({ x: rand(200, W - 200), y: rand(-200, 100), vx: rand(-120, 120), vy: rand(80, 220), life: rand(1.5, 2.5), t: 0, size: rand(18, 30), color: ['#f2ecd8', '#d8d0b8', '#bdb49a'][randi(0, 2)], g: 60, kind: 'confetti', rot: rand(0, 6), vr: rand(-3, 3) });
+  S.banner = { txt: '📰 ' + T.censorName + '!', sub: `${set.size}명의 문제가 ${RAID.censorMs / 1000}초 동안 먹칠됩니다 · 침착하게 읽으세요`, t: 0, life: 1.8, color: '#dcd3b8', red: true };
+}
+
+// 🚧 바리케이드: 잠깐 모든 공격을 막는다
+function startBarricade(){
+  const T = THEMES[themeKey];
+  S.barricadeStart = S.clock;
+  S.barricadeUntil = S.clock + RAID.barricadeMs;
+  S.shake = Math.max(S.shake, 20);
+  sfx('barricade');
+  for(let i = 0; i < 40; i++) S.parts.push({ x: BOSS_X + rand(-420, 420), y: BOSS_FEET - rand(0, 30), vx: rand(-300, 300), vy: rand(-300, -60), life: rand(0.5, 1), t: 0, size: rand(6, 14), color: '#6b5a50', g: 700, kind: 'dot' });
+  S.banner = { txt: '🚧 ' + T.barricadeName + '!', sub: `${RAID.barricadeMs / 1000}초 동안 모든 공격이 막힙니다`, t: 0, life: 1.6, color: '#e0b27a', red: true };
+}
+
+// 👮 헌병 증원: 체력 75%·40%에서 부하 둘을 부른다. 살아 있는 동안 공격 대부분이 부하에게 가고 보스는 피해 절반
+function checkMinionTrigger(){
+  if(minionsAlive() || S.phase !== 'fight') return;
+  for(const th of RAID.minionAt){
+    if(S.hp / S.max <= th && !S.minionWaves.includes(th)){ S.minionWaves.push(th); summonMinions(); return; }
+  }
+}
+function summonMinions(){
+  const T = THEMES[themeKey];
+  const hp = Math.round(S.max * RAID.minionHp);
+  S.minions = [-1, 1].map(side => ({ side, x: BOSS_X + side * 470, hp, max: hp, flash: 0, knock: 0, dead: false, deadT: 0, spawnT: 0 }));
+  showPose('whistle', 1200);
+  sfx('summon');
+  S.shake = Math.max(S.shake, 22);
+  for(const m of S.minions) for(let i = 0; i < 30; i++) S.parts.push({ x: m.x + rand(-120, 120), y: BOSS_FEET - rand(0, 60), vx: rand(-200, 200), vy: rand(-260, -40), life: rand(0.6, 1.2), t: 0, size: rand(10, 22), color: 'rgba(200,200,210,.7)', g: -40, kind: 'dot' });
+  S.banner = { txt: '👮 ' + T.summonName + '!', sub: `${T.minionName}가 있는 동안 ${T.bossName}는 피해 절반 · 먼저 쓰러뜨려라!`, t: 0, life: 2, color: '#9fc4ff', red: true };
+}
+function pickMinionTarget(st){
+  const alive = S.minions.filter(m => !m.dead);
+  if(!alive.length || Math.random() >= RAID.minionShotShare) return null;
+  return alive.find(m => (m.side < 0) === st.left) || alive[0];
+}
+function hitMinion(sh){
+  const T = THEMES[themeKey];
+  const m = sh.minion, st = sh.st;
+  const dmg = Math.round(sh.dmg * (bossStunned() ? 2 : 1));
+  m.hp = Math.max(0, m.hp - dmg);
+  st.dmg += dmg;
+  m.flash = 1; m.knock += (st.left ? 1 : -1) * (sh.crit ? 22 : 8);
+  if(S.clock - S.comboT < 1600) S.combo++; else S.combo = 1;
+  S.comboT = S.clock; S.comboPop = 1;
+  S.texts.push({ x: sh.x1 + rand(-40, 40), y: sh.y1 - 10, txt: fmtNum(dmg), crit: sh.crit, t: 0 });
+  burst(sh.x1, sh.y1, sh.type, sh.crit ? 30 : 12, st.left ? 1 : -1);
+  sfx(sh.crit ? 'crit' : 'hit');
+  rescueProgress();
+  if(m.hp <= 0){
+    m.dead = true; m.deadT = 0;
+    burst(m.x, BOSS_FEET - 250, 'torch', 40, 0);
+    S.rings.push({ x: m.x, y: BOSS_FEET - 250, t: 0, life: 0.5, r: 180, color: 'rgba(255,190,90,.95)', w: 12 });
+    S.texts.push({ x: m.x, y: BOSS_FEET - 520, txt: T.minionName + ' 격파!', stun: true, revive: true, t: 0 });
+    S.shake = Math.max(S.shake, 16);
+    sfx('explode');
+    if(!minionsAlive()) S.banner = { txt: '호위 격파!', sub: T.bossName + '가 다시 제 피해를 받습니다', t: 0, life: 1.4, color: '#6dff9e' };
+  }
+}
+
 // ── 보스 회복 ───────────────────────────────────────
 function checkHealTrigger(){
   if(S.cast || S.phase !== 'fight') return;
@@ -816,12 +1047,16 @@ function finishCastFail(){
 function startDying(){
   S.phase = 'dying'; S.dyingT = 0; S.endClock = S.clock; S.nextBoom = 0;
   S.shots = []; S.cast = null; S.timers = [];
+  S.arrest = null; S.checkpoint = null; S.censor = null; S.barricadeUntil = 0;
+  for(const m of S.minions) if(!m.dead){ m.dead = true; m.deadT = 0; }
   S.banner = null;
 }
 function startLose(reason){
   if(S.phase !== 'fight') return;
   S.phase = 'lose'; S.loseReason = reason; S.endClock = S.clock;
   S.shots = []; S.cast = null; S.timers = [];
+  S.arrest = null; S.checkpoint = null; S.censor = null; S.barricadeUntil = 0;
+  for(const m of S.minions) if(!m.dead){ m.dead = true; m.deadT = 0; }
   S.banner = null;
   sfx('lose');
   updateButtons();
@@ -875,12 +1110,17 @@ function update(dt){
       S.regenAcc += S.max * RAID.regenPerSec * (S.enrage ? 2 : 1) * dt;
       if(now >= S.regenShowAt){ S.regenShowAt = now + 1000; if(S.regenAcc >= 1){ healBoss(S.regenAcc, false); S.regenAcc = 0; } }
       if(S.enrage && !S.cast && S.healsDone.length >= RAID.healAt.length && now >= S.nextHealAt){ S.nextHealAt = now + RAID.healRepeatMs; startCast(); }
+      if(!S.cast && now >= S.specialAt){ doSpecial(); S.specialAt = now + RAID.specialGapMs * rand(0.85, 1.15); }
     } else {
+      S.specialAt = Math.max(S.specialAt, S.bossStunUntil + 2000);
       // 기절한 동안엔 회복 의식·공격 예약이 밀린다
       S.attackAt = Math.max(S.attackAt, S.bossStunUntil + 1200);
       S.counterAt = Math.max(S.counterAt, S.bossStunUntil + 2500);
     }
     if(S.cast && now >= S.cast.end) finishCastFail();
+    if(S.arrest && now >= S.arrest.end) freeArrest(false);
+    if(S.checkpoint && now >= S.checkpoint.end) failCheckpoint();
+    if(S.censor && now >= S.censor.end) S.censor = null;
     if(now - S.fightStart >= RAID.limitMs) startLose('시간 초과');
   }
 
@@ -919,8 +1159,10 @@ function update(dt){
   for(let i = S.timers.length - 1; i >= 0; i--) if(now >= S.timers[i].at){ const tm = S.timers.splice(i, 1)[0]; tm.fn(); }
 
   // 날아가는 공격 (학생 → 보스, 보스 → 학생)
-  for(let i = S.shots.length - 1; i >= 0; i--){
-    const sh = S.shots[i];
+  // 한 발이 보스를 쓰러뜨리면 S.shots가 새 배열로 비워지므로, 이번 프레임은 원래 배열을 끝까지 돈다
+  const shots = S.shots;
+  for(let i = shots.length - 1; i >= 0; i--){
+    const sh = shots[i];
     sh.t += dt / sh.dur;
     const p = shotPos(sh, Math.min(1, sh.t));
     sh.trail += dt;
@@ -928,7 +1170,7 @@ function update(dt){
       sh.trail -= 0.012;
       trailParticle(sh, p);
     }
-    if(sh.t >= 1){ S.shots.splice(i, 1); if(sh.enemy) hurtStudent(sh); else impact(sh); }
+    if(sh.t >= 1){ shots.splice(i, 1); if(sh.onHit === 'arrest') bindStudent(sh.st); else if(sh.enemy) hurtStudent(sh); else impact(sh); }
   }
   // 파편
   for(let i = S.parts.length - 1; i >= 0; i--){
@@ -955,6 +1197,8 @@ function update(dt){
   S.hitPose = Math.max(0, S.hitPose - dt);
   for(const st of S.students){ st.flash = Math.max(0, st.flash - dt * 2.5); st.wrongT = Math.max(0, st.wrongT - dt * 2); st.hurtT = Math.max(0, st.hurtT - dt * 2.5); }
   S.ghost += (S.hp - S.ghost) * Math.min(1, dt * 2.2);
+  for(const m of S.minions){ m.spawnT = Math.min(1, m.spawnT + dt * 2); m.flash = Math.max(0, m.flash - dt * 5); m.knock += (0 - m.knock) * Math.min(1, dt * 9); if(m.dead) m.deadT += dt; }
+  S.minions = S.minions.filter(m => !m.dead || m.deadT < 1.2);
 }
 
 function shotPos(sh, t){
@@ -969,6 +1213,7 @@ function trailParticle(sh, p){
   if(sh.type === 'torch') S.parts.push({ x: p.x + rand(-6, 6), y: p.y + rand(-6, 6), vx: rand(-40, 40), vy: rand(-80, -20), life: rand(0.25, 0.45), t: 0, size: rand(6, 13), color: ['#fff2a8', '#ffd166', '#ff8c42', '#ff4d2e'][randi(0, 3)], g: -60, kind: 'dot' });
   else if(sh.type === 'ink') S.parts.push({ x: p.x, y: p.y, vx: rand(-30, 30), vy: rand(-20, 40), life: rand(0.3, 0.5), t: 0, size: rand(4, 9), color: ['#10142c', '#23306e', '#3b4db0'][randi(0, 2)], g: 500, kind: 'dot' });
   else if(sh.type === 'crit') S.parts.push({ x: p.x + rand(-8, 8), y: p.y + rand(-8, 8), vx: rand(-60, 60), vy: rand(-60, 60), life: rand(0.2, 0.4), t: 0, size: rand(5, 11), color: ['#fff', '#fff3a0', '#7fd8ff'][randi(0, 2)], g: 0, kind: 'dot' });
+  else if(sh.type === 'rope') S.parts.push({ x: p.x, y: p.y, vx: rand(-20, 20), vy: rand(-20, 20), life: 0.3, t: 0, size: rand(3, 6), color: '#c9a36a', g: 0, kind: 'dot' });
   else if(sh.type === 'boss') S.parts.push({ x: p.x + rand(-10, 10), y: p.y + rand(-10, 10), vx: rand(-40, 40), vy: rand(-40, 40), life: rand(0.2, 0.4), t: 0, size: rand(5, 10), color: ['#ff3b30', '#b3121f', '#ff8a65'][randi(0, 2)], g: 0, kind: 'dot' });
   else if(Math.random() < 0.4) S.parts.push({ x: p.x, y: p.y, vx: 0, vy: 0, life: 0.18, t: 0, size: 3, color: 'rgba(255,255,255,.6)', g: 0, kind: 'dot' });
 }
@@ -984,6 +1229,9 @@ function draw(){
   if(S.shake > 0) ctx.translate(rand(-S.shake, S.shake), rand(-S.shake, S.shake) * 0.7);
   drawBackground();
   drawBossLayer();
+  drawMinions();
+  drawBarricade();
+  drawArrestRope();
   drawRings();
   drawParticles(false);
   drawShots();
@@ -993,7 +1241,7 @@ function draw(){
 
   drawTags();
   drawHpBar();
-  drawCastBar();
+  drawObjectives();
   drawCombo();
   drawStats();
   drawBanner();
@@ -1053,7 +1301,14 @@ function drawShots(){
     const p = shotPos(sh, Math.min(1, sh.t));
     ctx.save();
     ctx.translate(p.x, p.y);
-    if(sh.type === 'boss'){
+    if(sh.type === 'rope'){
+      // 빙글빙글 도는 올가미
+      ctx.rotate(S.clock / 60);
+      ctx.strokeStyle = '#3a2410'; ctx.lineWidth = 12;
+      ctx.beginPath(); ctx.ellipse(0, 0, 46, 30, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = '#c9a36a'; ctx.lineWidth = 7;
+      ctx.beginPath(); ctx.ellipse(0, 0, 46, 30, 0, 0, Math.PI * 2); ctx.stroke();
+    } else if(sh.type === 'boss'){
       // 보스 공격: 붉은 기운을 두른 곤봉(한국사) / 창(세계사)
       const gr = ctx.createRadialGradient(0, 0, 2, 0, 0, 56);
       gr.addColorStop(0, 'rgba(255,90,70,.9)'); gr.addColorStop(1, 'rgba(160,0,0,0)');
@@ -1147,7 +1402,8 @@ function drawTexts(){
     ctx.globalAlpha = k > 0.7 ? 1 - (k - 0.7) / 0.3 : 1;
     const y = tx.y - easeOut(Math.min(1, k * 1.3)) * (tx.stun ? 40 : 90);
     ctx.save(); ctx.translate(tx.x, y); ctx.scale(pop, pop);
-    if(tx.heal) outlinedText(ctx, tx.txt, 0, 0, tx.big ? 76 : 36, '#6dff9e', '#063a18', tx.big ? 12 : 6);
+    if(tx.block) outlinedText(ctx, tx.txt, 0, 0, 34, '#a0d4ff', '#0a1a30', 6);
+    else if(tx.heal) outlinedText(ctx, tx.txt, 0, 0, tx.big ? 76 : 36, '#6dff9e', '#063a18', tx.big ? 12 : 6);
     else if(tx.stun) outlinedText(ctx, tx.txt, 0, 0, 30, tx.revive ? '#8dffb5' : '#ffd0c8');
     else if(tx.crit){
       outlinedText(ctx, 'CRITICAL!', 0, -52, 32, '#7fd8ff');
@@ -1164,6 +1420,9 @@ function drawTags(){
   for(const st of S.students){
     const ko = isKo(st), stunned = !ko && st.stunUntil > S.clock;
     const targeted = !ko && st.targetUntil > S.clock;
+    const arrested = !ko && isArrested(st);
+    const checked = !ko && !!(S.checkpoint && S.checkpoint.st === st);
+    const censored = !ko && !!(S.censor && S.censor.set.has(st));
     const shakeT = Math.max(st.wrongT, st.hurtT);
     const shakeX = shakeT > 0 ? Math.sin(shakeT * 40) * 10 * shakeT : 0;
     const x = st.tx + shakeX, y = st.ty, cy = y + TAG_H / 2;
@@ -1173,9 +1432,21 @@ function drawTags(){
     ctx.fillStyle = ko ? '#2a2a30' : stunned ? '#3a3a50' : 'rgba(18,20,40,.88)'; ctx.fill();
     if(st.flash > 0){ ctx.globalAlpha = st.flash * 0.75; ctx.fillStyle = st.flashColor; ctx.fill(); }
     ctx.globalAlpha = 1;
+    if(arrested){
+      // 포승줄에 묶임: 갈색 줄무늬
+      ctx.save(); rr(ctx, x, y, TAG_W, TAG_H, 12); ctx.clip();
+      ctx.strokeStyle = 'rgba(201,163,106,.55)'; ctx.lineWidth = 8;
+      for(let i = -2; i < 12; i++){ ctx.beginPath(); ctx.moveTo(x + i * 30, y); ctx.lineTo(x + i * 30 + 40, y + TAG_H); ctx.stroke(); }
+      ctx.restore();
+      rr(ctx, x, y, TAG_W, TAG_H, 12);
+    }
     if(targeted){
       // 보스가 노리는 중: 붉은 테두리가 깜빡인다
       ctx.lineWidth = 5; ctx.strokeStyle = `rgba(255,50,40,${0.55 + 0.45 * Math.sin(S.clock / 45)})`;
+    } else if(checked){
+      ctx.lineWidth = 5; ctx.strokeStyle = `rgba(255,210,63,${0.6 + 0.4 * Math.sin(S.clock / 60)})`;
+    } else if(arrested){
+      ctx.lineWidth = 4; ctx.strokeStyle = '#d9a066';
     } else {
       ctx.lineWidth = 2; ctx.strokeStyle = top === st && st.dmg > 0 ? '#ffd23f' : 'rgba(255,255,255,.18)';
     }
@@ -1197,6 +1468,12 @@ function drawTags(){
     if(ko){
       ctx.font = `800 18px ${FONT}`; ctx.fillStyle = '#ff8a80';
       ctx.fillText(`부활 ${Math.ceil((st.koUntil - S.clock) / 1000)}초`, infoX, cy + 1);
+    } else if(arrested){
+      ctx.font = `800 18px ${FONT}`; ctx.fillStyle = '#ffd9a8';
+      ctx.fillText(`🔗 ${S.arrest.got}/${S.arrest.need}`, infoX, cy + 1);
+    } else if(checked){
+      ctx.font = `900 19px ${FONT}`; ctx.fillStyle = '#ffe14d';
+      ctx.fillText(`📋 ${Math.ceil((S.checkpoint.end - S.clock) / 1000)}초`, infoX, cy + 1);
     } else if(targeted){
       ctx.font = `900 24px ${FONT}`; ctx.fillStyle = '#ff5a4a';
       ctx.fillText('⚠', infoX, cy + 1);
@@ -1213,6 +1490,20 @@ function drawTags(){
         ctx.font = `800 17px ${FONT}`;
         ctx.fillText('😵', st.left ? infoX - n * step - 4 : infoX + n * step + 4, cy + 1);
       }
+    }
+    if(censored){
+      // 신문 검열: 먹칠한 띠와 '검열' 도장
+      ctx.save();
+      ctx.globalAlpha = 0.88;
+      ctx.fillStyle = '#0c0c0c';
+      ctx.fillRect(x + 46, y + 9, TAG_W - 110, 12);
+      ctx.fillRect(x + 60, y + 27, TAG_W - 140, 12);
+      ctx.globalAlpha = 1;
+      ctx.translate(st.left ? x + TAG_W - 70 : x + 70, cy); ctx.rotate(-0.18);
+      ctx.strokeStyle = '#d7263d'; ctx.lineWidth = 3; rr(ctx, -30, -14, 60, 28, 4); ctx.stroke();
+      ctx.textAlign = 'center'; ctx.font = `900 17px ${FONT}`; ctx.fillStyle = '#d7263d';
+      ctx.fillText('검열', 0, 1);
+      ctx.restore();
     }
     ctx.restore();
   }
@@ -1267,24 +1558,139 @@ function drawHpBar(){
   outlinedText(ctx, `${fmtNum(S.hp)} / ${fmtNum(S.max)}`, x + w / 2, y + h / 2 + 2, 24, '#fff', OUT, 5);
 }
 
-// 회복 의식 진행 막대: 남은 시간(초록)과 끊기까지 남은 공격 수(노랑)
-function drawCastBar(){
-  const c = S.cast;
-  if(!c || S.phase !== 'fight') return;
-  const T = THEMES[themeKey];
-  const w = 700, h = 30, x = 960 - w / 2, y = 196;
-  const timeLeft = clamp((c.end - S.clock) / (c.end - c.start), 0, 1);
-  const hitK = clamp(c.got / c.need, 0, 1);
+// 진행 중인 보스 기술 막대들 (회복 의식·체포·검문·검열·바리케이드·헌병 호위)
+function drawObjectives(){
+  if(S.phase !== 'fight') return;
+  const T = THEMES[themeKey], now = S.clock;
+  const items = [];
+  const timeK = (st, en) => clamp((en - now) / (en - st), 0, 1);
+  if(S.cast) items.push({ c: '#3ee07a', dark: '#10301c', label: `🩹 ${T.healName} — 공격해서 끊어라!  ${S.cast.got} / ${S.cast.need}`, k: timeK(S.cast.start, S.cast.end), p: S.cast.got / S.cast.need, sec: (S.cast.end - now) / 1000 });
+  if(S.arrest) items.push({ c: '#d9a066', dark: '#3a2410', label: `🔗 ${S.arrest.st.name} 체포됨 — ${S.arrest.need}번 공격해서 구출!  ${S.arrest.got} / ${S.arrest.need}`, k: timeK(S.arrest.start, S.arrest.end), p: S.arrest.got / S.arrest.need, sec: (S.arrest.end - now) / 1000 });
+  if(S.checkpoint) items.push({ c: '#ffd23f', dark: '#3a3000', label: `📋 ${T.checkName}: ${S.checkpoint.st.name} — 정답을 내라!`, k: timeK(S.checkpoint.start, S.checkpoint.end), sec: (S.checkpoint.end - now) / 1000 });
+  if(S.censor) items.push({ c: '#cfc7ae', dark: '#2a2820', label: `📰 ${T.censorName} — ${S.censor.set.size}명 문제 먹칠`, k: timeK(S.censor.start, S.censor.end), sec: (S.censor.end - now) / 1000 });
+  if(barricadeUp()) items.push({ c: '#e0b27a', dark: '#2a1a0a', label: `🚧 ${T.barricadeName} — 공격이 막힙니다`, k: timeK(S.barricadeStart, S.barricadeUntil), sec: (S.barricadeUntil - now) / 1000 });
+  const alive = S.minions.filter(m => !m.dead);
+  if(alive.length){
+    const hp = alive.reduce((n, m) => n + m.hp, 0), mx = S.minions.reduce((n, m) => n + m.max, 0);
+    items.push({ c: '#8fb3ff', dark: '#101c3a', label: `👮 ${T.minionName} 호위 중 (${alive.length}명) — ${T.bossName} 피해 절반`, k: hp / mx });
+  }
+  const w = 660, h = 18, x = 960 - w / 2;
+  let y = 202;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const blink = 0.75 + 0.25 * Math.sin(S.clock / 70);
-  ctx.globalAlpha = blink;
-  outlinedText(ctx, `🩹 ${T.healName} — 공격해서 끊어라!  ${c.got} / ${c.need}`, 960, y - 26, 30, '#6dff9e', '#032a10', 6);
-  ctx.globalAlpha = 1;
-  rr(ctx, x - 4, y - 4, w + 8, h + 8, 10); ctx.fillStyle = OUT; ctx.fill();
-  rr(ctx, x, y, w, h, 8); ctx.fillStyle = '#10301c'; ctx.fill();
-  if(timeLeft > 0){ rr(ctx, x, y, w * timeLeft, h, 8); ctx.fillStyle = '#3ee07a'; ctx.fill(); }
-  if(hitK > 0){ rr(ctx, x, y + h - 10, w * hitK, 10, 5); ctx.fillStyle = '#ffe14d'; ctx.fill(); }
-  outlinedText(ctx, `${((c.end - S.clock) / 1000).toFixed(1)}초`, 960, y + h / 2 + 1, 20, '#fff', OUT, 4);
+  for(const it of items){
+    ctx.globalAlpha = 0.85 + 0.15 * Math.sin(now / 90);
+    outlinedText(ctx, it.label, 960, y - 17, 23, it.c, '#000', 5);
+    ctx.globalAlpha = 1;
+    rr(ctx, x - 3, y - 3, w + 6, h + 6, 8); ctx.fillStyle = OUT; ctx.fill();
+    rr(ctx, x, y, w, h, 6); ctx.fillStyle = it.dark; ctx.fill();
+    if(it.k > 0){ rr(ctx, x, y, w * it.k, h, 6); ctx.fillStyle = it.c; ctx.fill(); }
+    if(it.p > 0){ rr(ctx, x, y + h - 6, w * clamp(it.p, 0, 1), 6, 3); ctx.fillStyle = '#ffe14d'; ctx.fill(); }
+    if(it.sec !== undefined) outlinedText(ctx, it.sec.toFixed(1) + '초', x + w + 36, y + h / 2 + 1, 18, '#fff', OUT, 4);
+    y += 52;
+  }
+}
+
+// 헌병(부하): 보스 양옆에 선다. 나타날 때는 위에서 내려오고, 쓰러지면 기울며 사라진다
+function drawMinions(){
+  for(const m of S.minions){
+    const t = S.clock / 1000;
+    const drop = (1 - easeOut(m.spawnT)) * -260;
+    const k = m.dead ? clamp(m.deadT / 1.2, 0, 1) : 0;
+    const H2 = 440, W2 = Math.round(H2 * 308 / 600);
+    ctx.save();
+    ctx.globalAlpha = m.spawnT * (1 - k);
+    // 그림자
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.beginPath(); ctx.ellipse(m.x, BOSS_FEET - 4, 110, 18, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.translate(m.x + m.knock, BOSS_FEET + drop + k * 40);
+    ctx.rotate(m.side * 0.6 * easeOut(k));
+    const breath = Math.sin(t * 2.4 + m.side) * 0.01;
+    ctx.scale(1, 1 + breath);
+    if(themeKey === 'korea' && imgOk(MP_IMG)){
+      mpOff.width = W2; mpOff.height = H2;
+      mpCtx.clearRect(0, 0, W2, H2);
+      // 보스를 바라보도록 오른쪽 헌병은 좌우를 뒤집는다
+      mpCtx.save();
+      if(m.side > 0){ mpCtx.translate(W2, 0); mpCtx.scale(-1, 1); }
+      mpCtx.drawImage(MP_IMG, 0, 0, W2, H2);
+      mpCtx.restore();
+      if(m.flash > 0){ mpCtx.globalCompositeOperation = 'source-atop'; mpCtx.fillStyle = `rgba(255,255,255,${m.flash * 0.8})`; mpCtx.fillRect(0, 0, W2, H2); mpCtx.globalCompositeOperation = 'source-over'; }
+      ctx.drawImage(mpOff, -W2 / 2, -H2);
+    } else {
+      drawMinionVector(m);
+    }
+    ctx.restore();
+    // 체력 막대
+    if(!m.dead){
+      const bw = 170, bx = m.x - bw / 2, by = BOSS_FEET - H2 - 40 + drop;
+      ctx.globalAlpha = m.spawnT;
+      rr(ctx, bx - 3, by - 3, bw + 6, 20, 6); ctx.fillStyle = OUT; ctx.fill();
+      rr(ctx, bx, by, bw * (m.hp / m.max), 14, 5); ctx.fillStyle = '#6fa8ff'; ctx.fill();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      outlinedText(ctx, THEMES[themeKey].minionName, m.x, by - 18, 22, '#cfe0ff', OUT, 5);
+      ctx.globalAlpha = 1;
+    }
+  }
+  // 호위 중: 헌병과 보스를 잇는 푸른 보호막
+  if(minionsAlive() && S.phase === 'fight'){
+    ctx.save();
+    ctx.globalAlpha = 0.18 + 0.08 * Math.sin(S.clock / 150);
+    ctx.strokeStyle = '#8fb3ff'; ctx.lineWidth = 10;
+    ctx.beginPath(); ctx.ellipse(BOSS_X, BOSS_FEET - 360, 330, 400, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+}
+// 그림이 없을 때(세계사 등) 코드로 그리는 부하 병사
+function drawMinionVector(m){
+  const g = ctx;
+  const body = themeKey === 'korea' ? '#1d2233' : '#6a2a8a', trim = '#e0b33c';
+  rr(g, -34, -110, 30, 110, 8); paint(g, '#111');
+  rr(g, 4, -110, 30, 110, 8); paint(g, '#111');
+  rr(g, -52, -300, 104, 200, 18); paint(g, body);
+  if(m.flash > 0){ g.globalAlpha *= 1; }
+  g.beginPath(); g.arc(0, -340, 42, 0, Math.PI * 2); paint(g, '#d9a676');
+  rr(g, -46, -392, 92, 34, 10); paint(g, themeKey === 'korea' ? '#15182a' : trim);
+  g.beginPath(); g.ellipse(-m.side * 60, -210, 40, 60, 0, 0, Math.PI * 2); paint(g, trim);
+  g.strokeStyle = '#6b4423'; g.lineWidth = 8; g.beginPath(); g.moveTo(m.side * 60, -60); g.lineTo(m.side * 60, -420); g.stroke();
+  if(m.flash > 0){ g.fillStyle = `rgba(255,255,255,${m.flash * 0.6})`; g.fillRect(-60, -430, 120, 430); }
+}
+
+// 바리케이드: 보스 앞에 세워지고, 끝나면 사라진다
+function drawBarricade(){
+  if(!barricadeUp() || S.phase !== 'fight') return;
+  const inK = clamp((S.clock - S.barricadeStart) / 250, 0, 1), outK = clamp((S.barricadeUntil - S.clock) / 300, 0, 1);
+  const a = Math.min(inK, outK);
+  const w = 820, h = Math.round(w * 566 / 900);
+  ctx.save();
+  ctx.globalAlpha = a;
+  const y = BOSS_FEET + 20 - h + (1 - easeOut(inK)) * -200;
+  if(imgOk(BARRICADE_IMG)) ctx.drawImage(BARRICADE_IMG, BOSS_X - w / 2, y, w, h);
+  else {
+    // 그림이 없으면 나무 기둥으로 간단히
+    ctx.strokeStyle = '#6b4423'; ctx.lineWidth = 34; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(BOSS_X - 380, y + h); ctx.lineTo(BOSS_X - 250, y + 40); ctx.moveTo(BOSS_X - 250, y + h); ctx.lineTo(BOSS_X - 380, y + 40);
+    ctx.moveTo(BOSS_X + 380, y + h); ctx.lineTo(BOSS_X + 250, y + 40); ctx.moveTo(BOSS_X + 250, y + h); ctx.lineTo(BOSS_X + 380, y + 40);
+    ctx.moveTo(BOSS_X - 400, y + 120); ctx.lineTo(BOSS_X + 400, y + 120); ctx.moveTo(BOSS_X - 400, y + h - 60); ctx.lineTo(BOSS_X + 400, y + h - 60); ctx.stroke();
+  }
+  // 막히는 느낌을 주는 옅은 방어막
+  ctx.globalAlpha = a * (0.12 + 0.06 * Math.sin(S.clock / 80));
+  ctx.fillStyle = '#a0d4ff';
+  ctx.beginPath(); ctx.ellipse(BOSS_X, BOSS_FEET - 330, 360, 420, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+// 체포된 학생과 보스 손을 잇는 포승줄
+function drawArrestRope(){
+  if(!S.arrest || S.phase !== 'fight') return;
+  const a = anchor(S.arrest.st);
+  const hx = BOSS_X - 175, hy = BOSS_FEET - 390;   // 보스 왼손(곤봉 쥔 손) 근처
+  const sag = 60 + Math.sin(S.clock / 200) * 12;
+  ctx.save();
+  for(const [w, c] of [[12, '#3a2410'], [7, '#c9a36a']]){
+    ctx.strokeStyle = c; ctx.lineWidth = w; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.quadraticCurveTo((hx + a.x) / 2, Math.max(hy, a.y) + sag, a.x, a.y); ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function drawCombo(){
@@ -1432,9 +1838,10 @@ function drawReady(){
     `보스 체력 ${fmtNum(RAID.hp)} · 제한 시간 ${RAID.limitMs / 60000}분 · 학생 목숨 ♥${RAID.hearts} · 쓰러지면 ${RAID.reviveMs / 1000}초 뒤 부활`,
     `오답을 내면 보스가 곧바로 반격 · 분노하면 호루라기로 ${RAID.whistleTargets}명을 기절시킵니다`,
     `보스는 계속 회복합니다 · 회복 의식은 ${RAID.healCastMs / 1000}초 안에 ${RAID.healNeed}번 때려야 끊을 수 있어요 (못 끊으면 ${Math.round(RAID.healAmount * 100)}% 회복)`,
+    '특수 공격: 🔗체포(구출) · 👮헌병 증원 · 📰신문 검열 · 📋불심 검문 · 🚧바리케이드',
     '5연속 정답 = 치명타 · 시간이 다 되거나 전원이 쓰러지면 실패'
   ];
-  lines.forEach((l, i) => ctx.fillText(l, 960, 530 + i * 42));
+  lines.forEach((l, i) => ctx.fillText(l, 960, 520 + i * 40));
   const blink = 0.6 + 0.4 * Math.sin(performance.now() / 300);
   ctx.globalAlpha = blink;
   outlinedText(ctx, '스페이스바 또는 ▶ 시작', 960, 740, 46, '#fff');
@@ -1522,9 +1929,12 @@ let lastT = performance.now();
 function frame(now){
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
-  if(running) update(dt);
-  draw();
+  // 다음 프레임을 먼저 예약해 두어, 한 번 오류가 나도 화면이 멈추지 않게 한다
   requestAnimationFrame(frame);
+  try {
+    if(running) update(dt);
+    draw();
+  } catch(e){ console.error(e); }
 }
 reset();
 // 주소 옵션: ?diff=1~5 난이도 · ?boss=world 세계사 보스로 시작 · ?auto 바로 시작(+&skip 등장 연출 생략) · ?hp=0.4 체력 비율을 정해 두고 시작(화면 점검용)
