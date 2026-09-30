@@ -110,22 +110,22 @@ const RAID_BASE = {
   barricadeMs: 4000,         // 바리케이드: 모든 공격을 막는다
   minionAt: [0.75, 0.4], minionShotShare: 0.6, minionBossDmg: 0.5   // 헌병이 있으면 공격 60%가 헌병에게 가고 헌병 경찰은 피해 절반
 };
-// 난이도 단계: 실제 게임 코드로 난이도마다 40~60판씩 돌려 맞춘 값 (2026-09-30, 제한 시간 5분 · 보스 자연 회복 없음, 30명 기준 · 20명도 비슷).
+// 난이도 단계: 실제 게임 코드로 난이도마다 100~200판씩 돌려 맞춘 값 (2026-09-30, 조금 더 쉽게 체력 약 4% 낮춤 · 제한 시간 5분 · 보스 자연 회복 없음, 30명 기준 · 20명도 비슷).
 // 목표: 2026-09-29(3분·자연 회복 있음) 때보다 조금 쉽게 — 그때 승률 보통 20/88/100 · 어려움 0/23/70 · 매우 어려움 0/0/3 · 지옥 빠름 82% 5%·90% 25%
 // 승률 메모는 '학생마다 약 9초에 한 번 답하는 속도' 기준: [정답률 70% / 82% / 90%] (빠름 = 약 4.5초에 한 번)
 //   attackGapMs: 곤봉 공격 간격 [평소 · 분노(50% 이하) · 광폭화(25% 이하)] (공격 인원은 RAID_BASE의 비율)
 const DIFFS = [
-  { name: '보통', emoji: '😐', color: '#3d8bfd', desc: '대부분 맞히면 이겨요', note: '정답률 80%면 충분',   // 약 42 / 100 / 100% (60%면 2%)
-    p: { hp: 55000, hearts: 6, reviveMs: 6000,  attackGapMs: [9000, 8000, 7000],  whistleGapMs: 13000, healNeed: 22, healAmount: 0.09,
+  { name: '보통', emoji: '😐', color: '#3d8bfd', desc: '대부분 맞히면 이겨요', note: '정답률 80%면 충분',   // 약 46 / 100 / 100% (60%면 0%)
+    p: { hp: 53000, hearts: 6, reviveMs: 6000,  attackGapMs: [9000, 8000, 7000],  whistleGapMs: 13000, healNeed: 22, healAmount: 0.09,
          specialGapMs: 17000, arrestNeed: 8,  censorCount: 8,  minionHp: 0.06 } },
-  { name: '어려움', emoji: '😠', color: '#ffb020', desc: '거의 다 맞혀야 해요', note: '정답률 90%는 되어야',   // 약 2 / 42 / 85%
-    p: { hp: 54500, hearts: 5, reviveMs: 8000,  attackGapMs: [8000, 7000, 6000],  whistleGapMs: 12000, healNeed: 24, healAmount: 0.10,
+  { name: '어려움', emoji: '😠', color: '#ffb020', desc: '거의 다 맞혀야 해요', note: '정답률 90%는 되어야',   // 약 1 / 50 / 94%
+    p: { hp: 52500, hearts: 5, reviveMs: 8000,  attackGapMs: [8000, 7000, 6000],  whistleGapMs: 12000, healNeed: 24, healAmount: 0.10,
          specialGapMs: 15000, arrestNeed: 10, censorCount: 10, minionHp: 0.07 } },
-  { name: '매우 어려움', emoji: '🔥', color: '#ff5a4a', desc: '빠르고 정확해야 해요', note: '보통 속도로는 거의 불가능',   // 0 / 0 / 7% · 빠름 70%면 100%
-    p: { hp: 56000, hearts: 5, reviveMs: 9000,  attackGapMs: [7000, 6000, 5000],  whistleGapMs: 11000, healNeed: 25, healAmount: 0.12,
+  { name: '매우 어려움', emoji: '🔥', color: '#ff5a4a', desc: '빠르고 정확해야 해요', note: '보통 속도로는 거의 불가능',   // 0 / 3 / 20% · 빠름 70%면 100%
+    p: { hp: 54000, hearts: 5, reviveMs: 9000,  attackGapMs: [7000, 6000, 5000],  whistleGapMs: 11000, healNeed: 25, healAmount: 0.12,
          specialGapMs: 13000, arrestNeed: 12, censorCount: 12, minionHp: 0.08 } },
-  { name: '지옥', emoji: '💀', color: '#b86bff', desc: '빨라도 버티기 힘들어요', note: '도전 과제용',   // 0 / 0 / 0% · 빠름 82% 약 10% · 빠름 90% 약 50%
-    p: { hp: 76000, hearts: 4, reviveMs: 11000, attackGapMs: [6000, 5000, 4000],  whistleGapMs: 10000, healNeed: 28, healAmount: 0.14,
+  { name: '지옥', emoji: '💀', color: '#b86bff', desc: '빨라도 버티기 힘들어요', note: '도전 과제용',   // 0 / 0 / 0% · 빠름 82% 약 20% · 빠름 90% 약 60%
+    p: { hp: 73000, hearts: 4, reviveMs: 11000, attackGapMs: [6000, 5000, 4000],  whistleGapMs: 10000, healNeed: 28, healAmount: 0.14,
          specialGapMs: 11000, arrestNeed: 14, censorCount: 14, minionHp: 0.09 } }
 ];
 let diffIdx = 0;   // 0 보통 · 1 어려움 · 2 매우 어려움 · 3 지옥
