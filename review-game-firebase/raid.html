@@ -51,7 +51,7 @@ cv.width = W; cv.height = H;
 const off = document.createElement('canvas');   // 보스를 먼저 그려 두고 번쩍임·분노 색을 입히는 캔버스
 off.width = 700; off.height = 780;
 const octx = off.getContext('2d');
-// 보스 그림: 한국사(헌병 경찰) 11장 · 세계사(히틀러) 5장. 동작 이름마다 쓸 그림 파일을 정한다(세계사는 없는 동작을 비슷한 그림으로 대신).
+// 보스 그림: 한국사(헌병 경찰) 11장 · 세계사(히틀러) 11장. 동작 이름마다 쓸 그림 파일을 정한다(없는 동작은 비슷한 그림으로 대신).
 // 모두 배경이 투명한 1005×900 틀에 발끝(가운데 아래)이 같은 자리에 오도록 맞춰 두었다.
 const SPRITE_W = 804, SPRITE_H = 720;
 const SPRITE_FEET_X = 402, SPRITE_FEET_Y = 714;   // 틀 안에서 발끝 위치
@@ -59,10 +59,11 @@ const sprOff = document.createElement('canvas');
 sprOff.width = SPRITE_W; sprOff.height = SPRITE_H;
 const sctx = sprOff.getContext('2d');
 const POSES = ['idle', 'hit', 'rage', 'hurt', 'down', 'whistle', 'swing', 'rope', 'stun', 'heal', 'guard'];
+// order: 부하 증원·검문(한국사는 호루라기, 세계사는 손가락으로 지목)
 const SPRITE_FILES = {
-  korea: Object.fromEntries(POSES.map(k => [k, 'police_' + k])),
-  world: { idle: 'hitler_idle', hit: 'hitler_hurt', rage: 'hitler_rage', hurt: 'hitler_hurt', down: 'hitler_down', whistle: 'hitler_rage',
-           swing: 'hitler_attack', rope: 'hitler_attack', stun: 'hitler_hurt', heal: 'hitler_idle', guard: 'hitler_idle' }
+  korea: { ...Object.fromEntries(POSES.map(k => [k, 'police_' + k])), order: 'police_whistle' },
+  world: { idle: 'hitler_idle', hit: 'hitler_hit', rage: 'hitler_rage', hurt: 'hitler_hurt', down: 'hitler_down', whistle: 'hitler_speech',
+           swing: 'hitler_attack', rope: 'hitler_order', order: 'hitler_order', stun: 'hitler_stun', heal: 'hitler_heal', guard: 'hitler_guard' }
 };
 const SPRITE_IMGS = {};   // 파일 이름 → 그림 (지금 보스 것만 불러온다)
 function bossSprites(){
@@ -73,9 +74,10 @@ function bossSprites(){
 function bossImg(pose){ return SPRITE_IMGS[bossSprites()[pose]]; }
 function imgOk(im){ return im.complete && im.naturalWidth > 0; }
 function spritesReady(){ return Object.values(bossSprites()).every(f => imgOk(SPRITE_IMGS[f])); }
-// 부하(헌병)와 바리케이드 그림
-const MP_IMG = new Image(); MP_IMG.src = 'assets/boss/mp.webp';
-const BARRICADE_IMG = new Image(); BARRICADE_IMG.src = 'assets/boss/barricade.webp';
+// 부하(헌병·친위대)와 바리케이드(방어선) 그림. 부하 그림은 보스를 바라보도록 flip 쪽을 좌우로 뒤집는다.
+const loadImg = src => { const im = new Image(); im.src = src; return im; };
+const MINION_IMGS = { korea: { img: loadImg('assets/boss/mp.webp'), flip: 1 }, world: { img: loadImg('assets/boss/ss.webp'), flip: -1 } };
+const BARRICADE_IMGS = { korea: loadImg('assets/boss/barricade.webp'), world: loadImg('assets/boss/barricade_world.webp') };
 const mpOff = document.createElement('canvas');   // 헌병이 맞을 때 하얗게 번쩍이는 효과용
 const mpCtx = mpOff.getContext('2d');
 const FONT = '"Malgun Gothic","Pretendard",sans-serif';
@@ -1109,7 +1111,7 @@ function startCheckpoint(){
   const st = pickStudent();
   if(!st) return;
   S.checkpoint = { st, start: S.clock, end: S.clock + RAID.checkMs };
-  showPose('whistle', 900);
+  showPose('order', 900);
   sfx('check');
   // 가짜 학생: 지목되면 서둘러 답한다 (가끔은 시간을 넘긴다)
   if(!LIVE) st.next = S.clock + rand(700, RAID.checkMs + 1500);
@@ -1165,7 +1167,7 @@ function summonMinions(){
   const T = THEMES[themeKey];
   const hp = Math.round(S.max * RAID.minionHp);
   S.minions = [-1, 1].map(side => ({ side, x: BOSS_X + side * 470, hp, max: hp, flash: 0, knock: 0, dead: false, deadT: 0, spawnT: 0 }));
-  showPose('whistle', 1200);
+  showPose('order', 1200);
   sfx('summon');
   S.shake = Math.max(S.shake, 22);
   for(const m of S.minions) for(let i = 0; i < 30; i++) S.parts.push({ x: m.x + rand(-120, 120), y: BOSS_FEET - rand(0, 60), vx: rand(-200, 200), vy: rand(-260, -40), life: rand(0.6, 1.2), t: 0, size: rand(10, 22), color: 'rgba(200,200,210,.7)', g: -40, kind: 'dot' });
@@ -1815,7 +1817,8 @@ function drawMinions(){
     const t = S.clock / 1000;
     const drop = (1 - easeOut(m.spawnT)) * -260;
     const k = m.dead ? clamp(m.deadT / 1.2, 0, 1) : 0;
-    const H2 = 440, W2 = Math.round(H2 * 308 / 600);
+    const MI = MINION_IMGS[themeKey];
+    const H2 = 440, W2 = imgOk(MI.img) ? Math.round(H2 * MI.img.naturalWidth / MI.img.naturalHeight) : 226;
     ctx.save();
     ctx.globalAlpha = m.spawnT * (1 - k);
     // 그림자
@@ -1825,13 +1828,13 @@ function drawMinions(){
     ctx.rotate(m.side * 0.6 * easeOut(k));
     const breath = Math.sin(t * 2.4 + m.side) * 0.01;
     ctx.scale(1, 1 + breath);
-    if(themeKey === 'korea' && imgOk(MP_IMG)){
+    if(imgOk(MI.img)){
       mpOff.width = W2; mpOff.height = H2;
       mpCtx.clearRect(0, 0, W2, H2);
-      // 보스를 바라보도록 오른쪽 헌병은 좌우를 뒤집는다
+      // 보스를 바라보도록 한쪽 부하는 좌우를 뒤집는다
       mpCtx.save();
-      if(m.side > 0){ mpCtx.translate(W2, 0); mpCtx.scale(-1, 1); }
-      mpCtx.drawImage(MP_IMG, 0, 0, W2, H2);
+      if(m.side === MI.flip){ mpCtx.translate(W2, 0); mpCtx.scale(-1, 1); }
+      mpCtx.drawImage(MI.img, 0, 0, W2, H2);
       mpCtx.restore();
       if(m.flash > 0){ mpCtx.globalCompositeOperation = 'source-atop'; mpCtx.fillStyle = `rgba(255,255,255,${m.flash * 0.8})`; mpCtx.fillRect(0, 0, W2, H2); mpCtx.globalCompositeOperation = 'source-over'; }
       ctx.drawImage(mpOff, -W2 / 2, -H2);
@@ -1859,7 +1862,7 @@ function drawMinions(){
     ctx.restore();
   }
 }
-// 그림이 없을 때(세계사 등) 코드로 그리는 부하 병사
+// 그림을 아직 못 불러왔을 때 코드로 그리는 부하 병사
 function drawMinionVector(m){
   const g = ctx;
   const body = themeKey === 'korea' ? '#1d2233' : '#4d5140', trim = themeKey === 'korea' ? '#e0b33c' : '#3a3d34';
@@ -1888,11 +1891,12 @@ function drawBarricade(){
   if(!barricadeUp() || S.phase !== 'fight') return;
   const inK = clamp((S.clock - S.barricadeStart) / 250, 0, 1), outK = clamp((S.barricadeUntil - S.clock) / 300, 0, 1);
   const a = Math.min(inK, outK);
-  const w = 820, h = Math.round(w * 566 / 900);
+  const BI = BARRICADE_IMGS[themeKey];
+  const w = themeKey === 'world' ? 900 : 820, h = imgOk(BI) ? Math.round(w * BI.naturalHeight / BI.naturalWidth) : Math.round(w * 566 / 900);
   ctx.save();
   ctx.globalAlpha = a;
   const y = BOSS_FEET + 20 - h + (1 - easeOut(inK)) * -200;
-  if(imgOk(BARRICADE_IMG)) ctx.drawImage(BARRICADE_IMG, BOSS_X - w / 2, y, w, h);
+  if(imgOk(BI)) ctx.drawImage(BI, BOSS_X - w / 2, y, w, h);
   else {
     // 그림이 없으면 나무 기둥으로 간단히
     ctx.strokeStyle = '#6b4423'; ctx.lineWidth = 34; ctx.lineCap = 'round';
