@@ -162,6 +162,15 @@
     };
   });
   el('nameInput').addEventListener('input', () => { el('step1Msg').textContent = ''; updateStep1Btn(); });
+  // 이름을 쓰고 엔터를 누르면 '다음'을 누른 것과 같다.
+  // 한글 입력 중 엔터는 키 이벤트가 두 번 올 수 있지만, 명단 확인 중엔 버튼이 잠겨 있어 한 번만 진행된다.
+  el('nameInput').addEventListener('keydown', e => {
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    updateStep1Btn();
+    if(!el('step1NextBtn').disabled) el('step1NextBtn').click();
+    else if(!grade || !cls) el('step1Msg').textContent = '학년과 반을 먼저 골라 주세요.';
+  });
   updateStep1Btn();
 
   function showStep(n){
