@@ -1622,7 +1622,7 @@ function raidBlockInfo(){
   if(!raidOn() || !m) return null;
   const now = serverNow();
   if(m.ko > now) return { icon:'💀', text:'쓰러졌어요!', sub:`${Math.ceil((m.ko - now)/1000)}초 뒤에 부활해요` };
-  if(m.ar > now) return { icon:'🔗', text:'포승줄에 묶였어요!', sub:`친구들이 보스를 공격하면 풀려나요 · ${Math.ceil((m.ar - now)/1000)}초 안에 구출되지 못하면 쓰러져요` };
+  if(m.ar > now) return { icon:'🔗', text:'게슈타포에게 체포됐어요!', sub:`친구들이 보스를 공격하면 풀려나요 · ${Math.ceil((m.ar - now)/1000)}초 안에 구출되지 못하면 쓰러져요` };
   if(m.st > now) return { icon:'😵', text:'기절했어요!', sub:`${Math.ceil((m.st - now)/1000)}초 뒤에 다시 싸울 수 있어요` };
   return null;
 }
@@ -1654,7 +1654,7 @@ function updateRaidUI(){
   el('raidWarn').classList.toggle('hidden', !(m && m.tg > now));
   const ck = m && m.ck > now;
   el('raidCheck').classList.toggle('hidden', !ck);
-  if(ck) el('raidCheck').textContent = `📋 불심 검문! ${Math.ceil((m.ck - now)/1000)}초 안에 정답을 내면 보스가 기절해요!`;
+  if(ck) el('raidCheck').textContent = `📋 게슈타포 심문! ${Math.ceil((m.ck - now)/1000)}초 안에 정답을 내면 보스가 기절해요!`;
   el('qbox').classList.toggle('raid-censor', !!(m && m.ce > now));
   const b = raidBlockInfo();
   el('raidBlock').classList.toggle('hidden', !b);

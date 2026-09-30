@@ -51,17 +51,28 @@ cv.width = W; cv.height = H;
 const off = document.createElement('canvas');   // 보스를 먼저 그려 두고 번쩍임·분노 색을 입히는 캔버스
 off.width = 700; off.height = 780;
 const octx = off.getContext('2d');
-// 한국사 보스 그림 7장: 평소·맞음·분노·크게 다침·쓰러짐·호루라기·곤봉 휘두르기.
+// 보스 그림: 한국사(헌병 경찰) 11장 · 세계사(히틀러) 5장. 동작 이름마다 쓸 그림 파일을 정한다(세계사는 없는 동작을 비슷한 그림으로 대신).
 // 모두 배경이 투명한 1005×900 틀에 발끝(가운데 아래)이 같은 자리에 오도록 맞춰 두었다.
 const SPRITE_W = 804, SPRITE_H = 720;
 const SPRITE_FEET_X = 402, SPRITE_FEET_Y = 714;   // 틀 안에서 발끝 위치
 const sprOff = document.createElement('canvas');
 sprOff.width = SPRITE_W; sprOff.height = SPRITE_H;
 const sctx = sprOff.getContext('2d');
-const POLICE = {};
-['idle', 'hit', 'rage', 'hurt', 'down', 'whistle', 'swing', 'rope', 'stun', 'heal', 'guard'].forEach(k => { const im = new Image(); im.src = 'assets/boss/police_' + k + '.webp'; POLICE[k] = im; });
+const POSES = ['idle', 'hit', 'rage', 'hurt', 'down', 'whistle', 'swing', 'rope', 'stun', 'heal', 'guard'];
+const SPRITE_FILES = {
+  korea: Object.fromEntries(POSES.map(k => [k, 'police_' + k])),
+  world: { idle: 'hitler_idle', hit: 'hitler_hurt', rage: 'hitler_rage', hurt: 'hitler_hurt', down: 'hitler_down', whistle: 'hitler_rage',
+           swing: 'hitler_attack', rope: 'hitler_attack', stun: 'hitler_hurt', heal: 'hitler_idle', guard: 'hitler_idle' }
+};
+const SPRITE_IMGS = {};   // 파일 이름 → 그림 (지금 보스 것만 불러온다)
+function bossSprites(){
+  const set = SPRITE_FILES[themeKey];
+  for(const f of Object.values(set)) if(!SPRITE_IMGS[f]){ const im = new Image(); im.src = 'assets/boss/' + f + '.webp'; SPRITE_IMGS[f] = im; }
+  return set;
+}
+function bossImg(pose){ return SPRITE_IMGS[bossSprites()[pose]]; }
 function imgOk(im){ return im.complete && im.naturalWidth > 0; }
-function spritesReady(){ return Object.values(POLICE).every(imgOk); }
+function spritesReady(){ return Object.values(bossSprites()).every(f => imgOk(SPRITE_IMGS[f])); }
 // 부하(헌병)와 바리케이드 그림
 const MP_IMG = new Image(); MP_IMG.src = 'assets/boss/mp.webp';
 const BARRICADE_IMG = new Image(); BARRICADE_IMG.src = 'assets/boss/barricade.webp';
@@ -83,11 +94,11 @@ const THEMES = {
     shots: ['torch', 'ink'], winLine: '반 전체가 힘을 모아 헌병 경찰을 물리쳤습니다!', loseLine: '헌병 경찰이 버텨 냈습니다… 다시 도전하세요!'
   },
   world: {
-    label: '세계사 · 크세르크세스', bossName: '크세르크세스 대왕', sub: '페르시아 제국의 왕',
-    critText: '스파르타!', rageText: '분노! 불사 부대가 깨어났다', counterText: '불사 부대 돌격!',
-    attackName: '창 투척', wrongText: '오답 반격!', healName: '불사 부대 교대', enrageText: '광폭화! 공격이 거세진다',
-    arrestName: '사슬 포획', summonName: '불사 부대 소환', minionName: '불사 부대', censorName: '공포 정치', checkName: '왕의 심문', barricadeName: '방패 벽',
-    shots: ['arrow', 'spear'], winLine: '반 전체가 힘을 모아 크세르크세스 대왕을 물리쳤습니다!', loseLine: '대왕이 버텨 냈습니다… 다시 도전하세요!'
+    label: '세계사 · 히틀러', bossName: '히틀러', sub: '나치 독일의 독재자',
+    critText: '연합군 총반격!', rageText: '분노! 히틀러가 권총을 뽑았다', counterText: '선동 연설!',
+    attackName: '권총 사격', wrongText: '오답 반격!', healName: '총동원령', enrageText: '광폭화! 공격이 거세진다',
+    arrestName: '게슈타포 체포', summonName: '친위대 증원', minionName: '친위대', censorName: '선전 검열', checkName: '게슈타포 심문', barricadeName: '방어선',
+    shots: ['torch', 'ink'], winLine: '반 전체가 힘을 모아 히틀러를 물리쳤습니다!', loseLine: '히틀러가 버텨 냈습니다… 다시 도전하세요!'
   }
 };
 // 모든 난이도에 공통인 규칙
@@ -388,6 +399,13 @@ function sfx(kind){
         noise(0.25, 0.7, 'bandpass', 500, 150, i * 0.2, { dirt: 1, q: 1.2 });
       }
       break;
+    case 'gun':       // 권총 사격: 탕! 탕!
+      for(const d of [0, 0.14]){
+        noise(0.05, 1, 'highpass', 6000, 2500, d, { dirt: 1 });
+        thump(180, 0.25, 0.9, d, { fall: 0.2 });
+        noise(0.4, 0.5, 'lowpass', 3000, 200, d + 0.01, { dirt: 1, rev: 0.4 });
+      }
+      break;
     case 'block':     // 공격이 막힘: 쨍! 쇠 소리
       [620, 1047, 1580, 2310].forEach((f, i) => tone('sine', f, f * 0.99, 0.5 - i * 0.08, 0.3, 0, { rev: 0.3 }));
       noise(0.03, 0.8, 'highpass', 5000, 3000, 0, { dirt: 1 });
@@ -438,11 +456,26 @@ const CITY = (() => {
   }
   return arr;
 })();
-const COLUMNS = (() => {
-  const r = seeded(11), arr = [];
-  for(let i = 0; i < 14; i++) arr.push({ x: 60 + i * 140 + r() * 30, h: 240 + r() * 120, broken: r() < 0.3 });
+// 세계사 배경: 부서진 건물 · 연기 · 잔해
+const RUINS = (() => {
+  const r = seeded(19), arr = [];
+  for(const far of [true, false]){
+    let x = -30;
+    while(x < W + 40){
+      const w = 90 + r() * 150, h = (far ? 200 : 110) + r() * (far ? 200 : 170);
+      const top = [[0, h * (0.6 + r() * 0.4)]];
+      for(let dx = 18; dx < w; dx += 14 + r() * 26) top.push([dx, h * (0.45 + r() * 0.55)]);
+      top.push([w, h * (0.5 + r() * 0.5)]);
+      const wins = [];
+      for(let wy = 30; wy < h * 0.45; wy += 36) for(let wx = 14; wx < w - 20; wx += 30) if(r() < 0.18) wins.push([wx, wy + 16]);
+      arr.push({ x, w, top, wins, far });
+      x += w + (far ? 10 : 40 + r() * 80);
+    }
+  }
   return arr;
 })();
+const SMOKE = (() => { const r = seeded(23), a = []; for(let i = 0; i < 14; i++) a.push({ x: r() * W, r: 40 + r() * 60, v: 0.03 + r() * 0.04, p: r() }); return a; })();
+const RUBBLE = (() => { const r = seeded(29), a = []; for(let i = 0; i < 16; i++) a.push([r() * W, 850 + r() * 220, 30 + r() * 70]); return a; })();
 const STARS = (() => { const r = seeded(3), a = []; for(let i = 0; i < 90; i++) a.push([r() * W, r() * 480, r()]); return a; })();
 
 function drawBackground(g){
@@ -470,25 +503,49 @@ function drawBackground(g){
     ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 2;
     for(let i = -10; i <= 10; i++){ ctx.beginPath(); ctx.moveTo(960 + i * 60, 820); ctx.lineTo(960 + i * 260, H); ctx.stroke(); }
   } else {
+    // 폐허가 된 도시(1945년 베를린 느낌): 연기 낀 붉은 하늘 · 탐조등 · 부서진 건물
     const sky = ctx.createLinearGradient(0, 0, 0, 820);
-    sky.addColorStop(0, '#3a1d4a'); sky.addColorStop(0.5, '#b8563a'); sky.addColorStop(1, '#f2b25a');
+    sky.addColorStop(0, '#16141a'); sky.addColorStop(0.55, '#3a2a2a'); sky.addColorStop(1, '#8a4a2a');
     ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
-    const sun = ctx.createRadialGradient(960, 640, 10, 960, 640, 260);
-    sun.addColorStop(0, 'rgba(255,240,200,.95)'); sun.addColorStop(0.35, 'rgba(255,200,120,.6)'); sun.addColorStop(1, 'rgba(255,160,80,0)');
-    ctx.fillStyle = sun; ctx.fillRect(600, 300, 720, 700);
-    // 페르세폴리스 기둥 실루엣
-    ctx.fillStyle = '#4a2530';
-    for(const c of COLUMNS){
-      const top = 820 - c.h * (c.broken ? 0.6 : 1);
-      ctx.fillRect(c.x, top, 30, 820 - top);
-      if(!c.broken){ ctx.fillRect(c.x - 16, top - 26, 62, 26); ctx.fillRect(c.x - 6, top - 44, 42, 18); }
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for(const [bx, sp, ph] of [[380, 0.35, 0], [1540, 0.3, 2], [960, 0.22, 4]]){
+      const ang = -Math.PI / 2 + Math.sin(t * sp + ph) * 0.55;
+      const beam = ctx.createLinearGradient(bx, 820, bx + Math.cos(ang) * 900, 820 + Math.sin(ang) * 900);
+      beam.addColorStop(0, 'rgba(255,245,210,.16)'); beam.addColorStop(1, 'rgba(255,245,210,0)');
+      ctx.fillStyle = beam;
+      ctx.beginPath(); ctx.moveTo(bx, 820);
+      ctx.lineTo(bx + Math.cos(ang - 0.06) * 1000, 820 + Math.sin(ang - 0.06) * 1000);
+      ctx.lineTo(bx + Math.cos(ang + 0.06) * 1000, 820 + Math.sin(ang + 0.06) * 1000);
+      ctx.closePath(); ctx.fill();
     }
-    ctx.fillRect(0, 800, W, 20);
+    ctx.restore();
+    // 불타는 지평선
+    const fire = ctx.createLinearGradient(0, 600, 0, 820);
+    fire.addColorStop(0, 'rgba(255,110,40,0)'); fire.addColorStop(1, `rgba(255,110,40,${0.35 + 0.08 * Math.sin(t * 3)})`);
+    ctx.fillStyle = fire; ctx.fillRect(0, 600, W, 220);
+    // 부서진 건물 실루엣 (지붕이 깨진 톱니 모양)
+    for(const b of RUINS){
+      ctx.fillStyle = b.far ? '#2a2226' : '#1a1518';
+      ctx.beginPath(); ctx.moveTo(b.x, 820);
+      for(const [dx, dh] of b.top) ctx.lineTo(b.x + dx, 820 - dh);
+      ctx.lineTo(b.x + b.w, 820); ctx.closePath(); ctx.fill();
+      if(!b.far){
+        ctx.fillStyle = 'rgba(255,150,70,.35)';
+        for(const [wx, wy] of b.wins) ctx.fillRect(b.x + wx, 820 - wy, 12, 16);
+      }
+    }
+    // 피어오르는 연기
+    ctx.fillStyle = 'rgba(40,34,36,.35)';
+    for(const sm of SMOKE){
+      const k = (t * sm.v + sm.p) % 1;
+      ctx.beginPath(); ctx.arc(sm.x + Math.sin(k * 6 + sm.p * 9) * 30, 780 - k * 520, sm.r * (0.5 + k), 0, Math.PI * 2); ctx.fill();
+    }
     const ground = ctx.createLinearGradient(0, 820, 0, H);
-    ground.addColorStop(0, '#b0773f'); ground.addColorStop(1, '#5a3620');
+    ground.addColorStop(0, '#4a3e36'); ground.addColorStop(1, '#1c1714');
     ctx.fillStyle = ground; ctx.fillRect(0, 820, W, H - 820);
-    ctx.strokeStyle = 'rgba(0,0,0,.08)'; ctx.lineWidth = 3;
-    for(let i = 0; i < 6; i++){ ctx.beginPath(); ctx.moveTo(0, 860 + i * 40); ctx.bezierCurveTo(600, 840 + i * 44, 1300, 880 + i * 38, W, 850 + i * 42); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(0,0,0,.18)';
+    for(const [rx, ry, rw] of RUBBLE){ ctx.beginPath(); ctx.ellipse(rx, ry, rw, rw * 0.28, 0, 0, Math.PI * 2); ctx.fill(); }
   }
   // 분노 상태: 붉은 테두리가 맥박처럼
   if(S.rage && S.phase !== 'victory'){
@@ -680,7 +737,7 @@ function swingAngle(p, base){
   return lerp(-0.5, base, easeOut((p - 0.5) / 0.5));
 }
 
-// 한국사 보스 그림 고르기 (위에서부터 우선)
+// 보스 그림 고르기 (위에서부터 우선)
 //   쓰러짐: 격파 연출 후반·승리 화면 / 맞음: 격파 폭발 중 / 기절: 기절 중(눈 돌아감)
 //   치료: 회복 의식 중(부하가 치료) / 방어: 바리케이드 중 / 맞음: 치명타 직후 / 공격 동작: 호루라기·곤봉 휘두르기·회복 성공(치료)
 //   크게 다침: 체력 25% 이하 / 분노: 50% 이하·실패 화면 / 그 외: 평소
@@ -699,7 +756,7 @@ function policePose(){
 }
 // 공격 동작 그림을 잠깐 보여 준다
 function showPose(kind, ms){ S.poseKind = kind; S.poseUntil = S.clock + ms; }
-function useSprite(){ return themeKey === 'korea' && spritesReady(); }
+function useSprite(){ return spritesReady(); }
 
 // 보스를 따로 그린 뒤 번쩍임·분노 색을 입히고, 본 화면에 붙일 캔버스와 발끝 기준점을 돌려준다
 function renderBoss(){
@@ -708,9 +765,9 @@ function renderBoss(){
   g.setTransform(1, 0, 0, 1, 0, 0);
   g.clearRect(0, 0, cvs.width, cvs.height);
   if(sprite){
-    g.drawImage(POLICE[policePose()], 0, 0, SPRITE_W, SPRITE_H);
+    g.drawImage(bossImg(policePose()), 0, 0, SPRITE_W, SPRITE_H);
   } else {
-    // 그림 파일을 아직 못 불러왔거나 세계사 보스일 때는 코드로 그린 캐릭터
+    // 그림 파일을 아직 못 불러왔을 때는 코드로 그린 캐릭터
     const p = { t: S.clock / 1000, rage: S.rage, attack: S.attack };
     if(themeKey === 'korea') drawPolice(g, p); else drawKing(g, p);
   }
@@ -933,7 +990,8 @@ function basicAttack(){
   S.timers.push({ at: S.clock + RAID.telegraphMs, fn: () => {
     if(S.phase !== 'fight' || bossStunned()) return;
     S.attack = 0.55;
-    showPose('swing', 650);   // 곤봉 휘두르기
+    showPose('swing', 650);   // 곤봉 휘두르기(한국사) · 권총 겨누기(세계사)
+    if(themeKey === 'world') sfx('gun');
     for(const st of targets) bossStrike(st, 0.4, T.attackName);
   }});
   S.attackAt = S.clock + RAID.attackGapMs[lvl];
@@ -942,7 +1000,7 @@ function basicAttack(){
 function enterRage(){
   const T = THEMES[themeKey];
   S.rage = true;
-  S.banner = { txt: T.rageText, sub: '체력 50% 이하 · 호루라기 반격으로 여러 명이 기절합니다!', t: 0, life: 2.2, color: '#ff5a4a', red: true };
+  S.banner = { txt: T.rageText, sub: `체력 50% 이하 · ${withRo(T.counterText.replace('!', ''))} 여러 명이 기절합니다!`, t: 0, life: 2.2, color: '#ff5a4a', red: true };
   S.shake = Math.max(S.shake, 30);
   S.counterAt = S.clock + 4000;
   for(let i = 0; i < 40; i++) S.parts.push({ x: BOSS_X + rand(-200, 200), y: BOSS_FEET - rand(0, 500), vx: rand(-60, 60), vy: rand(-420, -160), life: rand(0.8, 1.6), t: 0, size: rand(4, 10), color: Math.random() < 0.5 ? '#ff4d2e' : '#ffb347', g: -50, kind: 'dot' });
@@ -1230,7 +1288,7 @@ function update(dt){
     S.bossY = k < 1 ? lerp(-900, 0, k * k) : 0;
     if(k >= 1 && !S.landed){
       S.landed = true; S.shake = 40; S.squash = 1.3; sfx('drop');
-      for(let i = 0; i < 50; i++) S.parts.push({ x: BOSS_X + rand(-260, 260), y: BOSS_FEET - 10, vx: rand(-500, 500), vy: rand(-380, -60), life: rand(0.5, 1), t: 0, size: rand(6, 16), color: themeKey === 'korea' ? '#6b5a50' : '#d8a867', g: 700, kind: 'dot' });
+      for(let i = 0; i < 50; i++) S.parts.push({ x: BOSS_X + rand(-260, 260), y: BOSS_FEET - 10, vx: rand(-500, 500), vy: rand(-380, -60), life: rand(0.5, 1), t: 0, size: rand(6, 16), color: themeKey === 'korea' ? '#6b5a50' : '#6a665e', g: 700, kind: 'dot' });
     }
     if(S.introT >= 2.4) startFight();
   }
@@ -1456,7 +1514,7 @@ function drawShots(){
       ctx.strokeStyle = '#c9a36a'; ctx.lineWidth = 7;
       ctx.beginPath(); ctx.ellipse(0, 0, 46, 30, 0, 0, Math.PI * 2); ctx.stroke();
     } else if(sh.type === 'boss'){
-      // 보스 공격: 붉은 기운을 두른 곤봉(한국사) / 창(세계사)
+      // 보스 공격: 붉은 기운을 두른 곤봉(한국사) / 총알(세계사)
       const gr = ctx.createRadialGradient(0, 0, 2, 0, 0, 56);
       gr.addColorStop(0, 'rgba(255,90,70,.9)'); gr.addColorStop(1, 'rgba(160,0,0,0)');
       ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, 0, 56, 0, Math.PI * 2); ctx.fill();
@@ -1466,10 +1524,12 @@ function drawShots(){
         rr(ctx, 30, -11, 22, 22, 6); paint(ctx, '#3a2014', 4);
       } else {
         ctx.rotate(p.a);
-        ctx.strokeStyle = '#5a3620'; ctx.lineWidth = 8; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(-110, 0); ctx.lineTo(0, 0); ctx.stroke();
-        ctx.fillStyle = '#ffb3a8'; ctx.strokeStyle = OUT; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(32, 0); ctx.lineTo(-6, -12); ctx.lineTo(-6, 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+        const tr = ctx.createLinearGradient(-150, 0, 0, 0);   // 총알 궤적
+        tr.addColorStop(0, 'rgba(255,220,150,0)'); tr.addColorStop(1, 'rgba(255,230,170,.9)');
+        ctx.strokeStyle = tr; ctx.lineWidth = 10; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(-150, 0); ctx.lineTo(-4, 0); ctx.stroke();
+        rr(ctx, -16, -9, 26, 18, 4); paint(ctx, '#c9973a', 3);
+        ctx.beginPath(); ctx.moveTo(10, -9); ctx.quadraticCurveTo(30, 0, 10, 9); ctx.closePath(); paint(ctx, '#b87333', 3);
       }
     } else if(sh.type === 'torch' || sh.type === 'crit'){
       const r = sh.type === 'crit' ? 34 : 22;
@@ -1802,15 +1862,24 @@ function drawMinions(){
 // 그림이 없을 때(세계사 등) 코드로 그리는 부하 병사
 function drawMinionVector(m){
   const g = ctx;
-  const body = themeKey === 'korea' ? '#1d2233' : '#6a2a8a', trim = '#e0b33c';
+  const body = themeKey === 'korea' ? '#1d2233' : '#4d5140', trim = themeKey === 'korea' ? '#e0b33c' : '#3a3d34';
   rr(g, -34, -110, 30, 110, 8); paint(g, '#111');
   rr(g, 4, -110, 30, 110, 8); paint(g, '#111');
   rr(g, -52, -300, 104, 200, 18); paint(g, body);
   if(m.flash > 0){ g.globalAlpha *= 1; }
   g.beginPath(); g.arc(0, -340, 42, 0, Math.PI * 2); paint(g, '#d9a676');
-  rr(g, -46, -392, 92, 34, 10); paint(g, themeKey === 'korea' ? '#15182a' : trim);
-  g.beginPath(); g.ellipse(-m.side * 60, -210, 40, 60, 0, 0, Math.PI * 2); paint(g, trim);
-  g.strokeStyle = '#6b4423'; g.lineWidth = 8; g.beginPath(); g.moveTo(m.side * 60, -60); g.lineTo(m.side * 60, -420); g.stroke();
+  if(themeKey === 'korea'){ rr(g, -46, -392, 92, 34, 10); paint(g, '#15182a'); }
+  else { g.beginPath(); g.ellipse(0, -362, 58, 44, 0, Math.PI, 0); g.lineTo(62, -350); g.lineTo(-62, -350); g.closePath(); paint(g, '#3f4436'); }   // 철모
+  if(themeKey === 'korea'){
+    g.beginPath(); g.ellipse(-m.side * 60, -210, 40, 60, 0, 0, Math.PI * 2); paint(g, trim);
+    g.strokeStyle = '#6b4423'; g.lineWidth = 8; g.beginPath(); g.moveTo(m.side * 60, -60); g.lineTo(m.side * 60, -420); g.stroke();
+  } else {
+    // 소총을 비스듬히 든 병사
+    g.save(); g.translate(-m.side * 20, -220); g.rotate(-m.side * 0.5);
+    rr(g, -9, -150, 18, 230, 6); paint(g, '#5a3a22');
+    rr(g, -5, -200, 10, 70, 4); paint(g, '#2a2a2a');
+    g.restore();
+  }
   if(m.flash > 0){ g.fillStyle = `rgba(255,255,255,${m.flash * 0.6})`; g.fillRect(-60, -430, 120, 430); }
 }
 
@@ -1968,6 +2037,16 @@ function drawLose(){
   drawMvp(px, pw, py + 305);
 }
 
+// '호루라기 반격으로' · '선동 연설로'처럼 받침에 맞춰 (으)로를 붙인다
+function withRo(w){
+  const c = w.charCodeAt(w.length - 1) - 0xAC00, jong = c >= 0 && c < 11172 ? c % 28 : 0;
+  return w + (jong === 0 || jong === 8 ? '로' : '으로');
+}
+// 준비 화면에 보여 줄 특수 공격 목록 (보스마다 이름이 다르다)
+function specialLine(long){
+  const T = THEMES[themeKey];
+  return `특수 공격: 🔗${T.arrestName}(${long ? '친구들이 공격해서 구출' : '구출'}) · 👮${T.summonName} · 📰${T.censorName} · 📋${T.checkName} · 🚧${T.barricadeName}`;
+}
 // 준비 화면의 난이도 카드 위치 (클릭 판정에도 쓴다)
 const DIFF_CARD = { w: 250, h: 132, gap: 18, y: 330 };
 function diffCardX(i){
@@ -1985,7 +2064,7 @@ function drawReady(){
     ctx.fillText(`참가 학생 ${S.students.length}명 · 선생님이 게임을 시작하면 보스가 나타납니다`, 960, 520);
     ctx.font = `600 26px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.75)';
     ctx.fillText('문제를 맞히면 보스를 공격! 틀리면 보스가 반격합니다 · 목숨 ♥가 0이 되면 잠시 쓰러져요', 960, 580);
-    ctx.fillText('특수 공격: 🔗체포(친구들이 공격해서 구출) · 👮헌병 증원 · 📰신문 검열 · 📋불심 검문 · 🚧바리케이드', 960, 625);
+    ctx.fillText(specialLine(true), 960, 625);
     return;
   }
   ctx.fillStyle = 'rgba(5,5,15,.7)'; ctx.fillRect(0, 0, W, H);
@@ -2008,9 +2087,9 @@ function drawReady(){
   ctx.font = `600 25px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.85)';
   const lines = [
     `보스 체력 ${fmtNum(RAID.hp)} · 제한 시간 ${RAID.limitMs / 60000}분 · 학생 목숨 ♥${RAID.hearts} · 쓰러지면 ${RAID.reviveMs / 1000}초 뒤 부활`,
-    `오답을 내면 보스가 곧바로 반격 · 분노하면 호루라기로 학생 ${Math.round(RAID.whistleFrac * 100)}%를 기절시킵니다`,
-    `보스는 계속 회복합니다 · 회복 의식은 ${RAID.healCastMs / 1000}초 안에 ${RAID.healNeed}번 때려야 끊을 수 있어요 (못 끊으면 ${Math.round(RAID.healAmount * 100)}% 회복)`,
-    '특수 공격: 🔗체포(구출) · 👮헌병 증원 · 📰신문 검열 · 📋불심 검문 · 🚧바리케이드',
+    `오답을 내면 보스가 곧바로 반격 · 분노하면 ${withRo(THEMES[themeKey].counterText.replace('!', ''))} 학생 ${Math.round(RAID.whistleFrac * 100)}%를 기절시킵니다`,
+    `보스는 회복 의식(${THEMES[themeKey].healName})으로 회복합니다 · 회복 의식은 ${RAID.healCastMs / 1000}초 안에 ${RAID.healNeed}번 때려야 끊을 수 있어요 (못 끊으면 ${Math.round(RAID.healAmount * 100)}% 회복)`,
+    specialLine(false),
     '5연속 정답 = 치명타 · 시간이 다 되거나 전원이 쓰러지면 실패'
   ];
   lines.forEach((l, i) => ctx.fillText(l, 960, 520 + i * 40));
