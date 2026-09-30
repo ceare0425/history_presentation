@@ -100,7 +100,7 @@ const RAID_DIFF_TITLES = [
 ];
 const DAY_STEPS = [[3,'작심삼일 돌파','common'],[7,'개근상','rare'],[20,'역사 덕후','epic']];
 const HIDDEN_TITLES = [
-  { id:'flawless',    emoji:'💎', name:'무결점',     desc:'한 판에서 한 번도 틀리지 않고 20층 도달' },
+  { id:'flawless',    emoji:'💎', name:'무결점',     desc:'20문제 연속 정답' },
   { id:'buzzer',      emoji:'⏱️', name:'극장골',     desc:'수업 게임 종료 10초 전 안에 1등으로 올라서서 우승' },
   { id:'indomitable', emoji:'🦾', name:'불굴의 의지', desc:'수업 게임 한 판에서 방해 아이템을 10번 이상 맞고도 1등' },
   { id:'owl',         emoji:'🦉', name:'올빼미',     desc:'밤 10시가 넘어서 문제 풀기' },
