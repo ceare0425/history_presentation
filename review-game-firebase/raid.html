@@ -76,11 +76,11 @@ const NAMES = ['김민준','이서연','박지호','최하은','정도윤','강�
 
 const THEMES = {
   korea: {
-    label: '한국사 · 일제 순사', bossName: '일제 순사', sub: '무단 통치의 앞잡이',
-    critText: '대한 독립 만세!', rageText: '분노! 순사가 곤봉을 휘두른다', counterText: '호루라기 반격!',
+    label: '한국사 · 헌병 경찰', bossName: '헌병 경찰', sub: '무단 통치의 앞잡이',
+    critText: '대한 독립 만세!', rageText: '분노! 헌병 경찰이 곤봉을 휘두른다', counterText: '호루라기 반격!',
     attackName: '곤봉 내려치기', wrongText: '오답 반격!', healName: '헌병대 지원 요청', enrageText: '광폭화! 공격이 거세진다',
     arrestName: '포승줄 체포', summonName: '헌병 증원', minionName: '헌병', censorName: '신문 검열', checkName: '불심 검문', barricadeName: '바리케이드',
-    shots: ['torch', 'ink'], winLine: '반 전체가 힘을 모아 일제 순사를 물리쳤습니다!', loseLine: '순사가 버텨 냈습니다… 다시 도전하세요!'
+    shots: ['torch', 'ink'], winLine: '반 전체가 힘을 모아 헌병 경찰을 물리쳤습니다!', loseLine: '헌병 경찰이 버텨 냈습니다… 다시 도전하세요!'
   },
   world: {
     label: '세계사 · 크세르크세스', bossName: '크세르크세스 대왕', sub: '페르시아 제국의 왕',
@@ -108,23 +108,23 @@ const RAID_BASE = {
   checkMs: 5000, checkStunMs: 2500,   // 불심 검문: 지목된 학생이 5초 안에 정답 → 보스 2.5초 기절, 오답·시간 초과 → 목숨 2개
   censorMs: 6000, censorAcc: 0.5,     // 신문 검열: 먹칠당한 학생은 문제가 잘 안 보여 정답률이 떨어진다 (가짜 학생 기준 50%)
   barricadeMs: 4000,         // 바리케이드: 모든 공격을 막는다
-  minionAt: [0.75, 0.4], minionShotShare: 0.6, minionBossDmg: 0.5   // 헌병이 있으면 공격 60%가 헌병에게 가고 순사는 피해 절반
+  minionAt: [0.75, 0.4], minionShotShare: 0.6, minionBossDmg: 0.5   // 헌병이 있으면 공격 60%가 헌병에게 가고 헌병 경찰은 피해 절반
 };
 // 난이도 단계: 실제 게임 코드로 난이도마다 30~40판씩 돌려 맞춘 값 (2026-09-29, 공격 인원 비율 적용 뒤 20명·30명 모두 측정).
 // 승률 메모는 '학생마다 약 9초에 한 번 답하는 속도' 기준: [정답률 70% / 82% / 90%] (빠름 = 약 4.5초에 한 번)
-//   attackGapMs: 곤봉 공격 간격 [평소 · 분노(50% 이하) · 광폭화(25% 이하)] (공격 인원은 RAID_BASE의 비율), regenPerSec: 초당 최대 체력 대비 회복(광폭화 때 2배)
+//   attackGapMs: 곤봉 공격 간격 [평소 · 분노(50% 이하) · 광폭화(25% 이하)] (공격 인원은 RAID_BASE의 비율)
 const DIFFS = [
   { name: '보통', emoji: '😐', color: '#3d8bfd', desc: '대부분 맞히면 이겨요', note: '정답률 80%면 충분',   // 약 20 / 88 / 100%
-    p: { hp: 26500, hearts: 6, reviveMs: 6000,  attackGapMs: [9000, 8000, 7000],  whistleGapMs: 13000, regenPerSec: 0.002,  healNeed: 22, healAmount: 0.09,
+    p: { hp: 26500, hearts: 6, reviveMs: 6000,  attackGapMs: [9000, 8000, 7000],  whistleGapMs: 13000, healNeed: 22, healAmount: 0.09,
          specialGapMs: 17000, arrestNeed: 8,  censorCount: 8,  minionHp: 0.06 } },
   { name: '어려움', emoji: '😠', color: '#ffb020', desc: '거의 다 맞혀야 해요', note: '정답률 90%는 되어야',   // 약 0 / 23 / 70%
-    p: { hp: 26000, hearts: 5, reviveMs: 8000,  attackGapMs: [8000, 7000, 6000],  whistleGapMs: 12000,  regenPerSec: 0.0022, healNeed: 24, healAmount: 0.10,
+    p: { hp: 26000, hearts: 5, reviveMs: 8000,  attackGapMs: [8000, 7000, 6000],  whistleGapMs: 12000, healNeed: 24, healAmount: 0.10,
          specialGapMs: 15000, arrestNeed: 10, censorCount: 10, minionHp: 0.07 } },
   { name: '매우 어려움', emoji: '🔥', color: '#ff5a4a', desc: '빠르고 정확해야 해요', note: '보통 속도로는 거의 불가능',   // 0 / 0 / 3% · 빠름 82%면 100%
-    p: { hp: 30000, hearts: 5, reviveMs: 9000,  attackGapMs: [7000, 6000, 5000],  whistleGapMs: 11000,  regenPerSec: 0.0025, healNeed: 25, healAmount: 0.12,
+    p: { hp: 30000, hearts: 5, reviveMs: 9000,  attackGapMs: [7000, 6000, 5000],  whistleGapMs: 11000, healNeed: 25, healAmount: 0.12,
          specialGapMs: 13000, arrestNeed: 12, censorCount: 12, minionHp: 0.08 } },
   { name: '지옥', emoji: '💀', color: '#b86bff', desc: '빨라도 버티기 힘들어요', note: '도전 과제용',   // 0 / 0 / 0% · 빠름 82% 5% · 빠름 90% 25%
-    p: { hp: 40000, hearts: 4, reviveMs: 11000, attackGapMs: [6000, 5000, 4000],  whistleGapMs: 10000,  regenPerSec: 0.0028, healNeed: 28, healAmount: 0.14,
+    p: { hp: 40000, hearts: 4, reviveMs: 11000, attackGapMs: [6000, 5000, 4000],  whistleGapMs: 10000, healNeed: 28, healAmount: 0.14,
          specialGapMs: 11000, arrestNeed: 14, censorCount: 14, minionHp: 0.09 } }
 ];
 let diffIdx = 0;   // 0 보통 · 1 어려움 · 2 매우 어려움 · 3 지옥
@@ -750,7 +750,7 @@ function reset(){
     clock: 0, phase: 'ready', introT: 0, landed: false,
     hp: RAID.hp, ghost: RAID.hp, max: RAID.hp,
     rage: false, enrage: false, counterAt: 0, attack: 0, hitPose: 0,
-    attackAt: 0, poseKind: '', poseUntil: 0, fallen: false, regenAcc: 0, regenShowAt: 0, healFlash: 0,
+    attackAt: 0, poseKind: '', poseUntil: 0, fallen: false, healFlash: 0,
     cast: null, healsDone: [], nextHealAt: 0, bossStunUntil: 0,
     specialAt: 0, lastSpecial: '', arrest: null, checkpoint: null, censor: null, barricadeUntil: 0, barricadeStart: 0,
     minions: [], minionWaves: [],
@@ -783,7 +783,6 @@ function startFight(){
   S.phase = 'fight'; S.fightStart = S.clock;
   S.serverBase = serverNow() - S.clock;   // 게임 시계 → 서버 시각 변환용
   S.attackAt = S.clock + RAID.firstAttackMs;
-  S.regenShowAt = S.clock + 1000;   // 회복 숫자는 1초 분량씩 모아서 보여 준다
   S.specialAt = S.clock + RAID.specialFirstMs;
   const mean = SPEEDS[speedIdx].mean;
   for(const st of S.students) st.next = S.clock + rand(200, mean);
@@ -951,7 +950,7 @@ function enterRage(){
 function enterEnrage(){
   const T = THEMES[themeKey];
   S.enrage = true;
-  S.banner = { txt: T.enrageText, sub: '체력 25% 이하 · 회복 속도 2배 · 더 자주, 더 많이 공격합니다', t: 0, life: 2.2, color: '#ff3b30', red: true };
+  S.banner = { txt: T.enrageText, sub: '체력 25% 이하 · 더 자주, 더 많이 공격합니다', t: 0, life: 2.2, color: '#ff3b30', red: true };
   S.shake = Math.max(S.shake, 36);
   S.nextHealAt = S.clock + RAID.healRepeatMs;
   sfx('roar');
@@ -1254,9 +1253,6 @@ function update(dt){
     if(!bossStunned()){
       if(now >= S.attackAt) basicAttack();
       if(S.rage && now >= S.counterAt) counterAttack();
-      // 초당 회복 (광폭화 땐 2배), 1초마다 모아서 숫자로 보여 준다
-      S.regenAcc += S.max * RAID.regenPerSec * (S.enrage ? 2 : 1) * dt;
-      if(now >= S.regenShowAt){ S.regenShowAt = now + 1000; if(S.regenAcc >= 1){ healBoss(S.regenAcc, false); S.regenAcc = 0; } }
       if(S.enrage && !S.cast && S.healsDone.length >= RAID.healAt.length && now >= S.nextHealAt){ S.nextHealAt = now + RAID.healRepeatMs; startCast(); }
       if(!S.cast && now >= S.specialAt){ doSpecial(); S.specialAt = now + RAID.specialGapMs * rand(0.85, 1.15); }
     } else {
