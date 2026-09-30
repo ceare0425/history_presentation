@@ -931,7 +931,7 @@ function submitAnswer(){
   if(floor > lastFloor) popFloorBadge();
   lastFloor = floor;
   syncSoloLog(false);
-  if(floor >= 20 && wrongCount === 0) titles.unlockHidden('flawless');   // 숨은 칭호 '무결점'
+  if(streak >= 20) titles.unlockHidden('flawless');                      // 숨은 칭호 '무결점' (20연속 정답)
   if(correctCount >= 100) titles.unlockHidden('marathon');               // 숨은 칭호 '마라토너'
   flashFeedback(correct, q.answers[0], gain, wasRetry, usedHint);
   playCharacterReaction(correct);
