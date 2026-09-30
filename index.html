@@ -399,7 +399,9 @@
 
     function renderAll(data) {
       const subjects = data.subjects || [];
-      const totalPages = subjects.reduce((s, sub) => s + (sub.pages || []).length, 0);
+      const totalPages = subjects.reduce((s, sub) =>
+        s + (sub.pages || []).length
+          + (sub.groups || []).reduce((gs, g) => gs + (g.pages || []).length, 0), 0);
 
       // Header stats
       document.getElementById('headerStats').innerHTML = `
