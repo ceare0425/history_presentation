@@ -1441,7 +1441,7 @@ function soloEndLabel(e){
   if(e.ended === false){
     return (serverNow() - (e.ts||0) < SOLO_IDLE_MS)
       ? '<span class="muted">연습 중</span>'
-      : fmtSoloTime(e.ts) + '쯤 <span class="acc-bad" title="종료 기록이 남지 않아 마지막으로 답을 낸 시각을 대신 표시합니다">(중단 · 마지막 답 기준)</span>';
+      : '<span title="종료 기록이 남지 않아 마지막으로 답을 낸 시각을 대신 표시합니다">' + fmtSoloTime(e.ts) + '쯤</span>';
   }
   return fmtSoloTime(e.ts); // 종료 시각을 따로 안 남기던 구버전 기록
 }
