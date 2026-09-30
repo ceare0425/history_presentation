@@ -1109,11 +1109,14 @@ function startPresenceAndChat(){
   });
 
   const cRef = chatRef(ROOM, cls, name);
-  chatSeenKeys = new Set();
+  const mySeen = chatSeenKeys = new Set();
   chatMsgs = {};
   get(cRef).then(snap => {
+    if(chatSeenKeys !== mySeen) return;
     snap.forEach(msgSnap => { chatSeenKeys.add(msgSnap.key); chatMsgs[msgSnap.key] = msgSnap.val(); });
   }).catch(()=>{}).finally(() => {
+    // 불러오는 사이 연습이 끝났거나 새 연습이 시작됐으면 이 세션의 구독은 걸지 않는다 (안 그러면 풀리지 않는 구독이 남아 쪽지가 두 번 세어짐)
+    if(chatSeenKeys !== mySeen) return;
     chatUnsub = onChildAdded(cRef, (msgSnap) => {
       if(chatSeenKeys.has(msgSnap.key)) return;
       chatSeenKeys.add(msgSnap.key);

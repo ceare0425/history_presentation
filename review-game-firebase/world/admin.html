@@ -1188,7 +1188,7 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
   roundState = r ? {
     status: r.status||'idle', units: r.units||[],
     duration_sec: r.duration_sec||420, end_time: r.end_time ?? null, token: r.token||0,
-    order: r.order||'random', qids: r.qids||[],
+    order: r.order||'random', weight: r.weight||'even', qids: r.qids||[],
     team_mode: !!r.team_mode, team_count: r.team_count||4, bonus: r.bonus||[],
     items_mode: (r.items_mode === 'mild' ? 'nanta' : r.items_mode) || 'off',   // 구버전 '순한맛' 값 호환
     rivals: r.rivals || {}

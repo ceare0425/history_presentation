@@ -1491,6 +1491,8 @@ function stopRoundEffects(){
   clearFxState();
 }
 
+let listening = false;       // 방 전체 구독·타이머는 한 번만 건다 (내보내졌다가 다시 참여해도 중복되지 않게)
+let myNodeUnsubs = [];       // 내 id에 묶인 구독 — 다시 참여하면 새 id로 갈아 끼운다
 function startListening(){
   showView('waitingView');
   titles.bindButton(el('titlesBtnWait'));
@@ -1502,6 +1504,8 @@ function startListening(){
   if(savedFx && savedFx.pid === playerId && savedFx.seen){
     Object.entries(savedFx.seen).forEach(([k, at]) => seenItemEvents.set(k, at));
   }
+  if(listening){ listenMyNode(); return; }
+  listening = true;
 
   onValue(roomRef(ROOM, 'questions'), (snap)=>{
     questionsObj = snap.val() || {};
@@ -1532,7 +1536,46 @@ function startListening(){
     updateRivalLine();
   });
 
-  onValue(roomRef(ROOM, 'players', playerId), (snap)=>{
+  listenMyNode();
+
+  // 게임 화면을 나가거나 연결이 끊기면 서버가 offlineAt(끊긴 시각)을 남기고, 10초(OFFLINE_KICK_MS) 안에
+  // 다시 연결되지 않으면 접속해 있는 다른 화면이 이 학생을 자동으로 내보낸다(sweepOfflinePlayers).
+  // 예전처럼 끊기는 즉시 지우면(onDisconnect().remove()) 폰 화면이 잠깐 꺼지거나 와이파이↔LTE가 바뀔 때마다
+  // 점수가 날아가서, 10초 유예를 둔다. 다시 연결되면 offlineAt을 지워 유예를 취소한다.
+  armPresence();
+  setInterval(()=> sweepOfflinePlayers(ROOM, allPlayers), 2000);
+
+  // 아이템전: 전체 명단(방해 대상 계산) + 아이템 이벤트 수신
+  onValue(roomRef(ROOM, 'players'), (snap)=>{
+    allPlayers = Object.entries(snap.val() || {}).map(([id,p])=>({ id, ...p }));
+    if(roundState.status === 'running' && !roundState.team_mode && !roundEnded()){
+      const top = rankedPlayers(allPlayers)[0];
+      if(!top || top.id !== playerId) lastNotFirstAt = serverNow();
+    }
+    checkMyOvertake();
+    updateRankBadge();
+    updateRivalLine();
+  });
+  onValue(roomRef(ROOM, 'item_events'), (snap)=>{
+    lastItemEvents = snap.val() || {};
+    handleItemEvents(lastItemEvents);
+  });
+
+  // 보스 레이드: 전광판이 정해 주는 보스 상태 (내 상태는 listenMyNode에서)
+  onValue(roomRef(ROOM, 'raid_state', 'boss'), (snap)=>{ raidBoss = snap.val() || null; updateRaidUI(); });
+
+  renderItemBar();
+  renderItemGuide();
+  setInterval(tick, 250);
+}
+
+// 내 players 노드·레이드 개인 상태 구독 — 참여할 때마다 지금 id로 새로 건다
+function listenMyNode(){
+  myNodeUnsubs.forEach(u => { try{ u(); }catch(_e){} });
+  const myId = playerId;
+  myNodeUnsubs = [
+  onValue(roomRef(ROOM, 'players', myId), (snap)=>{
+    if(myId !== playerId) return;
     const p = snap.val();
     if(!p){
       handleRemovedFromRoster();
@@ -1563,38 +1606,10 @@ function startListening(){
       badge.classList.add('hidden');
     }
     updateRankBadge();
-  });
-
-  // 게임 화면을 나가거나 연결이 끊기면 서버가 offlineAt(끊긴 시각)을 남기고, 10초(OFFLINE_KICK_MS) 안에
-  // 다시 연결되지 않으면 접속해 있는 다른 화면이 이 학생을 자동으로 내보낸다(sweepOfflinePlayers).
-  // 예전처럼 끊기는 즉시 지우면(onDisconnect().remove()) 폰 화면이 잠깐 꺼지거나 와이파이↔LTE가 바뀔 때마다
-  // 점수가 날아가서, 10초 유예를 둔다. 다시 연결되면 offlineAt을 지워 유예를 취소한다.
-  armPresence();
-  setInterval(()=> sweepOfflinePlayers(ROOM, allPlayers), 2000);
-
-  // 아이템전: 전체 명단(방해 대상 계산) + 아이템 이벤트 수신
-  onValue(roomRef(ROOM, 'players'), (snap)=>{
-    allPlayers = Object.entries(snap.val() || {}).map(([id,p])=>({ id, ...p }));
-    if(roundState.status === 'running' && !roundState.team_mode && !roundEnded()){
-      const top = rankedPlayers(allPlayers)[0];
-      if(!top || top.id !== playerId) lastNotFirstAt = serverNow();
-    }
-    checkMyOvertake();
-    updateRankBadge();
-    updateRivalLine();
-  });
-  onValue(roomRef(ROOM, 'item_events'), (snap)=>{
-    lastItemEvents = snap.val() || {};
-    handleItemEvents(lastItemEvents);
-  });
-
-  // 보스 레이드: 전광판이 정해 주는 내 상태와 보스 상태
-  onValue(roomRef(ROOM, 'raid_state', 'p', playerId), (snap)=>{ myRaid = snap.val() || null; updateRaidUI(); });
-  onValue(roomRef(ROOM, 'raid_state', 'boss'), (snap)=>{ raidBoss = snap.val() || null; updateRaidUI(); });
-
-  renderItemBar();
-  renderItemGuide();
-  setInterval(tick, 250);
+  }),
+  // 보스 레이드: 전광판이 정해 주는 내 상태
+  onValue(roomRef(ROOM, 'raid_state', 'p', myId), (snap)=>{ if(myId !== playerId) return; myRaid = snap.val() || null; updateRaidUI(); })
+  ];
 }
 
 // ── 보스 레이드 ─────────────────────────────────────
