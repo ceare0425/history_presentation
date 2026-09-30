@@ -1104,11 +1104,31 @@ let unreadIncomingCount = 0;
 let lastAdminMsgText = ''; // 연습 종료 팝업에 보여줄, 가장 최근 받은 선생님 쪽지 내용
 let missedPopupKeys = []; // 연습 종료 팝업에서 "확인했어요/답장"을 누르면 읽음 처리할 key들
 
+// 수업 참여(play.html)에 들어갔다가 혼자 연습으로 넘어오면, 수업 참여 화면이 다른 탭에 남아 있거나
+// 폰에서 뒤로 밀린 채 연결이 살아 있어 '연결 끊김'이 기록되지 않는다. 그러면 관리자 화면 ④ 실시간 현황과
+// ⑤ 온라인 연습 학생 두 곳에 같은 학생이 뜬다. 그래서 혼자 연습을 시작할 때 같은 기기에서 참여했던
+// 수업 게임 기록(두 과목 모두)을 찾아 끊긴 것으로 표시한다 → ④에 '연결 끊김'으로 보이다가 10초 뒤 자동으로 빠진다.
+// (left_solo 표시를 본 수업 참여 탭은 스스로 나간다)
+function leaveClassGame(cls, name){
+  for(const room of ['world', 'korea']){
+    let pid = '';
+    try{ pid = localStorage.getItem('rg_fb_' + room + '_player_id') || ''; }catch(_e){}
+    if(!pid) continue;
+    runTransaction(roomRef(room, 'players', pid), (cur) => {
+      if(cur === null) return null;   // 처음엔 이 기기에 캐시된 값이 없어 null로 불린다 — 서버 값으로 다시 불리도록 넘긴다(실제로 없으면 그대로 없음)
+      if(cur.name !== name || (cur.cls && cur.cls !== cls)) return undefined;   // 다른 학생이거나 이미 나갔으면 그대로 둔다
+      if(cur.left_solo && cur.offlineAt) return undefined;
+      return { ...cur, offlineAt: serverNow(), left_solo: true };
+    }).catch(()=>{});
+  }
+}
+
 function startPresenceAndChat(){
   const cls = sessionClassKey;
   const name = (el('nameInput').value.trim() || '').slice(0, 20);
   if(!cls || !name) return;
   stopPresenceAndChat();
+  leaveClassGame(cls, name);
 
   const pRef = presenceRef(ROOM, cls, name);
   presenceSessionRef = pRef;
