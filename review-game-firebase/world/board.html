@@ -529,6 +529,7 @@ function overtakeToast(text){
 }
 
 // 지난 렌더 대비 순위가 바뀌었으면 "A, B 제쳤다!" 알림. 개인전은 상위 6위 안에서만.
+// 라이벌 대결 중에는 등수와 상관없이 서로 라이벌인 두 사람 사이의 추월만 알린다.
 function detectOvertakes(players, ranked, effective){
   if(effective !== 'running'){ prevRank = {}; prevRankMode = ''; overtakePairAt.clear(); return; }
   const teamOn = !!roundState.team_mode;
@@ -549,14 +550,17 @@ function detectOvertakes(players, ranked, effective){
   const now = serverNow();
   if(now - lastOvertakeAt >= OVERTAKE_GLOBAL_CD){
     const topLimit = teamOn ? 99 : 6;
+    const rivalPairs = new Set(rivalMatches().map(m=> [m.a.id, m.b.id].sort().join('|')));
+    const rivalOn = rivalPairs.size > 0;
     let best = null;   // { mover, passed, passedRank, moverRank }
     for(const o of order){
       const nr = cur[o.key], orr = prevRank[o.key];
       if(orr == null || nr >= orr) continue;      // 위로 안 올라갔으면 skip
-      if(nr > topLimit) continue;                 // 상위권 밖은 알림 안 함
+      if(!rivalOn && nr > topLimit) continue;     // 상위권 밖은 알림 안 함 (라이벌 대결은 등수 무관)
       if((o.score || 0) <= 0) continue;           // 0점끼리 스왑 무시
       for(const q of order){
         if(q.key === o.key) continue;
+        if(rivalOn && !rivalPairs.has([o.key, q.key].sort().join('|'))) continue;   // 라이벌 대결: 내 라이벌을 제쳤을 때만
         const pOld = prevRank[q.key], pNew = cur[q.key];
         if(pOld == null || pNew == null) continue;
         if(pOld < orr && pNew > nr && (!best || pNew < best.passedRank)){
@@ -577,7 +581,8 @@ function detectOvertakes(players, ranked, effective){
         lastOvertakeAt = now;
         if(!teamOn) overtakeCounts[best.mover.key] = (overtakeCounts[best.mover.key]||0) + 1;
         const note = best.moverRank === 1 ? ' 선두 등극! 👑' : '';
-        overtakeToast(`🔥 ${best.mover.name}, ${best.passed.name} 제쳤다!${note}`);
+        overtakeToast(rivalOn ? `⚔️ ${best.mover.name}, 라이벌 ${best.passed.name} 제쳤다!`
+                              : `🔥 ${best.mover.name}, ${best.passed.name} 제쳤다!${note}`);
         playOvertakeChime();
       }
     }
