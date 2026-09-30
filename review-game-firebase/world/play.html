@@ -1581,6 +1581,7 @@ function listenMyNode(){
       handleRemovedFromRoster();
       return;
     }
+    if(p.left_solo){ handleLeftForSolo(); return; }   // 이 학생이 혼자 연습을 시작함 — 이 탭은 수업 참여에서 나간다
     // 같은 학생이 두 탭으로 열어 두었다가 한쪽을 닫으면 그 탭의 끊김 기록이 남는다 — 이 탭은 아직 연결돼 있으니 지우고 다시 예약
     if(p.offlineAt && fbConnected) registerDisconnect();
     lastFloor = p.floor||0;
@@ -2680,6 +2681,22 @@ function handleRemovedFromRoster(){
   alert('게임에서 나가졌어요. (선생님이 내보냈거나, 연결이 10초 넘게 끊겼어요)\n이름을 확인하고 다시 참여해주세요.');
 }
 
+// 같은 학생이 혼자 연습을 시작하면(solo.html의 leaveClassGame) 남아 있던 이 탭은 조용히 수업 참여에서 나간다.
+// 끊김 기록이 다시 지워지지 않게 예약을 취소하고 참여 기록을 바로 지운다.
+function handleLeftForSolo(){
+  if(kicked) return;
+  kicked = true;
+  const pRef = playerId ? roomRef(ROOM, 'players', playerId) : null;
+  if(pRef){ onDisconnect(pRef).cancel().catch(()=>{}); set(pRef, null).catch(()=>{}); }
+  stopChat();
+  localStorage.removeItem(STORAGE_ID_KEY);
+  clearFxState();
+  playerId = '';
+  joinedAlready = false;
+  showView('joinView');
+  el('joinMsg').textContent = '혼자 연습을 시작해서 수업 참여에서 나왔어요. 다시 참여하려면 참여하기를 눌러 주세요.';
+}
+
 async function join(name){
   kicked = false;
   joinedAlready = true;
@@ -2691,7 +2708,7 @@ async function join(name){
   const pRef = roomRef(ROOM, 'players', playerId);
   const snap = await get(pRef);
   if(snap.exists()){
-    await update(pRef, { name: playerName, cls: classKey(), lastActive: serverNow() });
+    await update(pRef, { name: playerName, cls: classKey(), lastActive: serverNow(), left_solo: null, offlineAt: null });
   } else {
     const existingSnap = await get(roomRef(ROOM, 'players'));
     const existingAvatars = Object.values(existingSnap.val()||{}).map(pp=>pp.avatar).filter(Boolean);
