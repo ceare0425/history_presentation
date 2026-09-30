@@ -1435,8 +1435,22 @@ function soloDurLabel(sec){
 // (학생 화면은 1분이 지나면 스스로 연습을 끝내므로, 여기서는 채점·다음 문제 대기 시간만큼 여유를 더 둔다)
 const SOLO_IDLE_MS = 60000 + 5000;
 
+// 마지막으로 답을 낸 시각 (맞힌 문제의 last · 틀린 문제의 ts 중 가장 늦은 것)
+function soloLastAnswerTs(e){
+  let t = 0;
+  for(const q of (e.q_stats || [])) if(q && q.last > t) t = q.last;
+  for(const w of (e.wrong_items || [])) if(w && w.ts > t) t = w.ts;
+  return t;
+}
+
 function soloEndLabel(e){
   if(e.end_ts){
+    // 2026-09-30 전 기록은 폰 화면이 꺼지거나 창을 둔 채 떠나면 한참 뒤 창을 닫은 시각이 종료로 남았다
+    // (예: 08:04 시작 · 08:14 마지막 답 → 종료 15:25). 그런 기록은 마지막 답 + 1분을 무응답 종료로 보여 준다.
+    const lastAns = e.end_fix || e.relearn_end ? 0 : soloLastAnswerTs(e);
+    if(lastAns && e.end_ts - lastAns > SOLO_IDLE_MS){
+      return '<span class="acc-bad" title="마지막 답(' + fmtSoloTime(lastAns) + ') 뒤 1분 넘게 답이 없어 그 1분 뒤를 종료로 봅니다 · 저장된 종료 시각은 ' + fmtSoloTime(e.end_ts) + ' (화면이 꺼지거나 창을 그대로 둬서 늦게 기록됨)">' + fmtSoloTime(lastAns + 60000) + '</span>';
+    }
     const t = fmtSoloTime(e.end_ts);
     if(e.idle_end) return '<span class="acc-bad" title="1분 동안 답을 내지 않아 연습이 자동으로 끝났습니다">' + t + '</span>';
     if(e.relearn_end) return '<span class="acc-blue" title="다시 배우기를 열어 연습이 끝났습니다">' + t + '</span>';

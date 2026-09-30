@@ -974,6 +974,7 @@ function maybeShowClearPrompt(){
 
 function resumeFromClear(){
   el('clearPrompt').classList.add('hidden');
+  lastActiveAt = serverNow(); // 안내를 읽고 버튼을 누른 것도 활동으로 센다
   if(paused){
     if(roundState) roundState.end_time += serverNow() - pausedAt;  // 안내 보는 동안 흐른 시간만큼 제한시간 연장
     paused = false;
@@ -1023,7 +1024,7 @@ document.addEventListener('keyup', e=>{
 });
 
 // 제한 시간이 남았어도 학생이 직접 연습을 끝낼 수 있다.
-// showEndedView() → syncSoloLog(true) 가 end_ts 를 지금 시각으로 남기므로
+// showEndedView() → syncSoloLog(true) 가 end_ts 를 버튼을 누른 시각으로 남기므로
 // 선생님 화면에는 '중단'이 아니라 버튼을 누른 시각이 종료 시각으로 표시된다.
 el('endPracticeBtn').onclick = () => {
   if(ended) return;
@@ -1037,17 +1038,30 @@ el('endPracticeBtn').onclick = () => {
 // 첫 호출 때 항목을 만들고 그 뒤로는 같은 항목을 갱신하므로,
 // 학생이 제한시간 전에 창을 닫거나 나가도 마지막으로 갱신된 상태가 남는다.
 // final=true 는 정상 종료(제한시간 끝) 또는 확정 이탈을 뜻한다.
+// 실제로 연습이 끝난 시각. 폰 화면이 꺼지거나 탭이 뒤로 가면 타이머가 멈춰서, 제한 시간·1분 무응답 종료가
+// 한참 뒤(다시 화면을 켜거나 창을 닫을 때)에야 처리될 수 있다. '모두 맞혔어요' 안내를 띄운 채 두는 동안도 타이머가 멈춘다.
+// 그래서 지금 시각을 그대로 쓰지 않고 제한 시간 끝, 마지막 활동 + 1분 중 이른 시각으로 자른다.
+function soloEndAt(){
+  const now = serverNow();
+  let end = now, idle = false;
+  if(roundState && roundState.end_time && !paused) end = Math.min(end, roundState.end_time);
+  if(lastActiveAt && lastActiveAt + IDLE_LIMIT_MS < end){ end = lastActiveAt + IDLE_LIMIT_MS; idle = true; }
+  return { end, idle };
+}
+
 function syncSoloLog(final){
   if(correctCount + wrongCount === 0) return; // 문제를 하나도 안 푼 세션은 기록하지 않음
   const name = (el('nameInput').value.trim() || '(이름 없음)').slice(0, 20);
+  const fin = final ? soloEndAt() : null;
   const data = {
     name,
     cls: sessionClassKey || null,
-    ts: serverNow(),
+    ts: fin ? fin.end : serverNow(),
     started_ts: sessionStartedAt || null,
-    end_ts: final ? serverNow() : null,
+    end_ts: fin ? fin.end : null,
+    end_fix: fin ? true : null,   // 종료 시각을 제한 시간·마지막 활동 기준으로 잘라 저장한 기록 (2026-09-30부터)
     ended: !!final,
-    idle_end: (final && idleEnded) || null,
+    idle_end: (fin && (idleEnded || fin.idle) && !relearnEnded) || null,
     relearn_end: (final && relearnEnded) || null,
     duration_sec: sessionDuration || null,
     order: sessionOrder || null,
