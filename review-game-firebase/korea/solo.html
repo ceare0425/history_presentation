@@ -196,7 +196,7 @@
 
   .ended{ text-align:center; width:100%; max-width:420px; }
   .ended .big{ font-size:3.4rem; font-weight:800; color:var(--sky1); margin:6px 0; }
-  .final-stat{ font-size:1.05rem; font-weight:700; color:var(--sub); margin-bottom:1.2rem; }
+  .final-stat{ font-size:1.05rem; font-weight:700; color:var(--sub); margin-bottom:1.2rem; word-break:keep-all; }
   .best-note{ font-size:.85rem; color:var(--gold-dark); font-weight:700; margin-bottom:1.2rem; min-height:1.2em; }
 
   .hidden{ display:none !important; }
@@ -299,6 +299,57 @@
   .ptable .pr{ color:var(--sub); width:99%; }
   .ptable .pr b{ color:var(--good); }
 
+  /* ── 연습 방식: 👹 보스 레이드(화면 반쪽에 보스) · 🃏 암기 카드 ── */
+  .mode-desc{ font-size:.8rem; color:var(--sub); margin:-6px 0 12px; text-align:left; line-height:1.55; word-break:keep-all; }
+  .toggle-row.small button{ padding:10px 4px; font-size:.9rem; }
+  #playView{ flex-direction:row; gap:14px; }
+  .quiz-col{ flex:1 1 0; min-width:0; min-height:0; display:flex; flex-direction:column; position:relative; }
+  .raid-frame{ flex:1.3 1 0; min-width:0; align-self:center; aspect-ratio:16/9; background:#06060b; border-radius:16px; overflow:hidden; position:relative; }
+  .raid-frame iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; display:block; }
+  .raid-frame .raid-fail{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; padding:20px; text-align:center; font-weight:700; }
+  body.raid-mode .card{ width:min(1680px, 98vw); padding:2vh 1.4vw; }
+  body.raid-mode .avatar-char, body.card-mode .avatar-char{ display:none; }
+  .qbox{ position:relative; }
+  .raid-hud{ display:flex; align-items:center; gap:10px; margin:0 0 .6vh; padding:8px 12px; border-radius:14px; background:#1b1d33; color:#fff; font-weight:800; flex:0 0 auto; }
+  .raid-hud .rb-name{ font-size:.9rem; white-space:nowrap; }
+  .raid-hud .rb-bar{ flex:1; height:14px; background:#3a1a1a; border-radius:8px; overflow:hidden; border:2px solid #0b0b12; }
+  .raid-hud .rb-bar i{ display:block; height:100%; width:100%; background:linear-gradient(#ff6b5a,#b0172a); transition:width .3s; }
+  .raid-hud .rb-hearts{ font-size:1.1rem; letter-spacing:1px; color:#ff4d5e; white-space:nowrap; }
+  .raid-hud .rb-hearts .lost{ color:rgba(255,255,255,.25); }
+  .raid-hud .rb-hearts .sh{ font-size:.92rem; }
+  .raid-check, .raid-warn{ margin:0 0 .6vh; padding:8px 12px; border-radius:14px; font-weight:900; text-align:center; font-size:1rem; flex:0 0 auto; }
+  .raid-check{ background:#ffe14d; color:#3a2a00; animation:raidPulse .5s ease-in-out infinite alternate; }
+  .raid-warn{ background:#ff4d3a; color:#fff; animation:raidPulse .25s ease-in-out infinite alternate; }
+  @keyframes raidPulse{ from{ transform:scale(1); } to{ transform:scale(1.02); } }
+  .raid-block{ position:absolute; inset:0; z-index:4; display:flex; align-items:center; justify-content:center; background:rgba(10,10,20,.72); border-radius:16px; }
+  .raid-block-box{ background:#fff; color:#222; border-radius:20px; padding:22px 26px; text-align:center; max-width:90%; box-shadow:0 10px 40px rgba(0,0,0,.4); }
+  .raid-block-box .rbi{ font-size:3rem; line-height:1.1; }
+  .raid-block-box .rbt{ font-size:1.25rem; font-weight:900; margin-top:6px; }
+  .raid-block-box .rbs{ font-size:.95rem; color:#555; margin-top:6px; word-break:keep-all; }
+  .raid-flash{ position:fixed; inset:0; z-index:39; pointer-events:none; background:rgba(255,40,30,.45); animation:raidFlash .5s ease-out forwards; }
+  .raid-flash.shield{ background:rgba(90,170,255,.4); }
+  @keyframes raidFlash{ from{ opacity:1; } to{ opacity:0; } }
+  .qbox.raid-censor::after{ content:'검열'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:2rem; font-weight:900; color:#d7263d; text-shadow:0 0 6px #fff;
+    background:repeating-linear-gradient(0deg, rgba(10,10,10,.93) 0 16px, transparent 16px 34px); border-radius:14px; pointer-events:none; }
+  .card-row{ display:flex; gap:10px; flex:0 0 auto; }
+  .card-row button{ flex:1; padding:16px 10px; font-size:1.1rem; }
+  .card-row .know{ background:linear-gradient(90deg,#2e9e5b,#3cb371); }
+  .card-row .dont{ background:linear-gradient(90deg,#d9534f,#e8706c); }
+  .card-row .kbd{ font-size:.75rem; opacity:.8; font-weight:600; }
+  .qbox .blank-mark.reveal{ width:auto; height:auto; margin:0 .12em; padding:0 .12em; vertical-align:baseline; border-bottom-color:var(--good); color:var(--good); font-weight:800; }
+  .card-answer{ margin-top:10px; font-size:.8em; color:var(--good); font-weight:800; }
+  #endedView.raid .big, #endedView.card .big{ display:none; }
+  .mode-result{ font-size:1.35rem; font-weight:900; margin:10px 0 6px; line-height:1.5; word-break:keep-all; }
+  .mode-result.win{ color:var(--good); }
+  .mode-result.lose{ color:var(--bad); }
+  .mode-result.card{ color:var(--sky1); font-size:1.15rem; }
+  @media (max-width:900px), (orientation:portrait){
+    body.raid-mode #playView{ flex-direction:column; gap:8px; }
+    body.raid-mode .raid-frame{ flex:0 0 auto; width:100%; aspect-ratio:16/9; }
+    body.raid-mode .qbox{ min-height:16vh; }
+  }
+
   @media (max-width:700px), (orientation:portrait){
     body{ padding:0; min-height:0; }
     .card{
@@ -352,6 +403,23 @@
         <div class="muted" style="margin:-6px 0 6px; font-size:.78rem;">학년·반·이름을 모두 선택·입력해야 연습을 시작할 수 있어요. 연습 기록(학년·반·범위·층수)이 선생님 화면에 표시됩니다.</div>
       </div>
       <button type="button" id="reviewQuickBtn" class="review-quick-btn hidden"></button>
+      <label>연습 방식</label>
+      <div class="toggle-row" id="modeToggle">
+        <button type="button" class="active" data-mode="tower">🏢 탑 오르기</button>
+        <button type="button" data-mode="raid">👹 보스 레이드</button>
+        <button type="button" data-mode="card">🃏 암기 카드</button>
+      </div>
+      <div class="mode-desc" id="modeDesc"></div>
+      <div id="raidDiffBox" class="hidden">
+        <label>보스 난이도</label>
+        <div class="toggle-row small" id="raidDiffToggle">
+          <button type="button" class="active" data-diff="0">😐 보통</button>
+          <button type="button" data-diff="1">😠 어려움</button>
+          <button type="button" data-diff="2">🔥 매우 어려움</button>
+          <button type="button" data-diff="3">💀 지옥</button>
+        </div>
+        <div class="mode-desc" id="raidDiffDesc"></div>
+      </div>
       <label>연습 범위</label>
       <div class="units" id="unitList">불러오는 중...</div>
       <div class="pool-count" id="poolCountInfo"></div>
@@ -359,8 +427,10 @@
         <button type="button" class="secondary" id="selectAllBtn">전체 선택</button>
         <button type="button" class="secondary" id="selectNoneBtn">전체 해제</button>
       </div>
-      <label>제한 시간 (분)</label>
-      <input type="number" id="durationInput" value="5" min="1" max="60" step="1">
+      <div id="durationBox">
+        <label>제한 시간 (분)</label>
+        <input type="number" id="durationInput" value="5" min="1" max="60" step="1">
+      </div>
       <label>출제 순서</label>
       <div class="toggle-row" id="orderToggle">
         <button type="button" class="active" data-order="random">🔀 랜덤</button>
@@ -378,8 +448,11 @@
   </div>
 
   <div id="playView" class="view hidden">
+    <div class="raid-frame hidden" id="raidFrameWrap"></div>
+    <div class="quiz-col">
     <div class="hud">
-      <div class="floor-badge">🏢 <span id="floorVal">0</span>층</div>
+      <div class="floor-badge" id="floorBadge">🏢 <span id="floorVal">0</span>층</div>
+      <div class="floor-badge hidden" id="modeBadge"></div>
       <div class="timer">⏱ <span id="timerVal">--:--</span></div>
     </div>
     <div class="msg-toolbar">
@@ -387,6 +460,13 @@
       <button type="button" id="reportWrongBtn" class="report-btn">🚩 신고</button>
       <button type="button" id="msgOpenBtn">💬쪽지<span class="unread-badge hidden" id="msgUnreadBadge"></span></button>
     </div>
+    <div class="raid-hud hidden" id="raidHud">
+      <span class="rb-name" id="raidBossName">👹 보스</span>
+      <div class="rb-bar"><i id="raidHpFill"></i></div>
+      <span class="rb-hearts" id="raidHearts"></span>
+    </div>
+    <div class="raid-warn hidden" id="raidWarn"></div>
+    <div class="raid-check hidden" id="raidCheck"></div>
     <div class="streak" id="streakVal"></div>
 
     <div class="avatar-char" id="avatarChar">🧗</div>
@@ -397,17 +477,24 @@
       <div class="unit-tag" id="unitTag"></div>
       <button type="button" id="relearnBtn" class="mini-btn gold hidden">📖 다시 배우기</button>
     </div>
-    <div class="qbox"><div class="qtext-inner" id="qText">문제를 불러오는 중...</div></div>
+    <div class="qbox" id="qbox"><div class="qtext-inner" id="qText">문제를 불러오는 중...</div></div>
 
-    <div class="answer-row">
+    <div class="answer-row" id="answerRow">
       <input type="text" id="answerInput" placeholder="정답 입력 후 Enter" autocomplete="off">
       <button id="submitBtn">제출</button>
+    </div>
+    <div class="card-row hidden" id="cardRow">
+      <button type="button" id="cardRevealBtn">👀 정답 보기 <span class="kbd">(Space)</span></button>
+      <button type="button" id="cardKnowBtn" class="know hidden">⭕ 알았어요 <span class="kbd">(1)</span></button>
+      <button type="button" id="cardDontBtn" class="dont hidden">❌ 몰랐어요 <span class="kbd">(2)</span></button>
     </div>
     <div class="hint-row">
       <button type="button" id="hintBtn" class="secondary">💡 힌트 (초성) · Ctrl</button>
       <span class="hint-text" id="hintText"></span>
       <span class="idle-warn" id="idleWarn"></span>
       <button type="button" id="endPracticeBtn" class="secondary">■ 연습 종료</button>
+    </div>
+    <div class="raid-block hidden" id="raidBlock"><div class="raid-block-box"><div class="rbi" id="raidBlockIcon"></div><div class="rbt" id="raidBlockText"></div><div class="rbs" id="raidBlockSub"></div></div></div>
     </div>
   </div>
 
@@ -439,6 +526,7 @@
     <div class="ended">
       <div>🏁 연습 종료!</div>
       <div class="big"><span id="finalFloor">0</span>층</div>
+      <div class="mode-result hidden" id="modeResult"></div>
       <div class="final-stat" id="finalStat"></div>
       <div class="best-note" id="bestNote"></div>
       <div class="best-note hidden" id="endReason" style="color:#c96f5b;"></div>
@@ -542,6 +630,19 @@ let lastActiveAt = 0;
 let idleEnded = false;
 let relearnEnded = false; // 연습 중 '다시 배우기'(새 탭)를 열어 연습을 끝냈는지
 let lastQid = null;
+
+// 연습 방식: 'tower' 탑 오르기 · 'raid' 👹 혼자 보스 레이드(화면 왼쪽 반에 raid.html?solo) · 'card' 🃏 암기 카드(스스로 확인)
+const STORAGE_MODE_KEY = 'rg_fb_' + ROOM + '_solo_mode';
+const STORAGE_RAID_DIFF_KEY = 'rg_fb_' + ROOM + '_solo_raid_diff';
+let practiceMode = 'tower';   // 설정 화면에서 고른 방식
+let sessionMode = 'tower';    // 지금 진행 중인 세션의 방식 (복습 추천·즐겨찾기 다시 풀기는 늘 탑 오르기)
+let raidDiff = 0, sessionRaidDiff = 0;
+try{
+  const m = localStorage.getItem(STORAGE_MODE_KEY);
+  if(m === 'tower' || m === 'raid' || m === 'card') practiceMode = m;
+  const d = parseInt(localStorage.getItem(STORAGE_RAID_DIFF_KEY) || '0', 10);
+  if(d >= 0 && d <= 3) raidDiff = d;
+}catch(_e){}
 
 let floor = 0, correctCount = 0, wrongCount = 0, streak = 0;
 let lastFloor = 0;
@@ -668,6 +769,232 @@ el('weightToggle').querySelectorAll('button').forEach(btn=>{
     questionWeight = btn.dataset.weight;
     el('weightToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
   };
+});
+
+const MODE_DESC = {
+  tower: '문제를 빨리 맞힐수록 높이 올라가요. 정한 시간 동안 최고 층수에 도전!',
+  raid: '화면 왼쪽의 보스(헌병 경찰)와 혼자 싸워요. 맞히면 공격! ⚠ 공격 예고가 뜨면 다음 문제를 맞혀서 막아야 해요. 제한 시간 5분.',
+  card: '시간 제한 없이 문제를 보고 답을 떠올린 뒤 정답을 확인해요. 몰랐던 카드는 조금 뒤 다시 나오고 🔁 복습 추천에도 들어가요. 시험 직전 빠르게 훑어보기 좋아요.'
+};
+const RAID_DIFF_DESC = [
+  '정답률 80%면 대부분 이겨요. 처음이라면 여기부터!',
+  '정답률 90%는 되어야 이길 수 있어요.',
+  '정확하면서 빨리 쳐야 해요 (문제당 5초 안팎).',
+  '빠르고 거의 다 맞혀야 하는 도전 과제예요.'
+];
+const START_LABEL = { tower: '▶ 연습 시작', raid: '👹 보스 레이드 시작', card: '🃏 암기 카드 시작' };
+function updateModeUI(){
+  el('modeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.mode === practiceMode));
+  el('raidDiffToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', Number(b.dataset.diff) === raidDiff));
+  el('modeDesc').textContent = MODE_DESC[practiceMode];
+  el('raidDiffDesc').textContent = RAID_DIFF_DESC[raidDiff];
+  el('raidDiffBox').classList.toggle('hidden', practiceMode !== 'raid');
+  el('durationBox').classList.toggle('hidden', practiceMode !== 'tower');   // 레이드는 5분 고정, 암기 카드는 시간 제한 없음
+  el('startBtn').textContent = START_LABEL[practiceMode];
+}
+el('modeToggle').querySelectorAll('button').forEach(btn=>{
+  btn.onclick = () => {
+    practiceMode = btn.dataset.mode;
+    try{ localStorage.setItem(STORAGE_MODE_KEY, practiceMode); }catch(_e){}
+    updateModeUI();
+  };
+});
+el('raidDiffToggle').querySelectorAll('button').forEach(btn=>{
+  btn.onclick = () => {
+    raidDiff = Number(btn.dataset.diff) || 0;
+    try{ localStorage.setItem(STORAGE_RAID_DIFF_KEY, String(raidDiff)); }catch(_e){}
+    updateModeUI();
+  };
+});
+updateModeUI();
+
+// 문제 화면을 지금 세션 방식에 맞게 바꾼다
+function applyModeLayout(){
+  const raid = sessionMode === 'raid', card = sessionMode === 'card';
+  document.body.classList.toggle('raid-mode', raid);
+  document.body.classList.toggle('card-mode', card);
+  el('raidFrameWrap').classList.toggle('hidden', !raid);
+  el('raidHud').classList.toggle('hidden', !raid);
+  el('answerRow').classList.toggle('hidden', card);
+  el('hintBtn').classList.toggle('hidden', card);
+  el('cardRow').classList.toggle('hidden', !card);
+  el('floorBadge').classList.toggle('hidden', sessionMode !== 'tower');
+  el('modeBadge').classList.toggle('hidden', !card);
+  ['raidWarn','raidCheck','raidBlock'].forEach(id=> el(id).classList.add('hidden'));
+  el('qbox').classList.remove('raid-censor');
+}
+function clearModeLayout(){
+  document.body.classList.remove('raid-mode', 'card-mode');
+  el('raidFrameWrap').classList.add('hidden');
+}
+
+// ══════════════ 👹 혼자 보스 레이드 ══════════════
+// 화면 왼쪽 반에 raid.html?solo 를 띄우고, 답을 낼 때마다 window.SOLO.answer()로 넘긴다.
+// 보스·목숨·제한 시간(5분)은 레이드 화면이 정하고, 이 화면은 250ms마다 state()를 읽어 표시한다.
+const RAID_SAFETY_MS = 330000;   // 레이드 화면을 못 불러와도 이 시간이 지나면 연습을 끝낸다
+let raidWin = null, raidLast = null, raidEnding = false, raidLoadTimer = null;
+let raidLastHearts = null, raidLastShields = null;
+function raidApi(){ try{ return raidWin && raidWin.SOLO ? raidWin.SOLO : null; }catch(_e){ return null; } }
+function startRaidFrame(){
+  stopRaidFrame();
+  raidLast = null; raidEnding = false; raidLastHearts = null; raidLastShields = null;
+  const f = document.createElement('iframe');
+  f.title = '보스 레이드';
+  f.src = '../raid.html?solo=1&boss=korea&name=' + encodeURIComponent(myName()) + '&v=20261001a';
+  el('raidFrameWrap').appendChild(f);
+  const t0 = Date.now();
+  raidLoadTimer = setInterval(()=>{
+    let api = null;
+    try{ api = f.contentWindow && f.contentWindow.SOLO; }catch(_e){}
+    if(api){
+      clearInterval(raidLoadTimer); raidLoadTimer = null;
+      raidWin = f.contentWindow;
+      api.start(sessionRaidDiff);
+      api.audio();
+    } else if(Date.now() - t0 > 15000){
+      clearInterval(raidLoadTimer); raidLoadTimer = null;
+      el('raidFrameWrap').innerHTML = '<div class="raid-fail">보스 화면을 불러오지 못했어요. 문제는 계속 풀 수 있어요.</div>';
+    }
+  }, 100);
+}
+function stopRaidFrame(){
+  if(raidLoadTimer){ clearInterval(raidLoadTimer); raidLoadTimer = null; }
+  raidWin = null;
+  el('raidFrameWrap').innerHTML = '';
+}
+// 지금 답을 낼 수 없는 이유 (없으면 null)
+function raidBlockInfo(s){
+  if(!s) return { icon:'👹', text:'보스를 불러오는 중…', sub:'문제를 먼저 읽어 두세요' };
+  if(s.phase === 'ready' || s.phase === 'intro') return { icon:'👹', text:'보스 등장!', sub:'곧 싸움이 시작돼요 · 문제를 먼저 읽어 두세요' };
+  if(s.result) return null;
+  if(s.ko > 0) return { icon:'💀', text:'쓰러졌어요!', sub:`${Math.ceil(s.ko/1000)}초 뒤에 부활해요` };
+  if(s.stun > 0) return { icon:'😵', text:'기절했어요!', sub:`${Math.ceil(s.stun/1000)}초 뒤에 다시 싸울 수 있어요` };
+  return null;
+}
+function raidCanAnswer(){
+  if(sessionMode !== 'raid') return true;
+  if(raidEnding) return false;
+  if(!raidApi()) return !raidLoadTimer;   // 못 불러왔으면 문제 풀기만 계속
+  return !raidBlockInfo(raidLast);
+}
+function updateRaidUI(){
+  const api = raidApi();
+  const s = api ? api.state() : null;
+  if(s) raidLast = s;
+  const b = api || raidLoadTimer ? raidBlockInfo(s) : null;
+  el('raidBlock').classList.toggle('hidden', !b);
+  if(b){ el('raidBlockIcon').textContent = b.icon; el('raidBlockText').textContent = b.text; el('raidBlockSub').textContent = b.sub; }
+  if(!s){ el('timerVal').textContent = '5:00'; return; }
+  el('timerVal').textContent = fmtTime(Math.ceil(s.left / 1000));
+  el('raidBossName').textContent = '👹 ' + s.bossName;
+  el('raidHpFill').style.width = Math.max(0, Math.min(100, s.hp / Math.max(1, s.max) * 100)) + '%';
+  const lost = Math.max(0, s.maxHearts - s.hearts);
+  el('raidHearts').innerHTML = '♥'.repeat(Math.max(0, s.hearts)) + '<span class="lost">' + '♥'.repeat(lost) + '</span>'
+    + (s.shields ? ' <span class="sh">' + '🛡️'.repeat(s.shields) + '</span>' : '') + (s.ko > 0 ? ' 💀' : '');
+  // 맞았을 때 붉게, 방패로 막았을 때 파랗게 번쩍
+  if(raidLastHearts != null && s.hearts < raidLastHearts) flashRaid('');
+  else if(raidLastHearts != null && s.hearts === raidLastHearts && raidLastShields != null && s.shields < raidLastShields && !(s.ko > 0)) flashRaid('shield');
+  raidLastHearts = s.hearts; raidLastShields = s.shields;
+  const g = s.guard;
+  el('raidWarn').classList.toggle('hidden', !g || !!s.result);
+  if(g) el('raidWarn').textContent = `⚠ ${g.label.replace('😵 ', '')} 예고! ${Math.ceil(g.left/1000)}초 안에 다음 문제를 맞히면 막아요`;
+  const info = s.arrest ? `🔗 포승줄에 묶였어요! 정답 ${s.arrest.need - s.arrest.got}개를 더 맞히면 풀려나요 · ${Math.ceil(s.arrest.left/1000)}초`
+    : s.check ? `📋 불심 검문! ${Math.ceil(s.check/1000)}초 안에 정답을 내면 보스가 기절해요!` : '';
+  el('raidCheck').classList.toggle('hidden', !info || !!s.result);
+  if(info) el('raidCheck').textContent = info;
+  el('qbox').classList.toggle('raid-censor', s.censor > 0 && !s.result);
+  if(s.result && !raidEnding){
+    // 보스가 쓰러지는 연출·결과 화면을 잠깐 보여 준 뒤 종료 화면으로
+    raidEnding = true;
+    setTimeout(()=>{ if(!ended && sessionMode === 'raid') showEndedView(); }, s.result === 'win' ? 6500 : 3500);
+  }
+}
+function flashRaid(kind){
+  const f = document.createElement('div');
+  f.className = 'raid-flash' + (kind ? ' ' + kind : '');
+  document.body.appendChild(f);
+  setTimeout(()=> f.remove(), 600);
+  if(!kind){ try{ navigator.vibrate && navigator.vibrate(200); }catch(_e){} }
+}
+
+// ══════════════ 🃏 암기 카드 ══════════════
+// 문제를 보고 답을 떠올린 뒤 '정답 보기' → 알았어요/몰랐어요를 스스로 고른다. 스스로 매기는 것이라 정답률·칭호에는 넣지 않고,
+// '몰랐어요' 카드만 wrong_items에 남겨 🔁 복습 추천으로 이어지게 한다(탑 오르기·레이드에서 실제로 맞혀야 빠짐).
+const CARD_MAX_SHOWS = 3;   // 몰랐던 카드는 3~5장 뒤에 다시 — 한 카드는 최대 3번까지
+let cardDeck = [], cardRevealed = false, cardSeen = 0, cardKnownFirst = 0, cardUnknown = new Set(), cardTotal = 0, cardShows = {};
+let cardDone = new Set();   // 한 번이라도 알았어요/몰랐어요를 고른 카드
+let cardFinished = false;
+function startCardDeck(pool, order, weight){
+  const src = pool.map(([qid, q])=>[qid, q]);
+  if(order === 'sequential') cardDeck = src.map(([qid])=>qid);
+  else {
+    const wFn = weight === 'recent' ? recencyWeightFn(src.map(([,q])=>q.unit)) : null;
+    cardDeck = wFn ? weightedSample(src, wFn, src.length) : shuffle(src.map(([qid])=>qid));
+  }
+  cardTotal = cardDeck.length;
+  cardRevealed = false; cardSeen = 0; cardKnownFirst = 0; cardUnknown = new Set(); cardShows = {}; cardFinished = false; cardDone = new Set();
+}
+function updateCardUI(){
+  el('cardRevealBtn').classList.toggle('hidden', cardRevealed);
+  el('cardKnowBtn').classList.toggle('hidden', !cardRevealed);
+  el('cardDontBtn').classList.toggle('hidden', !cardRevealed);
+  el('modeBadge').textContent = `🃏 남은 카드 ${cardDeck.length + (currentQid ? 1 : 0)}장`;
+}
+function showNextCard(){
+  while(cardDeck.length && !questionsObj[cardDeck[0]]) cardDeck.shift();   // 그 사이 지워진 문제는 건너뛴다
+  if(!cardDeck.length){ currentQid = null; cardFinished = true; showEndedView(); return; }
+  const qid = cardDeck.shift();
+  currentQid = qid;
+  currentQuestion = questionsObj[qid];
+  currentStartedAt = serverNow();
+  cardShows[qid] = (cardShows[qid] || 0) + 1;
+  cardRevealed = false;
+  renderQuestion({ id: qid, text: currentQuestion.question, unit: currentQuestion.unit, page: currentQuestion.page });
+  el('answerInput').disabled = true;
+  el('answerInput').blur();
+  if(cardShows[qid] > 1) el('unitTag').textContent = '🔁 다시 · ' + el('unitTag').textContent;
+  updateCardUI();
+}
+function revealCard(){
+  if(ended || sessionMode !== 'card' || !currentQuestion || cardRevealed) return;
+  cardRevealed = true;
+  lastActiveAt = serverNow();
+  const answers = currentQuestion.answers || [];
+  const marks = el('qText').querySelectorAll('.blank-mark');
+  marks.forEach(bm=>{ bm.textContent = answers[0] || ''; bm.classList.add('reveal'); });
+  if(!marks.length || answers.length > 1){
+    const d = document.createElement('div');
+    d.className = 'card-answer';
+    d.textContent = (marks.length ? '다른 정답: ' + answers.slice(1).join(' / ') : '정답: ' + answers.join(' / '));
+    el('qText').appendChild(d);
+  }
+  updateCardUI();
+}
+function judgeCard(knew){
+  if(ended || sessionMode !== 'card' || !cardRevealed || !currentQuestion) return;
+  lastActiveAt = serverNow();
+  const qid = currentQid, q = currentQuestion;
+  cardSeen += 1;
+  cardDone.add(qid);
+  if(knew){ if(cardShows[qid] === 1) cardKnownFirst += 1; }
+  else {
+    cardUnknown.add(qid);
+    wrongMap.set(qid, { qid, unit: q.unit || '(기타)', qtext: q.question, answer: (q.answers||[])[0] || '', ts: serverNow() });
+    if(cardShows[qid] < CARD_MAX_SHOWS) cardDeck.splice(Math.min(cardDeck.length, 3 + Math.floor(Math.random()*3)), 0, qid);
+  }
+  syncSoloLog(false);
+  showNextCard();
+}
+el('cardRevealBtn').onclick = revealCard;
+el('cardKnowBtn').onclick = () => judgeCard(true);
+el('cardDontBtn').onclick = () => judgeCard(false);
+document.addEventListener('keydown', e=>{
+  if(sessionMode !== 'card' || ended || chatPanelOpen || el('playView').classList.contains('hidden')) return;
+  const ae = document.activeElement;
+  if(ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) && !ae.disabled) return;
+  if(!cardRevealed && (e.code === 'Space' || e.key === 'Enter')){ e.preventDefault(); revealCard(); }
+  else if(cardRevealed && (e.key === '1' || e.key === 'ArrowLeft')){ e.preventDefault(); judgeCard(true); }
+  else if(cardRevealed && (e.key === '2' || e.key === 'ArrowRight')){ e.preventDefault(); judgeCard(false); }
 });
 
 // 🏅 칭호 도감 — 학년·반·이름이 정해져 있어야 내 칭호를 불러올 수 있다
@@ -866,7 +1193,8 @@ function flashFeedback(correct, correctAnswer, gain, wasRetry, usedHint){
   if(correct){
     f.classList.remove('wrong'); f.classList.add('correct');
     const tail = usedHint ? ' (힌트 사용)' : '';
-    f.textContent = wasRetry ? `🔁 복습 문제 정답! +${gain}층${tail} 🎉` : `정답! +${gain}층${tail} 올라갑니다 🎉`;
+    if(sessionMode === 'raid') f.textContent = (wasRetry ? '🔁 복습 문제 정답! ' : '정답! ') + '💥 보스 공격' + tail;
+    else f.textContent = wasRetry ? `🔁 복습 문제 정답! +${gain}층${tail} 🎉` : `정답! +${gain}층${tail} 올라갑니다 🎉`;
   } else {
     f.classList.remove('correct'); f.classList.add('wrong');
     f.textContent = `아쉬워요! 곧 다시 나옵니다`;
@@ -877,6 +1205,7 @@ function flashFeedback(correct, correctAnswer, gain, wasRetry, usedHint){
 }
 
 function submitAnswer(){
+  if(sessionMode === 'card' || !raidCanAnswer()) return;   // 레이드: 쓰러짐·기절·등장 연출 중엔 답을 낼 수 없다
   const text = el('answerInput').value.trim();
   if(!text || !currentQid || !currentQuestion || ended) return;
   el('submitBtn').disabled = true;
@@ -890,6 +1219,7 @@ function submitAnswer(){
   const elapsed = (serverNow() - currentStartedAt) / 1000;
   const correct = isCorrect(text, q.answers);
   titles.recordAnswer(answeredQid, correct);
+  if(sessionMode === 'raid'){ const api = raidApi(); if(api) api.answer(correct, elapsed); }   // 정답이면 보스 공격, 틀리면 반격
   let gain = 0;
 
   const uName = q.unit || '(기타)';
@@ -962,6 +1292,7 @@ function maybeShowClearPrompt(){
   if(done < pool.length) return false;
 
   allClearedPrompted = true;
+  if(sessionMode === 'raid'){ queue = []; return false; }   // 레이드는 멈추지 않고 같은 범위를 다시 섞어 계속
   paused = true;
   pausedAt = serverNow();
   const total = correctCount + wrongCount;
@@ -1050,7 +1381,7 @@ function soloEndAt(){
 }
 
 function syncSoloLog(final){
-  if(correctCount + wrongCount === 0) return; // 문제를 하나도 안 푼 세션은 기록하지 않음
+  if(correctCount + wrongCount === 0 && !(sessionMode === 'card' && cardSeen > 0)) return; // 문제를 하나도 안 푼 세션은 기록하지 않음
   const name = (el('nameInput').value.trim() || '(이름 없음)').slice(0, 20);
   const fin = final ? soloEndAt() : null;
   const data = {
@@ -1073,7 +1404,14 @@ function syncSoloLog(final){
     hints: hintCount,
     unit_stats: Object.entries(unitStats).map(([u,x]) => ({ u, c: x.c, w: x.w })),
     q_stats: Object.entries(qStats).map(([qid,x]) => ({ qid, c: x.c, w: x.w, last: x.last||null })),
-    wrong_items: [...wrongMap.values()].slice(-30)
+    wrong_items: [...wrongMap.values()].slice(-30),
+    mode: sessionMode !== 'tower' ? sessionMode : null,   // 없으면 탑 오르기
+    raid_diff: sessionMode === 'raid' ? sessionRaidDiff + 1 : null,   // 1 보통 ~ 4 지옥
+    raid_result: sessionMode === 'raid' ? ((raidLast && raidLast.result) || (final ? 'stop' : null)) : null,
+    cards_total: sessionMode === 'card' ? cardTotal : null,
+    cards_seen: sessionMode === 'card' ? cardSeen : null,
+    cards_known: sessionMode === 'card' ? cardKnownFirst : null,     // 처음 보자마자 '알았어요'
+    cards_unknown: sessionMode === 'card' ? cardUnknown.size : null  // 한 번이라도 '몰랐어요'
   };
   try{
     if(soloLogRef) update(soloLogRef, data);
@@ -1237,6 +1575,7 @@ function renderChatPanel(){
 // "💬쪽지" 버튼 — 관리자 화면과 같은 형태의 대화창을 열고, 밀린 쪽지를 읽음 처리한다.
 el('msgOpenBtn').onclick = () => {
   chatPanelOpen = true;
+  { const api = raidApi(); if(api) api.pause(true); }
   el('chatPanel').classList.remove('hidden');
   markIncomingRead();
   renderChatPanel();
@@ -1245,6 +1584,8 @@ el('msgOpenBtn').onclick = () => {
 el('chatPanelClose').onclick = () => {
   chatPanelOpen = false;
   el('chatPanel').classList.add('hidden');
+  { const api = raidApi(); if(api) api.pause(false); }
+  if(sessionMode === 'raid' && !ended) el('answerInput').focus();
 };
 document.addEventListener('keydown', e=>{
   if(e.key === 'Escape' && chatPanelOpen) el('chatPanelClose').click();
@@ -1302,15 +1643,38 @@ function showEndedView(){
   ended = true;
   paused = false;
   el('clearPrompt').classList.add('hidden');
+  { const api = raidApi(); if(api){ try{ raidLast = api.state() || raidLast; }catch(_e){} } }
   logSoloSession();
+  stopRaidFrame();
+  clearModeLayout();
   el('finalFloor').textContent = floor;
   const total = correctCount + wrongCount;
   const acc = total ? Math.round(100*correctCount/total) : null;
   el('finalStat').textContent = acc!==null ? `정답 ${correctCount}개 · 오답 ${wrongCount}개 · 정답률 ${acc}%` : '아직 문제를 풀지 않았어요';
+  el('endedView').classList.toggle('raid', sessionMode === 'raid');
+  el('endedView').classList.toggle('card', sessionMode === 'card');
+  const mr = el('modeResult');
+  mr.className = 'mode-result hidden';
+  if(sessionMode === 'raid'){
+    const r = raidLast;
+    const diffName = ['😐 보통','😠 어려움','🔥 매우 어려움','💀 지옥'][sessionRaidDiff] || '';
+    if(r && r.result === 'win') { mr.className = 'mode-result win'; mr.textContent = `🎉 ${r.bossName} 격파! (${diffName} · ${fmtTime(Math.ceil(r.used/1000))} 만에)`; }
+    else if(r && r.result === 'lose'){ mr.className = 'mode-result lose'; mr.textContent = `💀 레이드 실패 · ${r.bossName} 체력 ${Math.max(1, Math.round(r.hp / Math.max(1, r.max) * 100))}% 남음 (${diffName})`; }
+    else { mr.className = 'mode-result'; mr.textContent = `👹 레이드를 중간에 마쳤어요 (${diffName})`; }
+    if(r) el('finalStat').textContent += ` · 준 피해 ${r.dmg.toLocaleString('ko-KR')} · 쓰러진 횟수 ${r.kos}번`;
+  } else if(sessionMode === 'card'){
+    mr.className = 'mode-result card';
+    mr.textContent = cardFinished ? `🃏 카드 ${cardTotal}장을 모두 넘겼어요!` : `🃏 카드 ${cardTotal}장 중 ${cardDone.size}장을 넘겼어요`;
+    el('finalStat').textContent = cardSeen
+      ? `바로 안 카드 ${cardKnownFirst}장 · 몰랐던 카드 ${cardUnknown.size}장` + (cardUnknown.size ? ' → 🔁 복습 추천에 들어갔어요. 탑 오르기나 보스 레이드로 직접 맞혀 보세요!' : ' · 모두 알고 있었어요 🎉')
+      : '아직 카드를 넘기지 않았어요';
+  }
 
   const prevBest = parseInt(localStorage.getItem(STORAGE_BEST_KEY) || '0', 10);
   const bestNote = el('bestNote');
-  if(floor > prevBest){
+  if(sessionMode !== 'tower'){
+    bestNote.textContent = '';
+  } else if(floor > prevBest){
     localStorage.setItem(STORAGE_BEST_KEY, String(floor));
     bestNote.textContent = prevBest > 0 ? `🎉 개인 최고 기록 갱신! (이전 ${prevBest}층)` : '🎉 첫 기록 달성!';
   } else {
@@ -1360,12 +1724,15 @@ el('missedMsgReplyInput').addEventListener('keydown', (e) => { if(e.key === 'Ent
 function tick(){
   if(!roundState || ended || paused) return;
   const remaining = Math.max(0, Math.round((roundState.end_time - serverNow())/1000));
-  el('timerVal').textContent = fmtTime(remaining);
+  if(sessionMode === 'raid') updateRaidUI();   // 남은 시간은 레이드 화면 기준
+  else if(sessionMode === 'card') el('timerVal').textContent = fmtTime(Math.round((serverNow() - sessionStartedAt)/1000));   // 암기 카드는 걸린 시간
+  else el('timerVal').textContent = fmtTime(remaining);
+  if(ended) return;
   if(remaining<=0){
     showEndedView();
     return;
   }
-  if(currentQid === null){
+  if(currentQid === null && sessionMode !== 'card'){
     assignNextQuestion();
   }
   checkIdle();
@@ -1373,7 +1740,8 @@ function tick(){
 
 function checkIdle(){
   // 채점 중(입력창 잠김)이거나 쪽지 창을 보고 있는 동안은 세지 않는다
-  if(!currentQid || el('answerInput').disabled || chatPanelOpen){ lastActiveAt = serverNow(); el('idleWarn').textContent = ''; return; }
+  // (레이드에서 쓰러짐·기절로 답을 못 내는 동안도 세지 않는다 · 암기 카드는 입력창 없이 버튼으로 넘기므로 그대로 센다)
+  if(!currentQid || (sessionMode !== 'card' && el('answerInput').disabled) || chatPanelOpen || !raidCanAnswer()){ lastActiveAt = serverNow(); el('idleWarn').textContent = ''; return; }
   const left = IDLE_LIMIT_MS - (serverNow() - lastActiveAt);
   if(left <= 0){
     idleEnded = true;
@@ -1425,8 +1793,9 @@ el('startBtn').onclick = async () => {
   const pool = poolFromQuestions(questionsObj, units);
   if(pool.length===0){ msg.textContent = '선택한 범위에 문제가 없습니다.'; return; }
 
+  const mode = practiceMode;
   const minutes = parseFloat(el('durationInput').value) || 5;
-  const duration_sec = Math.max(30, Math.min(3600, Math.round(minutes*60)));
+  const duration_sec = mode === 'raid' ? 300 : mode === 'card' ? null : Math.max(30, Math.min(3600, Math.round(minutes*60)));
   msg.textContent = '';
 
   floor = 0; correctCount = 0; wrongCount = 0; streak = 0; lastFloor = 0; ended = false;
@@ -1449,17 +1818,22 @@ el('startBtn').onclick = async () => {
 
   roundState = {
     duration_sec,
-    end_time: serverNow() + duration_sec*1000,
+    end_time: serverNow() + (mode === 'raid' ? RAID_SAFETY_MS : mode === 'card' ? 3600000 : duration_sec*1000),
     order: questionOrder,
     weight: questionWeight,
     qids: pool.map(([qid])=>qid)
   };
+  sessionMode = mode;
+  sessionRaidDiff = raidDiff;
 
   el('floorVal').textContent = 0;
   el('streakVal').textContent = '';
   el('feedback').classList.remove('show');
+  applyModeLayout();
   showView('playView');
-  assignNextQuestion();
+  if(mode === 'card'){ startCardDeck(pool, questionOrder, questionWeight); showNextCard(); }
+  else assignNextQuestion();
+  if(mode === 'raid'){ startRaidFrame(); updateRaidUI(); }
   startPresenceAndChat();
   loadBookmarks();
 
@@ -1497,6 +1871,8 @@ function startReviewSession(qids, label){
     weight: 'even',
     qids: validQids
   };
+  sessionMode = 'tower';
+  applyModeLayout();
 
   el('floorVal').textContent = 0;
   el('streakVal').textContent = '';
@@ -1513,6 +1889,7 @@ function startReviewSession(qids, label){
 el('retryBtn').onclick = () => {
   ended = true;
   roundState = null;
+  clearModeLayout();
   showView('setupView');
   refreshRecord(true); // 방금 끝낸 세션까지 반영
 };
@@ -1599,7 +1976,7 @@ function aggregate(list){
     c += e.correct || 0; w += e.wrong || 0; h += e.hints || 0;
     best = Math.max(best, e.floor || 0);
     daySet.add(dayNum(e.started_ts || e.ts));
-    floors.push({ ts: e.started_ts || e.ts, floor: e.floor || 0 });
+    if(e.mode !== 'card') floors.push({ ts: e.started_ts || e.ts, floor: e.floor || 0 });   // 암기 카드는 층수가 없다
     (Array.isArray(e.unit_stats) ? e.unit_stats : []).forEach(us=>{
       if(!us || !us.u) return;
       const t = units[us.u] || (units[us.u] = { c:0, w:0 });

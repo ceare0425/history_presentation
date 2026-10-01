@@ -36,7 +36,10 @@ let FB = null;
 let serverNow = () => Date.now();
 const Q = new URLSearchParams(location.search);
 const SIM_N = parseInt(Q.get('sim'), 10);
-const LIVE = !(SIM_N > 0);                     // 실제 게임 연결 여부 (?sim=숫자 면 가짜 학생 점검 모드)
+// ?solo : 혼자 연습(solo.html)이 화면 반쪽에 띄우는 1인 레이드. Firebase 없이 이 학생 한 명만 싸우고,
+//         답은 부모 화면이 window.SOLO.answer()로 넘겨 준다 (가짜 학생 없음)
+const SOLO = Q.has('solo');
+const LIVE = !(SIM_N > 0) && !SOLO;            // 실제 게임 연결 여부 (?sim=숫자 면 가짜 학생 점검 모드)
 // 방 이름: world·korea (점검할 때는 raidtest 같은 다른 이름도 쓸 수 있다)
 const ROOM = /^[a-z0-9_]{1,20}$/.test(Q.get('room') || '') ? Q.get('room') : 'world';
 // ─────────────────────────────────────────────────────────────
@@ -143,6 +146,35 @@ const DIFFS = [
     p: { hp: 73000, hearts: 4, reviveMs: 11000, attackGapMs: [6000, 5000, 4000],  whistleGapMs: 10000, healNeed: 28, healAmount: 0.14,
          specialGapMs: 11000, arrestNeed: 14, censorCount: 14, minionHp: 0.09 } }
 ];
+// 혼자 레이드(?solo) 난이도: 학생 한 명이 직접 타자로 답하는 속도(문제당 약 8초) 기준으로 따로 맞춘 값.
+// 보스 공격은 늘 나 한 명을 노리므로 간격을 넓히고, 반 전체가 해야 하던 일(회복 차단·구출)은 내 정답 몇 개로 줄였다.
+// 혼자일 땐 쓰러져도 지지 않고 부활 시간만 잃는다(시간 안에 못 잡으면 실패).
+// 보스 공격은 ⚠ 예고 뒤 guardMs 안에 다음 문제를 맞히면 막는다(soloGuardStart) — 정답률이 곧 버티는 힘이 되게.
+// 승률(2026-10-01, 실제 코드로 120판씩, 문제당 약 8초 · 빠름 = 약 5초): [정답률 60 / 70 / 80 / 90%]
+//   보통 35 / 57 / 85 / 99 · 어려움 - / 12 / 33 / 70 · 매우 어려움 80%·90% 6 / 23 (빠름 80 / 98) · 지옥 90% 0 (빠름 80%·90% 12 / 44, 4초 90% 88)
+const SOLO_BASE = {
+  healCastMs: 18000,         // 회복 의식: 이 시간 안에 정답 healNeed개로 끊는다
+  arrestMs: 15000,           // 체포: 이 시간 안에 정답 arrestNeed개로 포승줄을 끊는다 (못 끊으면 쓰러짐)
+  checkMs: 10000,            // 불심 검문: 10초 안에 정답 (실패하면 목숨 1개)
+  censorMs: 8000,
+  firstAttackMs: 8000
+};
+// guardMs: 공격 예고 뒤 이 시간 안에 다음 문제를 맞히면 막는다 · attackGapMs: 예고 공격 간격 [평소 · 분노 · 광폭화]
+const SOLO_DIFFS = [
+  { name: '보통', emoji: '😐', color: '#3d8bfd', desc: '대부분 맞히면 이겨요', note: '정답률 80%면 충분',
+    p: { hp: 1800, hearts: 5, reviveMs: 5000, guardMs: 10000, attackGapMs: [12000, 10000, 8000], whistleGapMs: 18000,
+         healNeed: 2, healAmount: 0.08, specialGapMs: 20000, arrestNeed: 1, censorCount: 1, minionHp: 0.06 } },
+  { name: '어려움', emoji: '😠', color: '#ffb020', desc: '거의 다 맞혀야 해요', note: '정답률 90%는 되어야',
+    p: { hp: 2400, hearts: 4, reviveMs: 6000, guardMs: 9000, attackGapMs: [10000, 8500, 7000], whistleGapMs: 16000,
+         healNeed: 2, healCastMs: 16000, healAmount: 0.1, specialGapMs: 18000, arrestNeed: 1, censorCount: 1, minionHp: 0.07 } },
+  { name: '매우 어려움', emoji: '🔥', color: '#ff5a4a', desc: '빠르고 정확해야 해요', note: '빨리 쳐야 이겨요',
+    p: { hp: 2900, hearts: 4, reviveMs: 7000, guardMs: 8000, attackGapMs: [9000, 7500, 6000], whistleGapMs: 14000,
+         healNeed: 2, healCastMs: 14000, healAmount: 0.12, specialGapMs: 16000, arrestNeed: 2, arrestMs: 16000, censorCount: 1, minionHp: 0.08 } },
+  { name: '지옥', emoji: '💀', color: '#b86bff', desc: '빨라도 버티기 힘들어요', note: '도전 과제용',
+    p: { hp: 4400, hearts: 3, reviveMs: 8000, guardMs: 7000, attackGapMs: [8000, 6500, 5000], whistleGapMs: 12000,
+         healNeed: 3, healCastMs: 15000, healAmount: 0.14, specialGapMs: 14000, arrestNeed: 2, censorCount: 1, minionHp: 0.09 } }
+];
+if(SOLO){ DIFFS.length = 0; DIFFS.push(...SOLO_DIFFS); }
 let diffIdx = 0;   // 0 보통 · 1 어려움 · 2 매우 어려움 · 3 지옥
 // round.raid_diff는 예전 번호(1 보통 ~ 4 지옥, 0 쉬움은 삭제됨)를 그대로 쓰므로 1을 빼서 DIFFS 순서로 바꾼다
 function diffFromRound(r){ return clamp((Number(r.raid_diff ?? 1) || 0) - 1, 0, DIFFS.length - 1); }
@@ -155,6 +187,7 @@ const SPEEDS = [
 
 let themeKey = Q.get('boss') === 'world' ? 'world' : Q.get('boss') === 'korea' ? 'korea' : (ROOM === 'korea' ? 'korea' : 'world'), speedIdx = 0, running = false, soundOn = true;
 let FAKE_ACC = 0.82;   // 가짜 학생의 정답률 (시연용)
+const SOLO_NAME = String(Q.get('name') || '나').trim().slice(0, 5) || '나';   // 혼자 레이드 이름표 (하트와 겹치지 않게 5글자까지)
 let S = null;
 
 // ── 유틸 ──────────────────────────────────────────────
@@ -807,7 +840,7 @@ function newStudent(name, i, pid){
 function anchor(st){ return { x: st.left ? st.tx + TAG_W : st.tx, y: st.ty + TAG_H / 2 }; }
 
 function reset(){
-  RAID = Object.assign({}, RAID_BASE, DIFFS[diffIdx].p);
+  RAID = Object.assign({}, RAID_BASE, SOLO ? SOLO_BASE : {}, DIFFS[diffIdx].p);
   S = {
     clock: 0, phase: 'ready', introT: 0, landed: false,
     hp: RAID.hp, ghost: RAID.hp, max: RAID.hp,
@@ -824,6 +857,7 @@ function reset(){
     loseReason: '', result: ''
   };
   if(LIVE) syncStudents();
+  else if(SOLO){ S.students.push(newStudent(SOLO_NAME, 0, 'me')); layoutTags(); }
   else {
     for(let i = 0; i < SIM_N; i++) S.students.push(newStudent(NAMES[i % NAMES.length] + (i >= NAMES.length ? (Math.floor(i / NAMES.length) + 1) : ''), i));
     layoutTags();
@@ -833,6 +867,7 @@ function reset(){
 }
 
 function scaleForClass(){
+  if(SOLO) return;   // 혼자 레이드는 SOLO_DIFFS 값을 그대로 쓴다
   const k = clamp(S.students.length / 30, 0.2, 1.4);
   RAID.hp = Math.max(3000, Math.round(RAID.hp * k / 100) * 100);
   RAID.arrestNeed = Math.max(3, Math.round(RAID.arrestNeed * k));
@@ -864,7 +899,7 @@ function answer(st, ok, sec){
     st.streak = 0; S.wrong++;
     st.flash = 1; st.flashColor = '#e0483c'; st.wrongT = 1;
     if(checked){ failCheckpoint(); return; }
-    if(!bossStunned()){ bossStrike(st, 0.35, T.wrongText); if(!(S.poseUntil > S.clock)) showPose('swing', 450); }
+    if(!bossStunned() && !S.noCounter){ bossStrike(st, 0.35, T.wrongText); if(!(S.poseUntil > S.clock)) showPose('swing', 450); }
     return;
   }
   if(checked) passCheckpoint();
@@ -989,16 +1024,47 @@ function hurtStudent(sh){
     S.texts.push({ x: tx, y: a.y, txt: '💀 쓰러짐', stun: true, t: 0 });
     sfx('ko');
     const alive = S.students.filter(s => !isKo(s)).length;
-    if(alive === 0) startLose('전원 쓰러짐');
+    if(alive === 0 && !SOLO) startLose('전원 쓰러짐');
   } else {
     S.texts.push({ x: tx, y: a.y, txt: (sh.label ? sh.label + ' ' : '') + '-1 ❤', stun: true, t: 0 });
     sfx('ouch');
   }
 }
+// 혼자 레이드의 공격: ⚠로 예고하고 guardMs 안에 다음 문제를 맞히면 막는다. 틀리거나 시간이 지나면 맞는다.
+function soloGuardStart(label, stunMs, kind){
+  const st = S.students[0];
+  if(!st || isKo(st) || S.guard) return;
+  S.guard = { label, stunMs, kind, start: S.clock, end: S.clock + RAID.guardMs };
+  st.targetUntil = S.guard.end;
+  sfx('warn');
+}
+function soloGuardLand(){
+  const g = S.guard, st = S.students[0];
+  S.guard = null; st.targetUntil = 0;
+  if(S.phase !== 'fight' || bossStunned() || isKo(st)) return;
+  if(g.kind === 'whistle'){
+    S.attack = 1; showPose('whistle', 1300); sfx('counter');
+    S.shake = Math.max(S.shake, 24);
+    S.rings.push({ x: BOSS_X, y: BOSS_FEET - 260, t: 0, life: 0.8, r: 1300, color: 'rgba(255,70,50,.9)', w: 26 });
+  } else {
+    S.attack = 0.55; showPose('swing', 650);
+    if(themeKey === 'world') sfx('gun');
+  }
+  bossStrike(st, 0.4, g.label, g.stunMs);
+}
+function soloGuardParry(){
+  const st = S.students[0], a = anchor(st);
+  S.guard = null; st.targetUntil = 0;
+  S.texts.push({ x: a.x + 90, y: a.y - 30, txt: '🛡️ 막아냄!', block: true, t: 0 });
+  burst(a.x, a.y, 'block', 14, 1);
+  sfx('block');
+}
+
 // 평소 공격: 목표를 ⚠로 1초 먼저 알려 준 뒤 내려친다
 function basicAttack(){
   const T = THEMES[themeKey];
   const lvl = S.enrage ? 2 : S.rage ? 1 : 0;
+  if(SOLO){ soloGuardStart(T.attackName, 0, 'swing'); S.attackAt = S.clock + RAID.attackGapMs[lvl]; return; }
   const pool = S.students.filter(s => !isKo(s));
   const targets = [];
   const count = Math.max(1, Math.round(S.students.length * RAID.attackFrac[lvl]));
@@ -1018,7 +1084,7 @@ function basicAttack(){
 function enterRage(){
   const T = THEMES[themeKey];
   S.rage = true;
-  S.banner = { txt: T.rageText, sub: `체력 50% 이하 · ${withRo(T.counterText.replace('!', ''))} 여러 명이 기절합니다!`, t: 0, life: 2.2, color: '#ff5a4a', red: true };
+  S.banner = { txt: T.rageText, sub: `체력 50% 이하 · ${withRo(T.counterText.replace('!', ''))} ${SOLO ? '나를 기절시킵니다' : '여러 명이 기절합니다'}!`, t: 0, life: 2.2, color: '#ff5a4a', red: true };
   S.shake = Math.max(S.shake, 30);
   S.counterAt = S.clock + 4000;
   for(let i = 0; i < 40; i++) S.parts.push({ x: BOSS_X + rand(-200, 200), y: BOSS_FEET - rand(0, 500), vx: rand(-60, 60), vy: rand(-420, -160), life: rand(0.8, 1.6), t: 0, size: rand(4, 10), color: Math.random() < 0.5 ? '#ff4d2e' : '#ffb347', g: -50, kind: 'dot' });
@@ -1036,6 +1102,7 @@ function enterEnrage(){
 // 분노 광역기: 호루라기로 여러 명을 한꺼번에 기절시키고 목숨도 깎는다
 function counterAttack(){
   const T = THEMES[themeKey];
+  if(SOLO){ soloGuardStart('😵 ' + T.counterText.replace('!', ''), RAID.whistleStunMs, 'whistle'); S.counterAt = S.clock + RAID.whistleGapMs; return; }
   S.attack = 1;
   showPose('whistle', 1300);   // 호루라기 불기
   sfx('counter');
@@ -1050,7 +1117,7 @@ function counterAttack(){
       const st = pool.splice(randi(0, pool.length - 1), 1)[0];
       hurtStudent({ st, label: '😵 기절!', stunMs: RAID.whistleStunMs });
     }
-    S.banner = { txt: T.counterText, sub: `${n}명이 ${RAID.whistleStunMs / 1000}초 동안 기절했습니다`, t: 0, life: 1.6, color: '#ff7a5a', red: true };
+    S.banner = { txt: T.counterText, sub: SOLO ? `${RAID.whistleStunMs / 1000}초 동안 기절했습니다` : `${n}명이 ${RAID.whistleStunMs / 1000}초 동안 기절했습니다`, t: 0, life: 1.6, color: '#ff7a5a', red: true };
   }});
   S.counterAt = S.clock + RAID.whistleGapMs;
 }
@@ -1094,7 +1161,7 @@ function bindStudent(st){
   st.flash = 1; st.flashColor = '#8a5a2b'; st.hurtT = 1; st.streak = 0;
   const a = anchor(st);
   burst(a.x, a.y, 'rope', 20, st.left ? -1 : 1);
-  S.banner = { txt: '🔗 ' + T.arrestName + '!', sub: `${st.name} 체포 · ${RAID.arrestMs / 1000}초 안에 반 전체가 ${RAID.arrestNeed}번 공격하면 구출!`, t: 0, life: 2, color: '#e8b57a', red: true };
+  S.banner = { txt: '🔗 ' + T.arrestName + '!', sub: SOLO ? `${RAID.arrestMs / 1000}초 안에 정답 ${RAID.arrestNeed}개로 포승줄을 끊어라!` : `${st.name} 체포 · ${RAID.arrestMs / 1000}초 안에 반 전체가 ${RAID.arrestNeed}번 공격하면 구출!`, t: 0, life: 2, color: '#e8b57a', red: true };
   S.shake = Math.max(S.shake, 14);
 }
 function rescueProgress(){
@@ -1110,14 +1177,14 @@ function freeArrest(ok){
     st.flash = 1; st.flashColor = '#48d17a';
     burst(a.x, a.y, 'rope', 24, st.left ? 1 : -1);
     S.texts.push({ x: tx, y: a.y, txt: '구출!', stun: true, revive: true, t: 0 });
-    S.banner = { txt: '구출 성공!', sub: st.name + ' 학생이 풀려났습니다', t: 0, life: 1.4, color: '#6dff9e' };
+    S.banner = { txt: SOLO ? '탈출 성공!' : '구출 성공!', sub: SOLO ? '포승줄을 끊었습니다' : st.name + ' 학생이 풀려났습니다', t: 0, life: 1.4, color: '#6dff9e' };
     sfx('break');
   } else {
     st.koUntil = S.clock + RAID.reviveMs; st.kos++; st.hearts = 0; st.stunUntil = 0;
     S.texts.push({ x: tx, y: a.y, txt: '💀 연행됨', stun: true, t: 0 });
-    S.banner = { txt: '구출 실패…', sub: st.name + ' 학생이 끌려갔습니다', t: 0, life: 1.4, color: '#ff8a80', red: true };
+    S.banner = { txt: SOLO ? '탈출 실패…' : '구출 실패…', sub: SOLO ? `끌려갔습니다 · ${RAID.reviveMs / 1000}초 뒤 부활` : st.name + ' 학생이 끌려갔습니다', t: 0, life: 1.4, color: '#ff8a80', red: true };
     sfx('ko');
-    if(!S.students.some(s => !isKo(s))) startLose('전원 쓰러짐');
+    if(!SOLO && !S.students.some(s => !isKo(s))) startLose('전원 쓰러짐');
   }
 }
 
@@ -1130,7 +1197,7 @@ function startCheckpoint(){
   showPose('order', 900);
   sfx('check');
   // 가짜 학생: 지목되면 서둘러 답한다 (가끔은 시간을 넘긴다)
-  if(!LIVE) st.next = S.clock + rand(700, RAID.checkMs + 1500);
+  if(!LIVE && !SOLO) st.next = S.clock + rand(700, RAID.checkMs + 1500);
   S.banner = { txt: '📋 ' + T.checkName + '!', sub: `${st.name}, ${RAID.checkMs / 1000}초 안에 정답을 내라! (성공하면 보스 기절)`, t: 0, life: 1.8, color: '#ffe14d', red: true };
 }
 function passCheckpoint(){
@@ -1145,7 +1212,7 @@ function failCheckpoint(){
   const st = S.checkpoint.st;
   S.checkpoint = null;
   hurtStudent({ st, label: '검문 실패' });
-  if(!isKo(st)) hurtStudent({ st, label: '검문 실패' });
+  if(!isKo(st) && !SOLO) hurtStudent({ st, label: '검문 실패' });   // 혼자일 땐 목숨 1개만
 }
 
 // 📰 신문 검열: 여러 학생의 문제 화면을 먹칠해 정답률을 떨어뜨린다
@@ -1158,7 +1225,7 @@ function startCensor(){
   showPose('rage', 700);
   sfx('censor');
   for(let i = 0; i < 40; i++) S.parts.push({ x: rand(200, W - 200), y: rand(-200, 100), vx: rand(-120, 120), vy: rand(80, 220), life: rand(1.5, 2.5), t: 0, size: rand(18, 30), color: ['#f2ecd8', '#d8d0b8', '#bdb49a'][randi(0, 2)], g: 60, kind: 'confetti', rot: rand(0, 6), vr: rand(-3, 3) });
-  S.banner = { txt: '📰 ' + T.censorName + '!', sub: `${set.size}명의 문제가 ${RAID.censorMs / 1000}초 동안 먹칠됩니다 · 침착하게 읽으세요`, t: 0, life: 1.8, color: '#dcd3b8', red: true };
+  S.banner = { txt: '📰 ' + T.censorName + '!', sub: `${SOLO ? '문제가' : set.size + '명의 문제가'} ${RAID.censorMs / 1000}초 동안 먹칠됩니다 · 침착하게 읽으세요`, t: 0, life: 1.8, color: '#dcd3b8', red: true };
 }
 
 // 🚧 바리케이드: 잠깐 모든 공격을 막는다
@@ -1268,7 +1335,7 @@ function startDying(){
   if(LIVE) onRaidEnd('win');   // 학생 화면은 쓰러지는 순간 바로 끝나게
   S.phase = 'dying'; S.dyingT = 0; S.endClock = S.clock; S.nextBoom = 0;
   S.shots = []; S.cast = null; S.timers = [];
-  S.arrest = null; S.checkpoint = null; S.censor = null; S.barricadeUntil = 0;
+  S.arrest = null; S.checkpoint = null; S.censor = null; S.barricadeUntil = 0; S.guard = null;
   for(const m of S.minions) if(!m.dead){ m.dead = true; m.deadT = 0; }
   S.banner = null;
 }
@@ -1276,7 +1343,7 @@ function startLose(reason){
   if(S.phase !== 'fight') return;
   S.phase = 'lose'; S.loseReason = reason; S.endClock = S.clock;
   S.shots = []; S.cast = null; S.timers = [];
-  S.arrest = null; S.checkpoint = null; S.censor = null; S.barricadeUntil = 0;
+  S.arrest = null; S.checkpoint = null; S.censor = null; S.barricadeUntil = 0; S.guard = null;
   for(const m of S.minions) if(!m.dead){ m.dead = true; m.deadT = 0; }
   S.banner = null;
   sfx('lose');
@@ -1320,7 +1387,7 @@ function update(dt){
         const a = anchor(st);
         S.texts.push({ x: a.x + (st.left ? 90 : -90), y: a.y, txt: '부활!', stun: true, revive: true, t: 0 });
       }
-      if(LIVE || now < st.next) continue;
+      if(LIVE || SOLO || now < st.next) continue;
       st.next = now + Math.max(700, expRand(mean));
       if(!canAct(st)) continue;
       const censored = !!(S.censor && S.censor.set.has(st));
@@ -1342,6 +1409,7 @@ function update(dt){
     if(S.arrest && now >= S.arrest.end) freeArrest(false);
     if(S.checkpoint && now >= S.checkpoint.end) failCheckpoint();
     if(S.censor && now >= S.censor.end) S.censor = null;
+    if(S.guard && now >= S.guard.end) soloGuardLand();
     if(LIVE ? (roundEnd && serverNow() >= roundEnd) : now - S.fightStart >= RAID.limitMs) startLose('시간 초과');
   }
 
@@ -1808,10 +1876,11 @@ function drawObjectives(){
   const T = THEMES[themeKey], now = S.clock;
   const items = [];
   const timeK = (st, en) => clamp((en - now) / (en - st), 0, 1);
+  if(S.guard) items.push({ c: '#ff5a4a', dark: '#3a0c08', label: `⚠ ${S.guard.label.replace('😵 ', '')} — 다음 문제를 맞혀서 막아라!`, k: timeK(S.guard.start, S.guard.end), sec: (S.guard.end - now) / 1000 });
   if(S.cast) items.push({ c: '#3ee07a', dark: '#10301c', label: `🩹 ${T.healName} — 공격해서 끊어라!  ${S.cast.got} / ${S.cast.need}`, k: timeK(S.cast.start, S.cast.end), p: S.cast.got / S.cast.need, sec: (S.cast.end - now) / 1000 });
-  if(S.arrest) items.push({ c: '#d9a066', dark: '#3a2410', label: `🔗 ${S.arrest.st.name} 체포됨 — ${S.arrest.need}번 공격해서 구출!  ${S.arrest.got} / ${S.arrest.need}`, k: timeK(S.arrest.start, S.arrest.end), p: S.arrest.got / S.arrest.need, sec: (S.arrest.end - now) / 1000 });
+  if(S.arrest) items.push({ c: '#d9a066', dark: '#3a2410', label: SOLO ? `🔗 체포됨 — 정답 ${S.arrest.need}개로 포승줄 끊기!  ${S.arrest.got} / ${S.arrest.need}` : `🔗 ${S.arrest.st.name} 체포됨 — ${S.arrest.need}번 공격해서 구출!  ${S.arrest.got} / ${S.arrest.need}`, k: timeK(S.arrest.start, S.arrest.end), p: S.arrest.got / S.arrest.need, sec: (S.arrest.end - now) / 1000 });
   if(S.checkpoint) items.push({ c: '#ffd23f', dark: '#3a3000', label: `📋 ${T.checkName}: ${S.checkpoint.st.name} — 정답을 내라!`, k: timeK(S.checkpoint.start, S.checkpoint.end), sec: (S.checkpoint.end - now) / 1000 });
-  if(S.censor) items.push({ c: '#cfc7ae', dark: '#2a2820', label: `📰 ${T.censorName} — ${S.censor.set.size}명 문제 먹칠`, k: timeK(S.censor.start, S.censor.end), sec: (S.censor.end - now) / 1000 });
+  if(S.censor) items.push({ c: '#cfc7ae', dark: '#2a2820', label: `📰 ${T.censorName} — ${SOLO ? '문제 먹칠' : S.censor.set.size + '명 문제 먹칠'}`, k: timeK(S.censor.start, S.censor.end), sec: (S.censor.end - now) / 1000 });
   if(barricadeUp()) items.push({ c: '#e0b27a', dark: '#2a1a0a', label: `🚧 ${T.barricadeName} — 공격이 막힙니다`, k: timeK(S.barricadeStart, S.barricadeUntil), sec: (S.barricadeUntil - now) / 1000 });
   const alive = S.minions.filter(m => !m.dead);
   if(alive.length){
@@ -1958,7 +2027,7 @@ function drawCombo(){
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const color = S.combo >= 15 ? '#ff5aa5' : S.combo >= 8 ? '#ffb020' : '#ffe14d';
   outlinedText(ctx, S.combo + ' COMBO', 0, 0, 70, color, '#3a0a00', 12);
-  outlinedText(ctx, S.combo >= 15 ? '반 전체 총공격!' : S.combo >= 8 ? '불붙었다!' : '연속 타격!', 0, 56, 30, '#fff');
+  outlinedText(ctx, S.combo >= 15 ? (SOLO ? '멈출 수 없다!' : '반 전체 총공격!') : S.combo >= 8 ? '불붙었다!' : '연속 타격!', 0, 56, 30, '#fff');
   ctx.restore();
 }
 
@@ -1971,7 +2040,8 @@ function drawStats(){
   const hurry = left <= 30000 && S.phase === 'fight';
   const timeColor = hurry ? (Math.sin(S.clock / 120) > 0 ? '#ff5a4a' : '#fff') : 'rgba(255,255,255,.95)';
   outlinedText(ctx, `⏳ ${fmtTime(Math.ceil(left / 1000) * 1000)}`, 800, 132, hurry ? 34 : 28, timeColor, OUT, 5);
-  outlinedText(ctx, `✔ ${S.correct}   ✗ ${S.wrong}   💀 ${kos}명`, 1090, 132, 26, 'rgba(255,255,255,.9)', OUT, 5);
+  const koLabel = SOLO ? `💀 ${S.students.reduce((n, s) => n + s.kos, 0)}번` : `💀 ${kos}명`;
+  outlinedText(ctx, `✔ ${S.correct}   ✗ ${S.wrong}   ${koLabel}`, 1090, 132, 26, 'rgba(255,255,255,.9)', OUT, 5);
 }
 
 function drawBanner(){
@@ -2041,7 +2111,7 @@ function drawVictory(){
   const bob = Math.sin(S.clock / 250) * 6;
   outlinedText(ctx, '🎉 보스 격파! 🎉', 960, py + 90 + bob, 92, '#ffe14d', '#4a2000', 14);
   ctx.font = `700 30px ${FONT}`; ctx.fillStyle = '#fff';
-  ctx.fillText(T.winLine, 960, py + 180);
+  ctx.fillText(SOLO ? T.winLine.replace('반 전체가 힘을 모아', '혼자 힘으로') : T.winLine, 960, py + 180);
   ctx.font = `700 26px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,.8)';
   ctx.fillText(`걸린 시간 ${fmtTime(S.endClock - S.fightStart)}  ·  정답 ${S.correct}개  ·  마지막 일격 ${S.lastHitter ? S.lastHitter.name : '-'}`, 960, py + 230);
   drawMvp(px, pw, py + 305);
@@ -2081,6 +2151,14 @@ function diffCardX(i){
   return 960 - total / 2 + i * (DIFF_CARD.w + DIFF_CARD.gap);
 }
 function drawReady(){
+  if(SOLO){
+    ctx.fillStyle = 'rgba(5,5,15,.7)'; ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    outlinedText(ctx, '👹 혼자 보스 레이드', 960, 420, 100, '#ffe14d', '#3a1a00', 14);
+    ctx.font = `700 34px ${FONT}`; ctx.fillStyle = '#fff';
+    ctx.fillText('곧 보스가 나타납니다…', 960, 540);
+    return;
+  }
   if(LIVE){
     ctx.fillStyle = 'rgba(5,5,15,.7)'; ctx.fillRect(0, 0, W, H);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -2306,13 +2384,13 @@ function refreshSoundBtn(){ $('soundBtn').classList.toggle('hidden', !!(AC && AC
 $('soundBtn').onclick = () => { audio(); setTimeout(refreshSoundBtn, 100); };
 document.addEventListener('pointerdown', () => { audio(); setTimeout(refreshSoundBtn, 100); });
 setInterval(refreshSoundBtn, 1500);
-if(!LIVE) document.addEventListener('keydown', e => {
+if(!LIVE && !SOLO) document.addEventListener('keydown', e => {
   if(e.code === 'Space'){ e.preventDefault(); toggleRun(); }
   else if(e.key === 'h' || e.key === 'H') manualHit();
   else if(S.phase === 'ready' && /^[1-4]$/.test(e.key)){ diffIdx = Number(e.key) - 1; reset(); }   // 준비 화면 안내대로 숫자 키로 난이도 선택
 });
 // 점검 모드 준비 화면: 난이도 카드를 눌러도 고를 수 있게 (화면 안내 문구와 맞춤)
-if(!LIVE) cv.addEventListener('click', e => {
+if(!LIVE && !SOLO) cv.addEventListener('click', e => {
   if(S.phase !== 'ready') return;
   const r = cv.getBoundingClientRect();
   const x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height;
@@ -2335,7 +2413,7 @@ function frame(now){
 }
 reset();
 // 주소 옵션: ?diff=1~4 난이도(1 보통 ~ 4 지옥) · ?boss=world 세계사 보스로 시작 · ?auto 바로 시작(+&skip 등장 연출 생략) · ?hp=0.4 체력 비율을 정해 두고 시작(화면 점검용)
-if(!LIVE) (() => {
+if(!LIVE && !SOLO) (() => {
   const q = Q;
   const dq = parseInt(q.get('diff'), 10);
   if(dq >= 1 && dq <= DIFFS.length){ diffIdx = dq - 1; reset(); }
@@ -2352,6 +2430,75 @@ if(!LIVE) (() => {
   if(ff > 0 && running){ for(let i = 0; i < ff * 60; i++){ update(1 / 60); if(S.phase === 'victory' || S.phase === 'lose') break; } }
 })();
 requestAnimationFrame(frame);
+
+// ── 혼자 레이드(?solo) 연결 ───────────────────────────
+// 부모 화면(korea/solo.html)이 같은 사이트의 iframe으로 띄우고, 아래 함수로 시작·답·일시정지를 넘기고 상태를 읽어 간다.
+if(SOLO){
+  const me = () => S.students[0];
+  const msLeft = t => Math.max(0, t - S.clock);
+  window.SOLO = {
+    start(d){
+      diffIdx = clamp(Number(d) || 0, 0, DIFFS.length - 1);
+      reset();
+      running = true;
+      S.phase = 'intro'; S.introT = 0;
+    },
+    // ok: 정답 여부, sec: 답하는 데 걸린 초. 싸울 수 없는 상태(쓰러짐·기절·싸움 전후)면 false
+    answer(ok, sec){
+      audio();
+      if(!S || S.phase !== 'fight' || !running) return false;
+      const st = me();
+      const g = S.guard;
+      if(isArrested(st)){
+        if(g){ if(ok) soloGuardParry(); else soloGuardLand(); }
+        // 혼자일 땐 구출해 줄 친구가 없으니, 묶인 동안 낸 정답이 포승줄을 끊는다
+        const a = anchor(st);
+        if(ok){
+          st.correct++; S.correct++; st.streak++;
+          st.flash = 1; st.flashColor = '#d9a066';
+          burst(a.x, a.y, 'rope', 12, 1);
+          sfx('hit');
+          rescueProgress();
+        } else {
+          S.wrong++; st.streak = 0;
+          st.flash = 1; st.flashColor = '#e0483c'; st.wrongT = 1;
+        }
+        return true;
+      }
+      if(!canAct(st)) return false;
+      if(g){
+        // 예고된 공격이 있으면 이 답으로 막거나 맞는다 (틀려도 오답 반격까지 겹쳐 맞지는 않는다)
+        if(ok) soloGuardParry(); else soloGuardLand();
+        S.noCounter = !ok;
+        try { answer(st, !!ok, Number(sec) || 8); } finally { S.noCounter = false; }
+        return true;
+      }
+      answer(st, !!ok, Number(sec) || 8);
+      return true;
+    },
+    pause(on){ if(S && (S.phase === 'fight' || S.phase === 'intro')) running = !on; },
+    audio(){ audio(); setTimeout(refreshSoundBtn, 100); },
+    state(){
+      const st = me();
+      if(!S || !st) return null;
+      const used = S.phase === 'fight' ? S.clock - S.fightStart : (S.phase === 'ready' || S.phase === 'intro') ? 0 : S.endClock - S.fightStart;
+      return {
+        phase: S.phase, running,
+        result: S.phase === 'victory' || S.phase === 'dying' ? 'win' : S.phase === 'lose' ? 'lose' : '',
+        hp: Math.round(S.hp), max: Math.round(S.max), left: Math.max(0, RAID.limitMs - used), used,
+        hearts: st.hearts, maxHearts: RAID.hearts, shields: st.shields,
+        ko: msLeft(st.koUntil), stun: isKo(st) ? 0 : msLeft(st.stunUntil),
+        arrest: isArrested(st) ? { got: S.arrest.got, need: S.arrest.need, left: msLeft(S.arrest.end) } : null,
+        censor: S.censor && S.censor.set.has(st) ? msLeft(S.censor.end) : 0,
+        check: S.checkpoint && S.checkpoint.st === st ? msLeft(S.checkpoint.end) : 0,
+        target: st.targetUntil > S.clock,
+        guard: S.guard ? { left: msLeft(S.guard.end), label: S.guard.label } : null,
+        dmg: Math.round(st.dmg), correct: S.correct, wrong: S.wrong, kos: st.kos,
+        diff: diffIdx, diffName: DIFFS[diffIdx].name, bossName: THEMES[themeKey].bossName, loseReason: S.loseReason || ''
+      };
+    }
+  };
+}
 </script>
 </body>
 </html>

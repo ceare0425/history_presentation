@@ -435,7 +435,7 @@
     <div class="pool-count" style="display:flex; align-items:center; gap:8px;"><b>세션 기록</b> (최근순)<button type="button" class="bad" id="soloModalDelAll" style="margin-left:auto; padding:3px 9px; font-size:.75rem;">이 학생 기록 전체 삭제</button></div>
     <div style="overflow-x:auto;">
       <table>
-        <thead><tr><th>시작</th><th>종료</th><th>주제(범위)</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th><th></th></tr></thead>
+        <thead><tr><th>시작</th><th>종료</th><th>주제(범위)</th><th>제한</th><th>층수·결과</th><th>정답/오답</th><th>힌트</th><th></th></tr></thead>
         <tbody id="soloModalRows"></tbody>
       </table>
     </div>
@@ -1562,6 +1562,16 @@ function soloRangeLabel(units){
   return labels.join(', ');
 }
 
+// 층수 칸: 혼자 연습의 연습 방식(👹 보스 레이드 · 🃏 암기 카드)을 함께 표시
+function soloScoreLabel(e){
+  if(e.mode === 'card') return `🃏 카드 ${e.cards_seen||0}장 · 몰랐음 ${e.cards_unknown||0}`;
+  if(e.mode === 'raid'){
+    const d = ['', '보통', '어려움', '매우 어려움', '지옥'][e.raid_diff] || '';
+    const r = e.raid_result === 'win' ? '격파' : e.raid_result === 'lose' ? '실패' : '중단';
+    return `👹 ${d} ${r}`;
+  }
+  return `${e.floor||0}층`;
+}
 function soloDurLabel(sec){
   if(!sec) return '-';
   const m = sec/60;
@@ -1672,13 +1682,13 @@ function renderSoloStats(){
         <td class="${count>1?'acc-ok':'muted'}">${count}회</td>
         <td>${escapeHtml(soloRangeLabel(e.units))}</td>
         <td class="muted">${soloDurLabel(e.duration_sec)}</td>
-        <td>${e.floor||0}층</td>
+        <td>${escapeHtml(soloScoreLabel(e))}</td>
         <td class="${accClass}">${e.correct||0}/${e.wrong||0}${acc===null?'':` (${acc}%)`}</td>
         <td class="${(e.hints||0)>0?'':'muted'}">${e.hints||0}회</td>
       </tr>`;
     }).join('');
     return `${groupRow}<div style="overflow-x:auto; margin:2px 0 12px;"><table>
-        <thead><tr><th style="width:22px;"></th><th>최근 시작</th><th>종료</th><th>이름</th><th>연습</th><th>최근 주제</th><th>제한</th><th>층수</th><th>정답/오답</th><th>힌트</th></tr></thead>
+        <thead><tr><th style="width:22px;"></th><th>최근 시작</th><th>종료</th><th>이름</th><th>연습</th><th>최근 주제</th><th>제한</th><th>층수·결과</th><th>정답/오답</th><th>힌트</th></tr></thead>
         <tbody>${stuRows}</tbody>
       </table></div>`;
   }).join('') : '<div class="muted">아직 기록이 없습니다.</div>';
@@ -1702,8 +1712,9 @@ function renderSoloModal(){
   const sum = (k) => list.reduce((s,e)=>s+(e[k]||0), 0);
   const tc = sum('correct'), tw = sum('wrong'), th = sum('hints'), tot = tc + tw;
   const acc = tot ? Math.round(100*tc/tot) : null;
-  const bestFloor = Math.max(...list.map(e=>e.floor||0));
-  const avgFloor = Math.round(list.reduce((s,e)=>s+(e.floor||0), 0) / list.length);
+  const floorList = list.filter(e => e.mode !== 'card');   // 암기 카드는 층수가 없다
+  const bestFloor = floorList.length ? Math.max(...floorList.map(e=>e.floor||0)) : 0;
+  const avgFloor = floorList.length ? Math.round(floorList.reduce((s,e)=>s+(e.floor||0), 0) / floorList.length) : 0;
   const first = list[list.length-1], last = list[0];
   const clsPrefix = (() => {
     const m = String(cls || '').match(/^(\d+)-(\d+)$/);
@@ -1756,7 +1767,7 @@ function renderSoloModal(){
       <td class="muted">${soloEndLabel(e)}</td>
       <td>${escapeHtml(soloRangeLabel(e.units))}</td>
       <td class="muted">${soloDurLabel(e.duration_sec)}</td>
-      <td>${e.floor||0}층</td>
+      <td>${escapeHtml(soloScoreLabel(e))}</td>
       <td class="${ac}">${e.correct||0}/${e.wrong||0}${a===null?'':` (${a}%)`}</td>
       <td class="${(e.hints||0)>0?'':'muted'}">${e.hints||0}회</td>
       <td><button type="button" class="mini-del" data-k="${e._k}">삭제</button></td>
