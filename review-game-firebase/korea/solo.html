@@ -485,8 +485,8 @@
     </div>
     <div class="card-row hidden" id="cardRow">
       <button type="button" id="cardRevealBtn">👀 정답 보기 <span class="kbd">(Space)</span></button>
-      <button type="button" id="cardKnowBtn" class="know hidden">⭕ 알았어요 <span class="kbd">(1)</span></button>
-      <button type="button" id="cardDontBtn" class="dont hidden">❌ 몰랐어요 <span class="kbd">(2)</span></button>
+      <button type="button" id="cardDontBtn" class="dont hidden">❌ 몰랐어요 <span class="kbd">(←)</span></button>
+      <button type="button" id="cardKnowBtn" class="know hidden">⭕ 알았어요 <span class="kbd">(→)</span></button>
     </div>
     <div class="hint-row">
       <button type="button" id="hintBtn" class="secondary">💡 힌트 (초성) · Ctrl</button>
@@ -993,8 +993,8 @@ document.addEventListener('keydown', e=>{
   const ae = document.activeElement;
   if(ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) && !ae.disabled) return;
   if(!cardRevealed && (e.code === 'Space' || e.key === 'Enter')){ e.preventDefault(); revealCard(); }
-  else if(cardRevealed && (e.key === '1' || e.key === 'ArrowLeft')){ e.preventDefault(); judgeCard(true); }
-  else if(cardRevealed && (e.key === '2' || e.key === 'ArrowRight')){ e.preventDefault(); judgeCard(false); }
+  else if(cardRevealed && e.key === 'ArrowRight'){ e.preventDefault(); judgeCard(true); }    // → 알았어요 (오른쪽 버튼)
+  else if(cardRevealed && e.key === 'ArrowLeft'){ e.preventDefault(); judgeCard(false); }    // ← 몰랐어요 (왼쪽 버튼)
 });
 
 // 🏅 칭호 도감 — 학년·반·이름이 정해져 있어야 내 칭호를 불러올 수 있다
