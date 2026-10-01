@@ -2433,7 +2433,7 @@ if(!LIVE && !SOLO) (() => {
 requestAnimationFrame(frame);
 
 // ── 혼자 레이드(?solo) 연결 ───────────────────────────
-// 부모 화면(korea/solo.html)이 같은 사이트의 iframe으로 띄우고, 아래 함수로 시작·답·일시정지를 넘기고 상태를 읽어 간다.
+// 부모 화면(korea/solo.html·world/solo.html)이 같은 사이트의 iframe으로 띄우고, 아래 함수로 시작·답·일시정지를 넘기고 상태를 읽어 간다.
 if(SOLO){
   const me = () => S.students[0];
   const msLeft = t => Math.max(0, t - S.clock);
