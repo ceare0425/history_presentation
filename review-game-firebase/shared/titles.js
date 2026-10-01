@@ -100,12 +100,12 @@ const RAID_DIFF_TITLES = [
   { key:'raidd4', emoji:'💀', name:'지옥의 정복자', rarity:'legend', desc:'💀 지옥 난이도 보스 레이드 승리' }
 ];
 const DAY_STEPS = [[3,'작심삼일 돌파','common'],[7,'개근상','rare'],[20,'역사 덕후','epic']];
-// 🧍 혼자 보스 레이드 칭호 (혼자 연습의 '👹 보스 레이드' 방식, 지금은 한국사만): solo.html이 이긴 판에서 log/solo<시작 시각>_<key>로 남긴다
-//   soloraidwin: 혼자 레이드 승리 · soloraidd2~4: 그 난이도 이상에서 승리
-const SOLO_RAID_ROOMS = ['korea'];
-const SOLO_RAID_KINDS = [
-  { key:'soloraidwin', emoji:'🧍', what:'혼자 보스 레이드 승리', steps:[[1,'홀로 일어선 의병','common'],[5,'외로운 독립투사','rare'],[15,'일당백 의열단원','epic']] }
-];
+// 🧍 혼자 보스 레이드 칭호 (혼자 연습의 '👹 보스 레이드' 방식, 한국사·세계사): solo.html이 이긴 판에서 log/solo<시작 시각>_<key>로 남긴다
+//   soloraidwin: 혼자 레이드 승리(칭호 이름은 과목마다 다름) · soloraidd2~4: 그 난이도 이상에서 승리
+const SOLO_RAID_KINDS_BY_ROOM = {
+  korea: [ { key:'soloraidwin', emoji:'🧍', what:'혼자 보스 레이드 승리', steps:[[1,'홀로 일어선 의병','common'],[5,'외로운 독립투사','rare'],[15,'일당백 의열단원','epic']] } ],
+  world: [ { key:'soloraidwin', emoji:'🧍', what:'혼자 보스 레이드 승리', steps:[[1,'홀로 선 레지스탕스','common'],[5,'외로운 저항 투사','rare'],[15,'일당백 연합군 특공대','epic']] } ]
+};
 const SOLO_RAID_DIFF_TITLES = [
   { key:'soloraidd2', emoji:'😠', name:'강적에 맞선 결의',   rarity:'rare',   desc:'😠 어려움 이상 혼자 보스 레이드 승리' },
   { key:'soloraidd3', emoji:'🔥', name:'단신 돌파',         rarity:'epic',   desc:'🔥 매우 어려움 이상 혼자 보스 레이드 승리' },
@@ -196,8 +196,8 @@ export function buildTitleBook(room, data, questionsObj){
   }));
 
   // 🧍 혼자 보스 레이드 (그 방식이 있는 과목만)
-  const soloRaidOn = SOLO_RAID_ROOMS.includes(room);
-  const soloRaidKinds = !soloRaidOn ? [] : SOLO_RAID_KINDS.map(h => {
+  const soloRaidOn = !!SOLO_RAID_KINDS_BY_ROOM[room];
+  const soloRaidKinds = !soloRaidOn ? [] : SOLO_RAID_KINDS_BY_ROOM[room].map(h => {
     const count = logKeys.filter(k => k.endsWith('_' + h.key)).length;
     return { kind:h, count, items: h.steps.map(([need, nm, rar], i) => add({
       id:`s_${h.key}_${i+1}`, name:nm, emoji:h.emoji, rarity:rar, ok: count >= need, desc:`${h.what} ${need}회`
