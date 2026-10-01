@@ -152,6 +152,7 @@ const DIFFS = [
 // 보스 공격은 ⚠ 예고 뒤 guardMs 안에 다음 문제를 맞히면 막는다(soloGuardStart) — 정답률이 곧 버티는 힘이 되게.
 // 승률(2026-10-01 '조금 어렵게'로 체력 약 8% 올린 뒤, 실제 코드로 200판씩, 문제당 약 8초 · 빠름 = 약 5초):
 //   보통 70% 50 · 80% 79 · 어려움 80% 29 · 90% 58 · 매우 어려움 90% 25 (빠름 96) · 지옥 빠름 90% 26
+//   지옥만 한 번 더 체력 4750→5100(약 7%↑): 빠름 90% 30→20 · 문제당 4초 90% 83→77
 const SOLO_BASE = {
   healCastMs: 18000,         // 회복 의식: 이 시간 안에 정답 healNeed개로 끊는다
   arrestMs: 15000,           // 체포: 이 시간 안에 정답 arrestNeed개로 포승줄을 끊는다 (못 끊으면 쓰러짐)
@@ -171,7 +172,7 @@ const SOLO_DIFFS = [
     p: { hp: 3150, hearts: 4, reviveMs: 7000, guardMs: 8000, attackGapMs: [9000, 7500, 6000], whistleGapMs: 14000,
          healNeed: 2, healCastMs: 14000, healAmount: 0.12, specialGapMs: 16000, arrestNeed: 2, arrestMs: 16000, censorCount: 1, minionHp: 0.08 } },
   { name: '지옥', emoji: '💀', color: '#b86bff', desc: '빨라도 버티기 힘들어요', note: '도전 과제용',
-    p: { hp: 4750, hearts: 3, reviveMs: 8000, guardMs: 7000, attackGapMs: [8000, 6500, 5000], whistleGapMs: 12000,
+    p: { hp: 5100, hearts: 3, reviveMs: 8000, guardMs: 7000, attackGapMs: [8000, 6500, 5000], whistleGapMs: 12000,
          healNeed: 3, healCastMs: 15000, healAmount: 0.14, specialGapMs: 14000, arrestNeed: 2, censorCount: 1, minionHp: 0.09 } }
 ];
 if(SOLO){ DIFFS.length = 0; DIFFS.push(...SOLO_DIFFS); }
