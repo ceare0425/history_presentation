@@ -1565,13 +1565,23 @@ function soloRangeLabel(units){
 
 // 층수 칸: 혼자 연습의 연습 방식(👹 보스 레이드 · 🃏 암기 카드)을 함께 표시
 function soloScoreLabel(e){
-  if(e.mode === 'card') return `🃏 카드 ${e.cards_seen||0}장 · 몰랐음 ${e.cards_unknown||0}`;
+  if(e.mode === 'card') return `🃏 카드 ${soloCardCount(e)}장`;
   if(e.mode === 'raid'){
     const d = ['', '보통', '어려움', '매우 어려움', '지옥'][e.raid_diff] || '';
     const r = e.raid_result === 'win' ? '격파' : e.raid_result === 'lose' ? '실패' : '중단';
     return `👹 ${d} ${r}`;
   }
   return `${e.floor||0}층`;
+}
+// 암기 카드: 넘긴 카드 수(서로 다른 카드) = 바로 안 카드 + 한 번이라도 몰랐던 카드
+function soloCardCount(e){ return (e.cards_known||0) + (e.cards_unknown||0); }
+// 정답/오답 칸: 암기 카드는 아는 것/모르는 것(스스로 매긴 것이라 정답률은 붙이지 않음)
+function soloAnsCell(e){
+  if(e.mode === 'card') return `<td class="muted" title="암기 카드: 아는 것/모르는 것">${e.cards_known||0}/${e.cards_unknown||0}</td>`;
+  const t = (e.correct||0)+(e.wrong||0);
+  const a = t ? Math.round(100*(e.correct||0)/t) : null;
+  const ac = a===null ? 'muted' : (a>=70 ? 'acc-ok' : 'acc-bad');
+  return `<td class="${ac}">${e.correct||0}/${e.wrong||0}${a===null?'':` (${a}%)`}</td>`;
 }
 function soloDurLabel(sec){
   if(!sec) return '-';
@@ -1672,9 +1682,6 @@ function renderSoloStats(){
     const groupRow = `<div class="solo-group-row" data-cls="${escapeHtml(clsRaw)}"><span class="solo-group-arrow">${collapsed?'▸':'▾'}</span> ${clsLabel(clsRaw)} (${rows.length}명)${hasToday ? ' 😎' : ''}</div>`;
     if(collapsed) return groupRow;
     const stuRows = rows.map(({ key, e, count })=>{
-      const total = (e.correct||0)+(e.wrong||0);
-      const acc = total ? Math.round(100*(e.correct||0)/total) : null;
-      const accClass = acc===null ? 'muted' : (acc>=70 ? 'acc-ok' : 'acc-bad');
       return `<tr>
         <td><input type="checkbox" class="solo-pick" data-gk="${escapeHtml(key)}"${soloPicked.has(key)?' checked':''}></td>
         <td class="muted">${fmtSoloTime(e.started_ts || e.ts)}</td>
@@ -1684,7 +1691,7 @@ function renderSoloStats(){
         <td>${escapeHtml(soloRangeLabel(e.units))}</td>
         <td class="muted">${soloDurLabel(e.duration_sec)}</td>
         <td>${escapeHtml(soloScoreLabel(e))}</td>
-        <td class="${accClass}">${e.correct||0}/${e.wrong||0}${acc===null?'':` (${acc}%)`}</td>
+        ${soloAnsCell(e)}
         <td class="${(e.hints||0)>0?'':'muted'}">${e.hints||0}회</td>
       </tr>`;
     }).join('');
@@ -1760,16 +1767,13 @@ function renderSoloModal(){
   }).join('') : '<div class="unit-acc-row muted">단원별 기록이 없습니다 (예전 버전 기록만 있을 수 있어요).</div>';
 
   el('soloModalRows').innerHTML = list.map(e=>{
-    const t = (e.correct||0)+(e.wrong||0);
-    const a = t ? Math.round(100*(e.correct||0)/t) : null;
-    const ac = a===null ? 'muted' : (a>=70 ? 'acc-ok' : 'acc-bad');
     return `<tr>
       <td class="muted">${fmtSoloTime(e.started_ts || e.ts)}</td>
       <td class="muted">${soloEndLabel(e)}</td>
       <td>${escapeHtml(soloRangeLabel(e.units))}</td>
       <td class="muted">${soloDurLabel(e.duration_sec)}</td>
       <td>${escapeHtml(soloScoreLabel(e))}</td>
-      <td class="${ac}">${e.correct||0}/${e.wrong||0}${a===null?'':` (${a}%)`}</td>
+      ${soloAnsCell(e)}
       <td class="${(e.hints||0)>0?'':'muted'}">${e.hints||0}회</td>
       <td><button type="button" class="mini-del" data-k="${e._k}">삭제</button></td>
     </tr>`;
