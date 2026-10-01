@@ -339,11 +339,11 @@
   .card-row .kbd{ font-size:.75rem; opacity:.8; font-weight:600; }
   .qbox .blank-mark.reveal{ width:auto; height:auto; margin:0 .12em; padding:0 .12em; vertical-align:baseline; border-bottom-color:var(--good); color:var(--good); font-weight:800; }
   .card-answer{ margin-top:10px; font-size:.8em; color:var(--good); font-weight:800; }
-  #endedView.raid .big, #endedView.card .big{ display:none; }
+  #endedView.m-raid .big, #endedView.m-card .big{ display:none; }
   .mode-result{ font-size:1.35rem; font-weight:900; margin:10px 0 6px; line-height:1.5; word-break:keep-all; }
   .mode-result.win{ color:var(--good); }
   .mode-result.lose{ color:var(--bad); }
-  .mode-result.card{ color:var(--sky1); font-size:1.15rem; }
+  .mode-result.m-card{ color:var(--sky1); font-size:1.15rem; }
   @media (max-width:900px), (orientation:portrait){
     body.raid-mode #playView{ flex-direction:column; gap:8px; }
     body.raid-mode .raid-frame{ flex:0 0 auto; width:100%; aspect-ratio:16/9; }
@@ -840,7 +840,7 @@ function startRaidFrame(){
   raidLast = null; raidEnding = false; raidLastHearts = null; raidLastShields = null;
   const f = document.createElement('iframe');
   f.title = '보스 레이드';
-  f.src = '../raid.html?solo=1&boss=world&name=' + encodeURIComponent(myName()) + '&v=20261001b';
+  f.src = '../raid.html?solo=1&boss=world&name=' + encodeURIComponent(myName()) + '&v=20261001c';
   el('raidFrameWrap').appendChild(f);
   const t0 = Date.now();
   raidLoadTimer = setInterval(()=>{
@@ -899,7 +899,7 @@ function updateRaidUI(){
   el('raidWarn').classList.toggle('hidden', !g || !!s.result);
   if(g) el('raidWarn').textContent = `⚠ ${g.label.replace('😵 ', '')} 예고! ${Math.ceil(g.left/1000)}초 안에 다음 문제를 맞히면 막아요`;
   const info = s.arrest ? `🔗 포승줄에 묶였어요! 정답 ${s.arrest.need - s.arrest.got}개를 더 맞히면 풀려나요 · ${Math.ceil(s.arrest.left/1000)}초`
-    : s.check ? `📋 불심 검문! ${Math.ceil(s.check/1000)}초 안에 정답을 내면 보스가 기절해요!` : '';
+    : s.check ? `📋 ${s.checkName || '불심 검문'}! ${Math.ceil(s.check/1000)}초 안에 정답을 내면 보스가 기절해요!` : '';
   el('raidCheck').classList.toggle('hidden', !info || !!s.result);
   if(info) el('raidCheck').textContent = info;
   el('qbox').classList.toggle('raid-censor', s.censor > 0 && !s.result);
@@ -1661,8 +1661,8 @@ function showEndedView(){
   const total = correctCount + wrongCount;
   const acc = total ? Math.round(100*correctCount/total) : null;
   el('finalStat').textContent = acc!==null ? `정답 ${correctCount}개 · 오답 ${wrongCount}개 · 정답률 ${acc}%` : '아직 문제를 풀지 않았어요';
-  el('endedView').classList.toggle('raid', sessionMode === 'raid');
-  el('endedView').classList.toggle('card', sessionMode === 'card');
+  el('endedView').classList.toggle('m-raid', sessionMode === 'raid');
+  el('endedView').classList.toggle('m-card', sessionMode === 'card');
   const mr = el('modeResult');
   mr.className = 'mode-result hidden';
   if(sessionMode === 'raid'){
@@ -1674,7 +1674,7 @@ function showEndedView(){
     if(r) el('finalStat').textContent += ` · 준 피해 ${r.dmg.toLocaleString('ko-KR')} · 막은 공격 ${r.parries || 0}번 · 쓰러진 횟수 ${r.kos}번`;
     recordSoloRaidTitles(r);
   } else if(sessionMode === 'card'){
-    mr.className = 'mode-result card';
+    mr.className = 'mode-result m-card';
     mr.textContent = cardFinished ? `🃏 카드 ${cardTotal}장을 모두 넘겼어요!` : `🃏 카드 ${cardTotal}장 중 ${cardDone.size}장을 넘겼어요`;
     el('finalStat').textContent = cardSeen
       ? `바로 안 카드 ${cardKnownFirst}장 · 몰랐던 카드 ${cardUnknown.size}장` + (cardUnknown.size ? ' → 🔁 복습 추천에 들어갔어요. 탑 오르기나 보스 레이드로 직접 맞혀 보세요!' : ' · 모두 알고 있었어요 🎉')
@@ -1985,9 +1985,9 @@ function aggregate(list){
   const floors = []; // {ts, floor}
   list.forEach(e=>{
     c += e.correct || 0; w += e.wrong || 0; h += e.hints || 0;
-    best = Math.max(best, e.floor || 0);
+    if(!e.mode) best = Math.max(best, e.floor || 0);   // 층수는 탑 오르기만 (레이드·암기 카드는 층이 화면에 안 보임)
     daySet.add(dayNum(e.started_ts || e.ts));
-    if(e.mode !== 'card') floors.push({ ts: e.started_ts || e.ts, floor: e.floor || 0 });   // 암기 카드는 층수가 없다
+    if(!e.mode) floors.push({ ts: e.started_ts || e.ts, floor: e.floor || 0 });   // 층수는 탑 오르기만
     (Array.isArray(e.unit_stats) ? e.unit_stats : []).forEach(us=>{
       if(!us || !us.u) return;
       const t = units[us.u] || (units[us.u] = { c:0, w:0 });
@@ -2063,7 +2063,7 @@ function allStudentTotals(obj){
     m.correct   += e.correct || 0;
     m.attempted += (e.correct || 0) + (e.wrong || 0);
     m.sessions  += 1;
-    m.best = Math.max(m.best, e.floor || 0);
+    if(!e.mode) m.best = Math.max(m.best, e.floor || 0);
     m.daySet.add(dayNum(e.started_ts || e.ts));
   });
   return map;
