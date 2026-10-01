@@ -569,7 +569,7 @@ import {
   unitsFromQuestions, poolFromQuestions, renderUnitGroups, recencyWeightFn, weightedQueue, weightedSample,
   presenceRef, chatRef, bookmarksRef, bookmarkRef, findLessonForUnit
 } from '../shared/lib.js?v=20260928g';
-import { mountTitles } from '../shared/titles.js?v=20260929a';
+import { mountTitles } from '../shared/titles.js?v=20261001a';
 
 const ROOM = 'korea';
 const SUBJECT_NAME = '한국사'; // pages.json의 과목명과 일치해야 "다시 배우기" 링크가 매칭됨
@@ -840,7 +840,7 @@ function startRaidFrame(){
   raidLast = null; raidEnding = false; raidLastHearts = null; raidLastShields = null;
   const f = document.createElement('iframe');
   f.title = '보스 레이드';
-  f.src = '../raid.html?solo=1&boss=korea&name=' + encodeURIComponent(myName()) + '&v=20261001a';
+  f.src = '../raid.html?solo=1&boss=korea&name=' + encodeURIComponent(myName()) + '&v=20261001b';
   el('raidFrameWrap').appendChild(f);
   const t0 = Date.now();
   raidLoadTimer = setInterval(()=>{
@@ -908,6 +908,16 @@ function updateRaidUI(){
     raidEnding = true;
     setTimeout(()=>{ if(!ended && sessionMode === 'raid') showEndedView(); }, s.result === 'win' ? 6500 : 3500);
   }
+}
+// 🧍 혼자 보스 레이드 칭호: 이긴 판(정답 1개 이상)을 titles log/solo<시작 시각>_<종류>로 남긴다 (shared/titles.js가 칭호로 바꿈)
+function recordSoloRaidTitles(r){
+  if(!r || !sessionStartedAt) return;
+  if(r.parries >= 10) titles.unlockHidden('soloparry');                 // 숨은 칭호 '철벽 수비'
+  if(r.result !== 'win' || correctCount < 1) return;
+  const keys = ['soloraidwin'];
+  for(let d = 2; d <= sessionRaidDiff + 1; d++) keys.push('soloraidd' + d);   // 어려움(2)~지옥(4): 그 난이도 이하 칭호도 함께
+  titles.recordLog('solo' + sessionStartedAt, keys);
+  if(r.used <= 120000) titles.unlockHidden('soloswift');                // 숨은 칭호 '번개 토벌'
 }
 function flashRaid(kind){
   const f = document.createElement('div');
@@ -1661,7 +1671,8 @@ function showEndedView(){
     if(r && r.result === 'win') { mr.className = 'mode-result win'; mr.textContent = `🎉 ${r.bossName} 격파! (${diffName} · ${fmtTime(Math.ceil(r.used/1000))} 만에)`; }
     else if(r && r.result === 'lose'){ mr.className = 'mode-result lose'; mr.textContent = `💀 레이드 실패 · ${r.bossName} 체력 ${Math.max(1, Math.round(r.hp / Math.max(1, r.max) * 100))}% 남음 (${diffName})`; }
     else { mr.className = 'mode-result'; mr.textContent = `👹 레이드를 중간에 마쳤어요 (${diffName})`; }
-    if(r) el('finalStat').textContent += ` · 준 피해 ${r.dmg.toLocaleString('ko-KR')} · 쓰러진 횟수 ${r.kos}번`;
+    if(r) el('finalStat').textContent += ` · 준 피해 ${r.dmg.toLocaleString('ko-KR')} · 막은 공격 ${r.parries || 0}번 · 쓰러진 횟수 ${r.kos}번`;
+    recordSoloRaidTitles(r);
   } else if(sessionMode === 'card'){
     mr.className = 'mode-result card';
     mr.textContent = cardFinished ? `🃏 카드 ${cardTotal}장을 모두 넘겼어요!` : `🃏 카드 ${cardTotal}장 중 ${cardDone.size}장을 넘겼어요`;
