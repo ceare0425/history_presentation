@@ -840,7 +840,7 @@ function startRaidFrame(){
   raidLast = null; raidEnding = false; raidLastHearts = null; raidLastShields = null;
   const f = document.createElement('iframe');
   f.title = '보스 레이드';
-  f.src = '../raid.html?solo=1&boss=korea&name=' + encodeURIComponent(myName()) + '&v=20261001c';
+  f.src = '../raid.html?solo=1&boss=korea&name=' + encodeURIComponent(myName()) + '&v=20261001d';
   el('raidFrameWrap').appendChild(f);
   const t0 = Date.now();
   raidLoadTimer = setInterval(()=>{
