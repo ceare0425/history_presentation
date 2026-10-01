@@ -1055,6 +1055,7 @@ function soloGuardLand(){
 function soloGuardParry(){
   const st = S.students[0], a = anchor(st);
   S.guard = null; st.targetUntil = 0;
+  S.parries = (S.parries || 0) + 1;
   S.texts.push({ x: a.x + 90, y: a.y - 30, txt: '🛡️ 막아냄!', block: true, t: 0 });
   burst(a.x, a.y, 'block', 14, 1);
   sfx('block');
@@ -2493,7 +2494,7 @@ if(SOLO){
         check: S.checkpoint && S.checkpoint.st === st ? msLeft(S.checkpoint.end) : 0,
         target: st.targetUntil > S.clock,
         guard: S.guard ? { left: msLeft(S.guard.end), label: S.guard.label } : null,
-        dmg: Math.round(st.dmg), correct: S.correct, wrong: S.wrong, kos: st.kos,
+        dmg: Math.round(st.dmg), correct: S.correct, wrong: S.wrong, kos: st.kos, parries: S.parries || 0,
         diff: diffIdx, diffName: DIFFS[diffIdx].name, bossName: THEMES[themeKey].bossName, loseReason: S.loseReason || ''
       };
     }

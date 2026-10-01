@@ -7,6 +7,7 @@
 //   hist: {q:{qid:{c,w}}, days}  칭호 기능 전 solo_log·class_log 기록을 처음 한 번 옮겨 담은 것 (histDone: true)
 //   days/<yyyymmdd>: true        문제를 푼 날짜 (수업 게임 + 혼자 연습)
 //   log/<라운드token>_<종류>: true  수업 게임 명예 기록 — 전광판이 종료 때 남긴다(같은 라운드는 한 번만 셈)
+//                                  혼자 보스 레이드는 solo.html이 log/solo<시작 시각>_<종류>로 남긴다
 //   hidden/<id>: ts              숨은 칭호 달성
 //   seen/<칭호id>: ts            한 번 받은 칭호 (문제가 추가돼 조건이 바뀌어도 받은 칭호는 유지)
 //   rep: 칭호id                  대표 칭호 (전광판 이름 위에 표시)
@@ -99,6 +100,17 @@ const RAID_DIFF_TITLES = [
   { key:'raidd4', emoji:'💀', name:'지옥의 정복자', rarity:'legend', desc:'💀 지옥 난이도 보스 레이드 승리' }
 ];
 const DAY_STEPS = [[3,'작심삼일 돌파','common'],[7,'개근상','rare'],[20,'역사 덕후','epic']];
+// 🧍 혼자 보스 레이드 칭호 (혼자 연습의 '👹 보스 레이드' 방식, 지금은 한국사만): solo.html이 이긴 판에서 log/solo<시작 시각>_<key>로 남긴다
+//   soloraidwin: 혼자 레이드 승리 · soloraidd2~4: 그 난이도 이상에서 승리
+const SOLO_RAID_ROOMS = ['korea'];
+const SOLO_RAID_KINDS = [
+  { key:'soloraidwin', emoji:'🧍', what:'혼자 보스 레이드 승리', steps:[[1,'홀로 일어선 의병','common'],[5,'외로운 독립투사','rare'],[15,'일당백 의열단원','epic']] }
+];
+const SOLO_RAID_DIFF_TITLES = [
+  { key:'soloraidd2', emoji:'😠', name:'강적에 맞선 결의',   rarity:'rare',   desc:'😠 어려움 이상 혼자 보스 레이드 승리' },
+  { key:'soloraidd3', emoji:'🔥', name:'단신 돌파',         rarity:'epic',   desc:'🔥 매우 어려움 이상 혼자 보스 레이드 승리' },
+  { key:'soloraidd4', emoji:'💀', name:'홀로 지옥을 넘은 자', rarity:'legend', desc:'💀 지옥 난이도 혼자 보스 레이드 승리' }
+];
 const HIDDEN_TITLES = [
   { id:'flawless',    emoji:'💎', name:'무결점',     desc:'20문제 연속 정답' },
   { id:'buzzer',      emoji:'⏱️', name:'극장골',     desc:'수업 게임 종료 10초 전 안에 1등으로 올라서서 우승' },
@@ -106,7 +118,9 @@ const HIDDEN_TITLES = [
   { id:'owl',         emoji:'🦉', name:'올빼미',     desc:'밤 10시가 넘어서 문제 풀기' },
   { id:'marathon',    emoji:'🏃', name:'마라토너',   desc:'혼자 연습 한 판에서 100문제 이상 맞히기' },
   { id:'lasthit',     emoji:'💥', name:'마무리 일격', desc:'보스 레이드에서 보스에게 마지막 일격을 날리기' },
-  { id:'ironwall',    emoji:'🧱', name:'불사신',     desc:'이긴 보스 레이드에서 한 번도 쓰러지지 않기(정답 1개 이상)' }
+  { id:'ironwall',    emoji:'🧱', name:'불사신',     desc:'이긴 보스 레이드에서 한 번도 쓰러지지 않기(정답 1개 이상)' },
+  { id:'soloparry',   emoji:'🛡️', name:'철벽 수비',   desc:'혼자 보스 레이드 한 판에서 예고 공격을 10번 막기', soloRaid:true },
+  { id:'soloswift',   emoji:'⚡', name:'번개 토벌',   desc:'혼자 보스 레이드를 2분 안에 격파', soloRaid:true }
 ];
 
 function topicNum(unit){
@@ -181,6 +195,18 @@ export function buildTitleBook(room, data, questionsObj){
     id:`r_${t.key}`, name:t.name, emoji:t.emoji, rarity:t.rarity, ok: logKeys.some(k => k.endsWith('_' + t.key)), desc:t.desc
   }));
 
+  // 🧍 혼자 보스 레이드 (그 방식이 있는 과목만)
+  const soloRaidOn = SOLO_RAID_ROOMS.includes(room);
+  const soloRaidKinds = !soloRaidOn ? [] : SOLO_RAID_KINDS.map(h => {
+    const count = logKeys.filter(k => k.endsWith('_' + h.key)).length;
+    return { kind:h, count, items: h.steps.map(([need, nm, rar], i) => add({
+      id:`s_${h.key}_${i+1}`, name:nm, emoji:h.emoji, rarity:rar, ok: count >= need, desc:`${h.what} ${need}회`
+    })) };
+  });
+  const soloRaidDiffs = !soloRaidOn ? [] : SOLO_RAID_DIFF_TITLES.map(t => add({
+    id:`s_${t.key}`, name:t.name, emoji:t.emoji, rarity:t.rarity, ok: logKeys.some(k => k.endsWith('_' + t.key)), desc:t.desc
+  }));
+
   // 📅 꾸준함
   const daySet = new Set([...Object.keys(data.days || {}), ...Object.keys((data.hist && data.hist.days) || {})]);
   const dayItems = DAY_STEPS.map(([need, nm, rar], i) => add({
@@ -188,9 +214,9 @@ export function buildTitleBook(room, data, questionsObj){
   }));
 
   // ❓ 숨은 칭호
-  const hidden = HIDDEN_TITLES.map(h => add({ id:`x_${h.id}`, name:h.name, emoji:h.emoji, rarity:'epic', ok: !!(data.hidden && data.hidden[h.id]), desc:h.desc, secret:true }));
+  const hidden = HIDDEN_TITLES.filter(h => !h.soloRaid || soloRaidOn).map(h => add({ id:`x_${h.id}`, name:h.name, emoji:h.emoji, rarity:'epic', ok: !!(data.hidden && data.hidden[h.id]), desc:h.desc, secret:true }));
 
-  return { unitRows, grand, honors, raidKinds, raidDiffs, dayItems, dayCount: daySet.size, hidden, all, byId };
+  return { unitRows, grand, honors, raidKinds, raidDiffs, soloRaidKinds, soloRaidDiffs, dayItems, dayCount: daySet.size, hidden, all, byId };
 }
 
 // ── 화면 (도감 창·획득 알림) ─────────────────────────────
@@ -370,6 +396,14 @@ export function mountTitles(deps, opts){
     });
     h += `<div class="tt-unit"><div class="tt-unit-name">⚔️ 높은 난이도 격파</div><div class="tt-chips">${book.raidDiffs.map(t => chip(t, repId)).join('')}</div><div class="tt-hint">${book.raidDiffs.map(t => escapeHtml(t.name + ': ' + t.desc)).join(' · ')}</div></div>`;
     h += `</div>`;
+    if(book.soloRaidKinds.length){
+      h += `<div class="tt-sec"><h4>🧍 혼자 보스 레이드</h4><div class="tt-note">혼자 연습에서 연습 방식 '👹 보스 레이드'로 보스를 쓰러뜨리면 받아요</div>`;
+      book.soloRaidKinds.forEach(g => {
+        h += `<div class="tt-unit"><div class="tt-unit-name">${g.kind.emoji} ${escapeHtml(g.kind.what)}<span class="tt-prog">${g.count}회</span></div><div class="tt-chips">${g.items.map(t => chip(t, repId)).join('')}</div><div class="tt-hint">${g.items.map(t => escapeHtml(t.name + ' ' + t.desc.replace(g.kind.what + ' ', ''))).join(' · ')}</div></div>`;
+      });
+      h += `<div class="tt-unit"><div class="tt-unit-name">⚔️ 높은 난이도 혼자 격파</div><div class="tt-chips">${book.soloRaidDiffs.map(t => chip(t, repId)).join('')}</div><div class="tt-hint">${book.soloRaidDiffs.map(t => escapeHtml(t.name + ': ' + t.desc)).join(' · ')}</div></div>`;
+      h += `</div>`;
+    }
     h += `<div class="tt-sec"><h4>📅 꾸준함</h4><div class="tt-note">문제를 푼 날: ${book.dayCount}일 (수업 게임 + 혼자 연습)</div><div class="tt-chips">${book.dayItems.map(t => chip(t, repId)).join('')}</div><div class="tt-hint">${book.dayItems.map(t => escapeHtml(t.name + ' ' + t.desc)).join(' · ')}</div></div>`;
     const hiddenGot = book.hidden.filter(t => t.earned).length;
     h += `<div class="tt-sec"><h4>❓ 숨은 칭호</h4><div class="tt-note">조건은 받아야 공개돼요 (${hiddenGot}/${book.hidden.length})</div><div class="tt-chips">${book.hidden.map(t => chip(t, repId)).join('')}</div>${hiddenGot ? `<div class="tt-hint">${book.hidden.filter(t => t.earned).map(t => escapeHtml(t.name + ': ' + t.desc)).join(' · ')}</div>` : ''}</div>`;
@@ -428,6 +462,13 @@ export function mountTitles(deps, opts){
       }
       const hr = new Date(nowMs()).getHours();
       if(hr >= 22 || hr < 5) api.unlockHidden('owl');
+    },
+    // 수업 게임 밖에서 남기는 명예 기록 (혼자 보스 레이드): log/<token>_<key> — 같은 token은 한 번만 센다
+    recordLog(token, keys){
+      if(!ident || !token || !keys || !keys.length) return;
+      const ups = {};
+      keys.forEach(k => { ups[`${token}_${k}`] = true; });
+      update(ref(db, `${base()}/log`), ups).catch(()=>{});
     },
     unlockHidden(id){
       if(!ident || (data.hidden && data.hidden[id])) return;
