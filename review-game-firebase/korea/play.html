@@ -126,6 +126,8 @@
   .raid-check{ margin:.6vh 0; padding:10px 12px; border-radius:14px; background:#ffe14d; color:#3a2a00; font-weight:900; text-align:center; font-size:1.05rem; animation:raidPulse .5s ease-in-out infinite alternate; }
   .raid-warn{ margin:.6vh 0; padding:8px 12px; border-radius:14px; background:#ff4d3a; color:#fff; font-weight:900; text-align:center; animation:raidPulse .25s ease-in-out infinite alternate; }
   @keyframes raidPulse{ from{ transform:scale(1); } to{ transform:scale(1.03); } }
+  .raid-flash.shield{ background:rgba(90,170,255,.4); }
+  .raid-hud .rb-hearts .sh{ font-size:.95rem; }
   .raid-flash{ position:fixed; inset:0; z-index:39; pointer-events:none; background:rgba(255,40,30,.45); animation:raidFlash .5s ease-out forwards; }
   @keyframes raidFlash{ from{ opacity:1; } to{ opacity:0; } }
   .qbox.raid-censor::after{ content:'검열'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
@@ -1614,7 +1616,7 @@ function listenMyNode(){
 }
 
 // ── 보스 레이드 ─────────────────────────────────────
-let myRaid = null, raidBoss = null, lastRaidHearts = null;
+let myRaid = null, raidBoss = null, lastRaidHearts = null, lastRaidShields = null;
 function raidOn(){ return !!roundState.raid_mode && roundState.status === 'running' && !roundEnded(); }
 function raidMine(){ return myRaid && myRaid.tk === roundState.token ? myRaid : null; }
 // 지금 답을 낼 수 없는 이유 (없으면 null)
@@ -1636,7 +1638,7 @@ function updateRaidUI(){
   if(!on){
     ['raidWarn','raidCheck','raidBlock'].forEach(id=> el(id).classList.add('hidden'));
     el('qbox').classList.remove('raid-censor');
-    lastRaidHearts = null;
+    lastRaidHearts = null; lastRaidShields = null;
     return;
   }
   if(raidBoss && raidBoss.tk === roundState.token){
@@ -1644,14 +1646,21 @@ function updateRaidUI(){
     el('raidHpFill').style.width = Math.max(0, Math.min(100, raidBoss.hp / Math.max(1, raidBoss.max) * 100)) + '%';
   }
   const hearts = m ? m.h : null;
-  el('raidHearts').innerHTML = hearts == null ? '' : '♥'.repeat(Math.max(0, hearts)) + (m.ko > now ? ' 💀' : '');
+  const shields = m && m.sh ? m.sh : 0;
+  el('raidHearts').innerHTML = hearts == null ? '' : '♥'.repeat(Math.max(0, hearts)) + (shields ? ' <span class="sh">' + '🛡️'.repeat(shields) + '</span>' : '') + (m.ko > now ? ' 💀' : '');
   // 맞았을 때: 화면이 붉게 번쩍 + 진동
   if(hearts != null && lastRaidHearts != null && hearts < lastRaidHearts){
     const f = document.createElement('div'); f.className = 'raid-flash'; document.body.appendChild(f);
     setTimeout(()=> f.remove(), 600);
     try{ navigator.vibrate && navigator.vibrate(200); }catch(_e){}
   }
+  // 방패가 공격을 막았을 때: 파랗게 번쩍
+  if(hearts != null && lastRaidHearts != null && hearts === lastRaidHearts && lastRaidShields != null && shields < lastRaidShields && !(m.ko > now)){
+    const f = document.createElement('div'); f.className = 'raid-flash shield'; document.body.appendChild(f);
+    setTimeout(()=> f.remove(), 600);
+  }
   if(hearts != null) lastRaidHearts = hearts;
+  lastRaidShields = hearts != null ? shields : null;
   el('raidWarn').classList.toggle('hidden', !(m && m.tg > now));
   const ck = m && m.ck > now;
   el('raidCheck').classList.toggle('hidden', !ck);
