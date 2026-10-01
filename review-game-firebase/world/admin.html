@@ -184,12 +184,26 @@
 </div>
 <script>
 (function(){
-  var PW = ['7328','6845','1000'];
+  // 비밀번호는 원문 대신 PBKDF2-SHA256 해시만 둔다 (소스에서 보이지 않게)
+  var SALT = 'hp-admin-gate-v1', ITER = 150000;
+  var PW_HASH = ['6cc37f26dcd6e13291658f36717b86a4b07e5b8551cd738e95624254f0a74e8f','6deda371101d9f202842e0003b251f35755ef8aab09c4b0df0409169fe9fd78c','5ede361b9ffe9a83be475bc1550969de4701c5f8bf2f05094ae85e3c36cc147f'];
   var gate = document.getElementById('authGate');
   var input = document.getElementById('authInput');
   var err = document.getElementById('authErr');
-  function tryAuth(){
-    if(PW.indexOf(input.value) !== -1){ gate.remove(); }
+  async function hashPw(pw){
+    var enc = new TextEncoder();
+    var key = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
+    var bits = await crypto.subtle.deriveBits({ name:'PBKDF2', hash:'SHA-256', salt:enc.encode(SALT), iterations:ITER }, key, 256);
+    return Array.from(new Uint8Array(bits), function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  }
+  var busy = false;
+  async function tryAuth(){
+    if(busy) return;
+    busy = true;
+    var ok = false;
+    try{ ok = PW_HASH.indexOf(await hashPw(input.value)) !== -1; }catch(e){}
+    busy = false;
+    if(ok){ gate.remove(); }
     else{ err.textContent = '비밀번호가 틀렸습니다.'; input.value=''; input.focus(); }
   }
   document.getElementById('authOk').addEventListener('click', tryAuth);
