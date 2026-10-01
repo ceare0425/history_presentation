@@ -88,6 +88,10 @@
   .presence-row .pcls{ color:var(--sub); font-size:.82rem; }
   .presence-row .ptime{ color:var(--sub); font-size:.78rem; margin-left:auto; }
   .presence-row .pchat-btn{ width:auto; flex:0 0 auto; padding:6px 12px; font-size:.8rem; position:relative; }
+  .notify-head{ display:flex; align-items:center; gap:10px; }
+  .notify-head h2{ margin-right:auto; }
+  #notifyBtn{ width:auto; flex:0 0 auto; padding:6px 12px; font-size:.8rem; }
+  #notifyBtn.on{ background:var(--good); }
   .presence-row .pchat-btn .unread{ position:absolute; top:-6px; right:-6px; background:var(--bad); color:#fff; font-size:.65rem; font-weight:800; border-radius:999px; padding:1px 5px; min-width:16px; text-align:center; }
   .chat-log{ max-height:40vh; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:10px; margin:10px 0; display:flex; flex-direction:column; gap:8px; background:var(--bg); }
   .chat-row{ display:flex; align-items:flex-end; gap:6px; }
@@ -325,8 +329,8 @@
   </div>
 
   <div class="card" style="grid-column:1 / -1">
-    <h2>⑤ 온라인 연습 학생 · 실시간 쪽지</h2>
-    <div class="sub" style="margin-top:-6px;">지금 <code>solo.html</code>(혼자 연습하기)에서 연습 중인 학생이 실시간으로 표시됩니다. <b>쪽지</b>를 누르면 그 학생에게 바로 메시지를 보낼 수 있고 학생 화면 상단에 배너로 뜨며, 학생이 답장하면 여기서 이어서 대화할 수 있습니다. 학생이 연습을 끝내고 오프라인이 되어도 아직 확인 못한 쪽지가 있으면 목록에 계속 남아 있어 나중에 열어볼 수 있습니다.</div>
+    <div class="notify-head"><h2>⑤ 온라인 연습 학생 · 실시간 쪽지</h2><button type="button" id="notifyBtn" class="secondary">🔕 쪽지 알림 꺼짐</button></div>
+    <div class="sub" style="margin-top:-6px;">지금 <code>solo.html</code>(혼자 연습하기)에서 연습 중인 학생이 실시간으로 표시됩니다. <b>쪽지</b>를 누르면 그 학생에게 바로 메시지를 보낼 수 있고 학생 화면 상단에 배너로 뜨며, 학생이 답장하면 여기서 이어서 대화할 수 있습니다. 학생이 연습을 끝내고 오프라인이 되어도 아직 확인 못한 쪽지가 있으면 목록에 계속 남아 있어 나중에 열어볼 수 있습니다. <b>🔔 쪽지 알림</b>을 켜 두면 학생 쪽지가 올 때 소리·윈도우 알림·탭 제목으로 알려 줍니다(이 관리자 화면이 열려 있는 동안만).</div>
     <div id="presenceList"><div class="muted">지금 온라인인 학생이 없습니다.</div></div>
   </div>
 
@@ -1294,6 +1298,7 @@ function markStudentMsgsRead(cls, name, msgs){
 }
 
 function renderPresenceList(){
+  updateNotifyTitle();
   const box = el('presenceList');
   const rows = [];
   const seen = new Set();
@@ -1346,8 +1351,126 @@ onValue(ref(db, 'presence/'+ROOM), (snap)=>{
 // 오프라인 학생의 "확인 못한 쪽지"도 놓치지 않고 목록에 띄운다(텍스트만이라 용량 부담 없음).
 onValue(ref(db, 'messages/'+ROOM), (snap)=>{
   allMsgObj = snap.val() || {};
+  detectNewStudentMsgs();
   renderPresenceList();
 });
+// ── 🔔 학생 쪽지 알림 (관리자 화면이 열려 있는 동안: 소리 · 윈도우 알림 · 탭 제목) ──
+const NOTIFY_KEY = 'adminMsgNotify';
+const BASE_TITLE = document.title;
+let notifyOn = false;
+try { notifyOn = localStorage.getItem(NOTIFY_KEY) === '1'; } catch(e){}
+let seenMsgIds = null; // 처음 불러온 쪽지는 '새 쪽지'로 치지 않는다
+let audioCtx = null;
+let titleBlinkTimer = null;
+
+function renderNotifyBtn(){
+  const b = el('notifyBtn');
+  b.classList.toggle('on', notifyOn);
+  b.classList.toggle('secondary', !notifyOn);
+  b.textContent = notifyOn ? '🔔 쪽지 알림 켜짐' : '🔕 쪽지 알림 꺼짐';
+}
+function unlockAudio(){
+  try {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+  } catch(e){}
+}
+// 브라우저는 사용자가 한 번 클릭해야 소리를 낼 수 있어서, 새로고침 뒤 첫 클릭·키 입력 때 소리를 깨워 둔다.
+document.addEventListener('pointerdown', ()=>{ if(notifyOn) unlockAudio(); });
+document.addEventListener('keydown', ()=>{ if(notifyOn) unlockAudio(); });
+
+el('notifyBtn').onclick = async ()=>{
+  notifyOn = !notifyOn;
+  try { localStorage.setItem(NOTIFY_KEY, notifyOn ? '1' : '0'); } catch(e){}
+  if(notifyOn){
+    unlockAudio();
+    if('Notification' in window && Notification.permission === 'default'){
+      try { await Notification.requestPermission(); } catch(e){}
+    }
+    if('Notification' in window && Notification.permission === 'denied'){
+      alert('브라우저에서 알림이 차단되어 있어 윈도우 알림 팝업은 뜨지 않습니다.\n소리와 탭 제목 알림만 동작합니다.\n(주소창 왼쪽 자물쇠 아이콘 → 알림 → 허용으로 바꾸면 팝업도 뜹니다.)');
+    }
+    playDing();
+  }
+  renderNotifyBtn();
+  updateNotifyTitle();
+};
+renderNotifyBtn();
+
+function playDing(){
+  if(!audioCtx) return;
+  try {
+    const t0 = audioCtx.currentTime;
+    [[880, 0], [1320, 0.16]].forEach(([freq, dt])=>{
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t0+dt);
+      g.gain.exponentialRampToValueAtTime(0.35, t0+dt+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+dt+0.45);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t0+dt); o.stop(t0+dt+0.5);
+    });
+  } catch(e){}
+}
+
+function totalUnread(){
+  let n = 0;
+  for(const cls of Object.keys(allMsgObj)) for(const name of Object.keys(allMsgObj[cls] || {})) n += threadUnread(cls, name);
+  return n;
+}
+function updateNotifyTitle(){
+  const n = totalUnread();
+  if(!n || !notifyOn){ stopTitleBlink(); document.title = BASE_TITLE; return; }
+  if(!titleBlinkTimer) document.title = `(${n}) 💬 새 쪽지 · ${BASE_TITLE}`;
+}
+function startTitleBlink(){
+  if(titleBlinkTimer) return;
+  let flip = false;
+  titleBlinkTimer = setInterval(()=>{
+    const n = totalUnread();
+    if(!n || document.visibilityState === 'visible'){ stopTitleBlink(); updateNotifyTitle(); return; }
+    flip = !flip;
+    document.title = flip ? `💬💬 새 쪽지 ${n}개 💬💬` : `(${n}) 💬 새 쪽지 · ${BASE_TITLE}`;
+  }, 1000);
+}
+function stopTitleBlink(){
+  if(titleBlinkTimer){ clearInterval(titleBlinkTimer); titleBlinkTimer = null; }
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible') updateNotifyTitle(); });
+
+function detectNewStudentMsgs(){
+  const fresh = [];
+  const ids = new Set();
+  for(const cls of Object.keys(allMsgObj)){
+    for(const name of Object.keys(allMsgObj[cls] || {})){
+      const t = allMsgObj[cls][name] || {};
+      for(const id of Object.keys(t)){
+        ids.add(id);
+        const m = t[id] || {};
+        if(seenMsgIds && !seenMsgIds.has(id) && m.from === 'student' && !m.read) fresh.push({ cls, name, text: m.text || '' });
+      }
+    }
+  }
+  seenMsgIds = ids;
+  if(!notifyOn || !fresh.length) return;
+  // 지금 그 학생 대화창을 보고 있으면 굳이 알리지 않는다.
+  const watching = document.visibilityState === 'visible';
+  const toAlert = fresh.filter(f => !(watching && openChatKey === chatThreadKey(f.cls, f.name)));
+  if(!toAlert.length) return;
+  playDing();
+  if(document.visibilityState !== 'visible') startTitleBlink();
+  if('Notification' in window && Notification.permission === 'granted'){
+    toAlert.slice(-3).forEach(f=>{
+      try {
+        const n = new Notification(`💬 ${f.name} 학생 쪽지 (${clsLabelShort(f.cls)})`, {
+          body: f.text.slice(0, 120), tag: chatThreadKey(f.cls, f.name), renotify: true
+        });
+        n.onclick = ()=>{ window.focus(); openChatModal(f.cls, f.name); n.close(); };
+      } catch(e){}
+    });
+  }
+}
+
 setInterval(renderPresenceList, 30000); // "N분째 연습 중" · "N분 전" 표시 갱신
 
 function chatMsgHtml(msg){
