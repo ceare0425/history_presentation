@@ -2495,7 +2495,7 @@ if(SOLO){
         target: st.targetUntil > S.clock,
         guard: S.guard ? { left: msLeft(S.guard.end), label: S.guard.label } : null,
         dmg: Math.round(st.dmg), correct: S.correct, wrong: S.wrong, kos: st.kos, parries: S.parries || 0,
-        diff: diffIdx, diffName: DIFFS[diffIdx].name, bossName: THEMES[themeKey].bossName, loseReason: S.loseReason || ''
+        diff: diffIdx, diffName: DIFFS[diffIdx].name, bossName: THEMES[themeKey].bossName, checkName: THEMES[themeKey].checkName, loseReason: S.loseReason || ''
       };
     }
   };

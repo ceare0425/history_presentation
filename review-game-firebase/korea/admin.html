@@ -1712,7 +1712,7 @@ function renderSoloModal(){
   const sum = (k) => list.reduce((s,e)=>s+(e[k]||0), 0);
   const tc = sum('correct'), tw = sum('wrong'), th = sum('hints'), tot = tc + tw;
   const acc = tot ? Math.round(100*tc/tot) : null;
-  const floorList = list.filter(e => e.mode !== 'card');   // 암기 카드는 층수가 없다
+  const floorList = list.filter(e => !e.mode);   // 층수는 탑 오르기만 (레이드·암기 카드는 층이 화면에 안 보임)
   const bestFloor = floorList.length ? Math.max(...floorList.map(e=>e.floor||0)) : 0;
   const avgFloor = floorList.length ? Math.round(floorList.reduce((s,e)=>s+(e.floor||0), 0) / floorList.length) : 0;
   const first = list[list.length-1], last = list[0];
