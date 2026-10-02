@@ -192,27 +192,56 @@ export function parseQuestionLine(line) {
 }
 
 // ── 문제 풀 계산 ──
+// chapter: 문제에 저장된 단원(예: "2단원"). 예전 문제처럼 없으면 그리기 때 주제 번호로 추정한다.
 export function unitsFromQuestions(questionsObj) {
-  const counts = {};
+  const map = new Map();
   Object.values(questionsObj || {}).forEach((q) => {
-    counts[q.unit] = (counts[q.unit] || 0) + 1;
+    const u = map.get(q.unit) || { unit: q.unit, count: 0, chapter: q.chapter || '' };
+    u.count++;
+    if (!u.chapter && q.chapter) u.chapter = q.chapter;
+    map.set(q.unit, u);
   });
-  return Object.entries(counts).map(([unit, count]) => ({ unit, count }));
+  return [...map.values()];
+}
+
+// ── 단원 표기 통일: "2" / "2 단원" / "Ⅱ" → "2단원", 비어 있으면 '' ──
+const ROMAN = { 'Ⅰ': 1, 'Ⅱ': 2, 'Ⅲ': 3, 'Ⅳ': 4, 'Ⅴ': 5, 'Ⅵ': 6, 'Ⅶ': 7, 'Ⅷ': 8, 'Ⅸ': 9, 'Ⅹ': 10 };
+export function normalizeChapter(s) {
+  const t = String(s ?? '').trim();
+  if (!t) return '';
+  const m = t.match(/^(\d+|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ])\s*\.?\s*(단원)?$/);
+  if (m) return (ROMAN[m[1]] || parseInt(m[1], 10)) + '단원';
+  return t.replace(/\s+/g, ' ');
+}
+export function chapterNumber(ch) {
+  const m = String(ch || '').match(/\d+/);
+  return m ? parseInt(m[0], 10) : null;
 }
 
 // ── 출제 범위(주제) 목록을 단원별 접기(토글)로 묶어 그리기 ──────────
+// 문제에 단원(chapter)이 저장돼 있으면 그대로 쓰고, 없는 예전 문제만 주제 번호로 추정한다.
 // 한국사: 모든 주제 → 1단원 / 세계사: 주제 1~14 → 1단원, 주제 16~22 → 2단원
 // 범위 밖(번호 없는 주제 등)은 '기타'로 모은다. 접힌 상태에서도 단원 체크박스로 한 번에 선택·해제 가능.
 function unitNumber(unit) {
   const m = String(unit || '').match(/\d+/);
   return m ? parseInt(m[0], 10) : null;
 }
-function chapterOfUnit(room, unit) {
+function legacyChapterOfUnit(room, unit) {
   const n = unitNumber(unit);
   if (room === 'korea') return '1단원';
   if (n !== null && n >= 1 && n <= 14) return '1단원';
   if (n !== null && n >= 16 && n <= 22) return '2단원';
   return '기타';
+}
+export function chapterOfQuestion(room, q) {
+  return (q && q.chapter) || legacyChapterOfUnit(room, q && q.unit);
+}
+// 단원 순서: 번호 순, 번호 없는 단원은 뒤, '기타'는 맨 끝
+export function compareChapters(a, b) {
+  if (a === b) return 0;
+  if (a === '기타') return 1;
+  if (b === '기타') return -1;
+  return (chapterNumber(a) ?? 999) - (chapterNumber(b) ?? 999) || String(a).localeCompare(String(b), 'ko');
 }
 const openChapters = new Set(); // 다시 그려도 펼침 상태 유지
 let unitGroupCssAdded = false;
@@ -234,17 +263,16 @@ function addUnitGroupCss() {
 }
 export function renderUnitGroups(box, allUnits, selectedUnits, room, onChange) {
   addUnitGroupCss();
-  const order = ['1단원', '2단원', '기타'];
   const groups = new Map();
   allUnits.slice()
     .sort((a, b) => (unitNumber(a.unit) ?? 999) - (unitNumber(b.unit) ?? 999) || String(a.unit).localeCompare(String(b.unit)))
     .forEach((u) => {
-      const ch = chapterOfUnit(room, u.unit);
+      const ch = u.chapter || legacyChapterOfUnit(room, u.unit);
       if (!groups.has(ch)) groups.set(ch, []);
       groups.get(ch).push(u);
     });
   box.innerHTML = '';
-  order.filter((ch) => groups.has(ch)).forEach((ch) => {
+  [...groups.keys()].sort(compareChapters).forEach((ch) => {
     const list = groups.get(ch);
     const total = list.reduce((s, u) => s + u.count, 0);
     const wrap = document.createElement('div');
@@ -351,20 +379,28 @@ export function findLessonForUnit(pagesData, subjectName, unit) {
   return null;
 }
 
-// ── "최근 주제 우선" 출제: 주제명 앞 숫자(주제 01 → 1)가 클수록 최근으로 본다 ──
+// ── "최근 주제 우선" 출제: 단원 번호가 클수록, 같은 단원 안에서는 주제 번호(주제 01 → 1)가 클수록 최근으로 본다 ──
 export function unitOrderNum(unit) {
   const m = String(unit || "").match(/\d+/);
   return m ? parseInt(m[0], 10) : null;
 }
+// 문제(q) 또는 주제명 문자열 → 정렬용 숫자. 단원이 있으면 단원×1000 + 주제 번호(단원마다 주제 01부터 다시 시작해도 순서 유지)
+function recencyOrderNum(x) {
+  if (typeof x === "string") return unitOrderNum(x);
+  const n = unitOrderNum(x && x.unit);
+  if (n === null) return null;
+  const c = chapterNumber(x && x.chapter);
+  return c === null ? n : c * 1000 + n;
+}
 
-// unitList: 이번 라운드에 등장하는 주제명 배열. 반환값은 주제명 → 가중치(가장 예전 주제=1, 가장 최근=maxWeight) 함수.
+// list: 이번 라운드에 등장하는 문제(q) 배열(예전처럼 주제명 배열도 가능). 반환값은 문제(또는 주제명) → 가중치(가장 예전 주제=1, 가장 최근=maxWeight) 함수.
 // 숫자가 없는 주제는 가장 예전(=1)으로 취급한다.
-export function recencyWeightFn(unitList, maxWeight = 3) {
-  const nums = (unitList || []).map(unitOrderNum).filter((n) => n !== null);
+export function recencyWeightFn(list, maxWeight = 3) {
+  const nums = (list || []).map(recencyOrderNum).filter((n) => n !== null);
   if (nums.length === 0) return () => 1;
   const lo = Math.min(...nums), hi = Math.max(...nums);
-  return (unit) => {
-    const n = unitOrderNum(unit);
+  return (x) => {
+    const n = recencyOrderNum(x);
     if (n === null || hi === lo) return 1;
     return 1 + ((n - lo) / (hi - lo)) * (maxWeight - 1);
   };
@@ -374,7 +410,7 @@ export function recencyWeightFn(unitList, maxWeight = 3) {
 export function weightedQueue(entries, weightOf) {
   const bag = [];
   for (const [qid, q] of entries) {
-    const w = Math.max(1, Math.round(weightOf(q.unit)));
+    const w = Math.max(1, Math.round(weightOf(q)));
     for (let i = 0; i < w; i++) bag.push(qid);
   }
   const arr = shuffle(bag);
@@ -394,7 +430,7 @@ export function weightedQueue(entries, weightOf) {
 // 가중치를 반영해 k개를 비복원 추출 (Efraimidis–Spirakis). 출제 문항 수를 제한할 때 사용.
 export function weightedSample(entries, weightOf, k) {
   return entries
-    .map(([qid, q]) => [qid, Math.pow(Math.random(), 1 / Math.max(0.01, weightOf(q.unit)))])
+    .map(([qid, q]) => [qid, Math.pow(Math.random(), 1 / Math.max(0.01, weightOf(q)))])
     .sort((a, b) => b[1] - a[1])
     .slice(0, k)
     .map((x) => x[0]);
