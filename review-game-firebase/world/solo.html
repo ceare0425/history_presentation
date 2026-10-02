@@ -568,7 +568,7 @@ import {
   isCorrect, computeGain, fmtTime, escapeHtml, shuffle, choseongHint,
   unitsFromQuestions, poolFromQuestions, renderUnitGroups, recencyWeightFn, weightedQueue, weightedSample,
   presenceRef, chatRef, bookmarksRef, bookmarkRef, findLessonForUnit
-} from '../shared/lib.js?v=20260928g';
+} from '../shared/lib.js?v=20261002a';
 import { mountTitles } from '../shared/titles.js?v=20261001b';
 
 const ROOM = 'world';
@@ -938,7 +938,7 @@ function startCardDeck(pool, order, weight){
   const src = pool.map(([qid, q])=>[qid, q]);
   if(order === 'sequential') cardDeck = src.map(([qid])=>qid);
   else {
-    const wFn = weight === 'recent' ? recencyWeightFn(src.map(([,q])=>q.unit)) : null;
+    const wFn = weight === 'recent' ? recencyWeightFn(src.map(([,q])=>q)) : null;
     cardDeck = wFn ? weightedSample(src, wFn, src.length) : shuffle(src.map(([qid])=>qid));
   }
   cardTotal = cardDeck.length;
@@ -959,7 +959,7 @@ function showNextCard(){
   currentStartedAt = serverNow();
   cardShows[qid] = (cardShows[qid] || 0) + 1;
   cardRevealed = false;
-  renderQuestion({ id: qid, text: currentQuestion.question, unit: currentQuestion.unit, page: currentQuestion.page });
+  renderQuestion({ id: qid, text: currentQuestion.question, unit: currentQuestion.unit, chapter: currentQuestion.chapter, page: currentQuestion.page });
   el('answerInput').disabled = true;
   el('answerInput').blur();
   if(cardShows[qid] > 1) el('unitTag').textContent = '🔁 다시 · ' + el('unitTag').textContent;
@@ -1103,7 +1103,7 @@ function renderQuestion(q){
     updateBookmarkBtn();
     return;
   }
-  el('unitTag').textContent = q.unit + (q.page ? ' · ' + q.page : '');
+  el('unitTag').textContent = (q.chapter ? q.chapter + ' · ' : '') + q.unit + (q.page ? ' · ' + q.page : '');
   el('qText').innerHTML = q.text.replace(/____/g, '<span class="blank-mark"></span>');
   el('answerInput').value = '';
   el('answerInput').disabled = false;
@@ -1142,8 +1142,8 @@ function assignNextQuestion(){
     currentStartedAt = serverNow();
     currentIsRetry = true;
     lastQid = due.qid;
-    renderQuestion({ id: due.qid, text: currentQuestion.question, unit: currentQuestion.unit, page: currentQuestion.page });
-    el('unitTag').textContent = '🔁 복습 · ' + currentQuestion.unit + (currentQuestion.page ? ' · ' + currentQuestion.page : '');
+    renderQuestion({ id: due.qid, text: currentQuestion.question, unit: currentQuestion.unit, chapter: currentQuestion.chapter, page: currentQuestion.page });
+    el('unitTag').textContent = '🔁 복습 · ' + (currentQuestion.chapter ? currentQuestion.chapter + ' · ' : '') + currentQuestion.unit + (currentQuestion.page ? ' · ' + currentQuestion.page : '');
     return;
   }
   currentIsRetry = false;
@@ -1155,7 +1155,7 @@ function assignNextQuestion(){
     if(roundState.order === 'sequential'){
       queue = src.map(([qid])=>qid);
     } else {
-      const wFn = roundState.weight === 'recent' ? recencyWeightFn(pool.map(([,q])=>q.unit)) : null;
+      const wFn = roundState.weight === 'recent' ? recencyWeightFn(pool.map(([,q])=>q)) : null;
       queue = !wFn ? shuffle(src.map(([qid])=>qid))
         : firstPass ? weightedSample(src, wFn, src.length)   // 겹치지 않게 한 번씩, 최근 단원일수록 앞쪽에
         : weightedQueue(src, wFn);
@@ -1169,7 +1169,7 @@ function assignNextQuestion(){
   currentQuestion = questionsObj[qid];
   currentStartedAt = serverNow();
   lastQid = qid;
-  renderQuestion({ id: qid, text: currentQuestion.question, unit: currentQuestion.unit, page: currentQuestion.page });
+  renderQuestion({ id: qid, text: currentQuestion.question, unit: currentQuestion.unit, chapter: currentQuestion.chapter, page: currentQuestion.page });
 }
 
 const AVATAR_IDLE = '🧗';

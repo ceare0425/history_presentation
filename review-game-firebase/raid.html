@@ -2380,7 +2380,7 @@ function initLive(m){
   });
   setInterval(() => publish(false), 250);
 }
-if(LIVE) import('./shared/lib.js?v=20260928g').then(initLive).catch(e => console.error('Firebase 연결 실패', e));
+if(LIVE) import('./shared/lib.js?v=20261002a').then(initLive).catch(e => console.error('Firebase 연결 실패', e));
 
 // 효과음은 이 화면을 한 번 눌러야 켜진다 (브라우저 정책)
 function refreshSoundBtn(){ $('soundBtn').classList.toggle('hidden', !!(AC && AC.state === 'running')); }

@@ -301,7 +301,7 @@
     <div class="card">
       <h2>② 문제 추가</h2>
       <label>엑셀(xlsx) 파일로 문제 추가 (양식 다운로드 후 표에 입력해서 작성하는 게 가장 편합니다)</label>
-      <div class="sub" style="margin-top:-6px;">'페이지' 칸은 선택 입력이며, 이미 등록된 문제와 주제·문제가 같으면 새로 추가하지 않고 페이지 값만 채워 넣습니다. 기존 문제에 페이지를 소급해서 넣고 싶으면 <b>현재 문제 내보내기</b>로 지금 등록된 문제를 받아 페이지 칸만 채운 뒤 그대로 다시 업로드하세요.</div>
+      <div class="sub" style="margin-top:-6px;">'단원' 칸(예: 1단원, 2단원)을 채우면 출제 범위가 단원별로 묶이고, 단원마다 주제 01부터 다시 번호를 매겨도 됩니다(단, 주제 이름은 단원끼리 겹치지 않게). '페이지' 칸은 선택 입력이며, 이미 등록된 문제와 주제·문제가 같으면 새로 추가하지 않고 페이지 값만 채워 넣습니다. 기존 문제에 페이지를 소급해서 넣고 싶으면 <b>현재 문제 내보내기</b>로 지금 등록된 문제를 받아 페이지 칸만 채운 뒤 그대로 다시 업로드하세요.</div>
       <input type="file" id="xlsxFileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
       <div class="btnrow">
         <button class="secondary" id="xlsxTemplateBtn" type="button">엑셀 양식 다운로드</button>
@@ -448,9 +448,10 @@
 import {
   roomRef, ref, onValue, get, set, update, remove, push, db, serverNow,
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, renderUnitGroups, shuffle,
+  normalizeChapter, chapterOfQuestion, compareChapters,
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS,
   presenceRef, chatRef, isOffline, sweepOfflinePlayers, watchForUpdate
-} from '../shared/lib.js?v=20260928g';
+} from '../shared/lib.js?v=20261002a';
 
 const ROOM = 'korea';
 // 학년+반 구분(명단 관리, 학년별 solo_log 기록)을 넣기 전에는 한국사=1학년, 세계사=2학년만 썼으므로,
@@ -837,21 +838,26 @@ el('giveRandomboxBtn').onclick = async () => {
 };
 
 const XLSX_TEMPLATE_ROWS = [
-  ['주제', '문제 (빈칸은 ____ 로 표시)', '정답 (여러 정답은 / 로 구분)', '페이지 (선택, 예: p.152)'],
-  ['주제 01. 삼국 통일과 남북국', '백제를 정복하고 이어서 고구려까지 멸망시킨 뒤 삼국을 통일한 신라의 왕은 ____이다.', '문무왕', 'p.34'],
-  ['주제 01. 삼국 통일과 남북국', '고려 광종은 노비안검법과 함께 ____를 실시하여 인재를 등용하였다.', '과거제', 'p.41'],
-  ['주제 02. 조선의 성립과 발전', '세종은 강력한 화포를 앞세워 대마도(쓰시마섬)를 정벌하도록 ____를 파견하였다.', '이종무', ''],
+  ['단원', '주제', '문제 (빈칸은 ____ 로 표시)', '정답 (여러 정답은 / 로 구분)', '페이지 (선택, 예: p.152)'],
+  ['1단원', '주제 01. 삼국 통일과 남북국', '백제를 정복하고 이어서 고구려까지 멸망시킨 뒤 삼국을 통일한 신라의 왕은 ____이다.', '문무왕', 'p.34'],
+  ['1단원', '주제 01. 삼국 통일과 남북국', '고려 광종은 노비안검법과 함께 ____를 실시하여 인재를 등용하였다.', '과거제', 'p.41'],
+  ['1단원', '주제 02. 조선의 성립과 발전', '세종은 강력한 화포를 앞세워 대마도(쓰시마섬)를 정벌하도록 ____를 파견하였다.', '이종무', ''],
+  ['2단원', '주제 01. 근대 국가 수립 운동', '흥선 대원군은 왕권 강화를 위해 ____을 중건하였다.', '경복궁', ''],
 ];
 
 const XLSX_GUIDE_ROWS = [
   ['한국사 복습 게임 - 문제 양식 사용법'],
   [''],
-  ["1. '문제' 시트에 주제 / 문제 / 정답 / 페이지 순서로 한 행에 문제 하나씩 입력하세요."],
+  ["1. '문제' 시트에 단원 / 주제 / 문제 / 정답 / 페이지 순서로 한 행에 문제 하나씩 입력하세요."],
   ['2. 문제 칸의 빈칸은 ____ (밑줄 4개)로 표시하세요. 안 쓰면 문제 끝에 자동으로 붙습니다.'],
   ['3. 정답이 여러 개일 수 있으면 / 로 구분해서 적으세요. 예: 세종/세종대왕'],
-  ['4. 주제 태그는 자유롭게 정하면 됩니다. 관리자 화면에서 이 태그 기준으로 출제 범위를 고릅니다.'],
+  ['4. 단원은 1단원, 2단원처럼 적으세요(숫자만 써도 됨). 관리자 화면 출제 범위가 단원별 묶음으로 나뉩니다.'],
+  ['   → 단원마다 주제 번호를 01부터 다시 써도 됩니다. 단, 단원이 달라도 주제 이름까지 똑같으면 같은 주제로 보니 이름은 다르게 적으세요.'],
+  ['   → 이미 등록된 주제에 다른 단원을 적어 올리면 그 주제의 문제 전체가 그 단원으로 옮겨집니다.'],
+  ['   → 단원 칸을 비우면 같은 주제의 기존 단원을 따르고, 처음 보는 주제면 주제 번호로 단원을 추정합니다.'],
+  ['   → 주제 태그는 자유롭게 정하면 됩니다. 관리자 화면에서 단원 → 주제 순으로 출제 범위를 고릅니다.'],
   ['5. 페이지 칸은 선택 사항이며(비워도 됨), 채우면 학생 화면에 교과서 쪽수로 함께 표시됩니다.'],
-  ['6. 이미 등록된 문제와 주제·문제가 완전히 같으면 새로 추가되지 않고, 페이지 값만 있으면 그것만 채워 넣습니다.'],
+  ['6. 이미 등록된 문제와 주제·문제가 완전히 같으면 새로 추가되지 않고, 페이지·단원 값만 있으면 그것만 채워 넣습니다.'],
   ['   → 기존 문제에 페이지를 나중에 채우고 싶으면, 관리자 화면의 "현재 문제 내보내기"로 받은 파일에 페이지만 채운 뒤 그대로 다시 업로드하세요.'],
   ['7. 첫 줄(머리글)은 그대로 두고, 예시 행은 지운 뒤 문제를 입력하세요.'],
   [''],
@@ -860,7 +866,7 @@ const XLSX_GUIDE_ROWS = [
 
 el('xlsxTemplateBtn').onclick = () => {
   const ws = XLSX.utils.aoa_to_sheet(XLSX_TEMPLATE_ROWS);
-  ws['!cols'] = [{ wch: 22 }, { wch: 60 }, { wch: 24 }, { wch: 16 }];
+  ws['!cols'] = [{ wch: 8 }, { wch: 26 }, { wch: 60 }, { wch: 24 }, { wch: 16 }];
   const guideWs = XLSX.utils.aoa_to_sheet(XLSX_GUIDE_ROWS);
   guideWs['!cols'] = [{ wch: 74 }];
   const wb = XLSX.utils.book_new();
@@ -870,12 +876,14 @@ el('xlsxTemplateBtn').onclick = () => {
 };
 
 el('xlsxExportBtn').onclick = () => {
-  const rows = [['주제', '문제 (빈칸은 ____ 로 표시)', '정답 (여러 정답은 / 로 구분)', '페이지 (선택, 예: p.152)']];
-  Object.values(questionsObj).forEach(q => {
-    rows.push([q.unit || '', q.question || '', (q.answers || []).join('/'), q.page || '']);
-  });
+  const rows = [['단원', '주제', '문제 (빈칸은 ____ 로 표시)', '정답 (여러 정답은 / 로 구분)', '페이지 (선택, 예: p.152)']];
+  Object.values(questionsObj)
+    .sort((a, b) => compareChapters(chapterOfQuestion(ROOM, a), chapterOfQuestion(ROOM, b)) || String(a.unit||'').localeCompare(String(b.unit||''), 'ko', { numeric: true }))
+    .forEach(q => {
+      rows.push([chapterOfQuestion(ROOM, q), q.unit || '', q.question || '', (q.answers || []).join('/'), q.page || '']);
+    });
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{ wch: 22 }, { wch: 60 }, { wch: 24 }, { wch: 16 }];
+  ws['!cols'] = [{ wch: 8 }, { wch: 26 }, { wch: 60 }, { wch: 24 }, { wch: 16 }];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '문제');
   XLSX.writeFile(wb, 'questions_현재목록.xlsx');
@@ -890,14 +898,37 @@ el('xlsxFileInput').onchange = async () => {
     const wb = XLSX.read(data, { type: 'array' });
     const sheetName = wb.SheetNames.includes('문제') ? '문제' : wb.SheetNames[0];
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: '' });
+    // 새 양식: 단원 | 주제 | 문제 | 정답 | 페이지 / 예전 양식: 주제 | 문제 | 정답 | 페이지 (머리글로 구분)
     let dataRows = rows;
-    if(dataRows.length && String(dataRows[0][0] || '').trim() === '주제'){ dataRows = dataRows.slice(1); }
-    const lines = dataRows
-      .map(r => [String(r[0] ?? '').trim(), String(r[1] ?? '').trim(), String(r[2] ?? '').trim(), String(r[3] ?? '').trim()])
-      .filter(([u,q,a]) => u || q || a)
-      .map(([u,q,a,p]) => p ? `${u} | ${q} | ${a} | ${p}` : `${u} | ${q} | ${a}`);
-    if(!lines.length){
-      msg.className='msg err'; msg.textContent = '엑셀 파일에서 문제를 찾지 못했습니다. "문제" 시트에 주제/문제/정답 순서로 입력했는지 확인하세요.';
+    let hasChapterCol = false;
+    const h0 = dataRows.length ? String(dataRows[0][0] || '').trim() : '';
+    if(h0 === '단원'){ hasChapterCol = true; dataRows = dataRows.slice(1); }
+    else if(h0 === '주제'){ dataRows = dataRows.slice(1); }
+    else if(/^(\d+|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ])\s*\.?\s*(단원)?$/.test(h0)){ hasChapterCol = true; }   // 머리글 없이 첫 칸이 '2단원'·'2'처럼 생긴 경우
+    const items = [];
+    dataRows.forEach(r => {
+      const c = hasChapterCol ? [r[0], r[1], r[2], r[3], r[4]] : ['', r[0], r[1], r[2], r[3]];
+      const [ch, u, q, a, p] = c.map(v => String(v ?? '').trim());
+      if(!(u || q || a)) return;
+      const parsed = parseQuestionLine(p ? `${u} | ${q} | ${a} | ${p}` : `${u} | ${q} | ${a}`);
+      if(parsed) items.push({ parsed, chapter: normalizeChapter(ch) });
+    });
+    if(!items.length){
+      msg.className='msg err'; msg.textContent = '엑셀 파일에서 문제를 찾지 못했습니다. "문제" 시트에 단원/주제/문제/정답 순서로 입력했는지 확인하세요.';
+      return;
+    }
+    // 단원은 '주제' 단위 속성: 한 파일 안에서 같은 주제에 서로 다른 단원을 적으면 막는다
+    const fileUnitChapter = new Map();
+    const conflicts = new Set();
+    items.forEach(({ parsed, chapter }) => {
+      if(!chapter) return;
+      const prev = fileUnitChapter.get(parsed.unit);
+      if(prev && prev !== chapter) conflicts.add(`"${parsed.unit}" (${prev} / ${chapter})`);
+      else fileUnitChapter.set(parsed.unit, chapter);
+    });
+    if(conflicts.size){
+      msg.className='msg err';
+      msg.textContent = `같은 주제에 단원이 서로 다르게 적혀 있습니다: ${[...conflicts].join(', ')} — 단원이 다르면 주제 이름도 다르게 적어 주세요.`;
       return;
     }
     // 주제+문제가 완전히 같으면 같은 문제로 본다. 이미 있는 문제면 새로 추가하지 않고,
@@ -907,10 +938,22 @@ el('xlsxFileInput').onchange = async () => {
     const currentPage = {};
     Object.entries(questionsObj).forEach(([id,q]) => { currentPage[id] = q.page || ''; });
     const updates = {};
+    // 기존 주제의 단원(이미 저장된 값)
+    const storedUnitChapter = new Map();
+    Object.values(questionsObj).forEach(q => { if(q.chapter && !storedUnitChapter.has(q.unit)) storedUnitChapter.set(q.unit, q.chapter); });
+    // 파일에 적힌 단원이 기존과 다르면(또는 기존 문제에 단원이 없으면) 그 주제의 문제 전체 단원을 맞춘다
+    const movedUnits = [];
+    let nChapterUpdated = 0;
+    fileUnitChapter.forEach((ch, unit) => {
+      const ids = Object.entries(questionsObj).filter(([, q]) => q.unit === unit && q.chapter !== ch).map(([id]) => id);
+      if(!ids.length) return;
+      const before = storedUnitChapter.get(unit);
+      if(before && before !== ch) movedUnits.push(`${unit}: ${before} → ${ch}`);
+      ids.forEach(id => { updates[`rooms/${ROOM}/questions/${id}/chapter`] = ch; });
+      nChapterUpdated += ids.length;
+    });
     let nNew = 0, nPageUpdated = 0, nSkipped = 0;
-    for(const line of lines){
-      const parsed = parseQuestionLine(line);
-      if(!parsed) continue;
+    for(const { parsed } of items){
       const sig = qSig(parsed.unit, parsed.question);
       const existId = sigToId.get(sig);
       if(existId){
@@ -919,11 +962,13 @@ el('xlsxFileInput').onchange = async () => {
           updates[`rooms/${ROOM}/questions/${existId}/page`] = newPage;
           currentPage[existId] = newPage;
           nPageUpdated++;
-        } else {
+        } else if(!updates[`rooms/${ROOM}/questions/${existId}/chapter`]) {
           nSkipped++;
         }
         continue;
       }
+      const ch = fileUnitChapter.get(parsed.unit) || storedUnitChapter.get(parsed.unit) || '';
+      if(ch) parsed.chapter = ch;
       const key = push(roomRef(ROOM,'questions')).key;
       updates[`rooms/${ROOM}/questions/${key}`] = parsed;
       sigToId.set(sig, key);
@@ -932,18 +977,20 @@ el('xlsxFileInput').onchange = async () => {
     }
     const noteParts = [];
     if(nPageUpdated) noteParts.push(`페이지 정보 ${nPageUpdated}개 갱신`);
+    if(nChapterUpdated) noteParts.push(`단원 정보 ${nChapterUpdated}개 갱신`);
     if(nSkipped) noteParts.push(`변화 없는 문제 ${nSkipped}개는 건너뜀`);
     const note = noteParts.length ? ` (${noteParts.join(', ')})` : '';
-    if(nNew===0 && nPageUpdated===0){
+    if(nNew===0 && nPageUpdated===0 && nChapterUpdated===0){
       msg.className = nSkipped ? 'msg ok' : 'msg err';
       msg.textContent = nSkipped
         ? `새로 반영할 내용이 없습니다.${note}`
         : '추가할 수 있는 문제가 없습니다. 양식(주제/문제/정답)을 확인하세요.';
       return;
     }
-    const confirmMsg = [nNew ? `새 문제 ${nNew}개 추가` : null, nPageUpdated ? `페이지 정보 ${nPageUpdated}개 갱신` : null]
+    const confirmMsg = [nNew ? `새 문제 ${nNew}개 추가` : null, nPageUpdated ? `페이지 정보 ${nPageUpdated}개 갱신` : null, nChapterUpdated ? `단원 정보 ${nChapterUpdated}개 갱신` : null]
       .filter(Boolean).join(', ');
-    if(!confirm(`"${file.name}"에서 ${confirmMsg}${nSkipped ? ` (변화 없는 문제 ${nSkipped}개는 건너뜀)` : ''}할까요?`)) {
+    const movedNote = movedUnits.length ? `\n\n단원이 바뀌는 주제:\n${movedUnits.join('\n')}` : '';
+    if(!confirm(`"${file.name}"에서 ${confirmMsg}${nSkipped ? ` (변화 없는 문제 ${nSkipped}개는 건너뜀)` : ''}할까요?${movedNote}`)) {
       msg.className='msg'; msg.textContent = ''; return;
     }
     await update(ref(db), updates);
@@ -959,8 +1006,18 @@ el('xlsxFileInput').onchange = async () => {
 function renderManageUnitOptions(){
   const sel = el('manageUnitFilter');
   const prev = sel.value;
+  const byCh = new Map();
+  allUnits.forEach(u => {
+    const ch = chapterOfQuestion(ROOM, u);
+    if(!byCh.has(ch)) byCh.set(ch, []);
+    byCh.get(ch).push(u);
+  });
   sel.innerHTML = `<option value="">전체 (${Object.keys(questionsObj).length}개)</option>` +
-    allUnits.map(u=>`<option value="${escapeHtml(u.unit)}">${escapeHtml(u.unit)} (${u.count}개)</option>`).join('');
+    [...byCh.keys()].sort(compareChapters).map(ch => {
+      const list = byCh.get(ch).sort((a, b) => String(a.unit).localeCompare(String(b.unit), 'ko', { numeric: true }));
+      return `<optgroup label="${escapeHtml(ch)}">` +
+        list.map(u=>`<option value="${escapeHtml(u.unit)}">${escapeHtml(u.unit)} (${u.count}개)</option>`).join('') + '</optgroup>';
+    }).join('');
   sel.value = prev && allUnits.some(u=>u.unit===prev) ? prev : '';
 }
 
@@ -972,7 +1029,7 @@ function renderQuestionList(){
   box.innerHTML = entries.map(([id, q]) => `
     <div class="qrow">
       <div class="qtext">
-        <span class="qunit">${escapeHtml(q.unit||'')}</span>${escapeHtml(q.question||'')}
+        <span class="qunit">${escapeHtml(chapterOfQuestion(ROOM, q) + ' · ' + (q.unit||''))}</span>${escapeHtml(q.question||'')}
         <div class="qans">정답: ${escapeHtml((q.answers||[]).join(' / '))}</div>
       </div>
       <button type="button" data-id="${id}">삭제</button>
@@ -1185,8 +1242,21 @@ el('roster').addEventListener('change', async (e)=>{
   sel.disabled = false;
 });
 
+// 단원 값이 없는 예전 문제에 주제 번호로 추정한 단원을 한 번 저장 → 학생 화면·혼자 연습도 같은 단원 값을 씀
+let chapterBackfillDone = false;
+function backfillChapters(){
+  if(chapterBackfillDone) return;
+  const updates = {};
+  Object.entries(questionsObj).forEach(([id, q]) => {
+    if(!q.chapter) updates[`rooms/${ROOM}/questions/${id}/chapter`] = chapterOfQuestion(ROOM, q);
+  });
+  if(!Object.keys(updates).length) return;
+  chapterBackfillDone = true;
+  update(ref(db), updates).catch(() => { chapterBackfillDone = false; });
+}
 function applyQuestions(obj){
   questionsObj = obj || {};
+  backfillChapters();
   allUnits = unitsFromQuestions(questionsObj);
   if(selectedUnits.size===0){ allUnits.forEach(u=>selectedUnits.add(u.unit)); }
   renderUnits();
@@ -1557,9 +1627,18 @@ function soloRangeLabel(units){
   if(!units || units === 'all') return '전체';
   const arr = Array.isArray(units) ? units : [units];
   if(!arr.length) return '전체';
-  const labels = [...new Set(arr.map(soloTopicNo))];
-  labels.sort((a,b)=>a.localeCompare(b,'ko',{numeric:true}));
-  return labels.join(', ');
+  const chOf = new Map(allUnits.map(u => [u.unit, u.chapter || '']));
+  const byCh = new Map();
+  arr.forEach(u => {
+    const ch = chOf.get(u) || '';
+    if(!byCh.has(ch)) byCh.set(ch, new Set());
+    byCh.get(ch).add(soloTopicNo(u));
+  });
+  const chs = [...byCh.keys()].sort((a, b) => !a ? 1 : !b ? -1 : compareChapters(a, b));
+  return chs.map(ch => {
+    const labels = [...byCh.get(ch)].sort((a,b)=>a.localeCompare(b,'ko',{numeric:true}));
+    return (ch && chs.length > 1 ? ch + ' ' : '') + labels.join(', ');
+  }).join(' / ');
 }
 
 // 층수 칸: 혼자 연습의 연습 방식(👹 보스 레이드 · 🃏 암기 카드)을 함께 표시
