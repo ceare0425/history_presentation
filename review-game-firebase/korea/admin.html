@@ -115,6 +115,21 @@
   .unit-acc-row .ubar-fill{ height:100%; border-radius:5px; }
   .unit-acc-row .uacc{ width:44px; text-align:right; flex-shrink:0; font-weight:700; }
   .unit-acc-row .ucnt{ width:56px; text-align:right; flex-shrink:0; color:var(--sub); font-size:.76rem; }
+
+  .modal-tabs{ display:flex; gap:6px; margin:10px 0 14px; border-bottom:1px solid var(--line); }
+  .modal-tab{ width:auto; background:none; color:var(--sub); font-weight:700; font-size:.86rem; padding:7px 4px 9px; border-radius:0; border-bottom:2px solid transparent; margin:0; }
+  .modal-tab.active{ color:var(--sky1); border-bottom-color:var(--sky1); }
+  .tt-sec{ margin-bottom:16px; }
+  .tt-sec h4{ margin:0 0 4px; font-size:.92rem; color:var(--sky1); }
+  .tt-note{ font-size:.76rem; color:var(--sub); margin-bottom:6px; }
+  .tt-unit{ padding:6px 0; border-bottom:1px dashed var(--line); }
+  .tt-unit-name{ font-size:.82rem; font-weight:700; display:flex; gap:8px; align-items:baseline; }
+  .tt-unit-name .tt-prog{ font-weight:400; color:var(--sub); font-size:.74rem; margin-left:auto; white-space:nowrap; }
+  .tt-chips{ display:flex; flex-wrap:wrap; gap:5px; margin-top:4px; }
+  .tt-chip{ display:inline-flex; align-items:center; gap:4px; border-radius:999px; padding:4px 10px; font-size:.78rem; font-weight:700; border:2px solid transparent; background:#f3f4f6; color:#9ca3af; }
+  .tt-chip:not(.earned){ filter:grayscale(1); opacity:.7; }
+  .tt-chip small{ font-weight:600; font-size:.66rem; opacity:.8; }
+  .tt-rep-note{ font-size:.76rem; color:var(--sub); margin:-8px 0 14px; }
   input[type=checkbox].solo-pick, #soloPickAll{ width:15px; height:15px; cursor:pointer; }
   .solo-group-row{ background:#eef2fb; font-weight:800; color:var(--sky1); padding:7px 8px; border-radius:6px; margin-top:4px; cursor:pointer; user-select:none; }
   .solo-group-row:hover{ background:#e2e8f7; }
@@ -429,15 +444,24 @@
     <button type="button" class="mclose" id="soloModalClose">닫기 ✕</button>
     <h3 id="soloModalTitle">학생 누적 현황</h3>
     <div class="muted" id="soloModalSub" style="font-size:.82rem;"></div>
-    <div class="stat-grid" id="soloModalStats"></div>
-    <div class="pool-count"><b>단원(주제)별 정답률</b> · 어려워하는 단원이 위로 오도록 낮은 순</div>
-    <div class="unit-acc-list" id="soloModalUnitAcc"></div>
-    <div class="pool-count" style="display:flex; align-items:center; gap:8px;"><b>세션 기록</b> (최근순)<button type="button" class="bad" id="soloModalDelAll" style="margin-left:auto; padding:3px 9px; font-size:.75rem;">이 학생 기록 전체 삭제</button></div>
-    <div style="overflow-x:auto;">
-      <table>
-        <thead><tr><th>시작</th><th>종료</th><th>주제(범위)</th><th>제한</th><th>층수·결과</th><th>정답/오답</th><th>힌트</th><th></th></tr></thead>
-        <tbody id="soloModalRows"></tbody>
-      </table>
+    <div class="modal-tabs" id="soloModalTabs">
+      <button type="button" class="modal-tab active" data-tab="stats">📊 누적 현황</button>
+      <button type="button" class="modal-tab" data-tab="titles">🏅 칭호 도감</button>
+    </div>
+    <div id="soloModalStatsPane">
+      <div class="stat-grid" id="soloModalStats"></div>
+      <div class="pool-count"><b>단원(주제)별 정답률</b> · 어려워하는 단원이 위로 오도록 낮은 순</div>
+      <div class="unit-acc-list" id="soloModalUnitAcc"></div>
+      <div class="pool-count" style="display:flex; align-items:center; gap:8px;"><b>세션 기록</b> (최근순)<button type="button" class="bad" id="soloModalDelAll" style="margin-left:auto; padding:3px 9px; font-size:.75rem;">이 학생 기록 전체 삭제</button></div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>시작</th><th>종료</th><th>주제(범위)</th><th>제한</th><th>층수·결과</th><th>정답/오답</th><th>힌트</th><th></th></tr></thead>
+          <tbody id="soloModalRows"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="soloModalTitlesPane" class="hidden">
+      <div id="soloModalTitlesBody">불러오는 중…</div>
     </div>
   </div>
 </div>
@@ -452,6 +476,7 @@ import {
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS,
   presenceRef, chatRef, isOffline, sweepOfflinePlayers, watchForUpdate
 } from '../shared/lib.js?v=20261002a';
+import { buildTitleBook, RARITY } from '../shared/titles.js?v=20261006b';
 
 const ROOM = 'korea';
 // 학년+반 구분(명단 관리, 학년별 solo_log 기록)을 넣기 전에는 한국사=1학년, 세계사=2학년만 썼으므로,
@@ -1863,6 +1888,71 @@ function closeSoloModal(){
   el('soloModal').classList.add('hidden');
 }
 
+// ── 🏅 칭호 도감 탭 ──
+function titleChip(t){
+  const r = RARITY[t.rarity] || RARITY.common;
+  const label = t.secret && !t.earned ? '❓ ???' : `${t.emoji} ${escapeHtml(t.name)}`;
+  const style = t.earned ? `background:${r.bg}; color:${r.color}; border-color:${r.color}55;` : '';
+  return `<span class="tt-chip ${t.earned?'earned':''}" style="${style}" title="${escapeHtml(t.secret && !t.earned ? '조건 비공개' : t.desc)}">${label}${t.earned ? ` <small>${r.label}</small>` : ''}</span>`;
+}
+function renderTitlesBody(book){
+  const got = book.all.filter(t=>t.earned).length;
+  let h = `<div class="pool-count"><b>받은 칭호</b> ${got} / ${book.all.length}개</div>`;
+  h += `<div class="tt-sec"><h4>📚 단원 정복</h4>`;
+  book.unitRows.forEach(r=>{
+    if(!r.hasQ && !r.items.some(t=>t.earned)) return;
+    h += `<div class="tt-unit"><div class="tt-unit-name">${escapeHtml(r.unit)}<span class="tt-prog">${r.solved}/${r.total}문제 · 정답률 ${Math.round(r.acc*100)}%</span></div><div class="tt-chips">${r.items.map(titleChip).join('')}</div></div>`;
+  });
+  h += `</div>`;
+  h += `<div class="tt-sec"><h4>👑 단원 전체</h4><div class="tt-chips">${book.grand.map(titleChip).join('')}</div></div>`;
+  h += `<div class="tt-sec"><h4>🏅 명예 (수업 게임)</h4>`;
+  book.honors.forEach(g=>{
+    h += `<div class="tt-unit"><div class="tt-unit-name">${g.kind.emoji} ${escapeHtml(g.kind.what)}<span class="tt-prog">${g.count}회</span></div><div class="tt-chips">${g.items.map(titleChip).join('')}</div></div>`;
+  });
+  h += `</div>`;
+  h += `<div class="tt-sec"><h4>👹 보스 레이드</h4>`;
+  book.raidKinds.forEach(g=>{
+    h += `<div class="tt-unit"><div class="tt-unit-name">${g.kind.emoji} ${escapeHtml(g.kind.what)}<span class="tt-prog">${g.count}회</span></div><div class="tt-chips">${g.items.map(titleChip).join('')}</div></div>`;
+  });
+  h += `<div class="tt-unit"><div class="tt-unit-name">⚔️ 높은 난이도 격파</div><div class="tt-chips">${book.raidDiffs.map(titleChip).join('')}</div></div>`;
+  h += `</div>`;
+  if(book.soloRaidKinds.length){
+    h += `<div class="tt-sec"><h4>🧍 혼자 보스 레이드</h4>`;
+    book.soloRaidKinds.forEach(g=>{
+      h += `<div class="tt-unit"><div class="tt-unit-name">${g.kind.emoji} ${escapeHtml(g.kind.what)}<span class="tt-prog">${g.count}회</span></div><div class="tt-chips">${g.items.map(titleChip).join('')}</div></div>`;
+    });
+    h += `<div class="tt-unit"><div class="tt-unit-name">⚔️ 높은 난이도 혼자 격파</div><div class="tt-chips">${book.soloRaidDiffs.map(titleChip).join('')}</div></div>`;
+    h += `</div>`;
+  }
+  h += `<div class="tt-sec"><h4>📅 꾸준함</h4><div class="tt-note">문제를 푼 날: ${book.dayCount}일</div><div class="tt-chips">${book.dayItems.map(titleChip).join('')}</div></div>`;
+  const hiddenGot = book.hidden.filter(t=>t.earned).length;
+  h += `<div class="tt-sec"><h4>❓ 숨은 칭호</h4><div class="tt-note">${hiddenGot}/${book.hidden.length}개 공개</div><div class="tt-chips">${book.hidden.map(titleChip).join('')}</div></div>`;
+  return h;
+}
+async function loadAndRenderTitlesPane(){
+  if(!soloModalSel) return;
+  const { name, cls } = soloModalSel;
+  const body = el('soloModalTitlesBody');
+  body.innerHTML = '불러오는 중…';
+  try{
+    const snap = await get(ref(db, `titles/${ROOM}/${cls}/${name}`));
+    if(!soloModalSel || soloModalSel.name !== name || soloModalSel.cls !== cls) return; // 불러오는 사이 다른 학생으로 바뀌면 버림
+    const book = buildTitleBook(ROOM, snap.val() || {}, questionsObj);
+    body.innerHTML = renderTitlesBody(book);
+  }catch(err){
+    body.innerHTML = `<div class="unit-acc-row muted">칭호 정보를 불러오지 못했습니다: ${escapeHtml(err.message)}</div>`;
+  }
+}
+el('soloModalTabs').addEventListener('click', (ev)=>{
+  const btn = ev.target.closest('.modal-tab');
+  if(!btn) return;
+  el('soloModalTabs').querySelectorAll('.modal-tab').forEach(b=>b.classList.toggle('active', b===btn));
+  const tab = btn.dataset.tab;
+  el('soloModalStatsPane').classList.toggle('hidden', tab !== 'stats');
+  el('soloModalTitlesPane').classList.toggle('hidden', tab !== 'titles');
+  if(tab === 'titles') loadAndRenderTitlesPane();
+});
+
 el('soloRecent').addEventListener('click', (ev)=>{
   const groupRow = ev.target.closest('.solo-group-row');
   if(groupRow){
@@ -1876,6 +1966,9 @@ el('soloRecent').addEventListener('click', (ev)=>{
   if(!sp) return;
   soloModalSel = { name: sp.dataset.name, cls: sp.dataset.cls || '' };
   el('soloModal').classList.remove('hidden');
+  el('soloModalTabs').querySelectorAll('.modal-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab === 'stats'));
+  el('soloModalStatsPane').classList.remove('hidden');
+  el('soloModalTitlesPane').classList.add('hidden');
   renderSoloModal();
 });
 el('soloModalClose').onclick = closeSoloModal;
