@@ -71,7 +71,7 @@ const UNIT_TITLES = {
 
 // 단원 전체 칭호: 범위 안의 모든 주제를 🥇달인으로
 const GRAND_TITLES = {
-  korea: [ { id:'g_all', name:'광복의 증인', min:1, max:99, desc:'모든 주제 🥇달인' } ],
+  korea: [ { id:'g_1', name:'광복의 증인', min:1, max:19, desc:'1단원(주제 01~19) 모두 🥇달인' } ],
   world: [
     { id:'g_1', name:'고대 문명 순례자', min:1, max:14, desc:'1단원(주제 01~14) 모두 🥇달인' },
     { id:'g_2', name:'근세의 설계자', min:16, max:22, desc:'2단원(주제 16~22) 모두 🥇달인' },
