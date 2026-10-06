@@ -130,6 +130,7 @@
   .tt-chip:not(.earned){ filter:grayscale(1); opacity:.7; }
   .tt-chip small{ font-weight:600; font-size:.66rem; opacity:.8; }
   .tt-rep-note{ font-size:.76rem; color:var(--sub); margin:-8px 0 14px; }
+  #soloModalTitlesBody{ min-height:200px; }
   input[type=checkbox].solo-pick, #soloPickAll{ width:15px; height:15px; cursor:pointer; }
   .solo-group-row{ background:#eef2fb; font-weight:800; color:var(--sky1); padding:7px 8px; border-radius:6px; margin-top:4px; cursor:pointer; user-select:none; }
   .solo-group-row:hover{ background:#e2e8f7; }
@@ -1929,18 +1930,26 @@ function renderTitlesBody(book){
   h += `<div class="tt-sec"><h4>❓ 숨은 칭호</h4><div class="tt-note">${hiddenGot}/${book.hidden.length}개 공개</div><div class="tt-chips">${book.hidden.map(titleChip).join('')}</div></div>`;
   return h;
 }
+// 탭을 누른 순간 fetch를 시작하면 "불러오는 중…"(짧은 글) → 실제 칭호 목록(긺)으로 내용 높이가
+// 갑자기 바뀌면서 가운데 정렬된 팝업이 출렁여(깜빡여) 보인다. 그래서 모달을 열 때 미리 불러와 두고,
+// 탭은 이미 그려진 내용을 보여주기만 하면 되도록 한다(같은 학생이면 다시 불러오지 않음).
+let soloTitlesLoadedKey = null;
+function titlesKey(sel){ return sel ? sel.cls + '␟' + sel.name : null; }
 async function loadAndRenderTitlesPane(){
   if(!soloModalSel) return;
+  const key = titlesKey(soloModalSel);
+  if(soloTitlesLoadedKey === key) return;
+  soloTitlesLoadedKey = key;
   const { name, cls } = soloModalSel;
-  const body = el('soloModalTitlesBody');
-  body.innerHTML = '불러오는 중…';
   try{
     const snap = await get(ref(db, `titles/${ROOM}/${cls}/${name}`));
-    if(!soloModalSel || soloModalSel.name !== name || soloModalSel.cls !== cls) return; // 불러오는 사이 다른 학생으로 바뀌면 버림
+    if(titlesKey(soloModalSel) !== key) return; // 불러오는 사이 다른 학생으로 바뀌면 버림
     const book = buildTitleBook(ROOM, snap.val() || {}, questionsObj);
-    body.innerHTML = renderTitlesBody(book);
+    el('soloModalTitlesBody').innerHTML = renderTitlesBody(book);
   }catch(err){
-    body.innerHTML = `<div class="unit-acc-row muted">칭호 정보를 불러오지 못했습니다: ${escapeHtml(err.message)}</div>`;
+    if(titlesKey(soloModalSel) !== key) return;
+    soloTitlesLoadedKey = null; // 실패하면 다음에 다시 시도할 수 있게
+    el('soloModalTitlesBody').innerHTML = `<div class="unit-acc-row muted">칭호 정보를 불러오지 못했습니다: ${escapeHtml(err.message)}</div>`;
   }
 }
 el('soloModalTabs').addEventListener('click', (ev)=>{
@@ -1950,7 +1959,6 @@ el('soloModalTabs').addEventListener('click', (ev)=>{
   const tab = btn.dataset.tab;
   el('soloModalStatsPane').classList.toggle('hidden', tab !== 'stats');
   el('soloModalTitlesPane').classList.toggle('hidden', tab !== 'titles');
-  if(tab === 'titles') loadAndRenderTitlesPane();
 });
 
 el('soloRecent').addEventListener('click', (ev)=>{
@@ -1969,7 +1977,9 @@ el('soloRecent').addEventListener('click', (ev)=>{
   el('soloModalTabs').querySelectorAll('.modal-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab === 'stats'));
   el('soloModalStatsPane').classList.remove('hidden');
   el('soloModalTitlesPane').classList.add('hidden');
+  el('soloModalTitlesBody').innerHTML = '불러오는 중…';
   renderSoloModal();
+  loadAndRenderTitlesPane(); // 탭을 누르기 전에 미리 불러와 둔다(위 설명 참고)
 });
 el('soloModalClose').onclick = closeSoloModal;
 el('soloModal').addEventListener('click', (ev)=>{ if(ev.target === el('soloModal')) closeSoloModal(); });
