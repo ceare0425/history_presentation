@@ -22,9 +22,13 @@ const TIER_EMOJI = ['🥉','🥈','🥇'];
 const TIER_RARITY = ['common','rare','epic'];
 const TIER_LABEL = ['입문','숙련','달인'];
 
-// 주제 번호 → [입문, 숙련, 달인]
+// 한국사는 단원마다 주제 01부터 다시 매기므로(2단원이 생기면 주제 번호가 1단원과 겹친다) 단원 번호로 한 번 더 묶어 구분한다.
+// 세계사는 주제 번호가 단원 전체에서 겹치지 않으므로(1~14, 16~22) 번호만으로 충분히 구분된다.
+const RESTARTS_PER_CHAPTER = { korea: true };
+
+// 주제 번호 → [입문, 숙련, 달인] (한국사는 단원 번호로 한 번 더 감쌈 — 위 RESTARTS_PER_CHAPTER 참고)
 const UNIT_TITLES = {
-  korea: {
+  korea: { 1: {
     1:['비밀결사 새내기','독립의군부 대원','대한광복회 총사령'],
     2:['민족 신문 애독자','『개벽』 편집자','분열 통치 간파자'],
     3:['우리말 지킴이','창씨개명 거부자','민족혼 수호자'],
@@ -44,7 +48,7 @@ const UNIT_TITLES = {
     17:['한국 독립군 대원','조선 혁명군 대원','쌍성보·영릉가 영웅'],
     18:['한인 애국단 단원','조선 의용대 대원','한국광복군 총사령'],
     19:['건국 동맹 동지','건국 강령 기초자','광복을 준비한 자']
-  },
+  } },
   world: {
     1:['뗀석기 사냥꾼','간석기 농부','문명의 개척자'],
     2:['쐐기 문자 필경사','파라오의 서기관','함무라비 법전 해석가'],
@@ -69,12 +73,12 @@ const UNIT_TITLES = {
   }
 };
 
-// 단원 전체 칭호: 범위 안의 모든 주제를 🥇달인으로
+// 단원 전체 칭호: 범위 안의 모든 주제를 🥇달인으로 (chapter를 지정하면 그 단원 번호의 주제만, 비우면 전체)
 const GRAND_TITLES = {
-  korea: [ { id:'g_1', name:'광복의 증인', min:1, max:19, desc:'1단원(주제 01~19) 모두 🥇달인' } ],
+  korea: [ { id:'g_1', name:'광복의 증인', chapter:1, min:1, max:19, desc:'1단원(주제 01~19) 모두 🥇달인' } ],
   world: [
-    { id:'g_1', name:'고대 문명 순례자', min:1, max:14, desc:'1단원(주제 01~14) 모두 🥇달인' },
-    { id:'g_2', name:'근세의 설계자', min:16, max:22, desc:'2단원(주제 16~22) 모두 🥇달인' },
+    { id:'g_1', name:'고대 문명 순례자', chapter:1, min:1, max:14, desc:'1단원(주제 01~14) 모두 🥇달인' },
+    { id:'g_2', name:'근세의 설계자', chapter:2, min:16, max:22, desc:'2단원(주제 16~22) 모두 🥇달인' },
     { id:'g_all', name:'세계사 대가', min:1, max:99, desc:'1·2단원 모두 🥇달인' }
   ]
 };
@@ -127,6 +131,21 @@ function topicNum(unit){
   const m = String(unit || '').match(/\d+/);
   return m ? parseInt(m[0], 10) : null;
 }
+function chapterNumber(ch){
+  const m = String(ch || '').match(/\d+/);
+  return m ? parseInt(m[0], 10) : null;
+}
+// 문제에 단원(chapter)이 저장돼 있으면 그대로 쓰고, 없는 예전 문제만 주제 번호로 추정한다 (admin.html의 legacyChapterOfUnit과 동일 규칙).
+function legacyChapterNum(room, n){
+  if(room === 'korea') return 1;
+  if(n !== null && n >= 1 && n <= 14) return 1;
+  if(n !== null && n >= 16 && n <= 22) return 2;
+  return null;
+}
+function chapterNumOf(room, q, n){
+  const explicit = chapterNumber(q && q.chapter);
+  return explicit !== null ? explicit : legacyChapterNum(room, n);
+}
 export function dayKey(ms = Date.now()){
   const d = new Date(ms);
   return '' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
@@ -145,17 +164,36 @@ export function buildTitleBook(room, data, questionsObj){
     const o = qs[qid] || (qs[qid] = { c:0, w:0 });
     o.c += (x && x.c) || 0; o.w += (x && x.w) || 0;
   }));
+  const restarts = !!RESTARTS_PER_CHAPTER[room];
+  // key: 단원 번호가 겹칠 수 있는 과목(한국사)은 "단원_주제", 아니면 주제 번호만으로 묶는다.
   const byTopic = {};
   Object.entries(questionsObj || {}).forEach(([qid, q]) => {
     const n = topicNum(q && q.unit);
     if(n === null) return;
-    (byTopic[n] = byTopic[n] || { unit: q.unit, qids: [] }).qids.push(qid);
+    const ch = chapterNumOf(room, q, n) ?? 1;
+    const key = restarts ? (ch + '_' + n) : n;
+    (byTopic[key] = byTopic[key] || { unit: q.unit, chapter: ch, n, qids: [] }).qids.push(qid);
   });
 
-  // 📚 단원 정복
+  // 📚 단원 정복 — UNIT_TITLES를 { 단원번호 → { 주제번호 → 이름들 } } 또는 { 주제번호 → 이름들 }(restarts 아닌 과목) 형태에서 평탄화
   const table = UNIT_TITLES[room] || {};
-  const unitRows = Object.keys(table).map(Number).sort((a,b)=>a-b).map(n => {
-    const tp = byTopic[n];
+  const specRows = [];
+  if(restarts){
+    Object.entries(table).forEach(([chStr, byN]) => {
+      const ch = Number(chStr);
+      Object.entries(byN).forEach(([nStr, names]) => specRows.push({ chapter: ch, n: Number(nStr), names }));
+    });
+  } else {
+    Object.entries(table).forEach(([nStr, names]) => {
+      const n = Number(nStr);
+      specRows.push({ chapter: legacyChapterNum(room, n), n, names });
+    });
+  }
+  specRows.sort((a, b) => a.chapter - b.chapter || a.n - b.n);
+
+  const unitRows = specRows.map(({ chapter, n, names }) => {
+    const key = restarts ? (chapter + '_' + n) : n;
+    const tp = byTopic[key];
     const total = tp ? tp.qids.length : 0;
     let solved = 0, c = 0, w = 0;
     (tp ? tp.qids : []).forEach(qid => { const x = qs[qid]; if(!x) return; if(x.c > 0) solved++; c += x.c; w += x.w; });
@@ -163,15 +201,17 @@ export function buildTitleBook(room, data, questionsObj){
     const need = [Math.max(1, Math.ceil(total * 0.3)), Math.max(1, Math.ceil(total * 0.7)), total];
     const oks = [total > 0 && solved >= need[0], total > 0 && solved >= need[1], total > 0 && solved >= total && acc >= 0.8];
     const descs = [`주제 ${n} 문제 ${need[0]}개 맞히기`, `주제 ${n} 문제 ${need[1]}개 맞히기`, `주제 ${n} 모든 문제(${total}개) 맞히고 정답률 80% 이상`];
-    const items = table[n].map((nm, i) => add({
-      id:`u${n}_${i+1}`, name:nm, emoji:TIER_EMOJI[i], rarity:TIER_RARITY[i], ok:oks[i], desc:descs[i], tier:TIER_LABEL[i]
+    // 단원이 겹칠 수 있는 과목은 1단원(기존 id와 동일, 이미 받은 칭호 유지)이 아니면 단원 번호를 id에 더해 구분한다.
+    const idPrefix = (restarts && chapter !== 1) ? `u${chapter}_${n}` : `u${n}`;
+    const items = names.map((nm, i) => add({
+      id:`${idPrefix}_${i+1}`, name:nm, emoji:TIER_EMOJI[i], rarity:TIER_RARITY[i], ok:oks[i], desc:descs[i], tier:TIER_LABEL[i]
     }));
-    return { n, unit: tp ? tp.unit : `주제 ${n}`, solved, total, acc, items, hasQ: total > 0 };
+    return { n, chapter, unit: tp ? tp.unit : `주제 ${n}`, solved, total, acc, items, hasQ: total > 0 };
   });
 
   // 👑 단원 전체
   const grand = (GRAND_TITLES[room] || []).map(g => {
-    const rows = unitRows.filter(r => r.n >= g.min && r.n <= g.max && r.hasQ);
+    const rows = unitRows.filter(r => r.n >= g.min && r.n <= g.max && r.hasQ && (g.chapter === undefined || r.chapter === g.chapter));
     return add({ id:g.id, name:g.name, emoji:'👑', rarity:'legend', ok: rows.length > 0 && rows.every(r => r.items[2].earned), desc:g.desc });
   });
 
