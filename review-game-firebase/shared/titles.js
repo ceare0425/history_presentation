@@ -25,6 +25,15 @@ const TIER_LABEL = ['입문','숙련','달인'];
 // 한국사는 단원마다 주제 01부터 다시 매기므로(2단원이 생기면 주제 번호가 1단원과 겹친다) 단원 번호로 한 번 더 묶어 구분한다.
 // 세계사는 주제 번호가 단원 전체에서 겹치지 않으므로(1~14, 16~22) 번호만으로 충분히 구분된다.
 const RESTARTS_PER_CHAPTER = { korea: true };
+// 칭호 표(UNIT_TITLES·GRAND_TITLES)가 정해진 과목. 한국사 방에는 한국사1 문제도 함께 있으므로(문제의 course 칸),
+// 다른 과목 문제는 칭호 계산에서 뺀다 — 주제 번호(01~)가 겹쳐 한국사2 주제 칭호에 섞이지 않게.
+// course가 없는 문제(예전 문제)는 이 과목으로 본다(lib.js의 DEFAULT_COURSE와 같은 값).
+const TITLE_COURSE = { korea: '한국사2' };
+function inTitleCourse(room, q){
+  const main = TITLE_COURSE[room];
+  const co = String((q && q.course) || '').trim().replace(/\s+/g, '');
+  return !main || !co || co === main;
+}
 
 // 주제 번호 → [입문, 숙련, 달인] (한국사는 단원 번호로 한 번 더 감쌈 — 위 RESTARTS_PER_CHAPTER 참고)
 const UNIT_TITLES = {
@@ -168,6 +177,7 @@ export function buildTitleBook(room, data, questionsObj){
   // key: 단원 번호가 겹칠 수 있는 과목(한국사)은 "단원_주제", 아니면 주제 번호만으로 묶는다.
   const byTopic = {};
   Object.entries(questionsObj || {}).forEach(([qid, q]) => {
+    if(!inTitleCourse(room, q)) return;
     const n = topicNum(q && q.unit);
     if(n === null) return;
     const ch = chapterNumOf(room, q, n) ?? 1;
