@@ -329,7 +329,7 @@
   .raid-flash{ position:fixed; inset:0; z-index:39; pointer-events:none; background:rgba(255,40,30,.45); animation:raidFlash .5s ease-out forwards; }
   .raid-flash.shield{ background:rgba(90,170,255,.4); }
   @keyframes raidFlash{ from{ opacity:1; } to{ opacity:0; } }
-  .qbox.raid-censor::after{ content:'검열'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  .qbox.raid-censor::after{ content:attr(data-censor); position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     font-size:2rem; font-weight:900; color:#d7263d; text-shadow:0 0 6px #fff;
     background:repeating-linear-gradient(0deg, rgba(10,10,10,.93) 0 16px, transparent 16px 34px); border-radius:14px; pointer-events:none; }
   .card-row{ display:flex; gap:10px; flex:0 0 auto; }
@@ -419,6 +419,11 @@
           <button type="button" data-diff="3">💀 지옥</button>
         </div>
         <div class="mode-desc" id="raidDiffDesc"></div>
+        <label>보스</label>
+        <div class="toggle-row small" id="raidBossToggle">
+          <button type="button" class="active" data-boss="world">🎖️ 히틀러</button>
+          <button type="button" data-boss="slime">🟢 슬라임 괴물</button>
+        </div>
       </div>
       <label>연습 범위</label>
       <div class="units" id="unitList">불러오는 중...</div>
@@ -634,6 +639,9 @@ let lastQid = null;
 // 연습 방식: 'tower' 탑 오르기 · 'raid' 👹 혼자 보스 레이드(화면 왼쪽 반에 raid.html?solo) · 'card' 🃏 암기 카드(스스로 확인)
 const STORAGE_MODE_KEY = 'rg_fb_' + ROOM + '_solo_mode';
 const STORAGE_RAID_DIFF_KEY = 'rg_fb_' + ROOM + '_solo_raid_diff';
+const STORAGE_RAID_BOSS_KEY = 'rg_fb_' + ROOM + '_solo_raid_boss';
+const RAID_BOSS_NAME = { world: '히틀러', slime: '슬라임 괴물' };
+let raidBoss = 'world';   // 보스: 이 과목 보스 · 'slime'(슬라임 괴물)
 let practiceMode = 'tower';   // 설정 화면에서 고른 방식
 let sessionMode = 'tower';    // 지금 진행 중인 세션의 방식 (복습 추천·즐겨찾기 다시 풀기는 늘 탑 오르기)
 let raidDiff = 0, sessionRaidDiff = 0;
@@ -642,6 +650,7 @@ try{
   if(m === 'tower' || m === 'raid' || m === 'card') practiceMode = m;
   const d = parseInt(localStorage.getItem(STORAGE_RAID_DIFF_KEY) || '0', 10);
   if(d >= 0 && d <= 3) raidDiff = d;
+  if(localStorage.getItem(STORAGE_RAID_BOSS_KEY) === 'slime') raidBoss = 'slime';
 }catch(_e){}
 
 let floor = 0, correctCount = 0, wrongCount = 0, streak = 0;
@@ -773,7 +782,7 @@ el('weightToggle').querySelectorAll('button').forEach(btn=>{
 
 const MODE_DESC = {
   tower: '문제를 빨리 맞힐수록 높이 올라가요. 정한 시간 동안 최고 층수에 도전!',
-  raid: '화면 왼쪽의 보스(히틀러)와 혼자 싸워요. 맞히면 공격! ⚠ 공격 예고가 뜨면 다음 문제를 맞혀서 막아야 해요. 제한 시간 5분.',
+  raid: '화면 왼쪽의 보스와 혼자 싸워요. 맞히면 공격! ⚠ 공격 예고가 뜨면 다음 문제를 맞혀서 막아야 해요. 제한 시간 5분.',
   card: '시간 제한 없이 문제를 보고 답을 떠올린 뒤 정답을 확인해요. 몰랐던 카드는 조금 뒤 다시 나오고 🔁 복습 추천에도 들어가요. 시험 직전 빠르게 훑어보기 좋아요.'
 };
 const RAID_DIFF_DESC = [
@@ -788,6 +797,7 @@ function updateModeUI(){
   el('raidDiffToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', Number(b.dataset.diff) === raidDiff));
   el('modeDesc').textContent = MODE_DESC[practiceMode];
   el('raidDiffDesc').textContent = RAID_DIFF_DESC[raidDiff];
+  el('raidBossToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.boss === raidBoss));
   el('raidDiffBox').classList.toggle('hidden', practiceMode !== 'raid');
   el('durationBox').classList.toggle('hidden', practiceMode !== 'tower');   // 레이드는 5분 고정, 암기 카드는 시간 제한 없음
   el('startBtn').textContent = START_LABEL[practiceMode];
@@ -803,6 +813,13 @@ el('raidDiffToggle').querySelectorAll('button').forEach(btn=>{
   btn.onclick = () => {
     raidDiff = Number(btn.dataset.diff) || 0;
     try{ localStorage.setItem(STORAGE_RAID_DIFF_KEY, String(raidDiff)); }catch(_e){}
+    updateModeUI();
+  };
+});
+el('raidBossToggle').querySelectorAll('button').forEach(btn=>{
+  btn.onclick = () => {
+    raidBoss = btn.dataset.boss === 'slime' ? 'slime' : 'world';
+    try{ localStorage.setItem(STORAGE_RAID_BOSS_KEY, raidBoss); }catch(_e){}
     updateModeUI();
   };
 });
@@ -840,7 +857,7 @@ function startRaidFrame(){
   raidLast = null; raidEnding = false; raidLastHearts = null; raidLastShields = null;
   const f = document.createElement('iframe');
   f.title = '보스 레이드';
-  f.src = '../raid.html?solo=1&boss=world&name=' + encodeURIComponent(myName()) + '&v=20261001g';
+  f.src = '../raid.html?solo=1&subj=world&boss=' + raidBoss + '&name=' + encodeURIComponent(myName()) + '&v=20261012a';
   el('raidFrameWrap').appendChild(f);
   const t0 = Date.now();
   raidLoadTimer = setInterval(()=>{
@@ -898,11 +915,12 @@ function updateRaidUI(){
   const g = s.guard;
   el('raidWarn').classList.toggle('hidden', !g || !!s.result);
   if(g) el('raidWarn').textContent = `⚠ ${g.label.replace('😵 ', '')} 예고! ${Math.ceil(g.left/1000)}초 안에 다음 문제를 맞히면 막아요`;
-  const info = s.arrest ? `🔗 포승줄에 묶였어요! 정답 ${s.arrest.need - s.arrest.got}개를 더 맞히면 풀려나요 · ${Math.ceil(s.arrest.left/1000)}초`
+  const info = s.arrest ? `🔗 ${s.arrestMsg || '포승줄에 묶였어요!'} 정답 ${s.arrest.need - s.arrest.got}개를 더 맞히면 풀려나요 · ${Math.ceil(s.arrest.left/1000)}초`
     : s.check ? `📋 ${s.checkName || '불심 검문'}! ${Math.ceil(s.check/1000)}초 안에 정답을 내면 보스가 기절해요!` : '';
   el('raidCheck').classList.toggle('hidden', !info || !!s.result);
   if(info) el('raidCheck').textContent = info;
   el('qbox').classList.toggle('raid-censor', s.censor > 0 && !s.result);
+  el('qbox').dataset.censor = s.censorLabel || '검열';
   if(s.result && !raidEnding){
     // 보스가 쓰러지는 연출·결과 화면을 잠깐 보여 준 뒤 종료 화면으로
     raidEnding = true;

@@ -262,13 +262,17 @@
           <button type="button" class="active" data-rd="off">끄기</button>
           <button type="button" data-rd="on">켜기</button>
         </div>
+        <div class="toggle-row hidden" id="raidBossRow">
+          <button type="button" class="active" data-boss="world">🎖️ 히틀러</button>
+          <button type="button" data-boss="slime">🟢 슬라임 괴물</button>
+        </div>
         <div class="toggle-row hidden" id="raidDiffRow">
           <button type="button" class="active" data-diff="1">😐 보통</button>
           <button type="button" data-diff="2">😠 어려움</button>
           <button type="button" data-diff="3">🔥 매우 어려움</button>
           <button type="button" data-diff="4">💀 지옥</button>
         </div>
-        <div class="sub hidden" id="raidHint" style="margin:4px 0 0; font-size:.76rem;">정답을 맞히면 보스를 공격하고, 틀리면 보스가 반격합니다. 학생마다 목숨 ♥가 있고, 보스(히틀러)는 권총 사격·선동 연설·게슈타포 체포·친위대 증원·선전 검열·게슈타포 심문·방어선으로 공격하며 총동원령으로 체력을 회복합니다. <b>보스는 전광판 화면이 움직이므로 전광판을 꼭 켜 두세요.</b> 레이드 중에는 팀전·라이벌·아이템전이 꺼지고 제한 시간은 5분으로 고정됩니다. 보스 체력은 참가 인원에 맞춰 자동으로 조절됩니다.</div>
+        <div class="sub hidden" id="raidHint" style="margin:4px 0 0; font-size:.76rem;">정답을 맞히면 보스를 공격하고, 틀리면 보스가 반격합니다. 학생마다 목숨 ♥가 있고, <span id="raidHintSkills"></span> <b>보스는 전광판 화면이 움직이므로 전광판을 꼭 켜 두세요.</b> 레이드 중에는 팀전·라이벌·아이템전이 꺼지고 제한 시간은 5분으로 고정됩니다. 보스 체력은 참가 인원에 맞춰 자동으로 조절됩니다.</div>
       </div>
       <div id="nonRaidOpts">
       <label>팀전 모드 (학생이 참여 화면에서 팀을 고릅니다)</label>
@@ -517,7 +521,12 @@ let itemsModeState = 'off'; // 'off' | 'nanta' | 'spicy'
 let rivalModeState = false;  // 라이벌 대결 (개인전 전용)
 let raidModeState = false;   // 보스 레이드
 let raidDiffState = 1;       // 1 보통 · 2 어려움 · 3 매우 어려움 · 4 지옥
+let raidBossState = 'world';   // 보스: 'world'(이 과목 보스) · 'slime'(슬라임 괴물, 두 과목 공통)
+const RAID_BOSS_SKILLS = { world: '보스(히틀러)는 권총 사격·선동 연설·게슈타포 체포·친위대 증원·선전 검열·게슈타포 심문·방어선으로 공격하며 총동원령으로 체력을 회복합니다.', slime: '보스(슬라임 괴물)는 몸통 박치기·점액 폭발·점액 포박·슬라임 분열·점액 범벅·슬라임 추격·젤리 장벽으로 공격하며 젤리 재생으로 체력을 회복합니다.' };
 function syncRaidModeUI(){
+  el('raidBossRow').classList.toggle('hidden', !raidModeState);
+  el('raidBossRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.boss===raidBossState));
+  el('raidHintSkills').textContent = RAID_BOSS_SKILLS[raidBossState];
   el('raidModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', (b.dataset.rd==='on')===raidModeState));
   el('raidDiffRow').classList.toggle('hidden', !raidModeState);
   el('raidHint').classList.toggle('hidden', !raidModeState);
@@ -607,7 +616,7 @@ el('rivalModeToggle').querySelectorAll('button').forEach(btn=>{
 el('raidModeToggle').querySelectorAll('button').forEach(btn=>{
   btn.onclick = async () => {
     raidModeState = btn.dataset.rd === 'on';
-    const upd = { raid_mode: raidModeState, raid_diff: raidDiffState };
+    const upd = { raid_mode: raidModeState, raid_diff: raidDiffState, raid_boss: raidBossState };
     if(raidModeState){
       teamModeState = false; itemsModeState = 'off'; rivalModeState = false;
       el('teamModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.mode==='off'));
@@ -622,6 +631,13 @@ el('raidModeToggle').querySelectorAll('button').forEach(btn=>{
     }
     syncRaidModeUI();
     await update(roomRef(ROOM,'round'), upd);
+  };
+});
+el('raidBossRow').querySelectorAll('button').forEach(btn=>{
+  btn.onclick = async () => {
+    raidBossState = btn.dataset.boss;
+    syncRaidModeUI();
+    await update(roomRef(ROOM,'round'), { raid_boss: raidBossState });
   };
 });
 el('raidDiffRow').querySelectorAll('button').forEach(btn=>{
@@ -785,6 +801,7 @@ el('startBtn').onclick = async () => {
       rivals,
       raid_mode: raidModeState,
       raid_diff: raidDiffState,
+      raid_boss: raidBossState,
       raid_result: null
     };
     updates[`rooms/${ROOM}/item_events`] = null;
@@ -803,7 +820,7 @@ el('startBtn').onclick = async () => {
     const rivalCount = Math.floor(Object.keys(rivals).length / 2);   // 1:1 경기 수 (홀수면 남는 한 명은 추가 대결)
     const bonusNote = (bonus.length ? ` · 🔥 2배 찬스 ${bonus.length}회 예정` : '')
       + (rivalModeState && !teamModeState ? (rivalCount ? ` · ⚔️ 라이벌 1:1 ${rivalCount}경기 동시 진행 (대진표는 전광판)` : ' · ⚔️ 학생이 2명 이상이어야 라이벌이 배정돼요') : '');
-    const raidNote = raidModeState ? ` · 👹 보스 레이드 (${['쉬움','보통','어려움','매우 어려움','지옥'][raidDiffState]}) — 전광판을 꼭 켜 두세요` : '';
+    const raidNote = raidModeState ? ` · 👹 보스 레이드 (${raidBossState === 'slime' ? '슬라임 괴물 · ' : ''}${['쉬움','보통','어려움','매우 어려움','지옥'][raidDiffState]}) — 전광판을 꼭 켜 두세요` : '';
     msg.className='msg ok'; msg.textContent = `시작! 출제 문항 ${qids.length}개 (선택 범위 ${pool.length}개 중)${bonusNote}${raidNote}`;
   } catch(err){
     msg.className='msg err'; msg.textContent = '시작 실패: ' + err.message;
@@ -824,7 +841,7 @@ el('resetBtn').onclick = async () => {
     updates[`rooms/${ROOM}/players/${pid}`] = null;
   });
   updates[`rooms/${ROOM}/item_events`] = null;
-  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null, team_mode: teamModeState, team_count: teamCountState, items_mode: itemsModeState, rival_mode: rivalModeState, raid_mode: raidModeState, raid_diff: raidDiffState };
+  updates[`rooms/${ROOM}/round`] = { status: 'idle', end_time: null, team_mode: teamModeState, team_count: teamCountState, items_mode: itemsModeState, rival_mode: rivalModeState, raid_mode: raidModeState, raid_diff: raidDiffState, raid_boss: raidBossState };
   updates[`rooms/${ROOM}/raid_hits`] = null;
   updates[`rooms/${ROOM}/raid_state`] = null;
   try{
@@ -1132,7 +1149,7 @@ function renderRoster(){
   el('giveRandomboxBtn').disabled = effective !== 'running' || itemsModeState === 'off';
   // 레이드 진행 중에 난이도를 바꾸면 화면만 바뀌고 진행 중인 판에는 적용되지 않으므로 끝날 때까지 잠근다
   const raidDiffLocked = effective === 'running' && raidModeState;
-  el('raidDiffRow').querySelectorAll('button').forEach(b=>{ b.disabled = raidDiffLocked; b.title = raidDiffLocked ? '레이드가 끝난 뒤에 바꿀 수 있어요' : ''; });
+  ['raidDiffRow','raidBossRow'].forEach(id=> el(id).querySelectorAll('button').forEach(b=>{ b.disabled = raidDiffLocked; b.title = raidDiffLocked ? '레이드가 끝난 뒤에 바꿀 수 있어요' : ''; }));
   const giftOk = effective === 'running' && itemsModeState !== 'off';
 
   const players = Object.entries(playersObj).map(([id,p])=>({id,...p}));
@@ -1318,6 +1335,7 @@ onValue(roomRef(ROOM,'round'), (snap)=>{
     rivalModeState = !!(r && r.rival_mode);
     raidModeState = !!(r && r.raid_mode);
     raidDiffState = (r && Number.isInteger(r.raid_diff)) ? Math.min(4, Math.max(1, r.raid_diff)) : 1;   // 0(쉬움)은 삭제됨
+    raidBossState = (r && r.raid_boss === 'slime') ? 'slime' : 'world';
     el('teamModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', (b.dataset.mode==='on')===teamModeState));
     el('teamCountRow').classList.toggle('hidden', !teamModeState);
     el('teamShuffleRow').classList.toggle('hidden', !teamModeState);
