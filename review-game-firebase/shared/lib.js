@@ -255,11 +255,36 @@ function addUnitGroupCss() {
   .unit-group-head input{ width:18px; height:18px; margin:0; flex:0 0 auto; cursor:pointer; }
   .unit-group-toggle{ flex:1; display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none; min-width:0; }
   .unit-group-toggle .arrow{ display:inline-block; transition:transform .15s; font-size:.75rem; }
-  .unit-group.open .unit-group-toggle .arrow{ transform:rotate(90deg); }
+  .unit-group.open > .unit-group-head .arrow{ transform:rotate(90deg); }
   .unit-group-toggle .cnt{ color:var(--sub, #6b7280); font-size:.78rem; font-weight:400; margin-left:auto; }
   .unit-group-body{ display:none; padding-left:14px; }
-  .unit-group.open .unit-group-body{ display:block; }`;
+  .unit-group.open > .unit-group-body{ display:block; }
+  .unit-group.course > .unit-group-head{ background:#dfe7f8; font-size:.98rem; }
+  .unit-group.course > .unit-group-body .unit-group{ margin-top:4px; }
+  .unit-group.course > .unit-group-body .unit-group-head{ background:#f3f6fc; }`;
   document.head.appendChild(st);
+}
+const COURSE_OF_ROOM = { korea: '한국사2' }; // 방별 과목 서랍 이름(가장 바깥 서랍)
+function makeUnitGroup(key, label, cntText) {
+  const wrap = document.createElement('div');
+  wrap.className = 'unit-group' + (openChapters.has(key) ? ' open' : '');
+  const head = document.createElement('div');
+  head.className = 'unit-group-head';
+  const gcb = document.createElement('input');
+  gcb.type = 'checkbox';
+  gcb.title = label + ' 전체 선택/해제';
+  const toggle = document.createElement('div');
+  toggle.className = 'unit-group-toggle';
+  toggle.innerHTML = `<span class="arrow">▶</span> ${escapeHtml(label)} <span class="cnt">${cntText}</span>`;
+  head.append(gcb, toggle);
+  const body = document.createElement('div');
+  body.className = 'unit-group-body';
+  toggle.onclick = () => {
+    wrap.classList.toggle('open');
+    if (wrap.classList.contains('open')) openChapters.add(key); else openChapters.delete(key);
+  };
+  wrap.append(head, body);
+  return { wrap, body };
 }
 export function renderUnitGroups(box, allUnits, selectedUnits, room, onChange) {
   addUnitGroupCss();
@@ -272,61 +297,62 @@ export function renderUnitGroups(box, allUnits, selectedUnits, room, onChange) {
       groups.get(ch).push(u);
     });
   box.innerHTML = '';
+  // 과목 서랍: 이 방의 범위 전체를 한 번 더 감싼다(예: 한국사 → '한국사2'). 없는 방은 단원 서랍만.
+  const course = COURSE_OF_ROOM[room];
+  let parent = box;
+  if (course) {
+    const total = allUnits.reduce((s, u) => s + u.count, 0);
+    const g = makeUnitGroup('과목:' + course, course, `단원 ${groups.size}개 · ${total}문제`);
+    g.wrap.classList.add('course');
+    box.appendChild(g.wrap);
+    parent = g.body;
+  }
   [...groups.keys()].sort(compareChapters).forEach((ch) => {
     const list = groups.get(ch);
     const total = list.reduce((s, u) => s + u.count, 0);
-    const wrap = document.createElement('div');
-    wrap.className = 'unit-group' + (openChapters.has(ch) ? ' open' : '');
-    const head = document.createElement('div');
-    head.className = 'unit-group-head';
-    const gcb = document.createElement('input');
-    gcb.type = 'checkbox';
-    gcb.title = ch + ' 전체 선택/해제';
-    const toggle = document.createElement('div');
-    toggle.className = 'unit-group-toggle';
-    toggle.innerHTML = `<span class="arrow">▶</span> ${escapeHtml(ch)} <span class="cnt">주제 ${list.length}개 · ${total}문제</span>`;
-    head.append(gcb, toggle);
-    const body = document.createElement('div');
-    body.className = 'unit-group-body';
+    const g = makeUnitGroup(ch, ch, `주제 ${list.length}개 · ${total}문제`);
     list.forEach((u) => {
       const row = document.createElement('label');
       row.className = 'unit-row';
       const checked = selectedUnits.has(u.unit) ? 'checked' : '';
       row.innerHTML = `<input type="checkbox" data-unit="${escapeHtml(u.unit)}" ${checked}> ${escapeHtml(u.unit)} <span class="cnt">${u.count}문제</span>`;
-      body.appendChild(row);
+      g.body.appendChild(row);
     });
-    const childBoxes = Array.from(body.querySelectorAll('input[type=checkbox]'));
-    const syncGroup = () => {
-      const n = childBoxes.filter((cb) => cb.checked).length;
-      gcb.checked = n === childBoxes.length;
-      gcb.indeterminate = n > 0 && n < childBoxes.length;
+    parent.appendChild(g.wrap);
+  });
+  // 서랍(과목·단원) 체크박스는 자기 아래 모든 주제 체크박스를 한 번에 선택·해제한다
+  const groupBoxes = Array.from(box.querySelectorAll('.unit-group')).map((wrap) => ({
+    gcb: wrap.querySelector(':scope > .unit-group-head > input'),
+    leaves: Array.from(wrap.querySelectorAll('input[data-unit]')),
+  }));
+  const syncAll = () => {
+    groupBoxes.forEach(({ gcb, leaves }) => {
+      const n = leaves.filter((cb) => cb.checked).length;
+      gcb.checked = leaves.length > 0 && n === leaves.length;
+      gcb.indeterminate = n > 0 && n < leaves.length;
+    });
+  };
+  box.querySelectorAll('input[data-unit]').forEach((cb) => {
+    cb.onchange = () => {
+      if (cb.checked) selectedUnits.add(cb.dataset.unit);
+      else selectedUnits.delete(cb.dataset.unit);
+      syncAll();
+      onChange && onChange();
     };
-    childBoxes.forEach((cb) => {
-      cb.onchange = () => {
-        if (cb.checked) selectedUnits.add(cb.dataset.unit);
-        else selectedUnits.delete(cb.dataset.unit);
-        syncGroup();
-        onChange && onChange();
-      };
-    });
+  });
+  groupBoxes.forEach(({ gcb, leaves }) => {
     gcb.onchange = () => {
       const on = gcb.checked;
-      childBoxes.forEach((cb) => {
+      leaves.forEach((cb) => {
         cb.checked = on;
         if (on) selectedUnits.add(cb.dataset.unit);
         else selectedUnits.delete(cb.dataset.unit);
       });
-      syncGroup();
+      syncAll();
       onChange && onChange();
     };
-    toggle.onclick = () => {
-      wrap.classList.toggle('open');
-      if (wrap.classList.contains('open')) openChapters.add(ch); else openChapters.delete(ch);
-    };
-    syncGroup();
-    wrap.append(head, body);
-    box.appendChild(wrap);
   });
+  syncAll();
 }
 
 export function poolFromQuestions(questionsObj, units) {
