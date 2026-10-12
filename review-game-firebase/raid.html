@@ -64,10 +64,11 @@ const sctx = sprOff.getContext('2d');
 const POSES = ['idle', 'hit', 'rage', 'hurt', 'down', 'whistle', 'swing', 'rope', 'stun', 'heal', 'guard'];
 // order: 부하 증원·검문(한국사는 호루라기, 세계사는 손가락으로 지목)
 const SPRITE_FILES = {
-  korea: { ...Object.fromEntries(POSES.map(k => [k, 'police_' + k])), order: 'police_whistle' },
-  slime: { ...Object.fromEntries(POSES.map(k => [k, 'slime_' + k])), order: 'slime_whistle' },
+  korea: { ...Object.fromEntries(POSES.map(k => [k, 'police_' + k])), order: 'police_whistle', dying: 'police_hit' },
+  // 슬라임: whistle(점액 폭발·분열) = 점액 뱉기 그림, guard = 젤리 장벽을 두른 그림, dying = 격파 직전 우는 그림
+  slime: { ...Object.fromEntries(POSES.map(k => [k, 'slime_' + k])), order: 'slime_whistle', dying: 'slime_dying' },
   world: { idle: 'hitler_idle', hit: 'hitler_hit', rage: 'hitler_rage', hurt: 'hitler_hurt', down: 'hitler_down', whistle: 'hitler_speech',
-           swing: 'hitler_attack', rope: 'hitler_order', order: 'hitler_order', stun: 'hitler_stun', heal: 'hitler_heal', guard: 'hitler_guard' }
+           swing: 'hitler_attack', rope: 'hitler_order', order: 'hitler_order', stun: 'hitler_stun', heal: 'hitler_heal', guard: 'hitler_guard', dying: 'hitler_hit' }
 };
 const SPRITE_IMGS = {};   // 파일 이름 → 그림 (지금 보스 것만 불러온다)
 function bossSprites(){
@@ -839,7 +840,7 @@ function slimeEyes(g, cx, cy, gap, r, mode){
   }
 }
 function drawSlime(g, p){
-  const pose = policePose(), t = p.t;
+  const pose = policePose() === 'dying' ? 'hit' : policePose(), t = p.t;
   const cx = 350, by = 740;
   const guard = pose === 'guard';
   const color = guard ? '#6cc3d6' : pose === 'hurt' ? '#9ccf5a' : '#74d65c';
@@ -947,7 +948,7 @@ function swingAngle(p, base){
 function policePose(){
   if(S.phase === 'victory' || (S.phase === 'dying' && S.dyingT >= 2.2)) return 'down';
   if(S.phase === 'lose') return 'rage';
-  if(S.phase === 'dying') return 'hit';
+  if(S.phase === 'dying') return 'dying';
   if(bossStunned()) return 'stun';
   if(S.cast) return 'heal';
   if(barricadeUp()) return 'guard';
@@ -2164,6 +2165,7 @@ function drawMinionVector(m){
 // 바리케이드: 보스 앞에 세워지고, 끝나면 사라진다
 function drawBarricade(){
   if(!barricadeUp() || S.phase !== 'fight') return;
+  if(themeKey === 'slime' && useSprite()) return;   // 슬라임은 방어 그림(slime_guard)에 젤리 장벽이 그려져 있다
   const inK = clamp((S.clock - S.barricadeStart) / 250, 0, 1), outK = clamp((S.barricadeUntil - S.clock) / 300, 0, 1);
   const a = Math.min(inK, outK);
   const BI = BARRICADE_IMGS[themeKey];
