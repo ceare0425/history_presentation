@@ -564,8 +564,8 @@ import {
   recencyWeightFn, weightedQueue,
   teamInfo, teamStandings, activeBonus,
   ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
-} from '../shared/lib.js?v=20261012a';
-import { mountTitles } from '../shared/titles.js?v=20261006b';
+} from '../shared/lib.js?v=20261012b';
+import { mountTitles } from '../shared/titles.js?v=20261012a';
 
 const ROOM = 'korea';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
@@ -926,7 +926,7 @@ function renderQuestion(q){
     el('unitTag').textContent = '';
     return;
   }
-  el('unitTag').textContent = (q.chapter ? q.chapter + ' · ' : '') + q.unit + (q.page ? ' · ' + q.page : '');
+  el('unitTag').textContent = (q.course && q.course !== '한국사2' ? q.course + ' · ' : '') + (q.chapter ? q.chapter + ' · ' : '') + q.unit + (q.page ? ' · ' + q.page : '');
   bindPendingStealDefenses(q.id);   // 문제를 기다리는 사이 맞은 강탈은 이 문제를 맞혀야 방어됨
   stopScramble();   // 이전 문제의 뒤섞기 상태를 먼저 정리
   el('qText').innerHTML = q.text.replace(/____/g, '<span class="blank-mark"></span>');
@@ -968,8 +968,8 @@ function assignNextQuestion(){
     currentStartedAt = serverNow();
     currentIsRetry = true;
     lastQid = due.qid;
-    renderQuestion({ id: due.qid, text: currentQuestion.question, unit: currentQuestion.unit, chapter: currentQuestion.chapter, page: currentQuestion.page });
-    el('unitTag').textContent = '🔁 복습 · ' + (currentQuestion.chapter ? currentQuestion.chapter + ' · ' : '') + currentQuestion.unit + (currentQuestion.page ? ' · ' + currentQuestion.page : '');
+    renderQuestion({ id: due.qid, text: currentQuestion.question, unit: currentQuestion.unit, chapter: currentQuestion.chapter, course: currentQuestion.course, page: currentQuestion.page });
+    el('unitTag').textContent = '🔁 복습 · ' + (currentQuestion.course && currentQuestion.course !== '한국사2' ? currentQuestion.course + ' · ' : '') + (currentQuestion.chapter ? currentQuestion.chapter + ' · ' : '') + currentQuestion.unit + (currentQuestion.page ? ' · ' + currentQuestion.page : '');
     return;
   }
   currentIsRetry = false;
@@ -991,7 +991,7 @@ function assignNextQuestion(){
   currentQuestion = questionsObj[qid];
   currentStartedAt = serverNow();
   lastQid = qid;
-  renderQuestion({ id: qid, text: currentQuestion.question, unit: currentQuestion.unit, chapter: currentQuestion.chapter, page: currentQuestion.page });
+  renderQuestion({ id: qid, text: currentQuestion.question, unit: currentQuestion.unit, chapter: currentQuestion.chapter, course: currentQuestion.course, page: currentQuestion.page });
 }
 
 let AVATAR_IDLE = '🧗'; // 입장 시 배정받는 개인 캐릭터로 바뀜

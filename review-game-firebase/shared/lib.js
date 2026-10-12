@@ -193,12 +193,14 @@ export function parseQuestionLine(line) {
 
 // ── 문제 풀 계산 ──
 // chapter: 문제에 저장된 단원(예: "2단원"). 예전 문제처럼 없으면 그리기 때 주제 번호로 추정한다.
+// course: 문제에 저장된 과목(예: "한국사1"). 없으면 DEFAULT_COURSE.
 export function unitsFromQuestions(questionsObj) {
   const map = new Map();
   Object.values(questionsObj || {}).forEach((q) => {
-    const u = map.get(q.unit) || { unit: q.unit, count: 0, chapter: q.chapter || '' };
+    const u = map.get(q.unit) || { unit: q.unit, count: 0, chapter: q.chapter || '', course: q.course || '' };
     u.count++;
     if (!u.chapter && q.chapter) u.chapter = q.chapter;
+    if (!u.course && q.course) u.course = q.course;
     map.set(q.unit, u);
   });
   return [...map.values()];
@@ -264,7 +266,15 @@ function addUnitGroupCss() {
   .unit-group.course > .unit-group-body .unit-group-head{ background:#f3f6fc; }`;
   document.head.appendChild(st);
 }
-const COURSE_OF_ROOM = { korea: '한국사2' }; // 방별 과목 서랍 이름(가장 바깥 서랍)
+// ── 과목(가장 바깥 서랍) ──
+// 과목을 나누는 방만 적는다. 문제에 course가 없으면(예전 문제·과목 칸을 비운 문제) 기본 과목으로 본다.
+export const DEFAULT_COURSE = { korea: '한국사2' };
+export function normalizeCourse(s) {
+  return String(s ?? '').trim().replace(/\s+/g, '');   // '한국사 1' → '한국사1'
+}
+export function courseOfQuestion(room, q) {
+  return (q && normalizeCourse(q.course)) || DEFAULT_COURSE[room] || '';
+}
 function makeUnitGroup(key, label, cntText) {
   const wrap = document.createElement('div');
   wrap.className = 'unit-group' + (openChapters.has(key) ? ' open' : '');
@@ -288,37 +298,42 @@ function makeUnitGroup(key, label, cntText) {
 }
 export function renderUnitGroups(box, allUnits, selectedUnits, room, onChange) {
   addUnitGroupCss();
-  const groups = new Map();
+  // 과목 → 단원 → 주제. 과목을 나누지 않는 방(세계사)은 과목 이름이 ''인 한 묶음이라 단원 서랍만 그린다.
+  const courses = new Map();
   allUnits.slice()
     .sort((a, b) => (unitNumber(a.unit) ?? 999) - (unitNumber(b.unit) ?? 999) || String(a.unit).localeCompare(String(b.unit)))
     .forEach((u) => {
+      const co = courseOfQuestion(room, u);
       const ch = u.chapter || legacyChapterOfUnit(room, u.unit);
+      if (!courses.has(co)) courses.set(co, new Map());
+      const groups = courses.get(co);
       if (!groups.has(ch)) groups.set(ch, []);
       groups.get(ch).push(u);
     });
   box.innerHTML = '';
-  // 과목 서랍: 이 방의 범위 전체를 한 번 더 감싼다(예: 한국사 → '한국사2'). 없는 방은 단원 서랍만.
-  const course = COURSE_OF_ROOM[room];
-  let parent = box;
-  if (course) {
-    const total = allUnits.reduce((s, u) => s + u.count, 0);
-    const g = makeUnitGroup('과목:' + course, course, `단원 ${groups.size}개 · ${total}문제`);
-    g.wrap.classList.add('course');
-    box.appendChild(g.wrap);
-    parent = g.body;
-  }
-  [...groups.keys()].sort(compareChapters).forEach((ch) => {
-    const list = groups.get(ch);
-    const total = list.reduce((s, u) => s + u.count, 0);
-    const g = makeUnitGroup(ch, ch, `주제 ${list.length}개 · ${total}문제`);
-    list.forEach((u) => {
-      const row = document.createElement('label');
-      row.className = 'unit-row';
-      const checked = selectedUnits.has(u.unit) ? 'checked' : '';
-      row.innerHTML = `<input type="checkbox" data-unit="${escapeHtml(u.unit)}" ${checked}> ${escapeHtml(u.unit)} <span class="cnt">${u.count}문제</span>`;
-      g.body.appendChild(row);
+  [...courses.keys()].sort((a, b) => a.localeCompare(b, 'ko', { numeric: true })).forEach((co) => {
+    const groups = courses.get(co);
+    let parent = box;
+    if (co) {
+      const total = [...groups.values()].flat().reduce((s, u) => s + u.count, 0);
+      const g = makeUnitGroup('과목:' + co, co, `단원 ${groups.size}개 · ${total}문제`);
+      g.wrap.classList.add('course');
+      box.appendChild(g.wrap);
+      parent = g.body;
+    }
+    [...groups.keys()].sort(compareChapters).forEach((ch) => {
+      const list = groups.get(ch);
+      const total = list.reduce((s, u) => s + u.count, 0);
+      const g = makeUnitGroup(co + '|' + ch, ch, `주제 ${list.length}개 · ${total}문제`);
+      list.forEach((u) => {
+        const row = document.createElement('label');
+        row.className = 'unit-row';
+        const checked = selectedUnits.has(u.unit) ? 'checked' : '';
+        row.innerHTML = `<input type="checkbox" data-unit="${escapeHtml(u.unit)}" ${checked}> ${escapeHtml(u.unit)} <span class="cnt">${u.count}문제</span>`;
+        g.body.appendChild(row);
+      });
+      parent.appendChild(g.wrap);
     });
-    parent.appendChild(g.wrap);
   });
   // 서랍(과목·단원) 체크박스는 자기 아래 모든 주제 체크박스를 한 번에 선택·해제한다
   const groupBoxes = Array.from(box.querySelectorAll('.unit-group')).map((wrap) => ({
