@@ -529,7 +529,7 @@ function syncRaidModeUI(){
   el('raidHintSkills').textContent = RAID_BOSS_SKILLS[raidBossState];
   el('raidModeToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', (b.dataset.rd==='on')===raidModeState));
   el('raidDiffRow').classList.toggle('hidden', !raidModeState);
-  el('raidHint').classList.toggle('hidden', !raidModeState);
+  el('raidHint').classList.add('hidden');   // 레이드 설명은 안내서(08 보스 레이드)로 옮기고 화면에서는 숨긴다
   el('raidDiffRow').querySelectorAll('button').forEach(b=>b.classList.toggle('active', Number(b.dataset.diff)===raidDiffState));
   el('nonRaidOpts').classList.toggle('hidden', raidModeState);
 }
