@@ -130,7 +130,7 @@
   .raid-hud .rb-hearts .sh{ font-size:.95rem; }
   .raid-flash{ position:fixed; inset:0; z-index:39; pointer-events:none; background:rgba(255,40,30,.45); animation:raidFlash .5s ease-out forwards; }
   @keyframes raidFlash{ from{ opacity:1; } to{ opacity:0; } }
-  .qbox.raid-censor::after{ content:'검열'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  .qbox.raid-censor::after{ content:attr(data-censor); position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     font-size:2rem; font-weight:900; color:#d7263d; text-shadow:0 0 6px #fff;
     background:repeating-linear-gradient(0deg, rgba(10,10,10,.93) 0 16px, transparent 16px 34px); border-radius:14px; pointer-events:none; }
   .qbox{
@@ -1625,7 +1625,7 @@ function raidBlockInfo(){
   if(!raidOn() || !m) return null;
   const now = serverNow();
   if(m.ko > now) return { icon:'💀', text:'쓰러졌어요!', sub:`${Math.ceil((m.ko - now)/1000)}초 뒤에 부활해요` };
-  if(m.ar > now) return { icon:'🔗', text:'게슈타포에게 체포됐어요!', sub:`친구들이 보스를 공격하면 풀려나요 · ${Math.ceil((m.ar - now)/1000)}초 안에 구출되지 못하면 쓰러져요` };
+  if(m.ar > now) return { icon:'🔗', text:(raidBoss && raidBoss.arn) || '게슈타포에게 체포됐어요!', sub:`친구들이 보스를 공격하면 풀려나요 · ${Math.ceil((m.ar - now)/1000)}초 안에 구출되지 못하면 쓰러져요` };
   if(m.st > now) return { icon:'😵', text:'기절했어요!', sub:`${Math.ceil((m.st - now)/1000)}초 뒤에 다시 싸울 수 있어요` };
   return null;
 }
@@ -1664,8 +1664,9 @@ function updateRaidUI(){
   el('raidWarn').classList.toggle('hidden', !(m && m.tg > now));
   const ck = m && m.ck > now;
   el('raidCheck').classList.toggle('hidden', !ck);
-  if(ck) el('raidCheck').textContent = `📋 게슈타포 심문! ${Math.ceil((m.ck - now)/1000)}초 안에 정답을 내면 보스가 기절해요!`;
+  if(ck) el('raidCheck').textContent = `📋 ${(raidBoss && raidBoss.ckn) || '게슈타포 심문'}! ${Math.ceil((m.ck - now)/1000)}초 안에 정답을 내면 보스가 기절해요!`;
   el('qbox').classList.toggle('raid-censor', !!(m && m.ce > now));
+  el('qbox').dataset.censor = (raidBoss && raidBoss.cen) || '검열';
   const b = raidBlockInfo();
   el('raidBlock').classList.toggle('hidden', !b);
   if(b){ el('raidBlockIcon').textContent = b.icon; el('raidBlockText').textContent = b.text; el('raidBlockSub').textContent = b.sub; }
