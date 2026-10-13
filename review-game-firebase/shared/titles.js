@@ -175,6 +175,10 @@ function chapterNumOf(room, q, n){
   const explicit = chapterNumber(q && q.chapter);
   return explicit !== null ? explicit : legacyChapterNum(room, n);
 }
+// 도감 '단원 정복'의 단원 소제목 (학생 도감·관리자 화면 칭호 탭 공용) — 칭호 과목이 정해진 한국사는 '한국사2 1단원'
+export function chapterLabel(room, ch){
+  return (TITLE_COURSE[room] ? TITLE_COURSE[room] + ' ' : '') + ch + '단원';
+}
 export function dayKey(ms = Date.now()){
   const d = new Date(ms);
   return '' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
@@ -456,7 +460,7 @@ export function mountTitles(deps, opts){
       if(!r.hasQ && !r.items.some(t => t.earned)) return;
       if(r.chapter !== lastCh){
         lastCh = r.chapter;
-        if(r.chapter !== null && r.chapter !== undefined) h += `<div class="tt-chap">${escapeHtml((TITLE_COURSE[room] ? TITLE_COURSE[room] + ' ' : '') + r.chapter + '단원')}</div>`;
+        if(r.chapter !== null && r.chapter !== undefined) h += `<div class="tt-chap">${escapeHtml(chapterLabel(room, r.chapter))}</div>`;
       }
       h += `<div class="tt-unit"><div class="tt-unit-name">${escapeHtml(r.unit)}<span class="tt-prog">${r.solved}/${r.total}문제 · 정답률 ${Math.round(r.acc*100)}%</span></div><div class="tt-chips">${r.items.map(t => chip(t, repId)).join('')}</div></div>`;
     });

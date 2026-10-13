@@ -123,6 +123,7 @@
   .tt-sec h4{ margin:0 0 4px; font-size:.92rem; color:var(--sky1); }
   .tt-note{ font-size:.76rem; color:var(--sub); margin-bottom:6px; }
   .tt-unit{ padding:6px 0; border-bottom:1px dashed var(--line); }
+  .tt-chap{ margin:12px 0 2px; padding:3px 9px; border-radius:7px; background:rgba(127,127,127,.13); font-size:.8rem; font-weight:800; }
   .tt-unit-name{ font-size:.82rem; font-weight:700; display:flex; gap:8px; align-items:baseline; }
   .tt-unit-name .tt-prog{ font-weight:400; color:var(--sub); font-size:.74rem; margin-left:auto; white-space:nowrap; }
   .tt-chips{ display:flex; flex-wrap:wrap; gap:5px; margin-top:4px; }
@@ -481,7 +482,7 @@ import {
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS,
   presenceRef, chatRef, isOffline, sweepOfflinePlayers, watchForUpdate
 } from '../shared/lib.js?v=20261012b';
-import { buildTitleBook, RARITY } from '../shared/titles.js?v=20261014b';
+import { buildTitleBook, chapterLabel, RARITY } from '../shared/titles.js?v=20261014c';
 
 const ROOM = 'korea';
 // 학년+반 구분(명단 관리, 학년별 solo_log 기록)을 넣기 전에는 한국사=1학년, 세계사=2학년만 썼으므로,
@@ -1961,8 +1962,13 @@ function renderTitlesBody(book){
   const got = book.all.filter(t=>t.earned).length;
   let h = `<div class="pool-count"><b>받은 칭호</b> ${got} / ${book.all.length}개</div>`;
   h += `<div class="tt-sec"><h4>📚 단원 정복</h4>`;
+  let lastCh = null;
   book.unitRows.forEach(r=>{
     if(!r.hasQ && !r.items.some(t=>t.earned)) return;
+    if(r.chapter !== lastCh){
+      lastCh = r.chapter;
+      if(r.chapter !== null && r.chapter !== undefined) h += `<div class="tt-chap">${escapeHtml(chapterLabel(ROOM, r.chapter))}</div>`;
+    }
     h += `<div class="tt-unit"><div class="tt-unit-name">${escapeHtml(r.unit)}<span class="tt-prog">${r.solved}/${r.total}문제 · 정답률 ${Math.round(r.acc*100)}%</span></div><div class="tt-chips">${r.items.map(titleChip).join('')}</div></div>`;
   });
   h += `</div>`;
