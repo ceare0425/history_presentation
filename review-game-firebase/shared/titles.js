@@ -102,8 +102,8 @@ const UNIT_TITLES = {
 // 단원 전체 칭호: 범위 안의 모든 주제를 🥇달인으로 (chapter를 지정하면 그 단원 번호의 주제만, 비우면 전체)
 const GRAND_TITLES = {
   korea: [
-    { id:'g_1', name:'광복의 증인', chapter:1, min:1, max:19, desc:'1단원(주제 01~19) 모두 🥇달인' },
-    { id:'g_2', name:'민주주의의 증인', chapter:2, min:1, max:16, desc:'2단원(주제 01~16) 모두 🥇달인' }
+    { id:'g_1', name:'광복의 증인', chapter:1, min:1, max:19, desc:'한국사2 1단원(주제 01~19) 모두 🥇달인' },
+    { id:'g_2', name:'민주주의의 증인', chapter:2, min:1, max:16, desc:'한국사2 2단원(주제 01~16) 모두 🥇달인' }
   ],
   world: [
     { id:'g_1', name:'고대 문명 순례자', chapter:1, min:1, max:14, desc:'1단원(주제 01~14) 모두 🥇달인' },
@@ -308,6 +308,7 @@ function addCss(){
   .tt-sec h4{ margin:16px 0 4px; font-size:1rem; }
   .tt-note{ font-size:.78rem; color:#6b7280; margin-bottom:8px; }
   .tt-unit{ padding:8px 0; border-bottom:1px dashed #e5e7eb; }
+  .tt-chap{ margin:14px 0 2px; padding:4px 10px; border-radius:8px; background:#f3f4f6; font-size:.86rem; font-weight:800; color:#374151; }
   .tt-unit-name{ font-size:.86rem; font-weight:700; display:flex; gap:8px; align-items:baseline; }
   .tt-unit-name .tt-prog{ font-weight:400; color:#6b7280; font-size:.78rem; margin-left:auto; white-space:nowrap; }
   .tt-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:5px; }
@@ -449,8 +450,14 @@ export function mountTitles(deps, opts){
     if(!loaded){ body.innerHTML = '<p>불러오는 중…</p>'; return; }
     let h = '';
     h += `<div class="tt-sec"><h4>📚 단원 정복</h4><div class="tt-note">🥉입문: 주제 문제의 30% 맞히기 · 🥈숙련: 70% 맞히기 · 🥇달인: 모든 문제를 맞히고 정답률 80% 이상 (수업 게임 + 혼자 연습 합산)</div>`;
+    // 단원이 바뀔 때마다 소제목 (한국사는 과목명 '한국사2'를 붙인다 — 주제 번호가 단원마다 01부터라 구분이 필요)
+    let lastCh = null;
     book.unitRows.forEach(r => {
       if(!r.hasQ && !r.items.some(t => t.earned)) return;
+      if(r.chapter !== lastCh){
+        lastCh = r.chapter;
+        if(r.chapter !== null && r.chapter !== undefined) h += `<div class="tt-chap">${escapeHtml((TITLE_COURSE[room] ? TITLE_COURSE[room] + ' ' : '') + r.chapter + '단원')}</div>`;
+      }
       h += `<div class="tt-unit"><div class="tt-unit-name">${escapeHtml(r.unit)}<span class="tt-prog">${r.solved}/${r.total}문제 · 정답률 ${Math.round(r.acc*100)}%</span></div><div class="tt-chips">${r.items.map(t => chip(t, repId)).join('')}</div></div>`;
     });
     h += `</div>`;
