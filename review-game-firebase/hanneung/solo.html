@@ -219,7 +219,7 @@ table.era-t{ width:100%; border-collapse:collapse; background:#fff; border-radiu
   </div>
 </section>
 
-<script src="exams.js?v=20261014b"></script>
+<script src="exams.js?v=20261014c"></script>
 <script type="module">
 // Firebase 기록용 — 불러오지 못해도 풀이 자체는 그대로 동작한다
 import { roomRef, push, update, serverNow } from '../shared/lib.js?v=20261012b';
@@ -342,7 +342,7 @@ function renderQ(){
   const graded = instant() && (pick || S.reviewing); // 검토에서는 안 푼 문항도 정답 표시
   $('choices').innerHTML = CIRCLED.map((c, i) => {
     let cls = '';
-    if(graded){ if(i+1 === ans) cls = 'right'; else if(i+1 === pick) cls = 'wrong'; }
+    if(graded){ if(i+1 === ans || (ans === 0 && i+1 === pick)) cls = 'right'; else if(i+1 === pick) cls = 'wrong'; }
     else if(i+1 === pick) cls = 'pick';
     return `<button type="button" class="${cls}" data-c="${i+1}" ${graded?'disabled':''}>${c}</button>`;
   }).join('');
@@ -350,9 +350,9 @@ function renderQ(){
   const fb = $('feedback');
   fb.hidden = !graded;
   if(graded){
-    const ok = pick === ans;
+    const ok = isRight(ans, pick);
     fb.className = 'feedback ' + (ok ? 'ok' : 'bad');
-    fb.textContent = ok ? `⭕ 정답! (${CIRCLED[ans-1]})` : (pick ? `❌ 오답 — 고른 답 ${CIRCLED[pick-1]}, 정답 ${CIRCLED[ans-1]}` : `⬜ 안 푼 문항 — 정답 ${CIRCLED[ans-1]}`);
+    fb.textContent = ok ? `⭕ 정답! (${ansLabel(ans)})` : (pick ? `❌ 오답 — 고른 답 ${CIRCLED[pick-1]}, 정답 ${ansLabel(ans)}` : `⬜ 안 푼 문항 — 정답 ${ansLabel(ans)}`);
   }
   $('prevBtn').disabled = S.idx === 0;
   const last = S.idx === S.list.length - 1;
@@ -364,7 +364,7 @@ function renderGrid(){
   $('qGrid').innerHTML = S.list.map((_, i) => {
     const it = itemAt(i), p = S.picks[i];
     let cls = '';
-    if(p) cls = instant() ? (p === ansOf(it) ? 'right' : 'wrong') : 'done';
+    if(p) cls = instant() ? (isRight(ansOf(it), p) ? 'right' : 'wrong') : 'done';
     else if(S.reviewing) cls = 'wrong';
     if(i === S.idx) cls += ' cur';
     // 문제은행은 회차마다 번호가 겹치므로 푸는 순서(1, 2, 3…)로 보여 준다
@@ -379,7 +379,7 @@ function choose(c){
   if(instant()){
     if(S.picks[S.idx]) return;
     S.picks[S.idx] = c;
-    markWrong(it.eid, it.n, c === ansOf(it));
+    markWrong(it.eid, it.n, isRight(ansOf(it), c));
     syncLog(false);
   } else {
     S.picks[S.idx] = S.picks[S.idx] === c ? 0 : c; // 같은 번호 다시 누르면 선택 취소
@@ -416,7 +416,7 @@ function submit(){
 function finish(){
   clearInterval(timerId);
   const e = exam();
-  S.list.forEach((n, i) => markWrong(S.examId, n, S.picks[i] === e.answers[n-1]));
+  S.list.forEach((n, i) => markWrong(S.examId, n, isRight(e.answers[n-1], S.picks[i])));
   delete store.progress; save();
   syncLog(true);
   showResult();
@@ -424,7 +424,7 @@ function finish(){
 
 function practiceDone(){
   const done = S.picks.filter(Boolean).length;
-  const ok = S.list.filter((_, i) => S.picks[i] === ansOf(itemAt(i))).length;
+  const ok = S.list.filter((_, i) => S.picks[i] && isRight(ansOf(itemAt(i)), S.picks[i])).length;
   alert(`${done}문항 중 ${ok}문항 맞혔어요!`);
   goHome();
 }
@@ -445,7 +445,7 @@ function syncLog(final){
       const it = itemAt(i), p = S.picks[i] || 0;
       arr[it.n-1] = p;
       if(p) answered++;
-      if(p === ansOf(it)){ correct++; score += e.points[it.n-1]; }
+      if((p && isRight(ansOf(it), p)) || (S.mode === 'exam' && !ansOf(it))){ correct++; score += e.points[it.n-1]; }
     });
     if(!answered && S.mode !== 'exam') return;
     const data = {
@@ -470,7 +470,7 @@ function showResult(){
   const byEra = ERAS.map(() => ({ t:0, c:0 }));
   const wrong = [];
   S.list.forEach((n, i) => {
-    const r = S.picks[i] === e.answers[n-1];
+    const r = isRight(e.answers[n-1], S.picks[i]);
     byEra[e.eras[n-1]].t++;
     if(r){ score += e.points[n-1]; ok++; byEra[e.eras[n-1]].c++; }
     else wrong.push(i);
