@@ -158,13 +158,6 @@ table.era-t{ width:100%; border-collapse:collapse; background:#fff; border-radiu
   </div>
 
   <div class="mode">
-    <h2>🧭 시대별 연습</h2>
-    <p>고른 시대의 문제만 풉니다. 하나 고를 때마다 바로 정답을 알려 줍니다.</p>
-    <div class="era-chips" id="eraChips"></div>
-    <button class="btn" id="startEraBtn" type="button">연습 시작</button>
-  </div>
-
-  <div class="mode">
     <h2>🔁 틀린 문제 다시 풀기</h2>
     <p id="wrongInfo">아직 틀린 문제가 없어요.</p>
     <div class="row">
@@ -270,9 +263,6 @@ function renderHome(){
   $('examPick').querySelectorAll('button').forEach(b => b.onclick = () => { examId = b.dataset.exam; renderHome(); });
 
   const e = exam();
-  const counts = ERAS.map((_, i) => e.eras.filter(x => x === i).length);
-  $('eraChips').innerHTML = ERAS.map((name, i) => counts[i] ?
-    `<label><input type="checkbox" value="${i}" checked> ${name} <small>(${counts[i]})</small></label>` : '').join('');
 
   const w = store.wrong[examId] || [];
   $('wrongInfo').textContent = w.length ? `지금까지 틀린 문제 ${w.length}개가 모여 있어요. 맞히면 목록에서 빠집니다.` : '아직 틀린 문제가 없어요.';
@@ -547,8 +537,10 @@ function renderBank(){
   $('startBankBtn').disabled = !n;
   ['bankExams','bankEras'].forEach(id => $(id).querySelectorAll('input').forEach(x => x.onchange = renderBank));
 }
-$('bankAll').onclick = () => { $('bankExams').querySelectorAll('input').forEach(x => x.checked = true); renderBank(); };
-$('bankNone').onclick = () => { $('bankExams').querySelectorAll('input').forEach(x => x.checked = false); renderBank(); };
+// 전체 선택·해제는 회차와 시대를 함께 바꾼다
+function bankSetAll(on){ ['bankExams','bankEras'].forEach(id => $(id).querySelectorAll('input').forEach(x => x.checked = on)); renderBank(); }
+$('bankAll').onclick = () => bankSetAll(true);
+$('bankNone').onclick = () => bankSetAll(false);
 $('bankWrongOnly').onchange = renderBank;
 $('startBankBtn').onclick = () => {
   const p = bankPrefs(), count = +$('bankCount').value;
@@ -567,12 +559,6 @@ if(store.bank){
 $('startExamBtn').onclick = () => {
   if(store.progress && store.progress.examId === examId && !confirm('이어서 풀던 모의고사가 있어요. 새로 시작할까요? (이전 풀이는 지워집니다)')) return;
   start('exam', exam().answers.map((_, i) => i+1), { timer: $('useTimer').checked });
-};
-$('startEraBtn').onclick = () => {
-  const on = [...$('eraChips').querySelectorAll('input:checked')].map(x => +x.value);
-  if(!on.length) return alert('시대를 하나 이상 골라 주세요.');
-  const list = exam().eras.map((era, i) => on.includes(era) ? i+1 : 0).filter(Boolean);
-  start('era', list);
 };
 $('startWrongBtn').onclick = () => start('wrong', (store.wrong[examId] || []).slice());
 $('clearWrongBtn').onclick = () => { if(confirm('틀린 문제 목록을 비울까요?')){ store.wrong[examId] = []; save(); renderHome(); } };
