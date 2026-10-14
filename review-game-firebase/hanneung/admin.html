@@ -155,7 +155,7 @@
   <div class="box" id="modalBox"></div>
 </div>
 
-<script src="exams.js?v=20261014b"></script>
+<script src="exams.js?v=20261014c"></script>
 <script type="module">
 import { roomRef, onValue, remove, escapeHtml } from '../shared/lib.js?v=20261012b';
 
@@ -321,7 +321,7 @@ function renderItems(list){
   const stats = e.answers.map((ans, i) => {
     const dist = [0,0,0,0,0,0]; // 0=무응답, 1~5
     ex.forEach(d => { dist[picksOf(d)[i] || 0]++; });
-    return { n:i+1, ans, era:e.eras[i], pts:e.points[i], dist, rate: pct(dist[ans], ex.length) };
+    return { n:i+1, ans, era:e.eras[i], pts:e.points[i], dist, rate: ans ? pct(dist[ans], ex.length) : 100 };
   });
   // 시대별 평균 정답률
   const eraAgg = ERAS.map((name, k) => {
@@ -337,7 +337,7 @@ function renderItems(list){
         let hot = 0, hotV = 0;
         for(let c = 1; c <= 5; c++) if(c !== x.ans && x.dist[c] > hotV){ hot = c; hotV = x.dist[c]; }
         return `<tr class="click" data-q="${x.n}">
-          <td><b>${x.n}번</b></td><td>${ERAS[x.era]}</td><td>${x.pts}점</td><td>${CIRCLED[x.ans-1]}</td>
+          <td><b>${x.n}번</b></td><td>${ERAS[x.era]}</td><td>${x.pts}점</td><td>${ansLabel(x.ans)}</td>
           <td>${barHtml(x.rate)}</td>
           <td><div class="dist">${[1,2,3,4,5].map(c => `<span class="${c===x.ans?'ans':(c===hot?'hot':'')}">${CIRCLED[c-1]} ${pct(x.dist[c], ex.length)}%</span>`).join('')}</div></td>
           <td>${x.dist[0]}명</td></tr>`;
@@ -353,7 +353,7 @@ function renderItemsAll(box, list){
   ex.forEach(d => {
     const e = EXAMS[d.exam]; if(!e) return;
     const pk = picksOf(d);
-    e.answers.forEach((ans, i) => { const k = e.eras[i]; era[k].t++; if(pk[i] === ans) era[k].c++; });
+    e.answers.forEach((ans, i) => { const k = e.eras[i]; era[k].t++; if(isRight(ans, pk[i])) era[k].c++; });
   });
   const rows = EXAM_IDS.map(id => {
     const xs = ex.filter(d => d.exam === id);
@@ -417,7 +417,7 @@ function openDetail(key){
     const p = pk[i] || 0;
     // 연습 기록은 푼 문항만 표시
     if(d.mode !== 'exam' && !p) return `<button type="button" class="n" data-q="${i+1}" disabled style="opacity:.35">${i+1}<b>-</b></button>`;
-    const cls = !p ? 'n' : p === ans ? 'o' : 'x';
+    const cls = !p ? 'n' : isRight(ans, p) ? 'o' : 'x';
     return `<button type="button" class="${cls}" data-q="${i+1}">${i+1}<b>${p ? CIRCLED[p-1] : '무응답'}</b></button>`;
   }).join('');
   openModal(`
@@ -436,8 +436,8 @@ function openDetail(key){
   $('qgrid').querySelectorAll('button[data-q]').forEach(b => b.onclick = () => {
     $('qgrid').querySelectorAll('button').forEach(x => x.classList.toggle('cur', x === b));
     const n = +b.dataset.q, p = pk[n-1] || 0, ans = e.answers[n-1];
-    const msg = !p ? `무응답 · 정답 ${CIRCLED[ans-1]}` : p === ans ? `⭕ ${CIRCLED[p-1]} 정답` : `❌ 고른 답 ${CIRCLED[p-1]} · 정답 ${CIRCLED[ans-1]}`;
-    $('qview').innerHTML = `<div class="cap" style="color:${p===ans?'var(--ok)':'var(--bad)'}">${n}번 (${ERAS[e.eras[n-1]]}, ${e.points[n-1]}점) — ${msg}</div>${sharedImg(d.exam, n)}<img src="${imgSrc(d.exam, n)}" alt="${n}번 문항">`;
+    const msg = !p ? `무응답 · 정답 ${ansLabel(ans)}` : isRight(ans, p) ? `⭕ ${CIRCLED[p-1]} 정답` : `❌ 고른 답 ${CIRCLED[p-1]} · 정답 ${ansLabel(ans)}`;
+    $('qview').innerHTML = `<div class="cap" style="color:${p && isRight(ans, p)?'var(--ok)':'var(--bad)'}">${n}번 (${ERAS[e.eras[n-1]]}, ${e.points[n-1]}점) — ${msg}</div>${sharedImg(d.exam, n)}<img src="${imgSrc(d.exam, n)}" alt="${n}번 문항">`;
   });
 }
 
@@ -446,7 +446,7 @@ function openQuestion(n, st, total){
   openModal(`
     <div class="mh"><h2>${e.title} ${n}번 · ${ERAS[e.eras[n-1]]} · ${e.points[n-1]}점</h2><span class="sp"></span>
       <button class="btn ghost" id="closeBtn" type="button">닫기</button></div>
-    <div style="margin-bottom:10px;">정답 <b>${CIRCLED[e.answers[n-1]-1]}</b> · 정답률 <b>${st.rate}%</b> (${total}회 중 ${st.dist[e.answers[n-1]]}회) ·
+    <div style="margin-bottom:10px;">정답 <b>${ansLabel(e.answers[n-1])}</b> · 정답률 <b>${st.rate}%</b> (${total}회 중 ${st.dist[e.answers[n-1]]}회) ·
       ${[1,2,3,4,5].map(c => `${CIRCLED[c-1]} ${st.dist[c]}명`).join(' · ')} · 무응답 ${st.dist[0]}명</div>
     <div class="qview">${sharedImg(examId, n)}<img src="${imgSrc(examId, n)}" alt="${n}번 문항"></div>`);
   $('closeBtn').onclick = closeModal;
