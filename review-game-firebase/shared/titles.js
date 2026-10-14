@@ -179,6 +179,34 @@ function chapterNumOf(room, q, n){
 export function chapterLabel(room, ch){
   return (TITLE_COURSE[room] ? TITLE_COURSE[room] + ' ' : '') + ch + '단원';
 }
+// 도감 '단원 정복'을 단원별 서랍(<details>)으로 그린다 (학생 도감·관리자 화면 칭호 탭 공용).
+// openSet: 펼쳐 둔 단원 키 모음 — 다시 그려도 펼친 서랍이 닫히지 않게 data-tt-chap 키로 기억한다.
+export function unitDrawersHtml(room, unitRows, chipHtml, openSet, esc){
+  const groups = [];
+  unitRows.forEach(r => {
+    if(!r.hasQ && !r.items.some(t => t.earned)) return;
+    const key = (r.chapter === null || r.chapter === undefined) ? 'etc' : String(r.chapter);
+    let g = groups[groups.length - 1];
+    if(!g || g.key !== key){ g = { key, chapter: r.chapter, rows: [] }; groups.push(g); }
+    g.rows.push(r);
+  });
+  return groups.map(g => {
+    const items = g.rows.flatMap(r => r.items);
+    const got = items.filter(t => t.earned).length;
+    const label = g.key === 'etc' ? '기타 주제' : chapterLabel(room, g.chapter);
+    const rows = g.rows.map(r => `<div class="tt-unit"><div class="tt-unit-name">${esc(r.unit)}<span class="tt-prog">${r.solved}/${r.total}문제 · 정답률 ${Math.round(r.acc*100)}%</span></div><div class="tt-chips">${r.items.map(chipHtml).join('')}</div></div>`).join('');
+    return `<details class="tt-drawer" data-tt-chap="${g.key}"${openSet && openSet.has(g.key) ? ' open' : ''}><summary class="tt-chap"><span>${esc(label)}</span><span class="tt-chap-cnt">🏅 ${got} / ${items.length} · 주제 ${g.rows.length}개</span></summary><div class="tt-drawer-body">${rows}</div></details>`;
+  }).join('');
+}
+export const UNIT_DRAWER_CSS = `
+  .tt-drawer{ margin:8px 0 0; }
+  .tt-drawer > summary.tt-chap{ list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px; user-select:none; }
+  .tt-drawer > summary.tt-chap::-webkit-details-marker{ display:none; }
+  .tt-drawer > summary.tt-chap::before{ content:'▶'; font-size:.7em; transition:transform .15s; }
+  .tt-drawer[open] > summary.tt-chap::before{ transform:rotate(90deg); }
+  .tt-chap-cnt{ margin-left:auto; font-weight:600; font-size:.78rem; opacity:.75; white-space:nowrap; }
+  .tt-drawer-body{ padding:0 4px 4px; }
+`;
 export function dayKey(ms = Date.now()){
   const d = new Date(ms);
   return '' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
@@ -331,6 +359,8 @@ function addCss(){
   .tt-toast{ background:#111827; color:#fff; border-radius:14px; padding:10px 18px; font-weight:800; font-size:1rem; box-shadow:0 10px 30px rgba(0,0,0,.35); animation:ttIn .35s ease; text-align:center; }
   .tt-toast small{ display:block; font-size:.74rem; font-weight:600; opacity:.8; }
   @keyframes ttIn{ from{ transform:translateY(-14px); opacity:0; } to{ transform:none; opacity:1; } }
+  .tt-drawer > summary.tt-chap{ margin:0; padding:8px 12px; font-size:.9rem; }
+  ${UNIT_DRAWER_CSS}
   `;
   document.head.appendChild(st);
 }
@@ -353,6 +383,7 @@ export function mountTitles(deps, opts){
   let overlay = null;
   let lastRepSig = null;
   let announced = new Set();  // 저장(seen)이 반영되기 전에 같은 칭호 알림이 두 번 뜨지 않게
+  const openChaps = new Set(); // 도감에서 펼쳐 둔 단원 서랍 (기록이 바뀌어 다시 그려도 유지)
   addCss();
 
   const base = () => `titles/${room}/${ident.cls}/${ident.name}`;
@@ -453,17 +484,8 @@ export function mountTitles(deps, opts){
     sub.textContent = `${ident.name} · 받은 칭호 ${got} / ${book.all.length}개 · 대표 칭호: ${info ? info.emoji + ' ' + info.name : '없음'} (받은 칭호를 누르면 대표로 설정)`;
     if(!loaded){ body.innerHTML = '<p>불러오는 중…</p>'; return; }
     let h = '';
-    h += `<div class="tt-sec"><h4>📚 단원 정복</h4><div class="tt-note">🥉입문: 주제 문제의 30% 맞히기 · 🥈숙련: 70% 맞히기 · 🥇달인: 모든 문제를 맞히고 정답률 80% 이상 (수업 게임 + 혼자 연습 합산)</div>`;
-    // 단원이 바뀔 때마다 소제목 (한국사는 과목명 '한국사2'를 붙인다 — 주제 번호가 단원마다 01부터라 구분이 필요)
-    let lastCh = null;
-    book.unitRows.forEach(r => {
-      if(!r.hasQ && !r.items.some(t => t.earned)) return;
-      if(r.chapter !== lastCh){
-        lastCh = r.chapter;
-        if(r.chapter !== null && r.chapter !== undefined) h += `<div class="tt-chap">${escapeHtml(chapterLabel(room, r.chapter))}</div>`;
-      }
-      h += `<div class="tt-unit"><div class="tt-unit-name">${escapeHtml(r.unit)}<span class="tt-prog">${r.solved}/${r.total}문제 · 정답률 ${Math.round(r.acc*100)}%</span></div><div class="tt-chips">${r.items.map(t => chip(t, repId)).join('')}</div></div>`;
-    });
+    h += `<div class="tt-sec"><h4>📚 단원 정복</h4><div class="tt-note">🥉입문: 주제 문제의 30% 맞히기 · 🥈숙련: 70% 맞히기 · 🥇달인: 모든 문제를 맞히고 정답률 80% 이상 (수업 게임 + 혼자 연습 합산) · 단원 이름을 누르면 펼쳐져요</div>`;
+    h += unitDrawersHtml(room, book.unitRows, t => chip(t, repId), openChaps, escapeHtml);
     h += `</div>`;
     h += `<div class="tt-sec"><h4>👑 단원 전체</h4><div class="tt-chips">${book.grand.map(t => chip(t, repId)).join('')}</div><div class="tt-hint">${book.grand.map(t => escapeHtml(t.name + ': ' + t.desc)).join(' · ')}</div></div>`;
     h += `<div class="tt-sec"><h4>🏅 명예 (수업 게임)</h4>`;
@@ -504,6 +526,12 @@ export function mountTitles(deps, opts){
         update(ref(db, base()), { rep: data.rep === id ? null : id }).catch(()=>{});
       }
     });
+    // toggle은 버블링되지 않아 캡처 단계에서 받는다
+    overlay.addEventListener('toggle', (e) => {
+      const d = e.target;
+      if(!d.matches || !d.matches('details[data-tt-chap]')) return;
+      if(d.open) openChaps.add(d.dataset.ttChap); else openChaps.delete(d.dataset.ttChap);
+    }, true);
     document.body.appendChild(overlay);
     renderBook();
   }
