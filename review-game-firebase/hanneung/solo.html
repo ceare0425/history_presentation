@@ -38,6 +38,12 @@ button{ font-family:inherit; cursor:pointer; }
 .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .check{ display:flex; align-items:center; gap:6px; font-size:.88rem; color:var(--sub); }
 .resume{ background:#FFF3CD; border:1.5px solid var(--accent); }
+.bank{ border:1.5px solid var(--main); }
+.sub-label{ display:flex; align-items:center; gap:6px; margin:4px 0 6px; font-size:.85rem; font-weight:700; color:var(--dark); }
+.mini{ padding:3px 9px; border-radius:7px; border:1px solid var(--line); background:#fff; color:var(--sub); font-size:.78rem; }
+.check select{ padding:5px 6px; border-radius:7px; border:1.5px solid var(--line); font-family:inherit; }
+.bank-info{ margin:10px 0 0 !important; font-size:.85rem !important; }
+.section-ttl{ margin:22px 0 8px; font-size:1rem; color:var(--dark); }
 
 /* ── 풀이 화면 ── */
 .top{ position:sticky; top:0; z-index:5; background:var(--dark); color:#fff; display:flex; align-items:center; gap:10px; padding:8px 14px; }
@@ -113,6 +119,24 @@ table.era-t{ width:100%; border-collapse:collapse; background:#fff; border-radiu
   <a class="back-link" href="../student.html">‹ 처음 화면으로</a>
   <h1>🎖️ 한능검 기출 풀기</h1>
   <p class="lead"><b id="whoLabel"></b> · 한국사능력검정시험 실제 기출문제를 시험지 모습 그대로 풀어 봅니다.</p>
+
+  <div class="mode bank">
+    <h2>🏦 문제은행 — 여러 회차를 시대별로</h2>
+    <p>고른 회차들에서 고른 시대의 문제만 모아 섞어서 풉니다. 하나 고를 때마다 바로 정답을 알려 줍니다.</p>
+    <div class="sub-label">회차 <button class="mini" id="bankAll" type="button">전체 선택</button><button class="mini" id="bankNone" type="button">전체 해제</button></div>
+    <div class="era-chips" id="bankExams"></div>
+    <div class="sub-label">시대</div>
+    <div class="era-chips" id="bankEras"></div>
+    <div class="row">
+      <label class="check">문항 수
+        <select id="bankCount"><option value="10">10문항</option><option value="20" selected>20문항</option><option value="30">30문항</option><option value="50">50문항</option><option value="100">100문항</option></select></label>
+      <label class="check"><input type="checkbox" id="bankWrongOnly"> 내가 틀린 문제만</label>
+      <button class="btn" id="startBankBtn" type="button">문제은행 시작</button>
+    </div>
+    <p class="bank-info" id="bankInfo"></p>
+  </div>
+
+  <h3 class="section-ttl">📚 회차를 하나 골라 풀기</h3>
   <div class="exam-pick" id="examPick"></div>
 
   <div class="mode resume" id="resumeBox" hidden>
@@ -162,7 +186,7 @@ table.era-t{ width:100%; border-collapse:collapse; background:#fff; border-radiu
   <div class="solve">
     <div>
       <div class="qcard">
-        <div class="qhead"><span class="era" id="qEra"></span><span id="qPts"></span><span class="pos" id="qPos"></span></div>
+        <div class="qhead"><span class="era" id="qEra"></span><b id="qSrc" hidden></b><span id="qPts"></span><span class="pos" id="qPos"></span></div>
         <img class="qimg" id="qShared" alt="공통 자료" hidden>
         <img class="qimg" id="qImg" alt="">
         <div class="feedback" id="feedback" hidden></div>
@@ -229,7 +253,15 @@ let S = null;   // 현재 풀이 상태
 let timerId = null;
 
 function exam(){ return EXAMS[examId]; }
-function imgSrc(n){ return exam().dir + '/q' + String(n).padStart(2,'0') + '.webp'; }
+function imgSrc(eid, n){ return EXAMS[eid].dir + '/q' + String(n).padStart(2,'0') + '.webp'; }
+// 풀이 목록의 i번째 문항 — 문제은행은 여러 회차가 섞여 있어 '회차:번호' 문자열로 담는다
+function itemAt(i){
+  const v = S.list[i];
+  if(S.mode !== 'bank') return { eid: S.examId, n: v };
+  const [eid, n] = String(v).split(':');
+  return { eid, n: +n };
+}
+function ansOf(it){ return EXAMS[it.eid].answers[it.n-1]; }
 
 // ── 시작 화면 ─────────────────────────────
 function renderHome(){
@@ -264,7 +296,7 @@ function show(view){
 
 // ── 풀이 시작 ─────────────────────────────
 function start(mode, list, opts){
-  S = { mode, examId, list, idx:0, picks: list.map(() => 0), endAt: null, reviewing: false, startedAt: Date.now(), logRef: null };
+  S = { mode, examId, list, idx:0, picks: list.map(() => 0), endAt: null, reviewing: false, startedAt: Date.now(), logRefs: {} };
   if(opts && opts.timer) S.endAt = Date.now() + exam().minutes * 60000;
   if(mode === 'exam') persist();
   openSolve();
@@ -274,9 +306,11 @@ function persist(){
 }
 
 function openSolve(){
-  const e = exam();
   const names = { exam:'실전 모의고사', era:'시대별 연습', wrong:'틀린 문제 다시 풀기' };
-  $('solveTitle').textContent = `${e.title} · ${S.reviewing ? '검토' : names[S.mode]}`;
+  if(S.mode === 'bank'){
+    const k = new Set(S.list.map(v => String(v).split(':')[0])).size;
+    $('solveTitle').textContent = `문제은행 · ${k}개 회차 ${S.list.length}문항`;
+  } else $('solveTitle').textContent = `${exam().title} · ${S.reviewing ? '검토' : names[S.mode]}`;
   $('submitBtn').hidden = !(S.mode === 'exam' && !S.reviewing);
   $('legend').innerHTML = (S.mode === 'exam' && !S.reviewing)
     ? '색칠된 번호 = 답을 고른 문항'
@@ -303,13 +337,15 @@ function tick(){
 function instant(){ return S.mode !== 'exam' || S.reviewing; }
 
 function renderQ(){
-  const e = exam(), n = S.list[S.idx], pick = S.picks[S.idx], ans = e.answers[n-1];
+  const it = itemAt(S.idx), e = EXAMS[it.eid], n = it.n, pick = S.picks[S.idx], ans = e.answers[n-1];
   // [47~48]처럼 여러 문항이 같이 쓰는 공통 자료는 문항 위에 함께 보여 준다
-  const sh = sharedSrc(S.examId, n);
+  const sh = sharedSrc(it.eid, n);
   $('qShared').hidden = !sh;
   if(sh) $('qShared').src = sh;
-  $('qImg').src = imgSrc(n);
+  $('qImg').src = imgSrc(it.eid, n);
   $('qImg').alt = `${e.title} ${n}번 문항`;
+  $('qSrc').hidden = S.mode !== 'bank';
+  $('qSrc').textContent = `제${it.eid}회 ${n}번`;
   $('qEra').textContent = ERAS[e.eras[n-1]];
   $('qPts').textContent = `${e.points[n-1]}점`;
   $('qPos').textContent = `${S.idx+1} / ${S.list.length}`;
@@ -335,25 +371,25 @@ function renderQ(){
 }
 
 function renderGrid(){
-  const e = exam();
-  $('qGrid').innerHTML = S.list.map((n, i) => {
-    const p = S.picks[i];
+  $('qGrid').innerHTML = S.list.map((_, i) => {
+    const it = itemAt(i), p = S.picks[i];
     let cls = '';
-    if(p) cls = instant() ? (p === e.answers[n-1] ? 'right' : 'wrong') : 'done';
+    if(p) cls = instant() ? (p === ansOf(it) ? 'right' : 'wrong') : 'done';
     else if(S.reviewing) cls = 'wrong';
     if(i === S.idx) cls += ' cur';
-    return `<button type="button" class="${cls}" data-i="${i}">${n}</button>`;
+    // 문제은행은 회차마다 번호가 겹치므로 푸는 순서(1, 2, 3…)로 보여 준다
+    return `<button type="button" class="${cls}" data-i="${i}">${S.mode === 'bank' ? i+1 : it.n}</button>`;
   }).join('');
   $('qGrid').querySelectorAll('button').forEach(b => b.onclick = () => go(+b.dataset.i));
 }
 
 function choose(c){
   if(S.reviewing) return;
-  const n = S.list[S.idx];
+  const it = itemAt(S.idx);
   if(instant()){
     if(S.picks[S.idx]) return;
     S.picks[S.idx] = c;
-    markWrong(n, c === exam().answers[n-1]);
+    markWrong(it.eid, it.n, c === ansOf(it));
     syncLog(false);
   } else {
     S.picks[S.idx] = S.picks[S.idx] === c ? 0 : c; // 같은 번호 다시 누르면 선택 취소
@@ -362,10 +398,10 @@ function choose(c){
   renderQ();
 }
 
-function markWrong(n, ok){
-  const set = new Set(store.wrong[S.examId] || []);
+function markWrong(eid, n, ok){
+  const set = new Set(store.wrong[eid] || []);
   if(ok) set.delete(n); else set.add(n);
-  store.wrong[S.examId] = [...set].sort((a,b) => a-b);
+  store.wrong[eid] = [...set].sort((a,b) => a-b);
   save();
 }
 
@@ -390,44 +426,51 @@ function submit(){
 function finish(){
   clearInterval(timerId);
   const e = exam();
-  S.list.forEach((n, i) => markWrong(n, S.picks[i] === e.answers[n-1]));
+  S.list.forEach((n, i) => markWrong(S.examId, n, S.picks[i] === e.answers[n-1]));
   delete store.progress; save();
   syncLog(true);
   showResult();
 }
 
 function practiceDone(){
-  const e = exam();
   const done = S.picks.filter(Boolean).length;
-  const ok = S.list.filter((n, i) => S.picks[i] === e.answers[n-1]).length;
+  const ok = S.list.filter((_, i) => S.picks[i] === ansOf(itemAt(i))).length;
   alert(`${done}문항 중 ${ok}문항 맞혔어요!`);
   goHome();
 }
 
 // ── 선생님 화면(관리자) 기록: rooms/hanneung/solo_log ──────────
 // picks는 1~50번 문항 순서의 50글자 문자열(안 푼 문항은 0). 연습은 첫 답부터 같은 항목을 계속 갱신한다.
+// 문제은행은 회차별로 나눠 회차마다 기록 하나씩 남긴다(관리자 화면이 회차 단위로 보여 주므로).
 function syncLog(final){
   const L = window.hgLog;
   if(!L || !S || S.reviewing) return;
-  const e = EXAMS[S.examId];
-  const arr = e.answers.map(() => 0);
-  S.list.forEach((n, i) => { arr[n-1] = S.picks[i] || 0; });
-  const answered = S.picks.filter(Boolean).length;
-  if(!answered && S.mode !== 'exam') return;
-  let correct = 0, score = 0;
-  S.list.forEach((n, i) => { if(S.picks[i] === e.answers[n-1]){ correct++; score += e.points[n-1]; } });
-  const data = {
-    name: WHO.name.slice(0, 20), cls: `${WHO.grade}-${WHO.cls}`,
-    ts: L.serverNow(), started_ts: S.startedAt, ended: !!final,
-    exam: S.examId, mode: S.mode, picks: arr.join(''),
-    total: S.list.length, answered, correct,
-    dur_sec: Math.round((Date.now() - S.startedAt) / 1000)
-  };
-  if(S.mode === 'exam'){ data.score = score; data.grade = gradeOf(score); data.timed = !!S.endAt; }
-  try{
-    if(S.logRef) L.update(S.logRef, data);
-    else S.logRef = L.push(L.roomRef('hanneung', 'solo_log'), data);
-  }catch(_e){ /* 기록 실패해도 풀이에는 지장 없음 */ }
+  const groups = {};   // { 회차: [목록 위치...] }
+  S.list.forEach((_, i) => { const eid = itemAt(i).eid; (groups[eid] = groups[eid] || []).push(i); });
+  Object.entries(groups).forEach(([eid, idxs]) => {
+    const e = EXAMS[eid];
+    const arr = e.answers.map(() => 0);
+    let answered = 0, correct = 0, score = 0;
+    idxs.forEach(i => {
+      const it = itemAt(i), p = S.picks[i] || 0;
+      arr[it.n-1] = p;
+      if(p) answered++;
+      if(p === ansOf(it)){ correct++; score += e.points[it.n-1]; }
+    });
+    if(!answered && S.mode !== 'exam') return;
+    const data = {
+      name: WHO.name.slice(0, 20), cls: `${WHO.grade}-${WHO.cls}`,
+      ts: L.serverNow(), started_ts: S.startedAt, ended: !!final,
+      exam: eid, mode: S.mode, picks: arr.join(''),
+      total: idxs.length, answered, correct,
+      dur_sec: Math.round((Date.now() - S.startedAt) / 1000)
+    };
+    if(S.mode === 'exam'){ data.score = score; data.grade = gradeOf(score); data.timed = !!S.endAt; }
+    try{
+      if(S.logRefs[eid]) L.update(S.logRefs[eid], data);
+      else S.logRefs[eid] = L.push(L.roomRef('hanneung', 'solo_log'), data);
+    }catch(_e){ /* 기록 실패해도 풀이에는 지장 없음 */ }
+  });
 }
 
 // ── 결과 ─────────────────────────────────
@@ -465,10 +508,59 @@ function review(i){
 
 function goHome(){
   clearInterval(timerId);
-  if(S && S.mode !== 'exam' && S.logRef) syncLog(true); // 연습을 끝내고 나가면 종료 표시
+  if(S && S.mode !== 'exam' && Object.keys(S.logRefs).length) syncLog(true); // 연습을 끝내고 나가면 종료 표시
   S = null;
   renderHome();
+  renderBank();
   show('home');
+}
+
+// ── 문제은행 (여러 회차 × 시대) ──────────────
+// 고른 회차·시대·문항 수는 store.bank에 기억해 두었다가 다음에도 그대로 보여 준다
+function checkedVals(box){ return [...$(box).querySelectorAll('input:checked')].map(x => x.value); }
+function bankPrefs(){
+  const b = store.bank || {};
+  return {
+    exams: $('bankExams').children.length ? checkedVals('bankExams') : (b.exams || EXAM_IDS.slice()),
+    eras: $('bankEras').children.length ? checkedVals('bankEras').map(Number) : (b.eras || ERAS.map((_, i) => i))
+  };
+}
+function bankPool(exams, eras, wrongOnly){
+  const pool = [];
+  exams.forEach(id => {
+    const e = EXAMS[id]; if(!e) return;
+    const w = new Set(store.wrong[id] || []);
+    e.eras.forEach((k, i) => { if(eras.includes(k) && (!wrongOnly || w.has(i+1))) pool.push(id + ':' + (i+1)); });
+  });
+  return pool;
+}
+function renderBank(){
+  const p = bankPrefs(), wrongOnly = $('bankWrongOnly').checked;
+  $('bankExams').innerHTML = EXAM_IDS.map(id =>
+    `<label><input type="checkbox" value="${id}" ${p.exams.includes(id)?'checked':''}> ${id}회</label>`).join('');
+  // 시대 옆 숫자 = 고른 회차들에 들어 있는 그 시대 문항 수
+  const counts = ERAS.map((_, k) => bankPool(p.exams, [k], wrongOnly).length);
+  $('bankEras').innerHTML = ERAS.map((name, k) =>
+    `<label><input type="checkbox" value="${k}" ${p.eras.includes(k)?'checked':''}> ${name} <small>(${counts[k]})</small></label>`).join('');
+  const n = bankPool(p.exams, p.eras, wrongOnly).length;
+  $('bankInfo').textContent = n ? `조건에 맞는 문제 ${n}개 중에서 골라 섞어 냅니다.` : (wrongOnly ? '고른 회차·시대에 틀린 문제가 없어요.' : '회차와 시대를 하나 이상 골라 주세요.');
+  $('startBankBtn').disabled = !n;
+  ['bankExams','bankEras'].forEach(id => $(id).querySelectorAll('input').forEach(x => x.onchange = renderBank));
+}
+$('bankAll').onclick = () => { $('bankExams').querySelectorAll('input').forEach(x => x.checked = true); renderBank(); };
+$('bankNone').onclick = () => { $('bankExams').querySelectorAll('input').forEach(x => x.checked = false); renderBank(); };
+$('bankWrongOnly').onchange = renderBank;
+$('startBankBtn').onclick = () => {
+  const p = bankPrefs(), count = +$('bankCount').value;
+  const pool = bankPool(p.exams, p.eras, $('bankWrongOnly').checked);
+  if(!pool.length) return;
+  for(let i = pool.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  store.bank = { exams: p.exams, eras: p.eras, count, wrongOnly: $('bankWrongOnly').checked }; save();
+  start('bank', pool.slice(0, count));
+};
+if(store.bank){
+  if(store.bank.count) $('bankCount').value = String(store.bank.count);
+  $('bankWrongOnly').checked = !!store.bank.wrongOnly;
 }
 
 // ── 버튼 연결 ─────────────────────────────
@@ -486,7 +578,7 @@ $('startWrongBtn').onclick = () => start('wrong', (store.wrong[examId] || []).sl
 $('clearWrongBtn').onclick = () => { if(confirm('틀린 문제 목록을 비울까요?')){ store.wrong[examId] = []; save(); renderHome(); } };
 $('resumeBtn').onclick = () => {
   const p = store.progress;
-  S = { mode:'exam', examId:p.examId, list:p.list, idx:p.idx||0, picks:p.picks, endAt:p.endAt, reviewing:false, startedAt:p.startedAt||Date.now(), logRef:null };
+  S = { mode:'exam', examId:p.examId, list:p.list, idx:p.idx||0, picks:p.picks, endAt:p.endAt, reviewing:false, startedAt:p.startedAt||Date.now(), logRefs:{} };
   if(S.endAt && S.endAt <= Date.now()){ alert('시간이 이미 끝났어요. 채점 결과를 보여 줄게요.'); return finish(); }
   openSolve();
 };
@@ -511,6 +603,7 @@ document.addEventListener('keydown', ev => {
 
 document.getElementById('whoLabel').textContent = `${WHO.grade}학년 ${WHO.cls}반 ${WHO.name}`;
 renderHome();
+renderBank();
 </script>
 </body>
 </html>
