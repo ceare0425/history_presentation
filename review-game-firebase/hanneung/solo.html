@@ -125,7 +125,7 @@ table.era-t{ width:100%; border-collapse:collapse; background:#fff; border-radiu
     <p>고른 회차들에서 고른 시대의 문제만 모아 섞어서 풉니다. 하나 고를 때마다 바로 정답을 알려 줍니다.</p>
     <div class="sub-label">회차 <button class="mini" id="bankAll" type="button">전체 선택</button><button class="mini" id="bankNone" type="button">전체 해제</button></div>
     <div class="era-chips" id="bankExams"></div>
-    <div class="sub-label">시대</div>
+    <div class="sub-label">시대 <button class="mini" id="bankEraAll" type="button">전체 선택</button><button class="mini" id="bankEraNone" type="button">전체 해제</button></div>
     <div class="era-chips" id="bankEras"></div>
     <div class="row">
       <label class="check">문항 수
@@ -537,10 +537,12 @@ function renderBank(){
   $('startBankBtn').disabled = !n;
   ['bankExams','bankEras'].forEach(id => $(id).querySelectorAll('input').forEach(x => x.onchange = renderBank));
 }
-// 전체 선택·해제는 회차와 시대를 함께 바꾼다
-function bankSetAll(on){ ['bankExams','bankEras'].forEach(id => $(id).querySelectorAll('input').forEach(x => x.checked = on)); renderBank(); }
-$('bankAll').onclick = () => bankSetAll(true);
-$('bankNone').onclick = () => bankSetAll(false);
+// 전체 선택·해제는 회차와 시대를 따로 바꾼다
+function bankSetAll(box, on){ $(box).querySelectorAll('input').forEach(x => x.checked = on); renderBank(); }
+$('bankAll').onclick = () => bankSetAll('bankExams', true);
+$('bankNone').onclick = () => bankSetAll('bankExams', false);
+$('bankEraAll').onclick = () => bankSetAll('bankEras', true);
+$('bankEraNone').onclick = () => bankSetAll('bankEras', false);
 $('bankWrongOnly').onchange = renderBank;
 $('startBankBtn').onclick = () => {
   const p = bankPrefs(), count = +$('bankCount').value;
