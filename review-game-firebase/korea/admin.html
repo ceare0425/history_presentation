@@ -1165,7 +1165,10 @@ el('deleteUnitBtn').onclick = async () => {
   if(!filter){ msg.className='msg err'; msg.textContent='삭제할 주제를 먼저 선택하세요 (전체 일괄 삭제는 지원하지 않습니다).'; return; }
   const ids = Object.entries(questionsObj).filter(([, q]) => q.unit === filter).map(([id]) => id);
   if(!ids.length) return;
-  if(!confirm(`"${filter}" 주제의 문제 ${ids.length}개를 모두 삭제할까요? 되돌릴 수 없습니다.`)) return;
+  if(!confirm(`"${filter}" 주제의 문제 ${ids.length}개를 모두 삭제할까요? 되돌릴 수 없습니다.
+
+⚠ 학생들의 칭호 도감(맞힌 문제·정답률)과 문제별 통계는 문제마다 붙은 번호로 기록됩니다. 지운 뒤 같은 문제를 다시 올려도 새 번호가 붙어 지금까지의 기록과 연결되지 않습니다.
+문제·정답을 고치려면 지우지 말고 '현재 문제 내보내기'로 받은 엑셀을 고쳐 그대로 다시 업로드하세요(정답·페이지·단원은 기존 문제에 반영됩니다).`)) return;
   const updates = {};
   ids.forEach(id => { updates[`rooms/${ROOM}/questions/${id}`] = null; });
   try{
@@ -1181,7 +1184,10 @@ el('deleteAllBtn').onclick = async () => {
   const msg = el('manageMsg');
   const ids = Object.keys(questionsObj);
   if(!ids.length){ msg.className='msg err'; msg.textContent='삭제할 문제가 없습니다.'; return; }
-  if(!confirm(`전체 문제 ${ids.length}개를 모두 삭제할까요? 되돌릴 수 없습니다.`)) return;
+  if(!confirm(`전체 문제 ${ids.length}개를 모두 삭제할까요? 되돌릴 수 없습니다.
+
+⚠ 학생들의 칭호 도감(맞힌 문제·정답률)과 문제별 통계는 문제마다 붙은 번호로 기록됩니다. 지운 뒤 같은 문제를 다시 올려도 새 번호가 붙어 지금까지의 기록과 연결되지 않습니다.
+문제·정답을 고치려면 지우지 말고 '현재 문제 내보내기'로 받은 엑셀을 고쳐 그대로 다시 업로드하세요(정답·페이지·단원은 기존 문제에 반영됩니다).`)) return;
   const updates = {};
   ids.forEach(id => { updates[`rooms/${ROOM}/questions/${id}`] = null; });
   try{
