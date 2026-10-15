@@ -152,6 +152,13 @@
     .sub-list span { display: block; }
     .bogie-box { background: var(--light); border: 1.5px solid var(--border); border-radius: 3px; padding: .28rem .7rem; font-size: .85rem; line-height: 1.7; margin-bottom: .1rem; }
     .bogie-title { font-weight: 700; color: var(--main); margin-right: .4rem; }
+
+    /* 사진 (테두리·그림자 없음) */
+    .photo-row { flex: 1; min-height: 0; display: flex; gap: 1.2rem; align-items: stretch; justify-content: center; width: 100%; }
+    .photo-col { flex: 1; min-width: 0; position: relative; }
+    .photo-col img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+    .img-reveal { opacity: 0; transform: translateY(.4rem); transition: opacity .45s ease, transform .45s ease; }
+    .img-reveal.on { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
@@ -249,8 +256,27 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 5: 1. 청의 성립과 발전 — 발전 건륭제 + 쇠퇴 ══ -->
+<!-- ══ 슬라이드 5: 황제의 은밀한 취미 (사진 3장 순차 공개) ══ -->
 <div class="slide" data-slide="4">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">🎭</span>
+      <span class="browser-title">1. 청의 성립과 발전 · 황제의 은밀한 취미</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">황제의 은밀한 취미</h2>
+      <div class="photo-row">
+        <div class="photo-col img-reveal" data-reveal><img src="./옹정제 코스프레1.jpg" alt=""></div>
+        <div class="photo-col img-reveal" data-reveal><img src="./옹정제 코스프레2.jpg" alt=""></div>
+        <div class="photo-col img-reveal" data-reveal><img src="./옹정제 코스프레3.jpg" alt=""></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 1. 청의 성립과 발전 — 발전 건륭제 + 쇠퇴 ══ -->
+<div class="slide" data-slide="5">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">👑</span>
@@ -280,8 +306,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 6: 2. 청의 다민족 통치 — (1) 만주족 + (2) 강경책 ══ -->
-<div class="slide" data-slide="5">
+<!-- ══ 슬라이드 7: 2. 청의 다민족 통치 — (1) 만주족 + (2) 강경책 ══ -->
+<div class="slide" data-slide="6">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🏯</span>
@@ -311,8 +337,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 7: 2. 청의 다민족 통치 — (2) 회유책 [➌신사] + (3)(4) ══ -->
-<div class="slide" data-slide="6">
+<!-- ══ 슬라이드 8: 2. 청의 다민족 통치 — (2) 회유책 [➌신사] + (3)(4) ══ -->
+<div class="slide" data-slide="7">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🏯</span>
@@ -343,8 +369,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 8: 3. 명·청대 경제와 사회의 변화 — (1) 경제 발전 ══ -->
-<div class="slide" data-slide="7">
+<!-- ══ 슬라이드 9: 3. 명·청대 경제와 사회의 변화 — (1) 경제 발전 ══ -->
+<div class="slide" data-slide="8">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">📦</span>
@@ -375,8 +401,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 9: 3. 명·청대 경제와 사회의 변화 — (2) 문화 발전 [➍양명학] ══ -->
-<div class="slide" data-slide="8">
+<!-- ══ 슬라이드 10: 3. 명·청대 경제와 사회의 변화 — (2) 문화 발전 [➍양명학] ══ -->
+<div class="slide" data-slide="9">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">📚</span>
@@ -407,8 +433,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 10: 개념 확인 문제 1번 — 보기에서 황제 고르기 ══ -->
-<div class="slide" data-slide="9">
+<!-- ══ 슬라이드 11: 개념 확인 문제 1번 — 보기에서 황제 고르기 ══ -->
+<div class="slide" data-slide="10">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -446,8 +472,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 11: 개념 확인 문제 2번 — 빈칸 쓰기 ══ -->
-<div class="slide" data-slide="10">
+<!-- ══ 슬라이드 12: 개념 확인 문제 2번 — 빈칸 쓰기 ══ -->
+<div class="slide" data-slide="11">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -474,8 +500,8 @@
   </div>
 </div>
 
-<!-- ══ 슬라이드 12: 개념 확인 문제 3번 — O/X ⑴⑵⑶⑷ ══ -->
-<div class="slide" data-slide="11">
+<!-- ══ 슬라이드 13: 개념 확인 문제 3번 — O/X ⑴⑵⑶⑷ ══ -->
+<div class="slide" data-slide="12">
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">✏️</span>
@@ -519,7 +545,7 @@
   </button>
   <span class="nav-counter">
     <input type="text" class="slide-input" id="slideInput" value="1" aria-label="슬라이드 번호 입력">
-    / <span id="totalSlides">12</span>
+    / <span id="totalSlides">13</span>
   </span>
   <button class="nav-btn" id="nextBtn" onclick="nextAction()" aria-label="다음">
     <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
