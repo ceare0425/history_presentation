@@ -110,7 +110,8 @@
   .unit-acc-list{ max-height:220px; overflow-y:auto; overflow-x:hidden; border:1px solid var(--line); border-radius:10px; margin:6px 0 14px; }
   .unit-acc-row{ display:flex; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid var(--line); font-size:.82rem; }
   .unit-acc-row:last-child{ border-bottom:none; }
-  .unit-acc-row .uname{ flex:1; }
+  .unit-acc-row .uname{ flex:1; min-width:0; }
+  .unit-acc-row .uchap{ display:block; width:max-content; font-size:.68rem; font-weight:700; color:var(--sky1); background:#eef2fb; padding:1px 7px; border-radius:6px; margin-bottom:2px; }
   .unit-acc-row .ubar-track{ width:80px; height:8px; background:#e6e9f0; border-radius:5px; overflow:hidden; flex-shrink:0; }
   .unit-acc-row .ubar-fill{ display:block; height:100%; border-radius:5px; }
   .unit-acc-row .uacc{ width:44px; text-align:right; flex-shrink:0; font-weight:700; }
@@ -1948,12 +1949,20 @@ function renderSoloModal(){
     .map(([u,x]) => ({ u, c:x.c, w:x.w, t:x.c+x.w, acc: (x.c+x.w) ? Math.round(100*x.c/(x.c+x.w)) : 0 }))
     .filter(r => r.t > 0)
     .sort((a,b) => a.acc - b.acc || b.t - a.t);
+  // 주제 번호가 단원마다 01부터라 주제 이름만으로는 몇 단원인지 헷갈림 → '한국사2 1단원' 꼬리표를 붙임
+  const unitInfo = new Map(allUnits.map(u => [u.unit, u]));
+  const chapLabelOf = (name) => {
+    const q = unitInfo.get(name) || { unit: name };
+    const ch = chapterOfQuestion(ROOM, q);
+    return ch ? `${courseOfQuestion(ROOM, q)} ${ch}`.trim() : '';
+  };
   const unitBox = el('soloModalUnitAcc');
   unitBox.innerHTML = unitRows.length ? unitRows.map(r=>{
     const ratio = r.c / r.t; // 학생 화면과 같이 반올림 전 정답률로 색 결정
     const color = ratio < 0.6 ? 'var(--bad)' : (ratio >= 0.8 ? 'var(--good)' : 'var(--sky2)');
+    const chap = chapLabelOf(r.u);
     return `<div class="unit-acc-row">
-      <span class="uname">${escapeHtml(r.u)}</span>
+      <span class="uname">${chap ? `<span class="uchap">${escapeHtml(chap)}</span>` : ''}${escapeHtml(r.u)}</span>
       <span class="ubar-track"><span class="ubar-fill" style="width:${r.acc}%; background:${color};"></span></span>
       <span class="uacc" style="color:${color};">${r.acc}%</span>
       <span class="ucnt">${r.c}/${r.w}</span>
