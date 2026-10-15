@@ -330,9 +330,10 @@ function addCss(){
   st.textContent = `
   .tt-open-btn{ margin-top:12px; background:#fff7dc; color:#7a5600; border:2px solid #f0d68a; border-radius:12px; padding:10px 16px; font-weight:800; font-size:1rem; cursor:pointer; }
   .tt-open-btn .tt-rep{ display:block; font-size:.78rem; font-weight:700; opacity:.85; margin-top:2px; }
-  .tt-overlay{ position:fixed; inset:0; z-index:9000; background:rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center; padding:16px; }
-  /* 휴대폰은 92vh가 주소창이 숨겨진 큰 화면 기준이라 실제 보이는 높이보다 커서 닫기 버튼이 위로 잘림 → 오버레이(보이는 화면) 높이를 넘지 않게 */
-  .tt-panel{ background:#fff; color:#1f2937; width:min(760px,100%); max-height:92vh; max-height:min(92vh,100%); border-radius:18px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.35); text-align:left; }
+  .tt-overlay{ position:fixed; inset:0; z-index:9000; background:rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center; padding:16px; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  /* 휴대폰은 92vh가 주소창이 숨겨진 큰 화면 기준이라 실제 보이는 높이보다 커서 닫기 버튼이 위로 잘림
+     → 실제 보이는 높이(dvh)·오버레이 높이를 넘지 않게 하고, margin:auto로 가운데 두어 넘치더라도 위쪽이 화면 밖으로 밀리지 않게(오버레이 스크롤로 닿을 수 있게) */
+  .tt-panel{ background:#fff; color:#1f2937; width:min(760px,100%); max-height:92vh; max-height:min(92vh,100%); max-height:min(92dvh,100%); margin:auto; flex-shrink:0; border-radius:18px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.35); text-align:left; }
   .tt-head{ display:flex; align-items:flex-start; gap:10px; padding:16px 18px 10px; border-bottom:1px solid #e5e7eb; }
   .tt-head h3{ margin:0; font-size:1.2rem; }
   .tt-head .tt-sub{ font-size:.84rem; color:#6b7280; margin-top:4px; }
