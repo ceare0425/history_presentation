@@ -273,6 +273,7 @@
   .utable{ width:100%; border-collapse:collapse; font-size:.82rem; }
   .utable td{ padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:middle; word-break:keep-all; overflow-wrap:anywhere; }
   .utable .uname{ font-weight:700; color:var(--ink); }
+  .utable .uchap{ display:block; width:max-content; font-size:.66rem; font-weight:700; color:var(--sky1); background:#eef2fb; padding:1px 7px; border-radius:6px; margin-bottom:2px; }
   .utable .tag{ font-size:.66rem; font-weight:800; border-radius:6px; padding:1px 6px; margin-left:6px; }
   .utable .tag.weak{ background:#fbeaea; color:var(--bad); }
   .utable .tag.master{ background:#e6f7ec; color:var(--good); }
@@ -572,7 +573,8 @@ import {
   roomRef, ref, db, onValue, get, push, update, set, remove, onDisconnect, onChildAdded, onChildChanged, runTransaction, serverNow,
   isCorrect, computeGain, fmtTime, escapeHtml, shuffle, choseongHint,
   unitsFromQuestions, poolFromQuestions, renderUnitGroups, recencyWeightFn, weightedQueue, weightedSample,
-  presenceRef, chatRef, bookmarksRef, bookmarkRef, findLessonForUnit
+  presenceRef, chatRef, bookmarksRef, bookmarkRef, findLessonForUnit,
+  chapterOfQuestion
 } from '../shared/lib.js?v=20261012b';
 import { mountTitles } from '../shared/titles.js?v=20261015a';
 
@@ -2174,6 +2176,9 @@ function renderDash(list, soloObj){
     return { u, t, acc: t ? x.c / t : 0 };
   }).filter(r=>r.t > 0).sort((a,b)=> a.acc - b.acc || b.t - a.t);
 
+  // 주제 번호가 단원마다 01부터라 주제 이름만으로는 몇 단원인지 헷갈림 → '1단원' 꼬리표를 붙임
+  const unitInfo = new Map(allUnits.map(u => [u.unit, u]));
+  const chapLabelOf = (name) => chapterOfQuestion(ROOM, unitInfo.get(name) || { unit: name }) || '';
   const isMaster = r => r.t >= MASTER_MIN && r.acc >= 0.8;
   const isWeak   = r => r.t >= WEAK_MIN   && r.acc < 0.6;
   const conquered = urows.filter(isMaster).map(r=>r.u);
@@ -2305,7 +2310,7 @@ function renderDash(list, soloObj){
                     : isWeak(r)   ? '<span class="tag weak">약점</span>' : '';
           const avail = allUnits.some(x=>x.unit === r.u);
           return `<tr>
-            <td><span class="uname">${escapeHtml(r.u)}</span>${tag}<div style="font-size:.7rem;color:var(--sub)">${r.t}문제</div></td>
+            <td>${chapLabelOf(r.u) ? `<span class="uchap">${escapeHtml(chapLabelOf(r.u))}</span>` : ''}<span class="uname">${escapeHtml(r.u)}</span>${tag}<div style="font-size:.7rem;color:var(--sub)">${r.t}문제</div></td>
             <td style="width:32%"><div class="bar"><i class="${barCls}" style="width:${p}%"></i></div></td>
             <td class="pct">${p}%</td>
             <td><button type="button" class="mini secondary" data-practice-unit="${escapeHtml(r.u)}"${avail ? '' : ' disabled title="지금 이 범위엔 문제가 없어요"'}>연습</button></td>
