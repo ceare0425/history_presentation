@@ -1950,7 +1950,8 @@ function renderSoloModal(){
     .sort((a,b) => a.acc - b.acc || b.t - a.t);
   const unitBox = el('soloModalUnitAcc');
   unitBox.innerHTML = unitRows.length ? unitRows.map(r=>{
-    const color = r.acc < 60 ? 'var(--bad)' : (r.acc >= 85 ? 'var(--good)' : 'var(--gold-dark)');
+    const ratio = r.c / r.t; // 학생 화면과 같이 반올림 전 정답률로 색 결정
+    const color = ratio < 0.6 ? 'var(--bad)' : (ratio >= 0.8 ? 'var(--good)' : 'var(--sky2)');
     return `<div class="unit-acc-row">
       <span class="uname">${escapeHtml(r.u)}</span>
       <span class="ubar-track"><span class="ubar-fill" style="width:${r.acc}%; background:${color};"></span></span>
