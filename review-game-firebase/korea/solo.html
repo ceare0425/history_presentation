@@ -2129,6 +2129,7 @@ async function refreshRecord(force){
     return;
   }
   t.disabled = false;
+  prefetchDashBookmarks();
   const { soloList: list, reviewList } = await loadReviewSessions(force);
   lastAgg = aggregate(list);
   updateReviewQuickBtn(reviewList);
@@ -2337,17 +2338,50 @@ async function loadDashBookmarks(){
   }catch(_e){ return []; }
 }
 
+// 학습 기록 창: 반 전체 기록(solo_log·class_log)이 수 MB로 커져 휴대폰에서 매번 받으면 1~2초 걸림
+// → 화면 진입 때 받아 둔 기록(soloCache·classCache)으로 바로 그리고, 최신 기록은 뒤에서 받아 바뀐 게 있을 때만 다시 그린다.
+let dashBookmarksKey = null; // lastBookmarkItems가 누구(반|이름)의 즐겨찾기인지
+let dashOpenSeq = 0;
+function dashSig(rs, bookmarks){
+  const maxTs = (arr) => arr.reduce((m, e) => Math.max(m, e.ts || 0), 0);
+  return [rs.soloList.length, maxTs(rs.soloList), rs.reviewList.length, maxTs(rs.reviewList),
+          Object.keys(rs.soloObj || {}).length, bookmarks.map(b => b.qid).join(',')].join('|');
+}
+function showDash(rs, bookmarks){
+  lastBookmarkItems = bookmarks;
+  lastDashList = rs.soloList;
+  lastDashReviewList = rs.reviewList;
+  lastDashSoloObj = rs.soloObj;
+  renderDash(lastDashList, lastDashSoloObj);
+}
 function openDash(){
+  const seq = ++dashOpenSeq;
+  const who = classKey() + '|' + myName();
   el('dashPanel').classList.remove('hidden');
-  el('dashBody').innerHTML = '<div class="dash-empty">불러오는 중…</div>';
+  let shownSig = null;
+  if(soloCache && classCache && dashBookmarksKey === who){
+    const rs = { soloObj: soloCache, soloList: mySessions(soloCache), reviewList: mySessions(soloCache).concat(mySessions(classCache)) };
+    showDash(rs, lastBookmarkItems);
+    shownSig = dashSig(rs, lastBookmarkItems);
+  } else {
+    el('dashBody').innerHTML = '<div class="dash-empty">불러오는 중…</div>';
+  }
   Promise.all([loadReviewSessions(true), loadDashBookmarks()]).then(([rs, bookmarks])=>{
-    lastBookmarkItems = bookmarks;
-    lastDashList = rs.soloList;
-    lastDashReviewList = rs.reviewList;
-    lastDashSoloObj = rs.soloObj;
-    renderDash(lastDashList, lastDashSoloObj);
+    if(seq !== dashOpenSeq || el('dashPanel').classList.contains('hidden')) return;
+    dashBookmarksKey = who;
+    if(shownSig !== dashSig(rs, bookmarks)){
+      const body = el('dashBody'), top = body.scrollTop; // 다시 그려도 보던 위치 유지
+      showDash(rs, bookmarks);
+      body.scrollTop = top;
+    }
     refreshRecord(false);
   });
+}
+// 첫 진입 때 즐겨찾기도 미리 받아 두어 학습 기록 창을 처음 열 때부터 바로 그릴 수 있게
+function prefetchDashBookmarks(){
+  const who = classKey() + '|' + myName();
+  if(!classKey() || !myName() || dashBookmarksKey === who) return;
+  loadDashBookmarks().then(b => { if(classKey() + '|' + myName() === who){ lastBookmarkItems = b; dashBookmarksKey = who; } });
 }
 function closeDash(){ el('dashPanel').classList.add('hidden'); }
 
