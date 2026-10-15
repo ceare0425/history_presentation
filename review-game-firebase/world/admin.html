@@ -323,7 +323,7 @@
     <div class="card">
       <h2>② 문제 추가</h2>
       <label>엑셀(xlsx) 파일로 문제 추가<span class="hidden"> (양식 다운로드 후 표에 입력해서 작성하는 게 가장 편합니다)</span></label>
-      <div class="sub hidden" style="margin-top:-6px;">'단원' 칸(예: 1단원, 2단원)을 채우면 출제 범위가 단원별로 묶이고, 단원마다 주제 01부터 다시 번호를 매겨도 됩니다(단, 주제 이름은 단원끼리 겹치지 않게). '페이지' 칸은 선택 입력이며, 이미 등록된 문제와 주제·문제가 같으면 새로 추가하지 않고 페이지 값만 채워 넣습니다. 기존 문제에 페이지를 소급해서 넣고 싶으면 <b>현재 문제 내보내기</b>로 지금 등록된 문제를 받아 페이지 칸만 채운 뒤 그대로 다시 업로드하세요.</div>
+      <div class="sub hidden" style="margin-top:-6px;">'단원' 칸(예: 1단원, 2단원)을 채우면 출제 범위가 단원별로 묶이고, 단원마다 주제 01부터 다시 번호를 매겨도 됩니다(단, 주제 이름은 단원끼리 겹치지 않게). '페이지' 칸은 선택 입력이며, 이미 등록된 문제와 주제·문제가 같으면 새로 추가하지 않고, 정답이 다르면 정답을 고치고 페이지 값이 있으면 페이지를 채워 넣습니다. 기존 문제에 페이지를 소급해서 넣고 싶으면 <b>현재 문제 내보내기</b>로 지금 등록된 문제를 받아 페이지 칸만 채운 뒤 그대로 다시 업로드하세요.</div>
       <input type="file" id="xlsxFileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
       <div class="btnrow">
         <button class="secondary" id="xlsxTemplateBtn" type="button">엑셀 양식 다운로드</button>
@@ -978,7 +978,7 @@ el('xlsxFileInput').onchange = async () => {
       return;
     }
     // 주제+문제가 완전히 같으면 같은 문제로 본다. 이미 있는 문제면 새로 추가하지 않고,
-    // 업로드한 줄에 페이지 값이 있고 기존과 다르면 그 문제의 페이지만 채워 넣는다(그 외 필드는 건드리지 않음).
+    // 업로드한 줄의 정답이 기존과 다르면 정답을 고치고, 페이지 값이 있고 기존과 다르면 페이지를 채워 넣는다(그 외 필드는 건드리지 않음).
     const qSig = (u, q) => `${(u||'').trim()}|__|${(q||'').trim().replace(/\s+/g,' ')}`;
     const sigToId = new Map(Object.entries(questionsObj).map(([id,q]) => [qSig(q.unit, q.question), id]));
     const currentPage = {};
@@ -998,17 +998,33 @@ el('xlsxFileInput').onchange = async () => {
       ids.forEach(id => { updates[`rooms/${ROOM}/questions/${id}/chapter`] = ch; });
       nChapterUpdated += ids.length;
     });
-    let nNew = 0, nPageUpdated = 0, nSkipped = 0;
+    let nNew = 0, nPageUpdated = 0, nSkipped = 0, nAnswerUpdated = 0;
+    const currentAnswers = {};
+    Object.entries(questionsObj).forEach(([id,q]) => { currentAnswers[id] = Array.isArray(q.answers) ? q.answers : Object.values(q.answers || {}); });
+    const answerChanged = new Map(); // id → 바뀌는 내용 설명 (확인 창에 보여 준다)
     for(const { parsed } of items){
       const sig = qSig(parsed.unit, parsed.question);
       const existId = sigToId.get(sig);
       if(existId){
+        let changed = false;
         const newPage = parsed.page || '';
         if(newPage && newPage !== currentPage[existId]){
           updates[`rooms/${ROOM}/questions/${existId}/page`] = newPage;
           currentPage[existId] = newPage;
           nPageUpdated++;
-        } else if(!updates[`rooms/${ROOM}/questions/${existId}/chapter`]) {
+          changed = true;
+        }
+        // 문제는 같고 정답만 바뀐 경우: 정답(여러 개면 순서까지) 그대로 새 값으로 바꾼다
+        const oldAns = (currentAnswers[existId] || []).join(' / ');
+        const newAns = parsed.answers.join(' / ');
+        if(newAns !== oldAns){
+          updates[`rooms/${ROOM}/questions/${existId}/answers`] = parsed.answers;
+          if(!answerChanged.has(existId)) nAnswerUpdated++;
+          answerChanged.set(existId, `${parsed.unit} · ${parsed.question.replace(/\s+/g,' ').slice(0, 30)}: ${oldAns || '(없음)'} → ${newAns}`);
+          currentAnswers[existId] = parsed.answers;
+          changed = true;
+        }
+        if(!changed && !updates[`rooms/${ROOM}/questions/${existId}/chapter`]) {
           nSkipped++;
         }
         continue;
@@ -1019,24 +1035,28 @@ el('xlsxFileInput').onchange = async () => {
       updates[`rooms/${ROOM}/questions/${key}`] = parsed;
       sigToId.set(sig, key);
       currentPage[key] = parsed.page || '';
+      currentAnswers[key] = parsed.answers;
       nNew++;
     }
     const noteParts = [];
+    if(nAnswerUpdated) noteParts.push(`정답 ${nAnswerUpdated}개 수정`);
     if(nPageUpdated) noteParts.push(`페이지 정보 ${nPageUpdated}개 갱신`);
     if(nChapterUpdated) noteParts.push(`단원 정보 ${nChapterUpdated}개 갱신`);
     if(nSkipped) noteParts.push(`변화 없는 문제 ${nSkipped}개는 건너뜀`);
     const note = noteParts.length ? ` (${noteParts.join(', ')})` : '';
-    if(nNew===0 && nPageUpdated===0 && nChapterUpdated===0){
+    if(nNew===0 && nAnswerUpdated===0 && nPageUpdated===0 && nChapterUpdated===0){
       msg.className = nSkipped ? 'msg ok' : 'msg err';
       msg.textContent = nSkipped
         ? `새로 반영할 내용이 없습니다.${note}`
         : '추가할 수 있는 문제가 없습니다. 양식(주제/문제/정답)을 확인하세요.';
       return;
     }
-    const confirmMsg = [nNew ? `새 문제 ${nNew}개 추가` : null, nPageUpdated ? `페이지 정보 ${nPageUpdated}개 갱신` : null, nChapterUpdated ? `단원 정보 ${nChapterUpdated}개 갱신` : null]
+    const confirmMsg = [nNew ? `새 문제 ${nNew}개 추가` : null, nAnswerUpdated ? `정답 ${nAnswerUpdated}개 수정` : null, nPageUpdated ? `페이지 정보 ${nPageUpdated}개 갱신` : null, nChapterUpdated ? `단원 정보 ${nChapterUpdated}개 갱신` : null]
       .filter(Boolean).join(', ');
     const movedNote = movedUnits.length ? `\n\n단원이 바뀌는 주제:\n${movedUnits.join('\n')}` : '';
-    if(!confirm(`"${file.name}"에서 ${confirmMsg}${nSkipped ? ` (변화 없는 문제 ${nSkipped}개는 건너뜀)` : ''}할까요?${movedNote}`)) {
+    const ansList = [...answerChanged.values()];
+    const answerNote = ansList.length ? `\n\n정답이 바뀌는 문제:\n${ansList.slice(0, 15).join('\n')}${ansList.length > 15 ? `\n… 외 ${ansList.length - 15}개` : ''}` : '';
+    if(!confirm(`"${file.name}"에서 ${confirmMsg}${nSkipped ? ` (변화 없는 문제 ${nSkipped}개는 건너뜀)` : ''}할까요?${answerNote}${movedNote}`)) {
       msg.className='msg'; msg.textContent = ''; return;
     }
     await update(ref(db), updates);
