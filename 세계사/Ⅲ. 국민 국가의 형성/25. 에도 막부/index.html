@@ -149,6 +149,16 @@
     .q-num { background: var(--main); color: var(--accent-light); font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: .75rem; min-width: 1.35rem; height: 1.35rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: .18em; }
     .q-text { flex: 1; font-size: .88rem; line-height: 1.8; }
     .bogie-box { background: var(--light); border: 1.5px solid var(--border); border-radius: 3px; padding: .28rem .7rem; font-size: .85rem; line-height: 1.7; margin-bottom: .1rem; }
+
+    /* 더 생각해보기 */
+    .think-def { background: var(--light); border: 1.5px solid var(--border); border-left: 5px solid var(--main); border-radius: 3px; padding: .45rem .9rem; font-size: .9rem; line-height: 1.7; margin-bottom: .55rem; }
+    .think-def b { color: var(--main); }
+    .think-q { font-family: 'Nanum Myeongjo', serif; font-weight: 800; font-size: .95rem; color: var(--dark); margin-bottom: .4rem; }
+    .reason-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .55rem; }
+    .reason-card { border: 1.5px solid var(--border); border-radius: 3px; background: var(--card-bg); overflow: hidden; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s; }
+    .reason-card.on { opacity: 1; transform: none; }
+    .reason-head { background: linear-gradient(90deg, var(--main), var(--dark)); color: var(--accent-light); font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: .88rem; padding: .3rem .7rem; }
+    .reason-body { padding: .45rem .75rem; font-size: .85rem; line-height: 1.65; }
   </style>
 </head>
 <body>
@@ -414,6 +424,38 @@
             <li>네덜란드 상인에게만 데지마에서의 교역 허가 → 서양의 의학, 천문학, 조선술 등 학문 유입(난학)</li>
             <li>➋ <span class="blank" data-reveal>신패</span>를 발급받은 청 상인에게 나가사키에서의 교역 허가</li>
           </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 더 생각해보기: 슈인장 제도 ══ -->
+<div class="slide" data-slide="5t">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">💡</span>
+      <span class="browser-title">더 생각해보기</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">더 생각해보기</h2>
+      <div class="think-def">
+        <b>슈인장</b>이 없으면 대외 무역을 할 수 없음 → 즉, <b>자국 상인의 무역을 제한</b>하는 제도
+      </div>
+      <div class="think-q">❓ 왜 자국 상인의 무역을 막았을까?</div>
+      <div class="reason-grid">
+        <div class="reason-card" data-reveal>
+          <div class="reason-head">① 지방 세력 견제</div>
+          <div class="reason-body">해외 무역은 돈이 됨 → 지방 세력이 성장하는 것을 견제</div>
+        </div>
+        <div class="reason-card" data-reveal>
+          <div class="reason-head">② 불법 무역·왜구 방지</div>
+          <div class="reason-body">불법 무역을 막고 왜구의 활동을 제지</div>
+        </div>
+        <div class="reason-card" data-reveal>
+          <div class="reason-head">③ 해외 세력 견제</div>
+          <div class="reason-body">해외 세력의 영향이 확대되는 것을 견제</div>
         </div>
       </div>
     </div>
