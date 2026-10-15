@@ -2046,6 +2046,7 @@ el('soloRecent').addEventListener('click', (ev)=>{
   el('soloModalStatsPane').classList.remove('hidden');
   el('soloModalTitlesPane').classList.add('hidden');
   el('soloModalTitlesBody').innerHTML = '불러오는 중…';
+  soloTitlesLoadedKey = null; // 내용을 '불러오는 중'으로 비웠으니 같은 학생을 다시 열어도 새로 불러온다
   renderSoloModal();
   loadAndRenderTitlesPane(); // 탭을 누르기 전에 미리 불러와 둔다(위 설명 참고)
 });
