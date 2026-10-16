@@ -156,6 +156,15 @@
   #slideList .photo-gallery { flex-direction: column !important; }
   #slideList .photo-frame { height: auto !important; }
   #slideList .photo-frame img { width: 100% !important; height: auto !important; max-height: none !important; }
+  /* 청 제국 등: photo-col 안의 img가 position:absolute + height:100%라
+     높이가 자동인 모바일 레이아웃에서는 칸 높이가 0이 되어 사진이 사라짐 → 일반 흐름으로 되돌림 */
+  #slideList .photo-row { flex-direction: column !important; height: auto !important; }
+  #slideList .photo-col { position: static !important; }
+  #slideList .photo-col img { position: static !important; width: 100% !important; height: auto !important; }
+  /* 슬라이드 안 사진에 인라인으로 준 height:100% 등도 모바일에선 원래 비율로 */
+  #slideList .browser-content img { max-width: 100% !important; height: auto !important; }
+  /* 투명 상태로 숨겨 두었다가 순차 공개하는 사진·카드는 모바일에선 탭할 대상이 안 보이므로 처음부터 표시 */
+  #slideList .img-reveal, #slideList .reason-card, #slideList .think-result { opacity: 1 !important; transform: none !important; }
   #slideList .grid-2, #slideList .grid-3, #slideList .grid-4 { grid-template-columns: 1fr !important; }
   /* 손가락 터치 정확도를 위해 빈칸류 탭 영역을 살짝 키움 */
   #slideList .blank, #slideList .ox, #slideList .ans-btn, #slideList .q-blank, #slideList .ox-reveal, #slideList .answer-reveal { padding: 0.25em 0.6em !important; }
