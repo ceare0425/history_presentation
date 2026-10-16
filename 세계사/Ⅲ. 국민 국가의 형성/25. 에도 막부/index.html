@@ -159,6 +159,10 @@
     .reason-card.on { opacity: 1; transform: none; }
     .reason-head { background: linear-gradient(90deg, var(--main), var(--dark)); color: var(--accent-light); font-family: 'Nanum Myeongjo', serif; font-weight: 700; font-size: .88rem; padding: .3rem .7rem; }
     .reason-body { padding: .45rem .75rem; font-size: .85rem; line-height: 1.65; }
+    .reason-grid.two { grid-template-columns: repeat(2, 1fr); }
+    .think-result { margin-top: .6rem; background: var(--light); border: 1.5px solid var(--accent); border-radius: 3px; padding: .45rem .9rem; font-size: .9rem; line-height: 1.7; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s; }
+    .think-result.on { opacity: 1; transform: none; }
+    .think-result b { color: var(--main); }
   </style>
 </head>
 <body>
@@ -457,6 +461,34 @@
           <div class="reason-head">③ 해외 세력 견제</div>
           <div class="reason-body">해외 세력의 영향이 확대되는 것을 견제</div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 더 생각해보기: 크리스트교 통제 ══ -->
+<div class="slide" data-slide="5t2">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">💡</span>
+      <span class="browser-title">더 생각해보기</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">더 생각해보기</h2>
+      <div class="think-q">❓ 에도 막부는 왜 크리스트교 확산을 통제했을까?</div>
+      <div class="reason-grid two">
+        <div class="reason-card" data-reveal>
+          <div class="reason-head">① 막부의 권위 위협</div>
+          <div class="reason-body">막부보다 크리스트교의 영향력이 강해질 것을 우려</div>
+        </div>
+        <div class="reason-card" data-reveal>
+          <div class="reason-head">② 식민 지배의 위험</div>
+          <div class="reason-body">선교를 목적으로 들어와 식민 지배로 이어진 사례가 많았음</div>
+        </div>
+      </div>
+      <div class="think-result" data-reveal>
+        ⇒ 그래서 크리스트교 영향력 확대를 막기 위해 <b>포르투갈 상인을 추방</b>함
       </div>
     </div>
   </div>
