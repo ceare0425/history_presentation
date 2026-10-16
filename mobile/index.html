@@ -166,6 +166,30 @@
   /* 투명 상태로 숨겨 두었다가 순차 공개하는 사진·카드는 모바일에선 탭할 대상이 안 보이므로 처음부터 표시 */
   #slideList .img-reveal, #slideList .reason-card, #slideList .think-result { opacity: 1 !important; transform: none !important; }
   #slideList .grid-2, #slideList .grid-3, #slideList .grid-4 { grid-template-columns: 1fr !important; }
+  /* 좌우로 나란히 배치한 슬라이드(초한지 등)는 폰 폭에선 양옆이 잘리므로 위아래로 쌓음 */
+  #slideList .browser-content { flex-direction: column !important; }
+  /* 사진 여러 장을 한 줄에 놓은 슬라이드(로마네스크 등): 모바일 규칙의 max-width:100%가 원본의 50%를 덮어써
+     두 장이 화면 밖으로 밀려나므로 줄바꿈해 한 장씩 보여 줌 */
+  #slideList .browser-content div:has(> img + img) { flex-wrap: wrap !important; height: auto !important; }
+  /* 한능검: 고정 높이 + overflow:hidden 본문, 가로로 늘어선 연표는 폰에서 오른쪽이 잘림 → 높이 자동, 연표는 세로로 */
+  #slideList .slide-body { height: auto !important; overflow: visible !important; flex-direction: column !important; }
+  /* 초한지처럼 고정 높이 상자에 사진 한 장을 넣은 경우, 사진 높이가 자동이 되면서 아래가 비므로 상자 높이도 자동으로 */
+  #slideList .browser-content div[style*="height"]:has(> img:only-child) { height: auto !important; }
+  #slideList .timeline-row { flex-direction: column !important; }
+  /* 표는 칸이 많아 폰 폭을 넘으면 잘리지 않고 옆으로 밀어서 볼 수 있게 (표 감싸개는 스크립트에서 넣음) */
+  #slideList .mtable-wrap { overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
+  /* 03번 등 선택형 문제의 정답 상자(.answer-reveal)는 원본에서 display:none이라 탭할 곳이 없음
+     → 가려진 동안엔 '탭하여 정답 보기' 버튼 모양으로 보여 주고, 탭하면 원래 내용 표시 */
+  #slideList .answer-reveal:not(.on) {
+    display: block !important; cursor: pointer; text-align: center;
+    margin-top: 0.5rem; padding: 0.55rem; border: 1.5px dashed #8B4513; border-radius: 6px;
+    color: #8B4513; font-weight: 700; font-size: 0.9rem;
+  }
+  #slideList .answer-reveal:not(.on) > * { display: none !important; }
+  #slideList .answer-reveal:not(.on)::before { content: '👆 탭하여 정답 보기'; }
+  #slideList .answer-reveal.on { display: block !important; cursor: pointer; }
+  /* 한능검 사진 카드 아래 빈칸처럼 정답이 긴 빈칸은 nowrap이면 카드 밖으로 잘림 → 줄바꿈 허용 */
+  #slideList .blank { white-space: normal !important; max-width: 100%; }
   /* 손가락 터치 정확도를 위해 빈칸류 탭 영역을 살짝 키움 */
   #slideList .blank, #slideList .ox, #slideList .ans-btn, #slideList .q-blank, #slideList .ox-reveal, #slideList .answer-reveal { padding: 0.25em 0.6em !important; }
 </style>
@@ -389,12 +413,48 @@
         // 여기서는 원본 스크립트를 불러오지 않으므로, 기존 onclick은 제거하고
         // 아래 REVEAL_SELECTOR에 대한 공통 위임 클릭 핸들러 하나로 통일해서 처리한다.
         s.querySelectorAll('[onclick]').forEach(el => el.removeAttribute('onclick'));
+        // 칸이 많은 표는 폰 폭을 넘으면 잘리므로 가로 스크롤 감싸개로 한 번 감싼다
+        s.querySelectorAll('table').forEach(t => {
+          const wrap = doc.createElement('div');
+          wrap.className = 'mtable-wrap';
+          t.replaceWith(wrap);
+          wrap.appendChild(t);
+        });
         return `<div class="mslide"><span class="mslide-num">${i + 1} / ${slides.length}</span>${s.outerHTML}</div>`;
       }).join('');
+      fitWideSlides();
+      slideList.querySelectorAll('img').forEach(img => img.addEventListener('load', scheduleFit));
     } catch (err) {
       slideList.innerHTML = `<div class="status-box"><div class="icon">⚠️</div><h3>불러오지 못했습니다</h3><p>${esc(err.message)}</p></div>`;
     }
   }
+
+  // 가계도(04번 한 고조)처럼 rem 고정 폭으로 그린 도식은 CSS만으로는 폰 폭에 못 맞춰 양옆이 잘린다.
+  // 그런 슬라이드만 골라 내용 전체가 들어오도록 축소(zoom)한다. 표는 가로 스크롤로 보므로 계산에서 뺀다.
+  function fitWideSlides() {
+    document.querySelectorAll('#slideList .browser-content').forEach(bc => {
+      bc.style.zoom = '';
+      const box = bc.getBoundingClientRect();
+      if (!box.width) return;
+      let min = box.left, max = box.right;
+      bc.querySelectorAll('*').forEach(el => {
+        if (el.closest('.mtable-wrap')) return;
+        const r = el.getBoundingClientRect();
+        if (!r.width) return;
+        if (r.left < min) min = r.left;
+        if (r.right > max) max = r.right;
+      });
+      const need = max - min;
+      if (need > box.width + 2) bc.style.zoom = (box.width / need * 0.98).toFixed(3);
+    });
+  }
+  let fitQueued = false;
+  function scheduleFit() {
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(() => { fitQueued = false; fitWideSlides(); });
+  }
+  window.addEventListener('resize', scheduleFit);
 
   function truncate(str, n) { return str.length > n ? str.slice(0, n) + '…' : str; }
   function esc(str) {
