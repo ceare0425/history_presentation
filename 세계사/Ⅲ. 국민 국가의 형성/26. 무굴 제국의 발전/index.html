@@ -140,6 +140,8 @@
     .info-list li::before { content: '◆'; color: var(--accent); font-size: .6rem; position: absolute; left: 0; top: .45em; }
     .info-list li.sub { padding-left: 2.3em; }
     .info-list li.sub::before { content: '—'; font-size: .88rem; top: .38em; }
+    .info-list li.sub.plain { padding-left: .6em; }
+    .info-list li.sub.plain::before { content: none; }
 
     /* 퀴즈 */
     .quiz-wrap { display: flex; flex-direction: column; gap: .3rem; margin-top: .15rem; }
@@ -226,8 +228,8 @@
             <li>중앙 집권 체제 강화 → 남부 지역 일부를 제외한 인도 전체 통일</li>
             <li>종교적 관용 정책 실시
               <ul class="info-list" style="margin-top:.2rem;">
-                <li class="sub">힌두교도 관리 임명, 힌두교도와 결혼</li>
-                <li class="sub">비이슬람교도 인두세 지즈야(인두세) 폐지</li>
+                <li class="sub plain">힌두교도 관리 임명, 힌두교도와 결혼</li>
+                <li class="sub plain">비이슬람교도 인두세 지즈야(인두세) 폐지</li>
               </ul>
             </li>
             <li>정복 활동 전개 → 구자라트·벵골 등 정복, 무굴 제국 최대 영토 확보</li>
