@@ -117,6 +117,9 @@
         },
         "photos": {
           ".write": true
+        },
+        "roster": {
+          ".write": true
         }
       }
     }
