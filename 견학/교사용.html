@@ -209,12 +209,15 @@ let unsub = null, unsubR = null, unsubRoster = null;
 let renderScheduled = false;
 /* 버튼을 누르는 도중(손가락·마우스 누름 ~ 뗀 직후)에 보드를 다시 그리면 버튼이 새 요소로 바뀌어
    클릭이 사라진다(승인·반려가 씹힘). 누르고 있는 동안과 뗀 직후 잠깐은 다시 그리기를 미룬다. */
-let pointerHeld = false, holdUntil = 0, deferTimer = null;
-document.addEventListener("pointerdown", () => { pointerHeld = true; }, true);
+let pointerHeld = false, heldSince = 0, holdUntil = 0, deferTimer = null;
+document.addEventListener("pointerdown", () => { pointerHeld = true; heldSince = Date.now(); }, true);
 const releasePointer = () => { pointerHeld = false; holdUntil = Date.now() + 250; };
 document.addEventListener("pointerup", releasePointer, true);
 document.addEventListener("pointercancel", releasePointer, true);
+window.addEventListener("blur", releasePointer);
 function scheduleRender(){
+  // pointerup을 놓쳐도(창 밖에서 떼기 등) 현황판이 영영 멈추지 않도록 3초 넘게 눌린 상태는 무시
+  if (pointerHeld && Date.now() - heldSince > 3000) pointerHeld = false;
   if (pointerHeld || Date.now() < holdUntil){
     if (!deferTimer) deferTimer = setTimeout(() => { deferTimer = null; scheduleRender(); },
       pointerHeld ? 120 : holdUntil - Date.now() + 10);
@@ -546,7 +549,9 @@ function detailHTML(sid, rec){
     const curAt = photoAt[id] || 0;
     // 학생 화면과 같은 기준: 사진은 '현재 사진이 승인됨'이어야 완료
     const approved = hasPhoto && !!rv && rv.status === "ok" && Number(rv.photoAt || 0) === Number(curAt);
-    const done = m.s.map((lbl,i)=> lbl === "사진" ? approved : !!stepVal(steps, `${id}:${i}`));
+    // doneSteps: 학생 화면이 계산한 완료 목록(퀴즈는 정답일 때만). 옛 기록엔 없어서 그때만 답 유무로 추정
+    const done = m.s.map((lbl,i)=> lbl === "사진" ? approved
+      : rec.doneV ? !!(rec.doneSteps || {})[`${id}:${i}`] : !!stepVal(steps, `${id}:${i}`));
     const nDone = done.filter(Boolean).length;
     const stamped = !!stamps[id];
     const answers = m.s.map((lbl,i) => {

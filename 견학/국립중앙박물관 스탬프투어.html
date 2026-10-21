@@ -377,11 +377,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v41</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v42</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v41");
+DBG("모듈 시작 v42");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 /* serverChecked: 서버에 저장된 내 기록을 확인(이어받기)하기 전에는 서버로 올리지 않는다
@@ -620,14 +620,20 @@ async function handlePhoto(itemId, file, onState){
   persist();
   onState("사진 확인됨 · 업로드 중…", "");
   refreshCardById(itemId);
-  uploadPhoto(itemId, onState);
+  uploadPhoto(itemId);
 }
 const uploading = new Set();
 let photoRetryTimer = null;
-async function uploadPhoto(itemId, onState){
+/* 업로드 상태 문구는 지금 화면에 있는 카드에서 찾아 바꾼다 — 자동 재시도(호출한 카드 없음)나
+   업로드 도중 카드가 다시 그려진 경우에도 "업로드 실패" 같은 옛 문구가 남지 않게 */
+function uplState(itemId, msg, cls){
+  const el = document.querySelector(`#card-${itemId} [data-uplstate]`);
+  if (el){ el.textContent = msg || ""; el.className = "uplstate" + (cls ? " " + cls : ""); }
+}
+async function uploadPhoto(itemId){
   const p = state.photos[itemId];
   if (!p || p.uploaded || !p.data || kicked) return;
-  if (!FB || !state.ident){ if (onState) onState("업로드 대기 (인터넷 연결되면 자동 전송)", "wait"); return; }
+  if (!FB || !state.ident){ uplState(itemId, "업로드 대기 (인터넷 연결되면 자동 전송)", "wait"); return; }
   if (uploading.has(p)) return;
   uploading.add(p);
   try {
@@ -635,11 +641,11 @@ async function uploadPhoto(itemId, onState){
     p.uploaded = true;
     delete p.data;
     persist();
-    if (onState) onState("업로드됨 · 선생님 승인 대기 중", "wait");
+    if (state.photos[itemId] === p) uplState(itemId, "업로드됨 · 선생님 승인 대기 중 (승인돼야 스탬프가 열려요)", "wait");
     refreshCardById(itemId);
     flushSync();
   } catch (e) {
-    if (onState) onState("업로드 실패 — 15초 뒤 자동으로 다시 시도해요", "no");
+    if (state.photos[itemId] === p) uplState(itemId, "업로드 실패 — 15초 뒤 자동으로 다시 시도해요", "no");
     clearTimeout(photoRetryTimer);
     photoRetryTimer = setTimeout(retryPhotos, 15000);
   } finally { uploading.delete(p); }
@@ -656,7 +662,7 @@ function slimPhotos(){
 function retryPhotos(){
   Object.keys(state.photos || {}).forEach(id => {
     const p = state.photos[id];
-    if (p && !p.uploaded && p.data) uploadPhoto(id, null);
+    if (p && !p.uploaded && p.data) uploadPhoto(id);
   });
 }
 function refreshCardById(id){ try { refreshCard(id); } catch (e) {} }
@@ -745,12 +751,15 @@ async function flushSync(){
   for (const [id, p] of Object.entries(state.photos || {})) {
     if (p && p.uploaded) photoAt[id] = p.at || 0;
   }
+  // 교사용은 퀴즈 정답을 모르므로, 완료된 세부 미션 목록을 같이 보낸다 (틀린 답을 고른 퀴즈가 ✓로 보이지 않게)
+  const doneSteps = {};
+  ALL.forEach(it => it.steps.forEach((_, i) => { if (stepDone(it, i)) doneSteps[`${it.id}:${i}`] = true; }));
   const payload = {
     name: i.name, grade: i.grade, cls: `${i.grade}-${i.cls}`, num: i.num, avatar: i.avatar || "",
     startedAt: state.startedAt || Date.now(), updatedAt: Date.now(),
     stampCount: count(), stepDone: stepsDone(), stepTotal: STEP_TOTAL,
     done: count() >= TOTAL,
-    stamps: state.stamps || {}, steps: state.steps || {}, answers,
+    stamps: state.stamps || {}, steps: state.steps || {}, answers, doneSteps, doneV: 1,   // doneV: 빈 객체는 서버에 저장되지 않으므로 '목록을 보내는 버전'임을 따로 표시
     photoAt, photoCount: Object.keys(photoAt).length,
     mvp: state.mvp || "", review: (state.review || "").slice(0, 2000),
   };
@@ -1316,6 +1325,21 @@ async function checkRosterAllowed(cls, num, name){
   } catch (e) {}
   return true;
 }
+/* 같은 반·번호로 이미 '다른 이름'이 참여 중이면 막는다 — 번호를 잘못 넣은 학생이 남의 기록을 이어받아
+   (스탬프·사진까지) 덮어쓰는 것 방지. 같은 이름이면 기기를 바꿔 다시 들어온 것이므로 통과. 조회 실패 시 통과. */
+async function checkSidFree(cls, num, name){
+  try {
+    if (!FB) return true;
+    const snap = await Promise.race([
+      FB.get(FB.ref(FB.db, `museum/${TOUR}/students/${GRADE}-${cls}-${num}`)),
+      new Promise((_, rj) => setTimeout(() => rj(new Error("timeout")), 5000)),
+    ]);
+    const rec = snap.val();
+    const norm = s => String(s || "").replace(/\s+/g, "");
+    if (rec && rec.name && norm(rec.name) !== norm(name.slice(0, 10))) return false;
+  } catch (e) {}
+  return true;
+}
 async function startFromGate(){
   DBG("클릭됨 → 시작 시도");
   if (!gateValid()){
@@ -1326,12 +1350,19 @@ async function startFromGate(){
   if (g.go.disabled) return;
   g.go.disabled = true;
   if (g.err) g.err.textContent = "명단 확인 중…";
-  const allowed = await checkRosterAllowed(String(+g.cls.value), String(+g.num.value), g.name.value.trim());
+  const cls0 = String(+g.cls.value), num0 = String(+g.num.value), name0 = g.name.value.trim();
+  const allowed = await checkRosterAllowed(cls0, num0, name0);
+  const free = allowed && await checkSidFree(cls0, num0, name0);
   g.go.disabled = false;
   if (g.err) g.err.textContent = "";
   if (!allowed){
     if (g.err) g.err.textContent = "명단에 없어요. 반 · 번호 · 이름을 정확히 입력했는지 확인하거나 선생님께 문의하세요.";
     g.name.focus();
+    return;
+  }
+  if (!free){
+    if (g.err) g.err.textContent = "이 반 · 번호로 이미 다른 이름이 참여 중이에요. 반 · 번호를 다시 확인하고, 맞다면 선생님께 문의하세요.";
+    g.num.focus();
     return;
   }
   try {
