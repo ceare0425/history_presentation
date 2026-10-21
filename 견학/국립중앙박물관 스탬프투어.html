@@ -377,11 +377,11 @@
   </div>
 </section>
 
-<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v39</span></div>
+<div class="foot" id="foot" hidden>국립중앙박물관 · 상설전시관 · 스탬프 투어 학습지 · <span id="ver">v40</span></div>
 
 <script type="module">
 function DBG(s){ try { console.log("[스탬프투어]", s); } catch (e) {} }
-DBG("모듈 시작 v39");
+DBG("모듈 시작 v40");
 /* ══════════ Firebase (선택적·비차단 · 로딩 실패·차단·오프라인이어도 앱은 로컬로 정상 동작) ══════════ */
 let FB = null;
 const FB_CFG = {
@@ -393,7 +393,7 @@ const FB_CFG = {
   messagingSenderId: "663174446158",
   appId: "1:663174446158:web:314c67ed3a3f69c0bed71f",
 };
-Promise.all([
+const FB_READY = Promise.all([
   import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"),
   import("https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"),
 ]).then(([appMod, dbm]) => {
@@ -1173,11 +1173,37 @@ function gateValid(){
   const name = g.name && g.name.value.trim();
   return !!(cls && num && name && +cls >= 1 && +num >= 1);
 }
-function startFromGate(){
+/* 교사용.html '학생 명단 관리'에서 등록한 museum/{TOUR}/roster/{반}/{번호} = 이름 명단으로 대조한다.
+   명단을 한 명도 등록하지 않은 반은 제한 없이 통과, 명단 조회 실패(오프라인 등) 시에도 통과시킨다. */
+async function checkRosterAllowed(cls, num, name){
+  try {
+    await Promise.race([FB_READY, new Promise(r => setTimeout(r, 5000))]);
+    if (!FB) return true;
+    const snap = await Promise.race([
+      FB.get(FB.ref(FB.db, `museum/${TOUR}/roster/${cls}`)),
+      new Promise((_, rj) => setTimeout(() => rj(new Error("timeout")), 5000)),
+    ]);
+    const roster = snap.val();
+    if (roster && Object.keys(roster).length > 0 && String(roster[num] || "").trim() !== name) return false;
+  } catch (e) {}
+  return true;
+}
+async function startFromGate(){
   DBG("클릭됨 → 시작 시도");
   if (!gateValid()){
     if (g.err) g.err.textContent = "반 · 번호 · 이름을 모두 입력해 주세요.";
     DBG("입력 미완료로 중단");
+    return;
+  }
+  if (g.go.disabled) return;
+  g.go.disabled = true;
+  if (g.err) g.err.textContent = "명단 확인 중…";
+  const allowed = await checkRosterAllowed(String(+g.cls.value), String(+g.num.value), g.name.value.trim());
+  g.go.disabled = false;
+  if (g.err) g.err.textContent = "";
+  if (!allowed){
+    if (g.err) g.err.textContent = "명단에 없어요. 반 · 번호 · 이름을 정확히 입력했는지 확인하거나 선생님께 문의하세요.";
+    g.name.focus();
     return;
   }
   try {

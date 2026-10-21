@@ -136,11 +136,13 @@
   </div>
 
   <details class="roster">
-    <summary>반 명단 붙여넣기 (선택) — 참여 안 한 학생까지 표시</summary>
+    <summary>학생 명단 관리 — 명단에 있는 학생만 입장 · 참여 안 한 학생까지 표시</summary>
     <div class="body">
-      <div class="hint">한 줄에 한 명. <code>학년-반 번호 이름</code> 순서 (예: <code>2-3 14 홍길동</code>). 탭·쉼표·공백 어떤 구분자든 됩니다. 저장은 이 브라우저에만 됩니다.</div>
-      <textarea id="rosterText" placeholder="2-3 1 김민준&#10;2-3 2 이서연&#10;2-3 3 박도윤"></textarea>
-      <div style="margin-top:.5rem"><button class="btn pri" id="rosterSave">명단 적용</button> <button class="btn" id="rosterClear">지우기</button></div>
+      <div class="hint">한 줄에 한 명. <code>학번 이름</code> 순서 (예: <code>20314 홍길동</code> = 2학년 3반 14번). 학번은 학년 1자리 + 반 2자리 + 번호 2자리입니다. 탭·쉼표·공백 어떤 구분자든 되고, 엑셀에서 학번·이름 열을 복사해 붙여넣어도 됩니다.</div>
+      <div class="hint">저장하면 이 투어 코드의 서버 명단이 이 내용으로 <b>교체</b>됩니다. 명단이 등록된 반은 <b>반·번호·이름이 모두 일치하는 학생만</b> 투어를 시작할 수 있고, 명단이 없는 반은 제한 없이 들어옵니다.</div>
+      <textarea id="rosterText" placeholder="20301 김민준&#10;20302 이서연&#10;20303 박도윤"></textarea>
+      <div style="margin-top:.5rem"><button class="btn pri" id="rosterSave">명단 저장</button> <button class="btn" id="rosterClear">명단 삭제</button></div>
+      <div class="hint" id="rosterMsg"></div>
     </div>
   </details>
 
@@ -191,15 +193,14 @@ const STEP_TOTAL = ORDER.reduce((a,id)=>a+META[id].s.length,0);
 
 let TOUR = (new URLSearchParams(location.search).get("tour") || localStorage.getItem("nmk-teacher-tour") || "default").replace(/[.#$\[\]\/]/g,"");
 document.getElementById("tourInput").value = TOUR;
-let roster = JSON.parse(localStorage.getItem("nmk-teacher-roster") || "[]");
-document.getElementById("rosterText").value = localStorage.getItem("nmk-teacher-roster-raw") || "";
+let roster = [];     // [{cls:"2-3", num:"14", name}] — museum/{TOUR}/roster 에서 실시간으로 채워짐
 let sortMode = "name";
 let expanded = new Set();
 let students = {};   // sid -> record
 let reviews = {};    // sid -> { itemId -> {status,reason,at,photoAt} }
 let photosAll = {};  // sid -> { itemId -> dataURL(base64) } — 펼친 학생만 채워짐 (지연 로딩)
 let photoSubs = {};  // sid -> unsubscribe (펼쳐진 학생의 사진 실시간 구독만 유지)
-let unsub = null, unsubR = null;
+let unsub = null, unsubR = null, unsubRoster = null;
 
 /* Firebase 콜백은 짧은 시간에 몰려서 여러 번 올 수 있다(예: "전체 펼치기"로 학생 수십 명의
    사진 구독이 한꺼번에 시작되는 경우). 매번 즉시 render()하면 보드 전체를 그때마다 다시 그려
@@ -215,6 +216,7 @@ function scheduleRender(){
 function subscribe(){
   if (unsub) unsub();
   if (unsubR) unsubR();
+  if (unsubRoster) unsubRoster();
   Object.keys(photoSubs).forEach(unsubscribePhotos);
   photosAll = {};
   expanded.clear();
@@ -230,6 +232,16 @@ function subscribe(){
     document.getElementById("board").innerHTML = `<div class="empty"><div class="big">🔒</div>데이터를 읽지 못했습니다.<br><small>${err.message}</small></div>`;
   });
   unsubR = onValue(ref(db, `museum/${TOUR}/reviews`), snap => { reviews = snap.val() || {}; scheduleRender(); }, () => {});
+  let rosterFirst = true;
+  unsubRoster = onValue(ref(db, `museum/${TOUR}/roster`), snap => {
+    roster = rosterFromDB(snap.val());
+    const ta = document.getElementById("rosterText");
+    // 처음 불러올 때와, 선생님이 편집 중이 아닐 때만 입력칸을 서버 내용으로 맞춘다
+    if (rosterFirst || document.activeElement !== ta) ta.value = rosterToText(roster);
+    rosterFirst = false;
+    document.getElementById("rosterMsg").textContent = roster.length ? `등록된 학생 ${roster.length}명 (명단이 있는 반은 입장 제한 적용 중)` : "등록된 명단이 없습니다 (누구나 입장 가능)";
+    scheduleRender();
+  }, () => {});
 }
 /* 사진은 학생 수 × 유물 수만큼 있으면 용량이 커서(예: 50명×20장 ≈ 100MB+),
    전체를 한번에 구독하지 않고 펼쳐본 학생의 사진만 그때그때 구독한다.
@@ -305,23 +317,58 @@ document.getElementById("expandAll").addEventListener("click", () => {
   render();
 });
 document.getElementById("csv").addEventListener("click", exportCSV);
-document.getElementById("rosterSave").addEventListener("click", () => {
-  const raw = document.getElementById("rosterText").value;
-  localStorage.setItem("nmk-teacher-roster-raw", raw);
-  roster = raw.split(/\r?\n/).map(parseRosterLine).filter(Boolean);
-  localStorage.setItem("nmk-teacher-roster", JSON.stringify(roster));
-  render();
+/* 서버 저장 형식: museum/{TOUR}/roster/{반}/{번호} = 이름 (학생 페이지가 반·번호·이름으로 대조) */
+function rosterFromDB(v){
+  const out = [];
+  for (const [c, nums] of Object.entries(v || {}))
+    for (const [n, name] of Object.entries(nums || {})) if (name) out.push({ cls: `2-${c}`, num: String(n), name: String(name) });
+  return out.sort((a,b) => (+a.cls.split("-")[1] - +b.cls.split("-")[1]) || (+a.num - +b.num));
+}
+function rosterToText(list){
+  const pad = v => String(v).padStart(2, "0");
+  return list.map(r => `2${pad(r.cls.split("-")[1])}${pad(r.num)} ${r.name}`).join("\n");
+}
+document.getElementById("rosterSave").addEventListener("click", async () => {
+  const msg = document.getElementById("rosterMsg");
+  const lines = document.getElementById("rosterText").value.split(/\r?\n/).filter(l => l.trim());
+  const obj = {}, bad = [], dup = [];
+  let count = 0;
+  for (const line of lines){
+    const r = parseRosterLine(line);
+    const c = r && String(r.cls).replace(/^\d+-/, "");
+    const gr = r && /^(\d+)-/.exec(String(r.cls));
+    if (!r || !/^\d+$/.test(c) || !+c || !/^\d+$/.test(r.num) || !+r.num || !r.name || (gr && gr[1] !== "2")){ bad.push(line.trim()); continue; }
+    const cn = String(+c);
+    obj[cn] = obj[cn] || {};
+    if (obj[cn][r.num]) dup.push(`${cn}반 ${r.num}번`);
+    else count++;
+    obj[cn][r.num] = r.name.slice(0, 20);
+  }
+  if (bad.length){ msg.textContent = `⚠️ 형식을 알 수 없는 줄 ${bad.length}개: ${bad.slice(0,3).join(" / ")}${bad.length>3?" …":""} — 2학년 학번(예: 20314) 이름 순서로 고친 뒤 다시 저장해 주세요. (저장 안 됨)`; return; }
+  if (!count){ msg.textContent = "명단이 비어 있습니다. 명단을 없애려면 '명단 삭제'를 누르세요."; return; }
+  const btn = document.getElementById("rosterSave");
+  btn.disabled = true;
+  try {
+    await set(ref(db, `museum/${TOUR}/roster`), obj);
+    document.getElementById("rosterText").blur();
+    msg.textContent = `✅ ${Object.keys(obj).length}개 반 ${count}명 저장 완료` + (dup.length ? ` (번호 중복 ${dup.length}건은 아래 줄 이름으로 덮어씀: ${dup.slice(0,3).join(", ")})` : "");
+  } catch (e) {
+    msg.textContent = "저장 실패: " + e.message + " — Firebase 규칙에 museum/$tour/roster 쓰기 권한이 배포됐는지 확인하세요.";
+  } finally { btn.disabled = false; }
 });
-document.getElementById("rosterClear").addEventListener("click", () => {
-  document.getElementById("rosterText").value = "";
-  localStorage.removeItem("nmk-teacher-roster-raw");
-  localStorage.removeItem("nmk-teacher-roster");
-  roster = []; render();
+document.getElementById("rosterClear").addEventListener("click", async () => {
+  if (!confirm(`투어 코드 '${TOUR}'의 학생 명단을 모두 삭제할까요?\n삭제하면 누구나 이름을 입력해 입장할 수 있습니다.`)) return;
+  try {
+    await remove(ref(db, `museum/${TOUR}/roster`));
+    document.getElementById("rosterText").value = "";
+  } catch (e) { document.getElementById("rosterMsg").textContent = "삭제 실패: " + e.message; }
 });
 function parseRosterLine(line){
   const t = line.trim(); if (!t) return null;
   const p = t.split(/[\s,\t]+/).filter(Boolean);
   if (p.length < 2) return null;
+  // 학번 형식: 20314 = 2학년 03반 14번
+  if (/^\d{5}$/.test(p[0])) return { cls: `${p[0][0]}-${+p[0].slice(1,3)}`, num: String(+p[0].slice(3)), name: p.slice(1).join(" ") };
   let cls, num, name;
   if (p.length >= 3){ cls = p[0]; num = p[1]; name = p.slice(2).join(" "); }
   else { cls = ""; num = p[0]; name = p.slice(1).join(" "); }
