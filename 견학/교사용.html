@@ -207,7 +207,19 @@ let unsub = null, unsubR = null, unsubRoster = null;
    이미 그려진 사진들까지 반복해서 디코딩하게 되어 급격히 느려진다. 한 프레임에 몰린 요청은
    하나의 render()로 합친다. */
 let renderScheduled = false;
+/* 버튼을 누르는 도중(손가락·마우스 누름 ~ 뗀 직후)에 보드를 다시 그리면 버튼이 새 요소로 바뀌어
+   클릭이 사라진다(승인·반려가 씹힘). 누르고 있는 동안과 뗀 직후 잠깐은 다시 그리기를 미룬다. */
+let pointerHeld = false, holdUntil = 0, deferTimer = null;
+document.addEventListener("pointerdown", () => { pointerHeld = true; }, true);
+const releasePointer = () => { pointerHeld = false; holdUntil = Date.now() + 250; };
+document.addEventListener("pointerup", releasePointer, true);
+document.addEventListener("pointercancel", releasePointer, true);
 function scheduleRender(){
+  if (pointerHeld || Date.now() < holdUntil){
+    if (!deferTimer) deferTimer = setTimeout(() => { deferTimer = null; scheduleRender(); },
+      pointerHeld ? 120 : holdUntil - Date.now() + 10);
+    return;
+  }
   if (renderScheduled) return;
   renderScheduled = true;
   requestAnimationFrame(() => { renderScheduled = false; render(); });
@@ -283,7 +295,7 @@ async function bulkApprove(sid){
   } catch (e) { alert("일괄 승인 실패: " + (e && e.message || e)); }
 }
 async function kickStudent(sid, name){
-  if (!confirm(`진짜 ${name} 학생을 내보내시겠습니까?\n\n이 학생의 진행 상황·올린 사진·검토 기록이 현황판에서 모두 삭제됩니다.\n(학생이 앱을 다시 열고 활동하면 새 참여자로 다시 올라올 수 있습니다.)`)) return;
+  if (!confirm(`진짜 ${name} 학생을 내보내시겠습니까?\n\n이 학생의 진행 상황·올린 사진·검토 기록이 현황판에서 모두 삭제되고,\n학생 기기의 기록도 초기화되어 정보 입력 화면으로 돌아갑니다.\n(학생이 정보를 다시 입력하면 새 참여자로 처음부터 시작합니다.)`)) return;
   try {
     await Promise.all([
       remove(ref(db, `museum/${TOUR}/students/${sid}`)),
@@ -291,6 +303,7 @@ async function kickStudent(sid, name){
       remove(ref(db, `museum/${TOUR}/photos/${sid}`)),
     ]);
     expanded.delete(sid);
+    unsubscribePhotos(sid);
   } catch (e) { alert("내보내기 실패: " + (e && e.message || e)); }
 }
 
@@ -426,7 +439,7 @@ function currentRows(){
 }
 function sortRows(rows){
   const s = rows.slice();
-  if (sortMode === "name") s.sort((a,b)=> String(a.cls).localeCompare(String(b.cls),"ko") || a.num-b.num);
+  if (sortMode === "name") s.sort((a,b)=> String(a.cls).localeCompare(String(b.cls),"ko",{numeric:true}) || a.num-b.num);
   else if (sortMode === "prog") s.sort((a,b)=> (b.rec?recProgress(b.rec).sd:-1) - (a.rec?recProgress(a.rec).sd:-1));
   else s.sort((a,b)=> (b.rec?.updatedAt||0) - (a.rec?.updatedAt||0));
   return s;
@@ -452,7 +465,7 @@ function render(){
   // 반별 그룹
   const byClass = {};
   rows.forEach(r => (byClass[r.cls] = byClass[r.cls] || []).push(r));
-  const classNames = Object.keys(byClass).sort((a,b)=>String(a).localeCompare(String(b),"ko"));
+  const classNames = Object.keys(byClass).sort((a,b)=>String(a).localeCompare(String(b),"ko",{numeric:true}));
 
   const th = `<tr>
     <th style="width:44px">번호</th><th>이름</th>
@@ -507,9 +520,9 @@ function rowHTML(r){
   const pcCls = pc >= TOTAL ? "done" : pc > 0 ? "mid" : "none";
   const wc = waitingPhotoCount(r.sid, r.rec);
   const cam = wc ? ` <span class="camwait" title="사진 ${wc}장 승인 대기 중">📸${wc > 1 ? " " + wc : ""}</span>` : "";
-  const main = `<tr class="stu" data-sid="${r.sid}">
+  const main = `<tr class="stu" data-sid="${esc(r.sid)}">
     <td>${r.num||""}</td>
-    <td>${r.rec.avatar||""} ${esc(r.name)}${cam} <span style="color:#B0A088">${open?"▲":"▼"}</span></td>
+    <td>${esc(r.rec.avatar||"")} ${esc(r.name)}${cam} <span style="color:#B0A088">${open?"▲":"▼"}</span></td>
     <td><b>${sc}</b> / ${TOTAL}
         <div class="mini"><i style="width:${sc/TOTAL*100}%"></i></div></td>
     <td>${sd} / ${STEP_TOTAL} <span style="color:#9C8A6E">(${pct}%)</span>
@@ -517,7 +530,7 @@ function rowHTML(r){
     <td><span class="pill ${pcCls}">${pc} / ${TOTAL}</span></td>
     <td><span class="pill ${st.k}">${st.label}</span></td>
     <td class="ago">${ago(r.rec.updatedAt)}</td>
-    <td><button class="kickbtn" data-kick data-sid="${r.sid}" data-name="${esc(r.name)}">내보내기</button></td></tr>`;
+    <td><button class="kickbtn" data-kick data-sid="${esc(r.sid)}" data-name="${esc(r.name)}">내보내기</button></td></tr>`;
   return main + (open ? detailHTML(r.sid, r.rec) : "");
 }
 
@@ -529,7 +542,11 @@ function detailHTML(sid, rec){
   const cards = ORDER.map(id => {
     const m = META[id];
     const hasPhoto = !!photoAt[id];
-    const done = m.s.map((lbl,i)=> lbl === "사진" ? hasPhoto : !!stepVal(steps, `${id}:${i}`));
+    const rv = (reviews[sid] || {})[id];
+    const curAt = photoAt[id] || 0;
+    // 학생 화면과 같은 기준: 사진은 '현재 사진이 승인됨'이어야 완료
+    const approved = hasPhoto && !!rv && rv.status === "ok" && Number(rv.photoAt || 0) === Number(curAt);
+    const done = m.s.map((lbl,i)=> lbl === "사진" ? approved : !!stepVal(steps, `${id}:${i}`));
     const nDone = done.filter(Boolean).length;
     const stamped = !!stamps[id];
     const answers = m.s.map((lbl,i) => {
@@ -537,12 +554,12 @@ function detailHTML(sid, rec){
       if (typeof v === "string" && v.trim()) return `<div class="ans"><b>${lbl}:</b> ${esc(v)}</div>`;
       return "";
     }).join("");
-    const imgSrc = photos && photos[id];
+    const raw = photos && photos[id];
+    const imgSrc = typeof raw === "string" && raw.startsWith("data:image/") ? raw : "";
     const pic = !hasPhoto ? `<div class="dpic nopic">사진 없음</div>`
       : imgSrc ? `<a href="${esc(imgSrc)}" target="_blank" rel="noopener"><img class="dpic" src="${esc(imgSrc)}" alt="" loading="lazy"></a>`
+      : photos ? `<div class="dpic nopic">사진 파일 없음 (학생 재업로드 필요)</div>`
       : `<div class="dpic nopic">⏳ 불러오는 중…</div>`;
-    const rv = (reviews[sid] || {})[id];
-    const curAt = photoAt[id] || 0;
     let rbadge = "", rbtns = "";
     if (hasPhoto){
       const stale = rv && Number(rv.photoAt || 0) !== Number(curAt);
@@ -551,8 +568,8 @@ function detailHTML(sid, rec){
       else if (rv.status === "ok") rbadge = `<span class="rvb ok">✅ 승인함</span>`;
       else rbadge = `<span class="rvb rej">❌ 반려함${rv.reason ? " · " + esc(rv.reason) : ""}</span>`;
       rbtns = `<div class="rvbtns">
-        <button class="rvbtn ok" data-review="ok" data-sid="${sid}" data-item="${id}">승인</button>
-        <button class="rvbtn rej" data-review="reject" data-sid="${sid}" data-item="${id}">반려</button></div>`;
+        <button class="rvbtn ok" data-review="ok" data-sid="${esc(sid)}" data-item="${id}">승인</button>
+        <button class="rvbtn rej" data-review="reject" data-sid="${esc(sid)}" data-item="${id}">반려</button></div>`;
     }
     return `<div class="dcard">
       <div class="dt">${m.e} ${m.n}
@@ -566,7 +583,7 @@ function detailHTML(sid, rec){
   const mvp = rec.mvp && META[rec.mvp] ? `${META[rec.mvp].e} ${META[rec.mvp].n}` : "—";
   const pending = waitingPhotoCount(sid, rec);
   const bulk = pending
-    ? `<button class="btn pri" data-bulkok data-sid="${sid}">이 학생 미검토 사진 ${pending}장 한꺼번에 승인</button>`
+    ? `<button class="btn pri" data-bulkok data-sid="${esc(sid)}">이 학생 미검토 사진 ${pending}장 한꺼번에 승인</button>`
     : `<span style="font-size:.82rem;color:var(--ok);font-weight:700">✅ 이 학생 사진 전부 승인됨</span>`;
   return `<tr class="detail"><td colspan="8">
     <div style="margin-bottom:.6rem">${bulk} <span style="font-size:.78rem;color:var(--ink-sec)">— 썸네일을 훑고 승인 후, 이상한 사진만 개별 [반려]</span></div>
@@ -595,7 +612,7 @@ function renderStats(rows){
     ["완주", done, `명 (${TOTAL}스탬프 전부)`],
     ["평균 스탬프", parts.length?Math.round(totalStamps/parts.length*10)/10:0, `/ ${TOTAL}`],
     ["올라온 사진", totalPhotos, `장 (평균 ${parts.length?Math.round(totalPhotos/parts.length):0}/${TOTAL})`],
-    ["최근 활동", recent?ago(recent.rec.updatedAt):"—", recent?`${recent.name}`:""],
+    ["최근 활동", recent?ago(recent.rec.updatedAt):"—", recent?esc(recent.name):""],
   ];
   document.getElementById("stats").innerHTML = s.map(([l,v,sub]) =>
     `<div class="stat"><div class="v">${v}</div><div class="l">${l} <span style="opacity:.7">${sub||""}</span></div></div>`).join("");
