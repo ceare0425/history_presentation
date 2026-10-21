@@ -125,6 +125,10 @@
     .ans-btn.on { background: var(--light); color: var(--main); box-shadow: 0 0 0 2px var(--accent); }
     .ans-btn.on::after { opacity: 0; }
 
+    /* 사진 슬라이드 */
+    .photo-content { position: relative; padding: .6rem; overflow: hidden; }
+    .photo-content img { position: absolute; inset: .6rem; width: calc(100% - 1.2rem); height: calc(100% - 1.2rem); object-fit: contain; }
+
     /* 표지 */
     .cover-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; gap: .65rem; }
 
@@ -250,7 +254,7 @@
   <div class="browser-card">
     <div class="browser-topbar">
       <span class="topbar-icon">🗺️</span>
-      <span class="browser-title">2. 미국 혁명의 배경 · (1) 혁명 이전 상황 · (2) 배경</span>
+      <span class="browser-title">2. 미국 혁명의 배경 · (1) 혁명 이전 상황</span>
     </div>
     <div class="browser-content">
       <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
@@ -264,14 +268,53 @@
           </ul>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 6: 2. 미국 혁명의 배경 (2) 중상주의 정책 — 배경 ══ -->
+<div class="slide" data-slide="5">
+  <div class="browser-card">
+    <div class="browser-topbar">
+      <span class="topbar-icon">💰</span>
+      <span class="browser-title">2. 미국 혁명의 배경 · (2) 중상주의 정책 · 배경</span>
+    </div>
+    <div class="browser-content">
+      <div class="hist-divider"><span class="h-line"></span><span class="h-gem">◆</span><span class="h-line"></span></div>
+      <h2 style="margin-bottom:.45rem;">(2) 영국의 중상주의 정책 — 배경</h2>
       <div class="ruler-card">
-        <div class="ruler-card-header">💰 (2) 영국의 중상주의 정책 — 배경</div>
+        <div class="ruler-card-header">💰 배경</div>
         <div class="ruler-card-body">
           <ul class="info-list">
             <li>7년 전쟁 등으로 인한 영국의 재정 악화</li>
           </ul>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 7~9: 중상주의 정책 사진 ══ -->
+<div class="slide">
+  <div class="browser-card">
+    <div class="browser-content photo-content">
+      <img src="중상주의1.png" alt="영국의 중상주의 정책 1">
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="browser-card">
+    <div class="browser-content photo-content">
+      <img src="중상주의2.png" alt="영국의 중상주의 정책 2">
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="browser-card">
+    <div class="browser-content photo-content">
+      <img src="중상주의3.png" alt="영국의 중상주의 정책 3">
     </div>
   </div>
 </div>
@@ -297,6 +340,23 @@
           </ul>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 슬라이드 11~12: 미국 혁명 사진 ══ -->
+<div class="slide">
+  <div class="browser-card">
+    <div class="browser-content photo-content">
+      <img src="미국1.png" alt="미국 혁명 1">
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="browser-card">
+    <div class="browser-content photo-content">
+      <img src="미국2.png" alt="미국 혁명 2">
     </div>
   </div>
 </div>
