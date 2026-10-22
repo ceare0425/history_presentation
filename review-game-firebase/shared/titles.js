@@ -23,7 +23,7 @@ const TIER_RARITY = ['common','rare','epic'];
 const TIER_LABEL = ['입문','숙련','달인'];
 
 // 한국사는 단원마다 주제 01부터 다시 매기므로(2단원이 생기면 주제 번호가 1단원과 겹친다) 단원 번호로 한 번 더 묶어 구분한다.
-// 세계사는 주제 번호가 단원 전체에서 겹치지 않으므로(1~14, 16~22) 번호만으로 충분히 구분된다.
+// 세계사는 주제 번호가 단원 전체에서 겹치지 않으므로(1~14, 16~22, 24~) 번호만으로 충분히 구분된다.
 const RESTARTS_PER_CHAPTER = { korea: true };
 // 칭호 표(UNIT_TITLES·GRAND_TITLES)가 정해진 과목. 한국사 방에는 한국사1 문제도 함께 있으므로(문제의 course 칸),
 // 다른 과목 문제는 칭호 계산에서 뺀다 — 주제 번호(01~)가 겹쳐 한국사2 주제 칭호에 섞이지 않게.
@@ -95,7 +95,11 @@ const UNIT_TITLES = {
     18:['흑사병 생존자','길드 장인','자치 도시 시장'],
     19:['피렌체 도제','95개조 반박문 필사자','르네상스 거장'],
     21:['상비군 병사','국채 투자자','재정·군사 국가 설계자'],
-    22:['30년 전쟁 용병','베스트팔렌 조약 외교관','세력 균형 조율자']
+    22:['30년 전쟁 용병','베스트팔렌 조약 외교관','세력 균형 조율자'],
+    24:['팔기군 병사','군기처 대신','강건성세의 주역'],
+    25:['데지마 상인','산킨코타이 다이묘','세키가하라의 승자'],
+    26:['타지마할 석공','아크바르의 관료','무굴 대제의 재상'],
+    27:['예니체리 신병','티마르 기병','술레이만의 대재상']
   }
 };
 
@@ -108,7 +112,8 @@ const GRAND_TITLES = {
   world: [
     { id:'g_1', name:'고대 문명 순례자', chapter:1, min:1, max:14, desc:'1단원(주제 01~14) 모두 🥇달인' },
     { id:'g_2', name:'근세의 설계자', chapter:2, min:16, max:22, desc:'2단원(주제 16~22) 모두 🥇달인' },
-    { id:'g_all', name:'세계사 대가', min:1, max:99, desc:'1·2단원 모두 🥇달인' }
+    { id:'g_3', name:'국민 국가의 개척자', chapter:3, min:24, max:99, desc:'3단원(주제 24~) 모두 🥇달인' },
+    { id:'g_all', name:'세계사 대가', min:1, max:99, desc:'1~3단원 모두 🥇달인' }
   ]
 };
 
@@ -248,7 +253,9 @@ export function buildTitleBook(room, data, questionsObj){
   } else {
     Object.entries(table).forEach(([nStr, names]) => {
       const n = Number(nStr);
-      specRows.push({ chapter: legacyChapterNum(room, n), n, names });
+      // 문제에 저장된 단원을 먼저 쓰고(3단원처럼 옛 규칙에 없는 단원), 문제가 없으면 옛 규칙으로 추정
+      const tp = byTopic[n];
+      specRows.push({ chapter: (tp && tp.chapter) ?? legacyChapterNum(room, n), n, names });
     });
   }
   specRows.sort((a, b) => a.chapter - b.chapter || a.n - b.n);
