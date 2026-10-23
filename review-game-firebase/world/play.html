@@ -564,7 +564,7 @@ import {
   recencyWeightFn, weightedQueue,
   teamInfo, teamStandings, activeBonus,
   ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
-} from '../shared/lib.js?v=20261012b';
+} from '../shared/lib.js?v=20261023a';
 import { mountTitles } from '../shared/titles.js?v=20261022a';
 
 const ROOM = 'world';
@@ -1190,9 +1190,11 @@ async function submitAnswerCore(){
   };
   if(!existed){ payload.name = playerName; payload.cls = classKey(); payload.avatar = AVATAR_IDLE; payload.floor = 0; }
   if(itemsOn()) payload.item = heldItem || null;
-  await update(pRef, payload);
-  // 제출 처리 중(get~update 사이)에 바나나·강탈 등으로 층수가 바뀌었을 수 있어, 읽어둔 층수로 덮어쓰지 않고 변화량만 더한다
-  p.floor = await addFloor((p.floor || 0) - floorBefore);
+
+  // 정답 배너·층수·캐릭터 반응은 서버 응답을 기다리지 않고 바로 보여 준다.
+  // (예전엔 저장·층수 트랜잭션 두 번의 서버 왕복이 끝나야 배너가 떠서, 교실 와이파이가 느리면 1~2초씩 늦었다)
+  // 층수 숫자는 우선 계산값으로 보여 주고, 실제 값은 저장 뒤 내 노드 구독(listenMyNode)이 맞춰 준다.
+  commitAnswer(pRef, payload, (p.floor || 0) - floorBefore);
 
   el('floorVal').textContent = p.floor;
   el('streakVal').textContent = p.streak >= 2 ? `🔥 ${p.streak}연속 정답!` : '';
@@ -1210,6 +1212,20 @@ async function submitAnswerCore(){
   };
   if(comboSparkStreak !== null) openComboSparkPicker(comboSparkStreak, proceedToNext);
   else proceedToNext();
+}
+
+// 답 처리 결과를 서버에 저장 — 화면은 이미 바뀐 뒤라 기다리지 않는다.
+// update()·트랜잭션은 부르는 즉시 로컬 캐시에 반영되므로 다음 문제의 get(pRef)도 이 결과를 본다.
+// 연결이 잠깐 끊겨도 Firebase가 쓰기를 모아 두었다가 다시 연결되면 순서대로 보낸다.
+async function commitAnswer(pRef, payload, floorDelta){
+  try{
+    await update(pRef, payload);
+    // 제출 처리 중(get~update 사이)에 바나나·강탈 등으로 층수가 바뀌었을 수 있어, 읽어둔 층수로 덮어쓰지 않고 변화량만 더한다
+    await addFloor(floorDelta);
+  }catch(err){
+    console.warn('commitAnswer', err);
+    showItemAlert('⚠️ 방금 답이 저장되지 않았어요. 인터넷 연결을 확인해 주세요');
+  }
 }
 
 el('submitBtn').onclick = submitAnswer;
