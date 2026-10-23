@@ -138,8 +138,7 @@
     .info-list li { position: relative; padding-left: 1.3em; font-size: .9rem; line-height: 1.65; }
     .info-list li::before { content: '◆'; color: var(--accent); font-size: .6rem; position: absolute; left: 0; top: .45em; }
     .info-list li.sub { padding-left: 2.3em; }
-    .info-list li.sub::before { content: '—'; font-size: .88rem; top: .38em; }
-    .info-list li.sub.nodash::before { content: none; }
+    .info-list li.sub::before { content: none; font-size: .88rem; top: .38em; }
 
     /* 퀴즈 */
     .quiz-wrap { display: flex; flex-direction: column; gap: .28rem; margin-top: .15rem; }
@@ -238,8 +237,8 @@
           <ul class="info-list">
             <li>개최: 루이 16세가 재정 문제 해결을 위해 개최</li>
             <li>갈등: 표결 방식을 두고 대립</li>
-            <li class="sub nodash">제1·2 신분: 기존 신분별 표결 고수</li>
-            <li class="sub nodash">제3 신분: 머릿수 표결 주장</li>
+            <li class="sub">제1·2 신분: 기존 신분별 표결 고수</li>
+            <li class="sub">제3 신분: 머릿수 표결 주장</li>
           </ul>
         </div>
       </div>
