@@ -163,6 +163,12 @@
   #slideList .photo-col img { position: static !important; width: 100% !important; height: auto !important; }
   /* 슬라이드 안 사진에 인라인으로 준 height:100% 등도 모바일에선 원래 비율로 */
   #slideList .browser-content img { max-width: 100% !important; height: auto !important; }
+  /* 만화 슬라이드(빈 체제·민족주의 운동·무굴 제국 등): 사진을 position:absolute + inset으로 칸에 꽉 채워 넣었는데,
+     모바일에선 칸 높이가 자동이라 0이 되고 카드의 overflow:hidden에 잘려 사진이 안 보임 → 일반 흐름으로 되돌림 */
+  /* 인라인 style이든 레슨 CSS 클래스(.photo-content img 등)든 잡히도록, 실제 계산된 position을 스크립트에서 보고 m-flow-img를 붙임 */
+  #slideList .browser-content img.m-flow-img {
+    position: static !important; inset: auto !important; width: 100% !important; display: block;
+  }
   /* 투명 상태로 숨겨 두었다가 순차 공개하는 사진·카드는 모바일에선 탭할 대상이 안 보이므로 처음부터 표시 */
   #slideList .img-reveal, #slideList .reason-card, #slideList .think-result { opacity: 1 !important; transform: none !important; }
   #slideList .grid-2, #slideList .grid-3, #slideList .grid-4 { grid-template-columns: 1fr !important; }
@@ -422,6 +428,9 @@
         });
         return `<div class="mslide"><span class="mslide-num">${i + 1} / ${slides.length}</span>${s.outerHTML}</div>`;
       }).join('');
+      slideList.querySelectorAll('.browser-content img').forEach(img => {
+        if (getComputedStyle(img).position === 'absolute') img.classList.add('m-flow-img');
+      });
       fitWideSlides();
       slideList.querySelectorAll('img').forEach(img => img.addEventListener('load', scheduleFit));
     } catch (err) {
