@@ -405,21 +405,25 @@ export function drawPet(ctx, id, si, ox, oy, mods){
 // ── 움직이는 캔버스 (숨쉬기·눈 깜빡임·기분 말풍선) ─────────────
 const reduceMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const actors = new Set();
-let loopOn = false;
+let loopOn = false, lastStill = -1e9;
+// '애니메이션 줄이기'(동작 줄이기)가 켜진 기기에서도 그림은 계속 다시 그려야 한다 — 펫을 사거나 기분·장면이 바뀌면
+// 그 상태로 바뀌어야 하므로. 그때는 움직임 없이(t=0 고정) 0.4초마다 한 번만 다시 그린다.
 function loop(t){
+  if(reduceMotion && t - lastStill < 400){ requestAnimationFrame(loop); return; }
+  lastStill = t;
   actors.forEach(a => {
     if(!a.cv.isConnected){ if(a.seen) actors.delete(a); return; }
     a.seen = true;
     a.ctx.clearRect(0, 0, a.cv.width, a.cv.height);
-    a.draw(a.ctx, t);
+    a.draw(a.ctx, reduceMotion ? 0 : t);
   });
-  if(actors.size && !reduceMotion) requestAnimationFrame(loop); else loopOn = false;
+  if(actors.size) requestAnimationFrame(loop); else loopOn = false;
 }
 function addActor(cv, draw){
   const a = { cv, ctx: cv.getContext('2d'), draw, seen: false };
   actors.add(a);
-  if(reduceMotion){ a.draw(a.ctx, 0); return a; }
-  if(!loopOn){ loopOn = true; requestAnimationFrame(loop); }
+  try{ a.draw(a.ctx, 0); }catch(_e){}   // 첫 프레임을 기다리지 않고 바로 한 번 그린다
+  if(!loopOn){ loopOn = true; lastStill = -1e9; requestAnimationFrame(loop); }
   return a;
 }
 // info: {id, s(단계), m(기분)} → 20×20 캔버스. 몸짓은 기분에 따라 다르다.
@@ -441,9 +445,9 @@ export function petCanvas(info, px){
     else if(m === 'happy'){ oy = 3 - (Math.abs(Math.sin(t / 260 + phase)) > .75 ? 1 : 0); }
     else if(m === 'hungry' || m === 'sad' || m === 'sick' || m === 'dirty'){ sad = true; ox = 2 + (Math.sin(t / (m === 'sick' ? 1700 : 1100) + phase) > 0 ? 1 : 0); oy = 4; }
     else if(m === 'walk'){ oy = 3 - (Math.abs(Math.sin(t / 180 + phase)) > .6 ? 1 : 0); }
-    else if(m === 'tired'){ closed = (t / 1000 + phase) % 2.2 < 0.9; oy = 4; }
+    else if(m === 'tired'){ closed = !reduceMotion && (t / 1000 + phase) % 2.2 < 0.9; oy = 4; }
     else { oy = 3 + (Math.sin(t / 420 + phase) > 0 ? 0 : 1); }
-    if(!closed && m !== 'sleep' && ((t / 1000 + phase) % 3.3) < 0.13) closed = true;
+    if(!closed && !reduceMotion && m !== 'sleep' && ((t / 1000 + phase) % 3.3) < 0.13) closed = true;
     if(st.sadUntil && t < st.sadUntil) sad = true;
     drawPet(ctx, st.id, st.s, ox, oy, { closed, sad });
     const blinkOn = (t / 700 + phase) % 2 < 1.3;
@@ -494,7 +498,7 @@ function sceneCanvas(st){
       py = 9 - (m === 'happy' && Math.abs(Math.sin(t / 260)) > .8 ? 1 : 0);
       sad = m === 'hungry' || m === 'sad' || m === 'dirty';
     }
-    if(!closed && ((t / 1000) % 3.3) < 0.13) closed = true;
+    if(!closed && !reduceMotion && ((t / 1000) % 3.3) < 0.13) closed = true;
     drawPet(ctx, s.id, s.s, px, py, { closed, sad });
     // 똥 (산책 중엔 집에 두고 나감)
     if(!walking){
