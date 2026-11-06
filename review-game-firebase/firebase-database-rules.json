@@ -93,6 +93,14 @@
         }
       }
     },
+    "pets": {
+      ".read": true,
+      "$classKey": {
+        "$name": {
+          ".write": true
+        }
+      }
+    },
     "titles": {
       ".read": true,
       "$room": {

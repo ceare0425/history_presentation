@@ -60,6 +60,10 @@
   .summary b{ color:var(--sky1); }
   [hidden]{ display:none !important; }
   .big-choice button.hanneung{ background:linear-gradient(90deg,#6B3010,#C5A028); }
+  /* 🐾 상점 · 펫 키우기 (shared/pets.js가 버튼 글자와 창을 채운다) */
+  .pet-choice{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; padding-top:16px; border-top:1px dashed var(--line); }
+  .pet-choice button.pt-open-btn{ margin:0; width:100%; padding:14px 8px; font-size:1.02rem; border-radius:14px; }
+  .pet-choice button#petShopBtn{ background:#fff4d6; color:#7a5200; border-color:#f0d68a; }
   .hint{ font-size:.78rem; color:var(--sub); text-align:center; margin-top:18px; line-height:1.5; }
 </style>
 </head>
@@ -100,6 +104,10 @@
         <button type="button" id="modeJoinBtn">🎮 수업 참여하기</button>
         <button type="button" id="modeSoloBtn">🧗 혼자 연습하기</button>
       </div>
+      <div class="pet-choice">
+        <button type="button" id="petShopBtn">🏪 상점</button>
+        <button type="button" id="petCareBtn">🐾 펫 키우기</button>
+      </div>
     </div>
 
     <div class="step" id="step3">
@@ -116,7 +124,8 @@
   </div>
 
 <script type="module">
-  import { ref, db, get } from './shared/lib.js?v=20261012b';
+  import { ref, db, get, onValue, runTransaction, serverNow, escapeHtml } from './shared/lib.js?v=20261012b';
+  import { mountPets } from './shared/pets.js?v=20261106b';
   const el = (id) => document.getElementById(id);
   // solo.html·play.html과 공유하는 학년·반·이름 저장 위치. 여기서 고르면 두 과목
   // 어디로 가든(혼자 연습이든 수업 참여든) 이미 채워진 채로 시작한다.
@@ -136,6 +145,10 @@
   let grade = localStorage.getItem(GRADE_KEY) || null;
   let cls = localStorage.getItem(CLASS_KEY) || null;
   let mode = null; // 'join' | 'solo'
+  // 🐾 상점 · 펫 키우기 — 수업 게임·혼자 연습과 같은 지갑·펫 (pets/<학년-반>/<이름>)
+  const pets = mountPets({ db, ref, get, runTransaction, onValue, serverNow, escapeHtml }, { source: 'solo' });
+  pets.bindButton(el('petShopBtn'), null, 'shop');
+  pets.bindButton(el('petCareBtn'), null, 'care');
 
   el('nameInput').value = localStorage.getItem(NAME_KEY) || '';
 
@@ -194,6 +207,7 @@
     localStorage.setItem(CLASS_KEY, cls);
     localStorage.setItem(NAME_KEY, name);
     el('step2Summary').innerHTML = `<b>${grade}학년 ${cls}반 ${name}</b>님, 어떻게 참여할까요?`;
+    pets.setIdentity(`${grade}-${cls}`, name);
     showStep(2);
   };
   el('step2BackBtn').onclick = () => showStep(1);
