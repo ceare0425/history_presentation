@@ -1098,7 +1098,7 @@ export function dayKey(ms){
 // ── 희귀 펫 해금 조건 ─────────────────────────────────
 // ext: 칭호 기록(두 과목) { world:{seen,days,histDays,log}, korea:{...} }
 // 관리자(선생님)가 학생 화면을 확인할 때 쓰는 계정 — 희귀 펫 해금 조건 없이 모두 열림 ('학년-반/이름')
-// 코인은 따로 들고, 필요하면 관리자 화면 ⑧ 코인 주기로 채운다
+// 코인은 따로 들고, 필요하면 관리자 화면 ⑧ 코인 주기로 채운다 · 유물 도감 44장과 장소 완성(기념 가구)은 접속할 때 자동으로 채운다(코인 보너스 없음)
 export const ADMIN_VIEWERS = ['2-9/영주T'];
 function rareProgress(id, d, ext){
   const seen = (room, tid) => !!(ext[room] && ext[room].seen && ext[room].seen[tid]);
@@ -1422,6 +1422,18 @@ export function mountPets(deps, opts){
     return runTransaction(ref(db, base()), (cur) => fn(cur || {}, nowMs())).catch(() => null);
   }
 
+  // 관리자 확인 계정: 유물 도감을 모두 채우고 장소마다 완성 처리(→ 🏺 기념 가구 11종). 코인 보너스는 주지 않는다
+  function fillAdminRelics(){
+    if(!isAdminView()) return;
+    const missing = (d) => PLACES.some(pl => !(d.relicDone || {})[pl.id] || pl.relics.some((_, j) => !((d.relics || {})[pl.id + '_' + j] > 0)));
+    if(!missing(data)) return;
+    tx((cur, now) => {
+      if(!missing(cur)) return;
+      cur.relics = cur.relics || {}; cur.relicDone = cur.relicDone || {};
+      PLACES.forEach(pl => { pl.relics.forEach((_, j) => { const k = pl.id + '_' + j; if(!(cur.relics[k] > 0)) cur.relics[k] = 1; }); if(!cur.relicDone[pl.id]) cur.relicDone[pl.id] = now; });
+      return cur;
+    }).then(res => { if(res && res.committed) toast('🏺 관리자 계정: 유물 도감 44장을 모두 채웠어요', '🏠 방 꾸미기에서 유물 기념 가구 11종을 끼울 수 있어요'); });
+  }
   function welcomeIfNeeded(){
     if(data.welcome) return;
     tx((cur) => {
@@ -2317,7 +2329,7 @@ export function mountPets(deps, opts){
       unsub = onValue(ref(db, base()), (snap) => {
         data = snap.val() || {};
         loaded = true;
-        if(first){ first = false; welcomeIfNeeded(); }
+        if(first){ first = false; welcomeIfNeeded(); fillAdminRelics(); }
         CUR_COZY = roomCozy(data.room);
         showGifts();
         showHearts();
