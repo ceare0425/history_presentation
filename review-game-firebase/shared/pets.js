@@ -10,16 +10,29 @@
 //   soloBest       혼자 연습 탑 오르기 최고 층 (불사조 해금 조건, 이 기능 이후 기록부터)
 //   bonus/<라운드token>: 받은 수업 게임 등수 보너스 (같은 라운드는 한 번만)
 //   active         데려가는 펫 id
-//   owned/<펫id>: {stage, exp, food, fun, energy, t, sleepUntil, at}
+//   items: {rice, snack, med}  가지고 있는 밥·간식·약 개수 (상점 용품)
+//   owned/<펫id>: {stage, exp, food, fun, energy, t, sleepUntil, at, poop, poopT, sick, walkUntil, walkNext}
 //       stage 0·1·2 진화 단계 · exp 데려가서 맞힌 문제 수 · food/fun/energy 0~100 (t 시각 기준 값, 시간이 지나면 줄어듦)
+//       poop 쌓인 똥 개수(poopT부터 일정 시간마다 하나씩) · sick 아픔(똥이 많이 쌓이거나 굶으면) · walkUntil 산책 중 · walkNext 다음 산책 가능 시각
 
 // ── 규칙 숫자 ─────────────────────────────────────────
 export const PET_RULES = {
   welcome: 200,          // 처음 받는 축하 코인 (한 번만)
   classBonus: [10, 6, 3],// 수업 게임 개인전 1·2·3등 보너스
   teamBonus: 5,          // 수업 게임 팀전 1등 팀 보너스
-  feedCost: 10,          // 밥 한 번 값
-  feedAmount: 30,        // 밥 한 번에 차는 배부름
+  // 상점 용품 (가지고 있으면 그걸 쓰고, 없으면 펫 키우기에서 바로 사서 줄 수 있음)
+  items: {
+    rice:  { label: '🍙 밥',   price: 10, food: 30 },            // 먹으면 똥이 하나 생김
+    snack: { label: '🍪 간식', price: 15, food: 10, fun: 15 },
+    med:   { label: '💊 약',   price: 20 }                        // 아플 때만 먹일 수 있음
+  },
+  poopEveryMs: 6 * 3600000, // 이만큼 지날 때마다 똥이 하나 생김
+  poopMax: 5,            // 똥은 최대 이만큼 쌓임
+  sickPoop: 4,           // 똥이 이만큼 쌓이면 아픔 (배부름이 0이 되어도 아픔)
+  walkMs: 20000,         // 산책 나가 있는 시간 (그동안 화면에서 걷는 모습)
+  walkCooldownMs: 60 * 60000, // 산책은 이 간격마다 한 번
+  walkFun: 20, walkEnergy: 10, walkFood: 5,   // 산책: 기분 +, 체력 -, 배부름 -
+  walkCoinChance: 0.3, walkCoinMax: 5,         // 산책하다 동전을 주울 확률·최대 개수
   foodDecay: 1,          // 시간당 줄어드는 배부름
   funDecay: 1,           // 시간당 줄어드는 기분
   funPerCorrect: 1.5,    // 데려가서 맞힐 때마다 오르는 기분
@@ -362,8 +375,13 @@ const ICONS = {
   heart: ['.mm.mm.', 'mmmmmmm', 'mmmmmmm', '.mmmmm.', '..mmm..', '...m...'],
   rice:  ['...h...', '..hhh..', '.hhhhh.', 'hhhhhhh', 'hkkkkkh', '.kkkkk.'],
   zz:    ['....kkk', 'kkkk..k', '...kkkk', '..k....', '.k.....', 'kkkk...'],
-  drop:  ['...b...', '..bbb..', '.bbbbb.', '.bbbbb.', '..bbb..', '.......']
+  drop:  ['...b...', '..bbb..', '.bbbbb.', '.bbbbb.', '..bbb..', '.......'],
+  sick:  ['.mmm.', 'mmwmm', 'mwwwm', 'mmwmm', '.mmm.'],
+  poop:  ['...o...', '..obo..', '.obbbo.', 'obbdbbo', 'ooooooo'],
+  poopS: ['..o..', '.obo.', 'obbbo', 'ooooo'],
+  coin:  ['.ooo.', 'oggGo', 'ogGgo', 'oggGo', '.ooo.']
 };
+const POOP_COL = { b: '#9a6534', d: '#6b4220', o: '#3a2412' };
 function drawIcon(ctx, name, ox, oy, colors){
   const pal = Object.assign({}, DATA.common, colors || {});
   ICONS[name].forEach((r, y) => r.split('').forEach((c, x) => {
@@ -410,7 +428,7 @@ export function petCanvas(info, px){
   cv.className = 'pt-cv';
   if(px) { cv.style.width = px + 'px'; cv.style.height = px + 'px'; }
   const phase = Math.random() * 10;
-  cv._pet = { id: info.id, s: info.s | 0, m: info.m || 'normal', jumpAt: -1e9 };
+  cv._pet = { id: info.id, s: info.s | 0, m: info.m || 'normal', poop: info.p | 0, jumpAt: -1e9 };
   addActor(cv, (ctx, t) => {
     const st = cv._pet;
     if(!petById[st.id]) return;
@@ -420,7 +438,8 @@ export function petCanvas(info, px){
     if(dt >= 0 && dt < 550) oy = 3 - Math.round(Math.sin(dt / 550 * Math.PI) * 3);
     else if(m === 'sleep'){ closed = true; oy = 3 + ((t / 900) % 2 < 1 ? 0 : 1); }
     else if(m === 'happy'){ oy = 3 - (Math.abs(Math.sin(t / 260 + phase)) > .75 ? 1 : 0); }
-    else if(m === 'hungry' || m === 'sad'){ sad = true; ox = 2 + (Math.sin(t / 1100 + phase) > 0 ? 1 : 0); oy = 4; }
+    else if(m === 'hungry' || m === 'sad' || m === 'sick' || m === 'dirty'){ sad = true; ox = 2 + (Math.sin(t / (m === 'sick' ? 1700 : 1100) + phase) > 0 ? 1 : 0); oy = 4; }
+    else if(m === 'walk'){ oy = 3 - (Math.abs(Math.sin(t / 180 + phase)) > .6 ? 1 : 0); }
     else if(m === 'tired'){ closed = (t / 1000 + phase) % 2.2 < 0.9; oy = 4; }
     else { oy = 3 + (Math.sin(t / 420 + phase) > 0 ? 0 : 1); }
     if(!closed && m !== 'sleep' && ((t / 1000 + phase) % 3.3) < 0.13) closed = true;
@@ -431,18 +450,72 @@ export function petCanvas(info, px){
     else if(m === 'hungry' && blinkOn) drawIcon(ctx, 'rice', 13, 0, { k: '#3f7d52' });
     else if(m === 'sleep' && blinkOn) drawIcon(ctx, 'zz', 13, 0, { k: '#5b6b8c' });
     else if(m === 'tired' && blinkOn) drawIcon(ctx, 'drop', 14, 1, { b: '#7cc3ff' });
+    else if(m === 'sick' && blinkOn) drawIcon(ctx, 'sick', 15, 0, { m: '#e5484d' });
+    if(m === 'dirty' || (m === 'sick' && st.poop)) drawIcon(ctx, 'poopS', 15, 16, POOP_COL);
   });
   return cv;
 }
 export function updatePetCanvas(cv, info){
   if(!cv || !cv._pet) return;
-  cv._pet.id = info.id; cv._pet.s = info.s | 0; cv._pet.m = info.m || 'normal';
+  cv._pet.id = info.id; cv._pet.s = info.s | 0; cv._pet.m = info.m || 'normal'; cv._pet.poop = info.p | 0;
 }
 function jumpPetCanvas(cv, correct){
   if(!cv || !cv._pet) return;
   const now = performance.now();
   if(correct) cv._pet.jumpAt = now; else cv._pet.sadUntil = now + 900;
 }
+// 펫 키우기 장면 48×30: st = {id, s, m, poop}
+function sceneCanvas(st){
+  const cv = document.createElement('canvas');
+  cv.width = 48; cv.height = 30; cv.className = 'pt-cv pt-scene';
+  cv._scene = st;
+  const POOP_X = [33, 40, 26, 36, 29];
+  addActor(cv, (ctx, t) => {
+    const s = cv._scene;
+    if(!petById[s.id]) return;
+    const m = s.m, walking = m === 'walk', sleeping = m === 'sleep';
+    // 바닥 (산책 중엔 풀밭이 흘러감)
+    ctx.fillStyle = walking ? '#cfe8b0' : '#efe4cc'; ctx.fillRect(0, 0, 48, 30);
+    ctx.fillStyle = walking ? '#8cc46a' : '#d9c7a0'; ctx.fillRect(0, 25, 48, 5);
+    if(walking){
+      ctx.fillStyle = '#5f9e45';
+      for(let i = 0; i < 6; i++){ const x = Math.round(((i * 11 - t / 35) % 66 + 66) % 66) - 9; ctx.fillRect(x, 24, 1, 2); ctx.fillRect(x + 2, 23, 1, 3); }
+      ctx.fillStyle = '#ffffff';
+      for(let i = 0; i < 3; i++){ const x = Math.round(((i * 19 - t / 90) % 57 + 57) % 57) - 9; ctx.fillRect(x, 4 + i * 3, 5, 1); ctx.fillRect(x + 1, 3 + i * 3, 3, 1); }
+    }
+    // 펫 위치: 평소엔 좌우로 어슬렁, 산책 중엔 제자리에서 걷기
+    let px = 8, py = 9, closed = false, sad = false;
+    if(walking){ px = 10; py = 9 - (Math.abs(Math.sin(t / 160)) > .55 ? 1 : 0); }
+    else if(sleeping){ px = 8; py = 9 + ((t / 900) % 2 < 1 ? 0 : 1); closed = true; }
+    else if(m === 'sick'){ px = 6 + (Math.sin(t / 1700) > 0 ? 1 : 0); py = 10; sad = true; }
+    else {
+      px = 8 + Math.round(Math.sin(t / 2300) * (m === 'happy' ? 7 : 4));
+      py = 9 - (m === 'happy' && Math.abs(Math.sin(t / 260)) > .8 ? 1 : 0);
+      sad = m === 'hungry' || m === 'sad' || m === 'dirty';
+    }
+    if(!closed && ((t / 1000) % 3.3) < 0.13) closed = true;
+    drawPet(ctx, s.id, s.s, px, py, { closed, sad });
+    // 똥 (산책 중엔 집에 두고 나감)
+    if(!walking){
+      for(let i = 0; i < Math.min(s.poop | 0, POOP_X.length); i++){
+        drawIcon(ctx, 'poop', POOP_X[i], 20, POOP_COL);
+        if((t / 500 + i) % 2 < 1){ ctx.fillStyle = '#9bb36a'; ctx.fillRect(POOP_X[i] + 2, 17, 1, 1); ctx.fillRect(POOP_X[i] + 4, 16, 1, 1); }
+      }
+    }
+    const blinkOn = (t / 700) % 2 < 1.3;
+    const bx = Math.min(41, px + 14);
+    if(m === 'sick' && blinkOn) drawIcon(ctx, 'sick', bx, 3, { m: '#e5484d' });
+    else if(m === 'hungry' && blinkOn) drawIcon(ctx, 'rice', bx, 2, { k: '#3f7d52' });
+    else if(m === 'happy' && blinkOn) drawIcon(ctx, 'heart', bx, 2);
+    else if(m === 'tired' && blinkOn) drawIcon(ctx, 'drop', bx, 3, { b: '#7cc3ff' });
+    if(sleeping){
+      ctx.fillStyle = 'rgba(30,30,70,.35)'; ctx.fillRect(0, 0, 48, 30);
+      if(blinkOn) drawIcon(ctx, 'zz', px + 14, 2, { k: '#ffffff' });
+    }
+  });
+  return cv;
+}
+
 // 상점 목록용: 움직이지 않는 한 장짜리 그림
 function staticCanvas(id, si, px){
   const cv = document.createElement('canvas');
@@ -460,25 +533,37 @@ export function careNow(p, now){
   let sleepUntil = p.sleepUntil || 0;
   let energy = clamp((p.energy == null ? 100 : p.energy) + h * PET_RULES.energyRegen);
   if(sleepUntil && now >= sleepUntil){ energy = 100; sleepUntil = 0; }
+  // 똥: poopT부터 poopEveryMs마다 하나씩 (최대 poopMax)
+  let poop = p.poop | 0, poopT = p.poopT || p.t || now;
+  const n = Math.floor((now - poopT) / PET_RULES.poopEveryMs);
+  if(n > 0){ poop = Math.min(PET_RULES.poopMax, poop + n); poopT += n * PET_RULES.poopEveryMs; }
+  let sick = !!p.sick;
+  const food = clamp((p.food == null ? 80 : p.food) - h * PET_RULES.foodDecay);
+  const fun = clamp((p.fun == null ? 80 : p.fun) - h * PET_RULES.funDecay * (sick ? 2 : 1));
+  if(!sick && (poop >= PET_RULES.sickPoop || food <= 0)) sick = true;
   return {
-    stage: p.stage | 0, exp: p.exp || 0,
-    food: clamp((p.food == null ? 80 : p.food) - h * PET_RULES.foodDecay),
-    fun: clamp((p.fun == null ? 80 : p.fun) - h * PET_RULES.funDecay),
-    energy, sleepUntil, at: p.at || now
+    stage: p.stage | 0, exp: p.exp || 0, food, fun,
+    energy, sleepUntil, at: p.at || now,
+    poop, poopT, sick, walkUntil: p.walkUntil || 0, walkNext: p.walkNext || 0
   };
 }
 export function moodOf(c, now){
   if(c.sleepUntil && c.sleepUntil > now) return 'sleep';
+  if(c.walkUntil && c.walkUntil > now) return 'walk';
+  if(c.sick) return 'sick';
   if(c.food < 25) return 'hungry';
+  if(c.poop >= 2) return 'dirty';
   if(c.energy < 20) return 'tired';
   if(c.fun < 25) return 'sad';
-  if(c.food >= 60 && c.fun >= 60 && c.energy >= 60) return 'happy';
+  if(c.food >= 60 && c.fun >= 60 && c.energy >= 60 && !c.poop) return 'happy';
   return 'normal';
 }
-export const MOOD_LABEL = { happy: '😊 신남', normal: '🙂 보통', hungry: '🍙 배고픔', tired: '😪 지침', sad: '😞 심심함', sleep: '💤 자는 중' };
+export const MOOD_LABEL = { happy: '😊 신남', normal: '🙂 보통', hungry: '🍙 배고픔', tired: '😪 지침', sad: '😞 심심함', sleep: '💤 자는 중',
+  walk: '🦮 산책 중', sick: '🤒 아픔', dirty: '💩 지저분함' };
 function storeCare(c, now){
   return { stage: c.stage, exp: Math.round(c.exp), food: Math.round(c.food * 10) / 10, fun: Math.round(c.fun * 10) / 10,
-           energy: Math.round(c.energy * 10) / 10, t: now, sleepUntil: c.sleepUntil || null, at: c.at };
+           energy: Math.round(c.energy * 10) / 10, t: now, sleepUntil: c.sleepUntil || null, at: c.at,
+           poop: c.poop | 0, poopT: c.poopT || now, sick: c.sick || null, walkUntil: c.walkUntil || null, walkNext: c.walkNext || null };
 }
 function evolveReady(c, now){
   if(c.stage === 0) return c.exp >= PET_RULES.evolve[0];
@@ -537,6 +622,20 @@ function addCss(){
   .pt-mine{ display:flex; gap:16px; align-items:center; background:#f6f8fc; border-radius:14px; padding:12px 14px; flex-wrap:wrap; }
   .pt-mine .pt-big{ background:linear-gradient(#dfe9fb,#c9daf6); border-radius:12px; padding:6px; }
   .pt-mine .pt-big .pt-cv{ width:120px; height:120px; }
+  .pt-mine .pt-big .pt-scene{ width:240px; height:150px; border-radius:8px; }
+  .pt-mine .pt-big{ padding:4px; }
+  .pt-poops{ grid-column:2 / 4; font-size:.86rem; letter-spacing:1px; }
+  .pt-status{ font-size:.84rem; font-weight:800; color:#8a5a00; background:#fff3d6; border-radius:8px; padding:5px 9px; }
+  .pt-status.bad{ color:#b42318; background:#fde8e7; }
+  .pt-overlay button.pt-act.warn{ background:#e5484d; border-color:#e5484d; color:#fff; }
+  .pt-overlay button.pt-act small{ font-weight:700; opacity:.8; }
+  .pt-sub-h{ margin:10px 0 6px !important; font-size:.92rem !important; }
+  .pt-sub-h small{ font-weight:600; color:#6b7280; font-size:.74rem; margin-left:6px; }
+  .pt-goods{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:8px; margin-bottom:12px; }
+  .pt-good{ border:2px dashed #e5d3a2; border-radius:12px; padding:8px 10px; display:flex; flex-direction:column; gap:3px; background:#fffcf3; }
+  .pt-good b{ font-size:.95rem; }
+  .pt-good span{ font-size:.76rem; color:#6b7280; }
+  .pt-good small{ font-size:.72rem; color:#8a5a00; font-weight:700; }
   .pt-mine-info{ flex:1; min-width:220px; display:flex; flex-direction:column; gap:6px; }
   .pt-mine-name{ font-size:1.15rem; font-weight:900; }
   .pt-mine-name small{ font-size:.8rem; font-weight:700; color:#6b7280; margin-left:6px; }
@@ -581,7 +680,7 @@ function addCss(){
   @keyframes ptIn{ from{ transform:translateY(10px); opacity:0; } to{ transform:none; opacity:1; } }
   .pt-coinpop{ position:absolute; font-weight:900; color:#d99a00; font-size:.85rem; pointer-events:none; animation:ptCoin .9s ease-out forwards; text-shadow:0 1px 0 #fff; white-space:nowrap; }
   @keyframes ptCoin{ from{ opacity:1; transform:translateY(0); } to{ opacity:0; transform:translateY(-26px); } }
-  @media (max-width:520px){ .pt-mine .pt-big .pt-cv{ width:96px; height:96px; } .pt-shop{ grid-template-columns:1fr; } }
+  @media (max-width:520px){ .pt-mine .pt-big .pt-cv{ width:96px; height:96px; } .pt-mine .pt-big .pt-scene{ width:192px; height:120px; } .pt-mine{ justify-content:center; } .pt-shop{ grid-template-columns:1fr; } }
   `;
   document.head.appendChild(st);
 }
@@ -595,6 +694,9 @@ export function mountPets(deps, opts){
   let unsub = null;
   let overlay = null;
   let shopTab = 'normal';
+  let sceneCv = null;       // 펫 키우기 장면 캔버스 (창을 닫을 때까지 재사용)
+  let tickTimer = null;
+  let lastMood = null;
   let view = 'all';         // 'all' 펫+상점 한 창 · 'shop' 상점만 · 'care' 펫 키우기만
   let ext = null;           // 희귀 해금 조건용 칭호 기록 (상점을 열 때 한 번 불러옴)
   let msg = '';
@@ -620,7 +722,7 @@ export function mountPets(deps, opts){
     if(!ident || !data.active || !data.owned || !data.owned[data.active] || !petById[data.active]) return null;
     const now = nowMs();
     const c = careNow(data.owned[data.active], now);
-    return { id: data.active, s: c.stage, m: moodOf(c, now) };
+    return { id: data.active, s: c.stage, m: moodOf(c, now), p: c.poop };
   }
   function sync(force){
     const info = activeInfo();
@@ -712,19 +814,45 @@ export function mountPets(deps, opts){
       const inf = PET_INFO[info.id];
       const nextNeed = c.stage < 2 ? PET_RULES.evolve[c.stage] : null;
       const ready = evolveReady(c, now);
+      const busy = info.m === 'sleep' || info.m === 'walk';
+      const items = data.items || {};
+      const coins = data.coins || 0;
+      const R = PET_RULES;
       const bar = (label, v, cls) => `<div class="pt-bar"><span style="text-align:left">${label}</span><i><b class="${cls || (v < 25 ? 'low' : '')}" style="width:${Math.max(0, Math.min(100, v))}%"></b></i><span>${Math.round(v)}</span></div>`;
+      // 용품 버튼: 가진 게 있으면 그걸 쓰고, 없으면 그 자리에서 사서 준다
+      const itemBtn = (k, off, cls) => {
+        const it = R.items[k], have = items[k] | 0;
+        const can = !off && (have > 0 || coins >= it.price);
+        return `<button type="button" class="pt-act ${cls || ''}" data-act="${k}" ${can ? '' : 'disabled'}>${it.label} ${have > 0 ? `<small>(${have}개)</small>` : `<small>(🪙${it.price})</small>`}</button>`;
+      };
+      const walkLeft = c.walkNext > now ? Math.ceil((c.walkNext - now) / 60000) : 0;
+      const status = info.m === 'walk' ? `🦮 산책 중… ${Math.max(0, Math.ceil((c.walkUntil - now) / 1000))}초 뒤 돌아와요`
+        : info.m === 'sleep' ? `💤 쿨쿨 자는 중… ${Math.max(1, Math.ceil((c.sleepUntil - now) / 60000))}분 뒤 일어나요`
+        : c.sick ? `🤒 아파요! 💊 약을 먹여 주세요${c.poop >= R.sickPoop ? ' (먼저 🧹 똥을 치워야 해요)' : c.food <= 0 ? ' (먼저 🍙 밥을 줘야 해요)' : ''} · 아픈 동안은 경험치가 오르지 않아요`
+        : c.food <= 0 ? '🍙 배가 너무 고파요! 밥을 주세요'
+        : c.poop >= 2 ? `💩 똥이 ${c.poop}개 쌓였어요! ${R.sickPoop}개가 되면 아파요`
+        : c.food < 25 ? '🍙 배고파요! 밥을 주세요'
+        : c.energy < 20 ? '😪 지쳤어요. 재워 주세요'
+        : c.fun < 25 ? '😞 심심해요. 산책을 가거나 같이 문제를 풀어요' : '';
+      const hint = c.stage < 2 && !ready ? (c.exp >= (nextNeed || 0) && c.stage === 1 ? '😊 신남 상태가 되면 진화할 수 있어요 (배부름·기분·체력 60 이상, 똥 없음, 안 아픔)' : `데려가서 문제를 ${nextNeed - c.exp}개 더 맞히면 진화할 수 있어요`) : '';
       h += `<div class="pt-sec"><h4>🐾 데려가는 펫</h4><div class="pt-mine"><div class="pt-big" data-slot="big"></div><div class="pt-mine-info">
         <div class="pt-mine-name">${escapeHtml(inf.names[c.stage])}<small>${c.stage + 1}단계 · ${MOOD_LABEL[info.m]}</small></div>
         ${bar('🍙 배부름', c.food)}${bar('😊 기분', c.fun)}${bar('⚡ 체력', c.energy)}
+        <div class="pt-bar"><span style="text-align:left">💩 똥</span><span class="pt-poops">${c.poop ? '💩'.repeat(c.poop) : '깨끗해요 ✨'}</span><span></span></div>
         ${nextNeed ? `<div class="pt-bar"><span style="text-align:left">✨ 경험치</span><i><b class="exp" style="width:${Math.min(100, c.exp / nextNeed * 100)}%"></b></i><span>${Math.min(c.exp, nextNeed)}/${nextNeed}</span></div>` : `<div class="pt-note">✨ 다 자랐어요! (맞힌 문제 ${c.exp}개)</div>`}
+        ${status ? `<div class="pt-status ${c.sick || c.food <= 0 ? 'bad' : ''}">${escapeHtml(status)}</div>` : ''}
         <div class="pt-acts">
-          <button type="button" class="pt-act gold" data-act="feed" ${(data.coins || 0) < PET_RULES.feedCost || c.food >= 95 || info.m === 'sleep' ? 'disabled' : ''}>🍙 밥 주기 (🪙${PET_RULES.feedCost})</button>
-          <button type="button" class="pt-act" data-act="sleep" ${info.m === 'sleep' || c.energy >= 95 ? 'disabled' : ''}>${info.m === 'sleep' ? `💤 자는 중 (${Math.ceil((c.sleepUntil - now) / 60000)}분)` : '💤 재우기'}</button>
+          ${itemBtn('rice', c.food >= 95 || busy, 'gold')}
+          ${itemBtn('snack', c.fun >= 100 || busy, 'gold')}
+          <button type="button" class="pt-act" data-act="clean" ${c.poop && info.m !== 'walk' ? '' : 'disabled'}>🧹 똥 치우기</button>
+          ${itemBtn('med', !c.sick || busy, c.sick ? 'warn' : '')}
+          <button type="button" class="pt-act" data-act="walk" ${!busy && !c.sick && !walkLeft && c.energy >= 15 ? '' : 'disabled'}>${walkLeft ? `🦮 산책 <small>(${walkLeft}분 뒤)</small>` : '🦮 산책 가기'}</button>
+          <button type="button" class="pt-act" data-act="sleep" ${busy || c.energy >= 95 ? 'disabled' : ''}>💤 재우기</button>
           ${c.stage < 2 ? `<button type="button" class="pt-act go" data-act="evolve" ${ready ? '' : 'disabled'}>✨ 진화하기</button>` : ''}
         </div>
-        <div class="pt-msg">${escapeHtml(msg || (c.food <= 0 ? '🍙 배가 고파서 경험치가 오르지 않아요! 밥을 주세요' : c.stage < 2 && !ready ? (c.exp >= (nextNeed || 0) && c.stage === 1 ? '기분이 😊신남 상태가 되면 진화할 수 있어요 (배부름·기분·체력 모두 60 이상)' : `데려가서 문제를 ${nextNeed - c.exp}개 더 맞히면 진화할 수 있어요`) : ''))}</div>
+        <div class="pt-msg">${escapeHtml(msg || hint)}</div>
       </div></div>
-      <div class="pt-note">데려간 펫과 함께 문제를 맞히면 경험치와 기분이 올라요 · 배부름이 0이면 경험치가 오르지 않아요 · 배부름·기분은 1시간에 1씩 줄어요 · 재우면 ${PET_RULES.sleepMs / 60000}분 뒤 체력이 가득 차요</div></div>`;
+      <div class="pt-note">데려간 펫과 함께 문제를 맞히면 경험치와 기분이 올라요 · 배부름·기분은 1시간에 1씩 줄어요 · ${R.poopEveryMs / 3600000}시간마다, 그리고 밥을 먹으면 똥을 싸요 · 똥이 ${R.sickPoop}개 쌓이거나 배부름이 0이 되면 아파요 · 산책은 ${R.walkCooldownMs / 60000}분에 한 번 (가끔 동전을 주워요) · 재우면 ${R.sleepMs / 60000}분 뒤 체력이 가득 차요</div></div>`;
     } else if(showCare){
       h += `<div class="pt-sec"><h4>🐾 데려가는 펫</h4><div class="pt-note">아직 펫이 없어요. ${showShop ? '아래 상점에서' : '상점에서'} 골라 보세요! 펫이 생기면 수업 게임 전광판과 혼자 연습 화면에 내 캐릭터로 나와요.</div>${showShop ? '' : '<button type="button" class="pt-act gold" data-view="shop">🏪 상점으로 가기</button>'}</div>`;
     }
@@ -739,6 +867,9 @@ export function mountPets(deps, opts){
     if(view === 'shop' && info) h += `<div class="pt-sec"><div class="pt-note">지금 데려가는 펫: <b>${escapeHtml(PET_INFO[info.id].names[info.s])}</b> · 밥 주기·진화는 🐾 펫 키우기에서 해요 <button type="button" class="pt-act" data-view="care">🐾 펫 키우기로 가기</button></div></div>`;
     if(showShop){
     h += `<div class="pt-sec"><h4>${view === 'shop' ? '🛒 펫 고르기' : '🏪 상점'}</h4><div class="pt-note">🪙 코인 모으기: 혼자 연습·수업 게임 정답 1개 = 1코인 + 1·2·3등 보너스 ${PET_RULES.classBonus.join('·')}코인 · 한국사·세계사 코인은 하나로 합쳐져요</div>
+      <h4 class="pt-sub-h">🧺 용품 <small>펫 키우기에서 없으면 바로 사서 줄 수도 있어요</small></h4>
+      <div class="pt-goods">${Object.entries(PET_RULES.items).map(([k, it]) => `<div class="pt-good"><b>${it.label}</b><span>${k === 'rice' ? `배부름 +${it.food} (먹으면 똥 하나)` : k === 'snack' ? `배부름 +${it.food} · 기분 +${it.fun}` : '아플 때 먹이면 나아요'}</span><small>가진 개수 ${((data.items || {})[k] | 0)}개</small><button type="button" class="pt-buy" data-buyitem="${k}" ${(data.coins || 0) >= it.price ? '' : 'disabled'}>🪙 ${it.price}코인에 사기</button></div>`).join('')}</div>
+      <h4 class="pt-sub-h">🐾 펫</h4>
       <div class="pt-tabs"><button type="button" class="pt-tab ${shopTab === 'normal' ? 'on' : ''}" data-tab="normal">일반 펫</button><button type="button" class="pt-tab ${shopTab === 'rare' ? 'on' : ''}" data-tab="rare">✦ 희귀 펫</button></div>
       <div class="pt-shop">`;
     PET_ORDER.filter(id => !!PET_INFO[id].rare === (shopTab === 'rare')).forEach(id => {
@@ -765,7 +896,11 @@ export function mountPets(deps, opts){
     // 캔버스 끼우기
     if(info){
       const slot = frag.querySelector('[data-slot="big"]');
-      if(slot) slot.appendChild(petCanvas(info));
+      if(slot){
+        if(!sceneCv) sceneCv = sceneCanvas({});
+        Object.assign(sceneCv._scene, { id: info.id, s: info.s, m: info.m, poop: info.p });
+        slot.appendChild(sceneCv);
+      }
     }
     ownIds.forEach(id => {
       const slot = frag.querySelector(`[data-slot="own-${id}"]`);
@@ -826,26 +961,88 @@ export function mountPets(deps, opts){
       await tx((cur) => { if(!cur.owned || !cur.owned[id]) return; cur.active = id; return cur; });
       return;
     }
+    if(kind === 'buyitem'){
+      const it = PET_RULES.items[id];
+      const res = await tx((cur) => {
+        if((cur.coins || 0) < it.price) return;
+        cur.coins -= it.price;
+        cur.items = cur.items || {};
+        cur.items[id] = (cur.items[id] | 0) + 1;
+        return cur;
+      });
+      if(res && res.committed) toast(`${it.label} 1개를 샀어요!`, '🐾 펫 키우기에서 줄 수 있어요');
+      return;
+    }
     const aid = data.active;
     if(!aid) return;
-    if(kind === 'feed'){
+    if(kind === 'rice' || kind === 'snack' || kind === 'med'){
+      const it = PET_RULES.items[kind];
+      let why = '';
       const res = await tx((cur, now) => {
+        why = '';
         const p = cur.owned && cur.owned[aid];
-        if(!p || (cur.coins || 0) < PET_RULES.feedCost) return;
-        const c = careNow(p, now);
-        if(c.food >= 95 || (c.sleepUntil && c.sleepUntil > now)) return;
-        c.food = clamp(c.food + PET_RULES.feedAmount);
-        cur.coins -= PET_RULES.feedCost;
+        if(!p) return;
+        const c = careNow(p, now), m = moodOf(c, now);
+        if(m === 'sleep' || m === 'walk') return;
+        if(kind === 'rice' && c.food >= 95) return;
+        if(kind === 'snack' && c.fun >= 100) return;
+        if(kind === 'med'){
+          if(!c.sick) return;
+          if(c.poop >= PET_RULES.sickPoop){ why = '🧹 똥부터 치워 주세요! 똥이 그대로면 약을 먹어도 다시 아파요'; return; }
+          if(c.food <= 0){ why = '🍙 밥부터 주세요! 굶으면 약을 먹어도 다시 아파요'; return; }
+        }
+        cur.items = cur.items || {};
+        if((cur.items[kind] | 0) > 0) cur.items[kind] -= 1;
+        else { if((cur.coins || 0) < it.price) return; cur.coins -= it.price; }
+        if(it.food) c.food = clamp(c.food + it.food);
+        if(it.fun) c.fun = clamp(c.fun + it.fun);
+        if(kind === 'rice') c.poop = Math.min(PET_RULES.poopMax, c.poop + 1);
+        if(kind === 'med'){ c.sick = false; c.fun = clamp(c.fun + 10); }
         cur.owned[aid] = storeCare(c, now);
         return cur;
       });
-      if(res && res.committed) setMsg('🍙 냠냠! 배부름이 올랐어요');
+      if(res && res.committed) setMsg(kind === 'rice' ? '🍙 냠냠! 배부름이 올랐어요 · 먹었더니 똥을 쌌어요 💩' : kind === 'snack' ? '🍪 맛있다! 기분이 올랐어요' : '💊 약을 먹고 다 나았어요!');
+      else if(why) setMsg(why);
+    } else if(kind === 'clean'){
+      const res = await tx((cur, now) => {
+        const p = cur.owned && cur.owned[aid];
+        if(!p) return;
+        const c = careNow(p, now);
+        if(!c.poop || moodOf(c, now) === 'walk') return;
+        c.poop = 0; c.poopT = now; c.fun = clamp(c.fun + 3);
+        cur.owned[aid] = storeCare(c, now);
+        return cur;
+      });
+      if(res && res.committed) setMsg('🧹 싹싹! 깨끗해졌어요 ✨');
+    } else if(kind === 'walk'){
+      let found = 0;
+      const res = await tx((cur, now) => {
+        const p = cur.owned && cur.owned[aid];
+        if(!p) return;
+        const c = careNow(p, now), m = moodOf(c, now);
+        if(m === 'sleep' || m === 'walk' || c.sick || c.walkNext > now || c.energy < 15) return;
+        found = Math.random() < PET_RULES.walkCoinChance ? 1 + Math.floor(Math.random() * PET_RULES.walkCoinMax) : 0;
+        c.walkUntil = now + PET_RULES.walkMs;
+        c.walkNext = now + PET_RULES.walkCooldownMs;
+        c.fun = clamp(c.fun + PET_RULES.walkFun);
+        c.energy = clamp(c.energy - PET_RULES.walkEnergy);
+        c.food = clamp(c.food - PET_RULES.walkFood);
+        cur.owned[aid] = storeCare(c, now);
+        cur.coins = (cur.coins || 0) + found;
+        cur.earned = (cur.earned || 0) + found;
+        return cur;
+      });
+      if(res && res.committed){
+        setMsg('🦮 산책 출발! 기분이 좋아져요');
+        if(found) setTimeout(() => toast(`🪙 산책하다가 동전 ${found}개를 주웠어요!`), PET_RULES.walkMs / 2);
+      }
     } else if(kind === 'sleep'){
       const res = await tx((cur, now) => {
         const p = cur.owned && cur.owned[aid];
         if(!p) return;
         const c = careNow(p, now);
-        if(c.sleepUntil && c.sleepUntil > now) return;
+        const m = moodOf(c, now);
+        if(m === 'sleep' || m === 'walk') return;
         c.sleepUntil = now + PET_RULES.sleepMs;
         cur.owned[aid] = storeCare(c, now);
         return cur;
@@ -881,6 +1078,7 @@ export function mountPets(deps, opts){
       if(b.dataset.tab){ shopTab = b.dataset.tab; render(); return; }
       if(b.dataset.view){ view = b.dataset.view; overlay.querySelector('.pt-body').scrollTop = 0; render(); updateButtons(); return; }
       if(b.dataset.buy){ act('buy', b.dataset.buy); return; }
+      if(b.dataset.buyitem){ act('buyitem', b.dataset.buyitem); return; }
       if(b.dataset.own){ act('own', b.dataset.own); return; }
       if(b.dataset.act){ act(b.dataset.act); }
     });
@@ -888,8 +1086,16 @@ export function mountPets(deps, opts){
     ext = null;
     render();
     loadExt();
+    clearInterval(tickTimer);
+    tickTimer = setInterval(() => {
+      if(!overlay) return;
+      const i = activeInfo();
+      const m = i ? i.m : null;
+      if(m === 'walk' || m === 'sleep' || m !== lastMood){ render(); sync(); }
+      lastMood = m;
+    }, 1000);
   }
-  function close(){ if(overlay){ overlay.remove(); overlay = null; } }
+  function close(){ clearInterval(tickTimer); tickTimer = null; sceneCv = null; if(overlay){ overlay.remove(); overlay = null; } }
   document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && overlay) close(); });
 
   const api = {
@@ -928,7 +1134,7 @@ export function mountPets(deps, opts){
         const p = cur.active && cur.owned && cur.owned[cur.active];
         if(p){
           const c = careNow(p, now);
-          if(c.food > 0) c.exp += 1;
+          if(c.food > 0 && !c.sick) c.exp += 1;   // 배고프거나 아프면 경험치가 오르지 않음
           c.fun = clamp(c.fun + PET_RULES.funPerCorrect);
           c.energy = clamp(c.energy - PET_RULES.energyPerCorrect);
           cur.owned[cur.active] = storeCare(c, now);
