@@ -1097,6 +1097,9 @@ export function dayKey(ms){
 
 // ── 희귀 펫 해금 조건 ─────────────────────────────────
 // ext: 칭호 기록(두 과목) { world:{seen,days,histDays,log}, korea:{...} }
+// 관리자(선생님)가 학생 화면을 확인할 때 쓰는 계정 — 희귀 펫 해금 조건 없이 모두 열림 ('학년-반/이름')
+// 코인은 따로 들고, 필요하면 관리자 화면 ⑧ 코인 주기로 채운다
+export const ADMIN_VIEWERS = ['2-9/영주T'];
 function rareProgress(id, d, ext){
   const seen = (room, tid) => !!(ext[room] && ext[room].seen && ext[room].seen[tid]);
   const logCount = (suffix) => ['world', 'korea'].reduce((n, r) => n + Object.keys((ext[r] && ext[r].log) || {}).filter(k => k.endsWith('_' + suffix)).length, 0);
@@ -1294,6 +1297,9 @@ export function mountPets(deps, opts){
   addCss();
 
   const base = () => `pets/${ident.cls}/${ident.name}`;
+  const isAdminView = () => !!ident && ADMIN_VIEWERS.includes(ident.cls + '/' + ident.name);
+  // 희귀 펫 해금 진행 상황 — 관리자 계정은 조건 없이 열림, 아직 기록을 못 불러왔으면 null
+  const rareProg = (id) => isAdminView() ? { ok: true, text: '관리자 계정 · 조건 없이 열림' } : ext ? rareProgress(id, data, ext) : null;
   const nowMs = () => (serverNow ? serverNow() : Date.now());
 
   function toast(text, sub){
@@ -1869,14 +1875,14 @@ export function mountPets(deps, opts){
       const have = !!owned[id];
       let lockHtml = '', canBuy = !have && (data.coins || 0) >= inf.price;
       if(inf.rare){
-        const pr = ext ? rareProgress(id, data, ext) : null;
+        const pr = rareProg(id);
         if(!pr){ lockHtml = `<div class="pt-lock">🔒 ${escapeHtml(inf.unlock)} · 확인 중…</div>`; canBuy = false; }
         else {
           lockHtml = `<div class="pt-lock ${pr.ok ? 'ok' : ''}">${pr.ok ? '🔓' : '🔒'} ${escapeHtml(inf.unlock)} · ${escapeHtml(pr.text)}</div>`;
           if(!pr.ok) canBuy = false;
         }
       }
-      const btnText = have ? '✔ 가지고 있어요' : (inf.rare && !(ext && rareProgress(id, data, ext).ok)) ? '🔒 조건을 채우면 열려요' : (data.coins || 0) < inf.price ? `🪙 ${(inf.price - (data.coins || 0)).toLocaleString()}코인 더 필요해요` : `🪙 ${inf.price.toLocaleString()}코인에 사기`;
+      const btnText = have ? '✔ 가지고 있어요' : (inf.rare && !(rareProg(id) || {}).ok) ? '🔒 조건을 채우면 열려요' : (data.coins || 0) < inf.price ? `🪙 ${(inf.price - (data.coins || 0)).toLocaleString()}코인 더 필요해요` : `🪙 ${inf.price.toLocaleString()}코인에 사기`;
       h += `<div class="pt-card ${inf.rare ? 'rare' : ''}"><div class="pt-card-top"><b>${escapeHtml(inf.name)}</b>${inf.rare ? '<span class="pt-rare">희귀</span>' : ''}<span class="pt-price">🪙 ${inf.price.toLocaleString()}</span></div>
         <div class="pt-evo" data-slot="evo-${id}"></div>
         <div class="pt-lore">${escapeHtml(inf.lore)}</div>${(() => { const ab = petAbility(id, 0); return ab ? `<div class="pt-skill">${ab.icon} <b>${escapeHtml(ab.name)}</b> ${escapeHtml(ab.text)}<small>아이템전 능력 · 진화하면 ${escapeHtml(abilityLadder(id))}</small></div>` : ''; })()}${lockHtml}
@@ -1956,7 +1962,7 @@ export function mountPets(deps, opts){
     if(!ident) return;
     if(kind === 'buy'){
       const inf = PET_INFO[id];
-      if(inf.rare && !(ext && rareProgress(id, data, ext).ok)) return;
+      if(inf.rare && !(rareProg(id) || {}).ok) return;
       const res = await tx((cur, now) => {
         cur.owned = cur.owned || {};
         if(cur.owned[id] || (cur.coins || 0) < inf.price) return;
