@@ -11,6 +11,11 @@
 //   bonus/<라운드token>: 받은 수업 게임 등수 보너스 (같은 라운드는 한 번만)
 //   active         데려가는 펫 id
 //   gifts/<키>: {a, r, at}  선생님이 주거나 뺀 코인 알림 (관리자 화면 ⑧) — 학생 화면이 알림을 띄우고 지운다
+//   room: {paper, floor, window, wall, left, right, rug, toy}  방 자리마다 끼운 물건 id (방 꾸미기)
+//   deco: {<종류>_<id>: 개수}   산 방 물건 (가구는 양쪽에 두려면 2개)
+//   toyNext / playUntil         장난감 '같이 놀기' 다음 가능 시각 / 노는 장면이 끝나는 시각
+//   hearts                      친구에게 받은 하트 합계 · heartDay: {k, by:{이름:true}} 오늘 하트 준 친구
+//   heartNews/<키>: {f, at}     받은 하트 알림 (띄우고 지움)
 //   items: {rice, snack, med}  가지고 있는 밥·간식·약 개수 (상점 용품)
 //   owned/<펫id>: {stage, exp, food, fun, energy, t, sleepUntil, at, poop, poopT, sick, walkUntil, walkNext}
 //       stage 0·1·2 진화 단계 · exp 데려가서 맞힌 문제 수 · food/fun/energy 0~100 (t 시각 기준 값, 시간이 지나면 줄어듦)
@@ -34,6 +39,10 @@ export const PET_RULES = {
   walkCooldownMs: 60 * 60000, // 산책은 이 간격마다 한 번
   walkFun: 20, walkEnergy: 10, walkFood: 5,   // 산책: 기분 +, 체력 -, 배부름 -
   walkCoinChance: 0.3, walkCoinMax: 5,         // 산책하다 동전을 주울 확률·최대 개수
+  cozyStep: 0.04, cozyMax: 0.5,  // 아늑함 1점마다 기분이 4%씩 천천히 떨어짐 (최대 50%)
+  cozyHappy: 8,          // 아늑함이 이보다 높으면 '신남' 기준이 60 → 50으로 낮아짐
+  toyCooldownMs: 30 * 60000, toyPlayMs: 6000,  // 장난감 같이 놀기 간격 · 노는 장면 길이
+  heartFun: 5,           // 친구에게 하트를 받으면 펫 기분 +
   foodDecay: 1,          // 시간당 줄어드는 배부름
   funDecay: 1,           // 시간당 줄어드는 기분
   funPerCorrect: 1.5,    // 데려가서 맞힐 때마다 오르는 기분
@@ -472,53 +481,261 @@ function jumpPetCanvas(cv, correct){
   const now = performance.now();
   if(correct) cv._pet.jumpAt = now; else cv._pet.sadUntil = now + 900;
 }
-// 펫 키우기 장면 48×30: st = {id, s, m, poop}
+// ── 펫 방 꾸미기: 64×40 도트 방, 정해진 자리(슬롯)에 물건을 끼운다 ──
+// 벽 y 0~27 · 바닥 y 28~39
+// slots: paper(벽지) floor(바닥) window(창문) wall(벽 장식) left(왼쪽 가구) right(오른쪽 가구) rug(러그)
+const R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+const P = (ctx, x, y, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, 1, 1); };
+function skyMode(hour){ return hour >= 6 && hour < 17 ? 'day' : hour >= 17 && hour < 20 ? 'eve' : 'night'; }
+// 창 안쪽 하늘: inside(x,y)가 true인 칸만 칠한다
+function drawSky(ctx, x0, y0, w, h, mode, t, inside){
+  const top = { day: '#7cc4f0', eve: '#e9876b', night: '#1b1f4a' }[mode];
+  const bot = { day: '#b9e2f8', eve: '#f6c27a', night: '#2c3270' }[mode];
+  for(let y = 0; y < h; y++) for(let x = 0; x < w; x++){
+    if(inside && !inside(x, y)) continue;
+    P(ctx, x0 + x, y0 + y, y < h / 2 ? top : bot);
+  }
+  const put = (x, y, c) => { if(x >= 0 && y >= 0 && x < w && y < h && (!inside || inside(x, y))) P(ctx, x0 + x, y0 + y, c); };
+  if(mode === 'night'){
+    put(w - 5, 2, '#fff3b0'); put(w - 4, 2, '#fff3b0'); put(w - 5, 3, '#fff3b0'); put(w - 6, 3, '#fff3b0'); put(w - 6, 4, '#fff3b0'); put(w - 5, 5, '#fff3b0');
+    [[2, 2], [5, 6], [9, 3], [3, 9], [11, 8], [7, 11]].forEach(([sx, sy], i) => { if((t / 600 + i) % 3 > .6) put(sx % w, sy % h, '#ffffff'); });
+  } else {
+    const sy = mode === 'day' ? 2 : h - 5;
+    for(let dy = 0; dy < 3; dy++) for(let dx = 0; dx < 3; dx++) put(w - 5 + dx, sy + dy, mode === 'day' ? '#ffe066' : '#ff9a4a');
+    const cx = Math.round(((t / 120) % (w + 10)) - 6);
+    [[0, 1], [1, 0], [2, 0], [3, 1], [1, 1], [2, 1], [4, 1]].forEach(([dx, dy]) => put(cx + dx, 5 + dy, '#ffffff'));
+  }
+}
+
+export const DECOR = {
+  paper: {
+    cream:  { name: '크림 벽지', price: 0, cozy: 0, draw(ctx){ R(ctx, 0, 0, 64, 28, '#f3e6c8'); for(let y = 3; y < 27; y += 6) for(let x = (y % 12 ? 3 : 6); x < 64; x += 6) P(ctx, x, y, '#e6d4ae'); } },
+    hanji:  { name: '한지 격자 벽', price: 120, cozy: 1, draw(ctx){ R(ctx, 0, 0, 64, 28, '#f4ecd8'); for(let x = 0; x < 64; x += 8) R(ctx, x, 0, 1, 27, '#d9c9a3'); for(let y = 0; y < 27; y += 9) R(ctx, 0, y, 64, 1, '#d9c9a3'); } },
+    brick:  { name: '벽돌 벽', price: 120, cozy: 1, draw(ctx){ R(ctx, 0, 0, 64, 28, '#c46a4c'); for(let y = 0; y < 27; y += 4){ R(ctx, 0, y, 64, 1, '#a85a40'); for(let x = (y / 4) % 2 ? 4 : 0; x < 64; x += 8) R(ctx, x, y, 1, 4, '#a85a40'); } } },
+    stripe: { name: '하늘 줄무늬 벽지', price: 100, cozy: 1, draw(ctx){ R(ctx, 0, 0, 64, 28, '#d5e8f7'); for(let x = 2; x < 64; x += 6) R(ctx, x, 0, 2, 27, '#bcd6ee'); } },
+    starry: { name: '밤하늘 벽지', price: 180, cozy: 2, draw(ctx, t){ R(ctx, 0, 0, 64, 28, '#2e3466'); [[5,4],[14,9],[23,3],[31,12],[40,6],[50,10],[58,3],[9,18],[27,21],[45,19],[60,22],[36,24]].forEach(([x, y], i) => P(ctx, x, y, (t / 700 + i) % 3 > .5 ? '#fff3b0' : '#8f95c9')); } }
+  },
+  floor: {
+    wood:    { name: '나무 마루', price: 0, cozy: 0, draw(ctx){ R(ctx, 0, 28, 64, 12, '#b9824f'); for(let y = 30; y < 40; y += 3) R(ctx, 0, y, 64, 1, '#9c6a3d'); for(let i = 0; i < 4; i++) for(let x = (i % 2 ? 9 : 2); x < 64; x += 14) P(ctx, x, 28 + i * 3, '#9c6a3d'); } },
+    jangpan: { name: '노란 장판', price: 100, cozy: 1, draw(ctx){ R(ctx, 0, 28, 64, 12, '#e6c464'); for(let x = 0; x < 64; x += 10) R(ctx, x, 28, 1, 12, '#d6b04e'); R(ctx, 0, 33, 64, 1, '#d6b04e'); } },
+    marble:  { name: '대리석 바닥', price: 150, cozy: 1, draw(ctx){ for(let y = 28; y < 40; y += 3) for(let x = 0; x < 64; x += 4) R(ctx, x, y, 4, 3, ((x / 4 + (y - 28) / 3) % 2) ? '#e9e9ef' : '#c9cad6'); } }
+  },
+  window: {
+    basic: { name: '네모 창문', price: 0, cozy: 1, draw(ctx, t, hour){
+      const x = 6, y = 5;
+      drawSky(ctx, x + 1, y + 1, 14, 12, skyMode(hour), t);
+      R(ctx, x, y, 16, 1, '#8b5a33'); R(ctx, x, y + 13, 16, 1, '#8b5a33'); R(ctx, x, y, 1, 14, '#8b5a33'); R(ctx, x + 15, y, 1, 14, '#8b5a33');
+      R(ctx, x + 7, y, 2, 14, '#8b5a33'); R(ctx, x, y + 6, 16, 1, '#8b5a33'); R(ctx, x - 1, y + 14, 18, 1, '#6b4423'); } },
+    hanok: { name: '한옥 띠살창', price: 150, cozy: 2, draw(ctx, t, hour){
+      const x = 6, y = 4, m = skyMode(hour);
+      R(ctx, x, y, 16, 16, '#6b4423');
+      R(ctx, x + 1, y + 1, 14, 14, m === 'night' ? '#e8b866' : m === 'eve' ? '#f6d7a0' : '#f4ead2');   // 밤엔 방 불빛이 창호지에 비침
+      for(let i = 0; i < 14; i += 3) R(ctx, x + 1 + i, y + 1, 1, 14, '#8b5a33');
+      R(ctx, x + 1, y + 4, 14, 1, '#8b5a33'); R(ctx, x + 1, y + 11, 14, 1, '#8b5a33'); R(ctx, x + 7, y + 1, 2, 14, '#6b4423'); } },
+    moon:  { name: '둥근 달창', price: 180, cozy: 2, draw(ctx, t, hour){
+      const x = 5, y = 4, c = 8.5, r = 7.5;
+      const inC = (px, py) => Math.hypot(px + .5 - c, py + .5 - c) <= r;
+      drawSky(ctx, x, y, 17, 17, skyMode(hour), t, (px, py) => Math.hypot(px + .5 - c, py + .5 - c) <= r - 1);
+      for(let py = 0; py < 17; py++) for(let px = 0; px < 17; px++){ const d = Math.hypot(px + .5 - c, py + .5 - c); if(d <= r && d > r - 1.3) P(ctx, x + px, y + py, '#7a4b2a'); }
+      for(let i = 3; i < 15; i += 4){ for(let k = 0; k < 17; k++){ if(inC(i, k)) P(ctx, x + i, y + k, '#9b6a43'); if(inC(k, i)) P(ctx, x + k, y + i, '#9b6a43'); } } } },
+    stained: { name: '스테인드글라스', price: 220, cozy: 3, draw(ctx, t, hour){
+      const x = 7, y = 3, m = skyMode(hour);
+      const cols = m === 'night' ? ['#5a2a3a', '#23305e', '#6b5a24', '#255036'] : ['#e5484d', '#3b6fe0', '#f2c230', '#3fae6a'];
+      for(let py = 0; py < 18; py++) for(let px = 0; px < 14; px++){
+        if(py < 6 && Math.hypot(px + .5 - 7, py + .5 - 7) > 7) continue;      // 위가 둥근 아치
+        const lead = px % 7 === 0 || px === 13 || py % 6 === 0 || py === 17 || (py < 6 && Math.hypot(px + .5 - 7, py + .5 - 7) > 6);
+        P(ctx, x + px, y + py, lead ? '#2b2233' : cols[((px / 7 | 0) + (py / 6 | 0)) % 4]);
+      }
+      R(ctx, x - 1, y + 18, 16, 1, '#6b6f80'); } }
+  },
+  wall: {
+    none:   { name: '없음', price: 0, cozy: 0, draw(){} },
+    clock:  { name: '벽시계', price: 100, cozy: 1, draw(ctx, t, hour, min){
+      const cx = 51, cy = 10;
+      for(let py = -5; py <= 5; py++) for(let px = -5; px <= 5; px++){ const d = Math.hypot(px, py); if(d <= 5.3) P(ctx, cx + px, cy + py, d > 4.3 ? '#6b4423' : '#fffaf0'); }
+      const hand = (ang, len, c) => { for(let k = 0; k <= len; k++) P(ctx, cx + Math.round(Math.sin(ang) * k), cy - Math.round(Math.cos(ang) * k), c); };
+      hand(((hour % 12) + min / 60) / 12 * Math.PI * 2, 2, '#2b2233'); hand(min / 60 * Math.PI * 2, 3.5, '#5b6b8c'); P(ctx, cx, cy, '#e5484d'); } },
+    tiger:  { name: '민화 호랑이 액자', price: 160, cozy: 2, draw(ctx){
+      const x = 45, y = 5; R(ctx, x, y, 13, 11, '#6b4423'); R(ctx, x + 1, y + 1, 11, 9, '#f2e6c8');
+      R(ctx, x + 2, y + 2, 2, 5, '#3f7d52'); R(ctx, x + 1, y + 2, 4, 1, '#3f7d52'); R(ctx, x + 1, y + 4, 4, 1, '#3f7d52');   // 소나무
+      R(ctx, x + 5, y + 5, 6, 3, '#f39a3c'); R(ctx, x + 9, y + 4, 3, 3, '#f39a3c'); P(ctx, x + 6, y + 5, '#2b2233'); P(ctx, x + 8, y + 6, '#2b2233'); P(ctx, x + 10, y + 5, '#2b2233'); P(ctx, x + 5, y + 8, '#f39a3c'); P(ctx, x + 10, y + 8, '#f39a3c'); P(ctx, x + 4, y + 5, '#f39a3c'); } },
+    scroll: { name: '산수화 족자', price: 140, cozy: 2, draw(ctx){
+      const x = 47, y = 3; R(ctx, x - 1, y, 11, 1, '#6b4423'); R(ctx, x, y + 1, 9, 15, '#f4ecd8'); R(ctx, x - 1, y + 16, 11, 1, '#6b4423');
+      [[1, 9], [2, 8], [3, 7], [4, 8], [5, 9], [4, 6], [5, 5], [6, 6], [7, 7]].forEach(([dx, dy]) => P(ctx, x + dx, y + dy, '#55606e'));
+      R(ctx, x + 1, y + 11, 7, 1, '#9fb0bf'); P(ctx, x + 7, y + 3, '#e5484d'); } },
+    map:    { name: '옛 세계 지도', price: 180, cozy: 2, draw(ctx){
+      const x = 44, y = 5; R(ctx, x, y, 15, 11, '#7a4b2a'); R(ctx, x + 1, y + 1, 13, 9, '#e9d9a6');
+      [[2, 2, 3, 3], [3, 5, 2, 3], [7, 2, 3, 2], [7, 4, 2, 4], [10, 2, 3, 3], [11, 6, 2, 2]].forEach(([a, b, w, h]) => R(ctx, x + a, y + b, w, h, '#8aa05a'));
+      P(ctx, x + 6, y + 7, '#e5484d'); } },
+    egypt:  { name: '이집트 벽화', price: 200, cozy: 2, draw(ctx){
+      const x = 44, y = 4; R(ctx, x, y, 15, 12, '#d9b56a'); R(ctx, x, y, 15, 1, '#2f5fb0'); R(ctx, x, y + 11, 15, 1, '#2f5fb0');
+      R(ctx, x + 4, y + 4, 7, 1, '#2b2233'); R(ctx, x + 3, y + 5, 9, 1, '#2b2233'); R(ctx, x + 6, y + 5, 3, 2, '#2f5fb0'); R(ctx, x + 4, y + 7, 6, 1, '#2b2233');
+      P(ctx, x + 7, y + 8, '#2b2233'); P(ctx, x + 7, y + 9, '#2b2233'); P(ctx, x + 8, y + 9, '#2b2233'); P(ctx, x + 10, y + 8, '#2b2233'); } }
+  },
+  // 가구는 왼쪽·오른쪽 자리에 함께 쓴다 (x: 자리의 왼쪽 끝, 바닥선 y=31에 붙어 섬)
+  furn: {
+    none:    { name: '없음', price: 0, cozy: 0, draw(){} },
+    celadon: { name: '청자 화분', price: 150, cozy: 2, draw(ctx, t, x){
+      const sway = Math.sin(t / 900) > 0 ? 1 : 0;
+      [[6, 10], [5, 9], [4, 8], [7, 8], [8, 7], [9, 8], [10, 9], [6, 6], [5, 5], [9, 5], [10, 4]].forEach(([dx, dy]) => P(ctx, x + dx + (dy < 7 ? sway : 0), 14 + dy, '#3f9a52'));
+      R(ctx, x + 5, 25, 7, 1, '#6faa96'); R(ctx, x + 4, 26, 9, 3, '#8fc7b0'); R(ctx, x + 5, 29, 7, 2, '#8fc7b0'); R(ctx, x + 6, 31, 5, 1, '#6faa96'); P(ctx, x + 7, 27, '#e8f6ef'); P(ctx, x + 9, 28, '#5f9a86'); } },
+    jagae:   { name: '자개장', price: 280, cozy: 3, draw(ctx, t, x){
+      R(ctx, x + 1, 14, 14, 17, '#2a1a12'); R(ctx, x + 1, 31, 2, 1, '#2a1a12'); R(ctx, x + 13, 31, 2, 1, '#2a1a12');
+      R(ctx, x + 2, 15, 5, 14, '#3a2418'); R(ctx, x + 9, 15, 5, 14, '#3a2418');
+      [[3, 17], [5, 19], [4, 22], [3, 25], [10, 17], [12, 20], [11, 23], [12, 26], [6, 26], [10, 25]].forEach(([dx, dy], i) => P(ctx, x + dx, dy, (t / 500 + i) % 4 > 1 ? '#e8f0ff' : '#ffd6f0'));
+      P(ctx, x + 7, 22, '#ffcf3f'); P(ctx, x + 8, 22, '#ffcf3f'); } },
+    books:   { name: '책장', price: 180, cozy: 2, draw(ctx, t, x){
+      R(ctx, x + 1, 12, 14, 19, '#8b5a33'); R(ctx, x + 1, 31, 14, 1, '#6b4423');
+      const cols = ['#e5484d', '#3b6fe0', '#f2c230', '#3fae6a', '#a46be8', '#f39a3c'];
+      [14, 20, 26].forEach((sy, r) => { R(ctx, x + 2, sy, 12, 5, '#5e3a1f'); for(let i = 0; i < 6; i++) R(ctx, x + 2 + i * 2, sy + (i % 3 === r % 3 ? 1 : 0), 2, 5 - (i % 3 === r % 3 ? 1 : 0), cols[(i + r * 2) % 6]); R(ctx, x + 1, sy + 5, 14, 1, '#8b5a33'); }); } },
+    globe:   { name: '지구본', price: 200, cozy: 2, draw(ctx, t, x){
+      const cx = x + 8, cy = 20;
+      for(let py = -5; py <= 5; py++) for(let px = -5; px <= 5; px++){
+        if(Math.hypot(px, py) > 5.2) continue;
+        const lon = ((px + Math.round(t / 260)) % 12 + 12) % 12;          // 천천히 돎
+        P(ctx, cx + px, cy + py, (lon < 4 && Math.abs(py) < 4) || (lon > 7 && lon < 10 && py > -2) ? '#5fae5a' : '#3b8fe0');
+      }
+      for(let a = 0; a < 12; a++){ P(ctx, cx + Math.round(Math.cos(a / 12 * Math.PI) * 6), cy - Math.round(Math.sin(a / 12 * Math.PI) * 6), '#c98a12'); }
+      R(ctx, cx, 26, 1, 4, '#6b4423'); R(ctx, cx - 3, 30, 7, 1, '#6b4423'); R(ctx, cx - 4, 31, 9, 1, '#4a2c18'); } },
+    armor:   { name: '기사 갑옷', price: 260, cozy: 2, draw(ctx, t, x){
+      const g = '#b8bfcc', d = '#7d8597';
+      R(ctx, x + 6, 12, 5, 5, g); R(ctx, x + 6, 14, 5, 1, '#2b2233'); P(ctx, x + 8, 11, '#e5484d'); P(ctx, x + 8, 10, '#e5484d');
+      R(ctx, x + 4, 17, 9, 7, g); R(ctx, x + 8, 17, 1, 7, d); R(ctx, x + 3, 17, 1, 6, d); R(ctx, x + 13, 17, 1, 6, d);
+      R(ctx, x + 5, 24, 3, 6, g); R(ctx, x + 9, 24, 3, 6, g); R(ctx, x + 4, 30, 9, 1, d); R(ctx, x + 3, 31, 11, 1, '#4a2c18');
+      R(ctx, x + 14, 11, 1, 20, '#7a5a3a'); P(ctx, x + 14, 10, '#d9d9e3'); P(ctx, x + 13, 11, '#d9d9e3'); P(ctx, x + 15, 11, '#d9d9e3'); } },
+    column:  { name: '로마 기둥', price: 220, cozy: 2, draw(ctx, t, x){
+      R(ctx, x + 3, 12, 11, 2, '#e9e5da'); R(ctx, x + 2, 11, 13, 1, '#d4cfc1'); R(ctx, x + 5, 14, 7, 15, '#f2efe6');
+      for(let i = 6; i < 12; i += 2) R(ctx, x + i, 14, 1, 15, '#d4cfc1');
+      R(ctx, x + 3, 29, 11, 2, '#e9e5da'); R(ctx, x + 2, 31, 13, 1, '#c9c3b2');
+      R(ctx, x + 6, 6, 5, 5, '#e9e5da'); P(ctx, x + 7, 8, '#9a958a'); P(ctx, x + 9, 8, '#9a958a'); R(ctx, x + 5, 5, 7, 1, '#7fae4a'); } }
+  },
+  rug: {
+    none:   { name: '없음', price: 0, cozy: 0, draw(){} },
+    hwamun: { name: '화문석 돗자리', price: 120, cozy: 1, draw(ctx){
+      R(ctx, 18, 33, 28, 5, '#e3c987'); for(let x = 18; x < 46; x += 2) R(ctx, x, 33, 1, 5, '#d4b773');
+      R(ctx, 18, 33, 28, 1, '#a5302a'); R(ctx, 18, 37, 28, 1, '#a5302a');
+      [[23, 35], [31, 35], [39, 35]].forEach(([fx, fy]) => { P(ctx, fx, fy, '#e5484d'); P(ctx, fx - 1, fy, '#3f7d52'); P(ctx, fx + 1, fy, '#3f7d52'); }); } },
+    persia: { name: '페르시아 양탄자', price: 220, cozy: 2, draw(ctx){
+      R(ctx, 17, 32, 30, 7, '#c9a227'); R(ctx, 18, 33, 28, 5, '#9e2a2a');
+      R(ctx, 29, 34, 6, 3, '#2f5fb0'); R(ctx, 31, 33, 2, 5, '#2f5fb0'); P(ctx, 32, 35, '#f2c230');
+      for(let x = 20; x < 45; x += 4){ P(ctx, x, 34, '#f2c230'); P(ctx, x + 2, 36, '#f2c230'); }
+      for(let x = 17; x < 47; x += 2){ P(ctx, x, 39, '#f2e6c8'); } } },
+    round:  { name: '무지개 러그', price: 150, cozy: 1, draw(ctx){
+      const cols = ['#ff8fa3', '#ffcf3f', '#8fdc8f', '#7cc4f0'];
+      for(let py = 0; py < 7; py++) for(let px = 0; px < 28; px++){
+        const d = Math.hypot((px + .5 - 14) / 14, (py + .5 - 3.5) / 3.5);
+        if(d <= 1) P(ctx, 18 + px, 32 + py, cols[Math.min(3, Math.floor(d * 4))]);
+      } } }
+  },
+  // 장난감: 바닥 오른쪽 앞(x 45~58) — play(같이 노는 중)이면 더 크게 움직인다
+  toy: {
+    none:  { name: '없음', price: 0, cozy: 0, fun: 0, draw(){} },
+    ball:  { name: '고무공', price: 80, cozy: 1, fun: 8, draw(ctx, t, play){
+      const up = play ? Math.round(Math.abs(Math.sin(t / 180)) * 7) : 0, x = 45, y = 31 - up;
+      R(ctx, x + 1, 37, 5, 1, 'rgba(0,0,0,.18)');
+      for(let py = 0; py < 6; py++) for(let px = 0; px < 6; px++){ const d = Math.hypot(px - 2.5, py - 2.5); if(d <= 3) P(ctx, x + px, y + py, d > 2.4 ? '#a5302a' : (px + Math.round(t / (play ? 90 : 400))) % 4 < 2 ? '#e5484d' : '#ffffff'); }
+      P(ctx, x + 1, y + 1, '#ffd6d6'); } },
+    top:   { name: '팽이', price: 100, cozy: 1, fun: 10, draw(ctx, t, play){
+      const x = 45, y = 30, s = Math.floor(t / (play ? 60 : 160)) % 4;
+      const tilt = play ? 0 : (Math.sin(t / 700) > 0 ? 1 : 0);
+      R(ctx, x + 1, 37, 6, 1, 'rgba(0,0,0,.18)');
+      R(ctx, x + 3 + tilt, y - 2, 1, 2, '#6b4423');
+      R(ctx, x + tilt, y, 8, 3, '#c98a4a');
+      for(let i = 0; i < 8; i++) P(ctx, x + tilt + i, y + 1, (i + s) % 4 < 2 ? '#e5484d' : '#3b6fe0');
+      [[0, 8], [1, 6], [2, 4], [3, 2]].forEach(([dy, w]) => R(ctx, x + tilt + (8 - w) / 2, y + 3 + dy, w, 1, '#b07a3e'));
+      if(play && s % 2){ P(ctx, x - 2, y + 2, '#ffffff'); P(ctx, x + 10, y + 1, '#ffffff'); } } },
+    jegi:  { name: '제기', price: 90, cozy: 1, fun: 9, draw(ctx, t, play){
+      const up = play ? Math.round(Math.abs(Math.sin(t / 260)) * 10) : 0, x = 46, y = 32 - up;
+      const sway = Math.sin(t / 200) > 0 ? 1 : 0;
+      R(ctx, x + 1, 37, 5, 1, 'rgba(0,0,0,.18)');
+      ['#e5484d', '#f2c230', '#3fae6a', '#3b6fe0', '#a46be8'].forEach((c, i) => R(ctx, x + i + (i % 2 ? sway : 0), y - 4, 1, 4, c));
+      R(ctx, x, y, 6, 2, '#c98a12'); P(ctx, x + 2, y, '#7a4b12'); P(ctx, x + 3, y, '#7a4b12'); } },
+    horse: { name: '나무 목마', price: 200, cozy: 2, fun: 12, draw(ctx, t, play){
+      const rock = Math.round(Math.sin(t / (play ? 160 : 600)) * (play ? 2 : 1)), x = 45, y = 27;
+      const W = '#b0773f', D = '#7a4b2a', a = rock > 0 ? 1 : 0, b = rock < 0 ? 1 : 0;
+      R(ctx, x + 1, 37, 11, 1, D); P(ctx, x, 36, D); P(ctx, x + 12, 36, D);
+      R(ctx, x + 3, 30, 1, 6, D); R(ctx, x + 9, 30, 1, 6, D);
+      R(ctx, x + 2, y + 1 + a, 9, 3, W); R(ctx, x + 3, y + 2 + a, 7, 1, D);
+      R(ctx, x + 9, y - 3 + b, 3, 5, W); P(ctx, x + 12, y - 2 + b, W); P(ctx, x + 10, y - 2 + b, '#2b2233');
+      R(ctx, x + 8, y - 3 + b, 1, 4, '#e5484d');
+      P(ctx, x + 1, y + 1 + a, '#e5484d'); P(ctx, x, y + 2 + a, '#e5484d'); } }
+  }
+};
+export const SLOT_LABEL = { paper: '🧱 벽지', floor: '🟫 바닥', window: '🪟 창문', wall: '🖼️ 벽 장식', left: '🪑 왼쪽 가구', right: '🪑 오른쪽 가구', rug: '🟥 러그', toy: '🧸 장난감' };
+export const SLOT_KIND = { paper: 'paper', floor: 'floor', window: 'window', wall: 'wall', left: 'furn', right: 'furn', rug: 'rug', toy: 'toy' };
+export const DEFAULT_ROOM = { paper: 'cream', floor: 'wood', window: 'basic', wall: 'none', left: 'none', right: 'none', rug: 'none', toy: 'none' };
+export function roomCozy(room){
+  let n = 0;
+  Object.keys(SLOT_KIND).forEach(s => { const it = DECOR[SLOT_KIND[s]][(room || {})[s] || DEFAULT_ROOM[s]]; if(it) n += it.cozy; });
+  return n;
+}
+// 방 전체 그리기 (펫 제외) — 펫은 쓰는 쪽에서 바닥 위에 그린다
+export function drawRoom(ctx, room, t, hour, min, play){
+  room = Object.assign({}, DEFAULT_ROOM, room || {});
+  const get = (s) => DECOR[SLOT_KIND[s]][room[s]] || DECOR[SLOT_KIND[s]][DEFAULT_ROOM[s]];
+  get('paper').draw(ctx, t);
+  R(ctx, 0, 27, 64, 1, '#7a5a3a');
+  get('floor').draw(ctx, t);
+  get('window').draw(ctx, t, hour);
+  get('wall').draw(ctx, t, hour, min);
+  get('rug').draw(ctx, t);
+  get('left').draw(ctx, t, 1);
+  get('right').draw(ctx, t, 47);
+  get('toy').draw(ctx, t, !!play);
+}
+
+
+// 펫 키우기 장면 = 꾸민 방 64×40: st = {id, s, m, poop, room, playUntil} (id가 없으면 빈 방만)
 function sceneCanvas(st){
   const cv = document.createElement('canvas');
-  cv.width = 48; cv.height = 30; cv.className = 'pt-cv pt-scene';
+  cv.width = 64; cv.height = 40; cv.className = 'pt-cv pt-scene';
   cv._scene = st;
-  const POOP_X = [33, 40, 26, 36, 29];
+  const POOP_X = [3, 10, 17, 38, 31];   // 펫(가운데)·장난감(오른쪽 앞)에 가리지 않게 주로 왼쪽 앞
   addActor(cv, (ctx, t) => {
     const s = cv._scene;
-    if(!petById[s.id]) return;
-    const m = s.m, walking = m === 'walk', sleeping = m === 'sleep';
-    // 바닥 (산책 중엔 풀밭이 흘러감)
-    ctx.fillStyle = walking ? '#cfe8b0' : '#efe4cc'; ctx.fillRect(0, 0, 48, 30);
-    ctx.fillStyle = walking ? '#8cc46a' : '#d9c7a0'; ctx.fillRect(0, 25, 48, 5);
-    if(walking){
+    const m = s.m, walking = m === 'walk', sleeping = m === 'sleep', hasPet = !!petById[s.id];
+    const d = new Date(), play = hasPet && s.playUntil && Date.now() < s.playUntil && !walking && !sleeping;
+    if(walking && hasPet){
+      // 산책 중: 풀밭이 흘러감
+      ctx.fillStyle = '#cfe8b0'; ctx.fillRect(0, 0, 64, 40);
+      ctx.fillStyle = '#8cc46a'; ctx.fillRect(0, 33, 64, 7);
       ctx.fillStyle = '#5f9e45';
-      for(let i = 0; i < 6; i++){ const x = Math.round(((i * 11 - t / 35) % 66 + 66) % 66) - 9; ctx.fillRect(x, 24, 1, 2); ctx.fillRect(x + 2, 23, 1, 3); }
+      for(let i = 0; i < 8; i++){ const x = Math.round(((i * 11 - t / 35) % 88 + 88) % 88) - 12; ctx.fillRect(x, 32, 1, 2); ctx.fillRect(x + 2, 31, 1, 3); }
       ctx.fillStyle = '#ffffff';
-      for(let i = 0; i < 3; i++){ const x = Math.round(((i * 19 - t / 90) % 57 + 57) % 57) - 9; ctx.fillRect(x, 4 + i * 3, 5, 1); ctx.fillRect(x + 1, 3 + i * 3, 3, 1); }
+      for(let i = 0; i < 3; i++){ const x = Math.round(((i * 25 - t / 90) % 75 + 75) % 75) - 9; ctx.fillRect(x, 5 + i * 4, 6, 1); ctx.fillRect(x + 1, 4 + i * 4, 4, 1); }
+    } else {
+      drawRoom(ctx, s.room, t, d.getHours(), d.getMinutes(), play);
     }
-    // 펫 위치: 평소엔 좌우로 어슬렁, 산책 중엔 제자리에서 걷기
-    let px = 8, py = 9, closed = false, sad = false;
-    if(walking){ px = 10; py = 9 - (Math.abs(Math.sin(t / 160)) > .55 ? 1 : 0); }
-    else if(sleeping){ px = 8; py = 9 + ((t / 900) % 2 < 1 ? 0 : 1); closed = true; }
-    else if(m === 'sick'){ px = 6 + (Math.sin(t / 1700) > 0 ? 1 : 0); py = 10; sad = true; }
+    if(!hasPet) return;
+    let px = 22, py = 19, closed = false, sad = false;
+    if(walking){ px = 22; py = 19 - (Math.abs(Math.sin(t / 160)) > .55 ? 1 : 0); }
+    else if(sleeping){ py = 19 + ((t / 900) % 2 < 1 ? 0 : 1); closed = true; }
+    else if(play){ px = 27 + Math.round(Math.sin(t / 400) * 2); py = 19 - Math.round(Math.abs(Math.sin(t / 220)) * 4); }
+    else if(m === 'sick'){ px = 20 + (Math.sin(t / 1700) > 0 ? 1 : 0); py = 20; sad = true; }
     else {
-      px = 8 + Math.round(Math.sin(t / 2300) * (m === 'happy' ? 7 : 4));
-      py = 9 - (m === 'happy' && Math.abs(Math.sin(t / 260)) > .8 ? 1 : 0);
+      px = 22 + Math.round(Math.sin(t / 2300) * (m === 'happy' ? 6 : 4));
+      py = 19 - (m === 'happy' && Math.abs(Math.sin(t / 260)) > .8 ? 1 : 0);
       sad = m === 'hungry' || m === 'sad' || m === 'dirty';
     }
     if(!closed && !reduceMotion && ((t / 1000) % 3.3) < 0.13) closed = true;
-    drawPet(ctx, s.id, s.s, px, py, { closed, sad });
     // 똥 (산책 중엔 집에 두고 나감)
     if(!walking){
       for(let i = 0; i < Math.min(s.poop | 0, POOP_X.length); i++){
-        drawIcon(ctx, 'poop', POOP_X[i], 20, POOP_COL);
-        if((t / 500 + i) % 2 < 1){ ctx.fillStyle = '#9bb36a'; ctx.fillRect(POOP_X[i] + 2, 17, 1, 1); ctx.fillRect(POOP_X[i] + 4, 16, 1, 1); }
+        drawIcon(ctx, 'poop', POOP_X[i], 32, POOP_COL);
+        if((t / 500 + i) % 2 < 1){ ctx.fillStyle = '#9bb36a'; ctx.fillRect(POOP_X[i] + 2, 29, 1, 1); ctx.fillRect(POOP_X[i] + 4, 28, 1, 1); }
       }
     }
+    drawPet(ctx, s.id, s.s, px, py, { closed, sad });
     const blinkOn = (t / 700) % 2 < 1.3;
-    const bx = Math.min(41, px + 14);
-    if(m === 'sick' && blinkOn) drawIcon(ctx, 'sick', bx, 3, { m: '#e5484d' });
-    else if(m === 'hungry' && blinkOn) drawIcon(ctx, 'rice', bx, 2, { k: '#3f7d52' });
-    else if(m === 'happy' && blinkOn) drawIcon(ctx, 'heart', bx, 2);
-    else if(m === 'tired' && blinkOn) drawIcon(ctx, 'drop', bx, 3, { b: '#7cc3ff' });
+    const bx = Math.min(57, px + 14);
+    if(play && blinkOn) drawIcon(ctx, 'heart', bx, py - 6);
+    else if(m === 'sick' && blinkOn) drawIcon(ctx, 'sick', bx, py - 5, { m: '#e5484d' });
+    else if(m === 'hungry' && blinkOn) drawIcon(ctx, 'rice', bx, py - 6, { k: '#3f7d52' });
+    else if(m === 'happy' && blinkOn) drawIcon(ctx, 'heart', bx, py - 6);
+    else if(m === 'tired' && blinkOn) drawIcon(ctx, 'drop', bx, py - 5, { b: '#7cc3ff' });
     if(sleeping){
-      ctx.fillStyle = 'rgba(30,30,70,.35)'; ctx.fillRect(0, 0, 48, 30);
-      if(blinkOn) drawIcon(ctx, 'zz', px + 14, 2, { k: '#ffffff' });
+      ctx.fillStyle = 'rgba(30,30,70,.35)'; ctx.fillRect(0, 0, 64, 40);
+      if(blinkOn) drawIcon(ctx, 'zz', px + 14, py - 6, { k: '#ffffff' });
     }
   });
   return cv;
@@ -535,7 +752,8 @@ function staticCanvas(id, si, px){
 
 // ── 돌봄 계산 ────────────────────────────────────────
 const clamp = (v) => Math.max(0, Math.min(100, v));
-export function careNow(p, now){
+let CUR_COZY = 0;   // 지금 학생 방의 아늑함 (데이터를 받을 때마다 갱신) — careNow의 기본값
+export function careNow(p, now, cozy = CUR_COZY){
   p = p || {};
   const h = Math.max(0, (now - (p.t || now)) / 3600000);
   let sleepUntil = p.sleepUntil || 0;
@@ -547,12 +765,13 @@ export function careNow(p, now){
   if(n > 0){ poop = Math.min(PET_RULES.poopMax, poop + n); poopT += n * PET_RULES.poopEveryMs; }
   let sick = !!p.sick;
   const food = clamp((p.food == null ? 80 : p.food) - h * PET_RULES.foodDecay);
-  const fun = clamp((p.fun == null ? 80 : p.fun) - h * PET_RULES.funDecay * (sick ? 2 : 1));
+  const slow = 1 - Math.min(PET_RULES.cozyMax, (cozy || 0) * PET_RULES.cozyStep);   // 방이 아늑할수록 기분이 천천히 떨어짐
+  const fun = clamp((p.fun == null ? 80 : p.fun) - h * PET_RULES.funDecay * (sick ? 2 : 1) * slow);
   if(!sick && (poop >= PET_RULES.sickPoop || food <= 0)) sick = true;
   return {
     stage: p.stage | 0, exp: p.exp || 0, food, fun,
     energy, sleepUntil, at: p.at || now,
-    poop, poopT, sick, walkUntil: p.walkUntil || 0, walkNext: p.walkNext || 0
+    poop, poopT, sick, walkUntil: p.walkUntil || 0, walkNext: p.walkNext || 0, cozy: cozy || 0
   };
 }
 export function moodOf(c, now){
@@ -563,7 +782,8 @@ export function moodOf(c, now){
   if(c.poop >= 2) return 'dirty';
   if(c.energy < 20) return 'tired';
   if(c.fun < 25) return 'sad';
-  if(c.food >= 60 && c.fun >= 60 && c.energy >= 60 && !c.poop) return 'happy';
+  const th = (c.cozy || 0) > PET_RULES.cozyHappy ? 50 : 60;   // 아늑한 방이면 더 쉽게 신남
+  if(c.food >= th && c.fun >= th && c.energy >= th && !c.poop) return 'happy';
   return 'normal';
 }
 export const MOOD_LABEL = { happy: '😊 신남', normal: '🙂 보통', hungry: '🍙 배고픔', tired: '😪 지침', sad: '😞 심심함', sleep: '💤 자는 중',
@@ -577,6 +797,14 @@ function evolveReady(c, now){
   if(c.stage === 0) return c.exp >= PET_RULES.evolve[0];
   if(c.stage === 1) return c.exp >= PET_RULES.evolve[1] && moodOf(c, now) === 'happy';
   return false;
+}
+
+export function josa(word, withB, noB){
+  const s = String(word || ''), c = s.charCodeAt(s.length - 1);
+  if(!(c >= 0xAC00 && c <= 0xD7A3)) return s + withB;
+  const jong = (c - 0xAC00) % 28;
+  if(withB === '으로') return s + (jong === 0 || jong === 8 ? '로' : '으로');   // ㄹ 받침은 '로'
+  return s + (jong ? withB : noB);
 }
 
 export function dayKey(ms){
@@ -630,7 +858,19 @@ function addCss(){
   .pt-mine{ display:flex; gap:16px; align-items:center; background:#f6f8fc; border-radius:14px; padding:12px 14px; flex-wrap:wrap; }
   .pt-mine .pt-big{ background:linear-gradient(#dfe9fb,#c9daf6); border-radius:12px; padding:6px; }
   .pt-mine .pt-big .pt-cv{ width:120px; height:120px; }
-  .pt-mine .pt-big .pt-scene{ width:240px; height:150px; border-radius:8px; }
+  .pt-mine .pt-big .pt-scene{ width:256px; height:160px; border-radius:6px; }
+  .pt-ctabs{ padding:2px 0 4px; margin:0 0 2px; }
+  .pt-items{ display:flex; flex-wrap:wrap; gap:6px; }
+  .pt-overlay button.pt-item{ width:auto; flex:0 0 auto; font-size:.82rem; font-weight:700; padding:5px 10px; border-radius:10px; border:2px solid #e5e7eb; background:#fff; color:#374151; cursor:pointer; transition:none; }
+  .pt-overlay button.pt-item small{ color:#a86b00; font-weight:800; margin-left:2px; }
+  .pt-overlay button.pt-item.on{ border-color:#6c8cf5; background:#f1f5ff; box-shadow:0 0 0 1px #6c8cf5 inset; }
+  .pt-overlay button.pt-item:disabled{ opacity:1; cursor:default; }
+  .pt-overlay button.pt-item:disabled:not(.on){ opacity:.45; }
+  .pt-slot h4{ margin:12px 0 6px !important; font-size:.92rem !important; }
+  .pt-friends{ display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:8px; }
+  .pt-overlay button.pt-friend{ width:auto; display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:8px 12px; border-radius:12px; border:2px solid #e5e7eb; background:#fff; color:#1f2937; cursor:pointer; text-align:left; transition:none; font-size:.95rem; }
+  .pt-overlay button.pt-friend span{ font-size:.76rem; color:#6b7280; font-weight:600; }
+  .pt-overlay button.pt-friend:hover{ border-color:#6c8cf5; }
   .pt-mine .pt-big{ padding:4px; }
   .pt-poops{ grid-column:2 / 4; font-size:.86rem; letter-spacing:1px; }
   .pt-status{ font-size:.84rem; font-weight:800; color:#8a5a00; background:#fff3d6; border-radius:8px; padding:5px 9px; }
@@ -688,7 +928,7 @@ function addCss(){
   @keyframes ptIn{ from{ transform:translateY(10px); opacity:0; } to{ transform:none; opacity:1; } }
   .pt-coinpop{ position:absolute; font-weight:900; color:#d99a00; font-size:.85rem; pointer-events:none; animation:ptCoin .9s ease-out forwards; text-shadow:0 1px 0 #fff; white-space:nowrap; }
   @keyframes ptCoin{ from{ opacity:1; transform:translateY(0); } to{ opacity:0; transform:translateY(-26px); } }
-  @media (max-width:520px){ .pt-mine .pt-big .pt-cv{ width:96px; height:96px; } .pt-mine .pt-big .pt-scene{ width:192px; height:120px; } .pt-mine{ justify-content:center; } .pt-shop{ grid-template-columns:1fr; } }
+  @media (max-width:520px){ .pt-mine .pt-big .pt-cv{ width:96px; height:96px; } .pt-mine .pt-big .pt-scene{ width:256px; height:160px; max-width:100%; } .pt-mine{ justify-content:center; } .pt-shop{ grid-template-columns:1fr; } }
   `;
   document.head.appendChild(st);
 }
@@ -705,6 +945,8 @@ export function mountPets(deps, opts){
   let sceneCv = null;       // 펫 키우기 장면 캔버스 (창을 닫을 때까지 재사용)
   let tickTimer = null;
   let lastMood = null;
+  let careTab = 'care';     // 펫 키우기 탭: 'care' 돌보기 · 'room' 방 꾸미기 · 'friends' 친구 방
+  let friends = null, friendsBusy = false, friendSel = null, friendCv = null;
   let view = 'all';         // 'all' 펫+상점 한 창 · 'shop' 상점만 · 'care' 펫 키우기만
   let ext = null;           // 희귀 해금 조건용 칭호 기록 (상점을 열 때 한 번 불러옴)
   let msg = '';
@@ -775,6 +1017,22 @@ export function mountPets(deps, opts){
 
   // 🎁 선생님이 준 코인 알림 (관리자 화면에서 gifts/<키>로 남김) — 띄운 뒤 지운다
   const giftShown = new Set();
+  // ❤️ 친구에게 받은 하트 알림
+  const heartShown = new Set();
+  function showHearts(){
+    const g = data.heartNews || {};
+    const keys = Object.keys(g).filter(k => !heartShown.has(k)).sort();
+    if(!keys.length) return;
+    keys.forEach(k => { heartShown.add(k); toast(`❤️ ${josa((g[k] || {}).f || '친구', '이', '가')} 하트를 보냈어요!`, `펫 기분 +${PET_RULES.heartFun}`); });
+    tx((cur) => {
+      if(!cur.heartNews) return;
+      let changed = false;
+      keys.forEach(k => { if(cur.heartNews[k]){ delete cur.heartNews[k]; changed = true; } });
+      return changed ? cur : undefined;
+    });
+  }
+  const nameKey = (n) => String(n).replace(/[.#$\[\]\/]/g, '_');
+
   function showGifts(){
     const g = data.gifts || {};
     const keys = Object.keys(g).filter(k => !giftShown.has(k)).sort();
@@ -801,7 +1059,7 @@ export function mountPets(deps, opts){
     const c = careNow(data.owned[info.id], now);
     if(evolveReady(c, now) && !readyToasted[info.id + c.stage]){
       readyToasted[info.id + c.stage] = true;
-      toast(`✨ ${PET_INFO[info.id].names[c.stage]}가 진화할 수 있어요!`, '🐾 펫 키우기에서 진화하기를 눌러 주세요');
+      toast(`✨ ${josa(PET_INFO[info.id].names[c.stage], '이', '가')} 진화할 수 있어요!`, '🐾 펫 키우기에서 진화하기를 눌러 주세요');
     }
   }
 
@@ -824,6 +1082,77 @@ export function mountPets(deps, opts){
     });
   }
 
+  const decoHave = (kind, id) => DECOR[kind][id] && DECOR[kind][id].price === 0 ? Infinity : ((data.deco || {})[kind + '_' + id] | 0);
+  function roomHtml(info, now){
+    const room = Object.assign({}, DEFAULT_ROOM, data.room || {});
+    const cozy = roomCozy(room), coins = data.coins || 0;
+    const toy = DECOR.toy[room.toy] || DECOR.toy.none;
+    const toyLeft = (data.toyNext || 0) > now ? Math.ceil((data.toyNext - now) / 60000) : 0;
+    const busy = info && (info.m === 'sleep' || info.m === 'walk');
+    let s = `<div class="pt-sec"><h4>🏠 내 방</h4><div class="pt-mine"><div class="pt-big" data-slot="big"></div><div class="pt-mine-info">
+      <div class="pt-mine-name">아늑함 ${cozy}<small>기분이 ${Math.round(Math.min(PET_RULES.cozyMax, cozy * PET_RULES.cozyStep) * 100)}% 천천히 떨어져요${cozy > PET_RULES.cozyHappy ? ' · 펫이 더 쉽게 신나요' : ''}</small></div>
+      <div class="pt-bar"><span style="text-align:left">🛋️ 아늑함</span><i><b class="exp" style="width:${Math.min(100, cozy / 18 * 100)}%"></b></i><span>${cozy}</span></div>
+      <div class="pt-bar"><span style="text-align:left">❤️ 하트</span><span class="pt-poops">친구에게 받은 하트 ${data.hearts | 0}개</span><span></span></div>
+      <div class="pt-acts"><button type="button" class="pt-act gold" data-act="play" ${info && room.toy !== 'none' && !busy && !toyLeft ? '' : 'disabled'}>${room.toy === 'none' ? '🧸 장난감을 끼우면 같이 놀 수 있어요' : toyLeft ? `🧸 같이 놀기 <small>(${toyLeft}분 뒤)</small>` : `🧸 ${josa(toy.name, '으로')} 같이 놀기 <small>(기분 +${toy.fun})</small>`}</button></div>
+      <div class="pt-msg">${escapeHtml(msg)}</div>
+    </div></div><div class="pt-note">가진 물건은 누르면 바로 끼우고, 없는 물건은 코인으로 사서 끼워요. 산 물건은 빼도 계속 가지고 있어요. 같은 가구를 양쪽에 두려면 두 개가 필요해요.</div></div>`;
+    Object.keys(SLOT_LABEL).forEach(slot => {
+      const kind = SLOT_KIND[slot];
+      const other = slot === 'left' ? 'right' : slot === 'right' ? 'left' : null;
+      s += `<div class="pt-sec pt-slot"><h4>${SLOT_LABEL[slot]}</h4><div class="pt-items">` + Object.entries(DECOR[kind]).map(([id, it]) => {
+        const on = room[slot] === id;
+        const need = (other && id !== 'none' && room[other] === id) ? 2 : 1;
+        const have = decoHave(kind, id);
+        const can = have >= need;
+        const tag = on ? '✓ 끼움' : can ? (it.price ? '가짐 · 끼우기' : '끼우기') : `🪙${it.price}`;
+        return `<button type="button" class="pt-item ${on ? 'on' : ''}" data-place="${slot}:${id}" ${on || (!can && coins < it.price) ? 'disabled' : ''}>${escapeHtml(it.name)} <small>${tag}${it.cozy ? ' · 아늑+' + it.cozy : ''}</small></button>`;
+      }).join('') + `</div></div>`;
+    });
+    return s;
+  }
+  function friendsHtml(now){
+    if(!friends){ if(!friendsBusy) loadFriends(); return `<div class="pt-sec"><p class="pt-note">같은 반 친구 방을 불러오는 중…</p></div>`; }
+    if(friendSel){
+      const f = friends.find(x => x.name === friendSel);
+      if(f){
+        const dk = dayKey(now), hd = f.d.heartDay;
+        const gave = !!(hd && hd.k === dk && hd.by && hd.by[nameKey(ident.name)]);
+        const pn = f.info ? PET_INFO[f.info.id].names[f.info.s] : '펫 없음';
+        return `<div class="pt-sec"><button type="button" class="pt-act" data-fback="1">← 친구 목록</button><h4>🏘️ ${escapeHtml(f.name)}의 방</h4>
+          <div class="pt-mine"><div class="pt-big" data-slot="friend"></div><div class="pt-mine-info">
+            <div class="pt-mine-name">${escapeHtml(pn)}<small>${f.info ? MOOD_LABEL[f.info.m] : ''}</small></div>
+            <div class="pt-bar"><span style="text-align:left">🛋️ 아늑함</span><i><b class="exp" style="width:${Math.min(100, roomCozy(f.d.room) / 18 * 100)}%"></b></i><span>${roomCozy(f.d.room)}</span></div>
+            <div class="pt-bar"><span style="text-align:left">❤️ 하트</span><span class="pt-poops">받은 하트 ${f.d.hearts | 0}개</span><span></span></div>
+            <div class="pt-acts"><button type="button" class="pt-act ${gave ? '' : 'warn'}" data-heart="${escapeHtml(f.name)}" ${gave ? 'disabled' : ''}>${gave ? '❤️ 오늘 하트를 줬어요' : `❤️ 하트 주기 <small>(친구 펫 기분 +${PET_RULES.heartFun})</small>`}</button></div>
+            <div class="pt-msg">${escapeHtml(msg)}</div>
+          </div></div><div class="pt-note">하트는 친구 한 명에게 하루에 한 번 줄 수 있어요.</div></div>`;
+      }
+    }
+    if(!friends.length) return `<div class="pt-sec"><p class="pt-note">아직 같은 반(${escapeHtml(ident.cls.replace('-', '학년 '))}반)에 펫을 키우는 친구가 없어요.</p></div>`;
+    return `<div class="pt-sec"><h4>🏘️ 같은 반 친구 방 (${friends.length}명)</h4><div class="pt-note">친구를 누르면 그 친구 방에 놀러 가요</div><div class="pt-friends">${friends.map(f =>
+      `<button type="button" class="pt-friend" data-friend="${escapeHtml(f.name)}"><b>${escapeHtml(f.name)}</b><span>${f.info ? escapeHtml(PET_INFO[f.info.id].names[f.info.s]) : '펫 없음'} · 🛋️${roomCozy(f.d.room)} · ❤️${f.d.hearts | 0}</span></button>`).join('')}</div>
+      <button type="button" class="pt-act" data-freload="1" style="margin-top:8px">↻ 새로 불러오기</button></div>`;
+  }
+  function friendEntry(name, d, now){
+    const id = d.active && d.owned && d.owned[d.active] && petById[d.active] ? d.active : null;
+    let info = null;
+    if(id){ const c = careNow(d.owned[id], now, roomCozy(d.room)); info = { id, s: c.stage, m: moodOf(c, now), p: c.poop }; }
+    return { name, d, info };
+  }
+  async function loadFriends(){
+    if(!ident) return;
+    friendsBusy = true;
+    const me = ident;
+    try{
+      const snap = await get(ref(db, `pets/${me.cls}`));
+      if(me !== ident) return;
+      const now = nowMs();
+      friends = Object.entries(snap.val() || {}).filter(([n]) => n !== me.name).map(([n, d]) => friendEntry(n, d || {}, now)).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+    }catch(_e){ friends = []; }
+    friendsBusy = false;
+    render();
+  }
+
   function render(){
     if(!overlay) return;
     overlay.querySelector('.pt-coins').textContent = `🪙 ${(data.coins || 0).toLocaleString()}`;
@@ -836,9 +1165,14 @@ export function mountPets(deps, opts){
     const frag = document.createElement('div');
     let h = '';
     const info = activeInfo();
-    const showCare = view !== 'shop', showShop = view !== 'care';
+    const showCare = view !== 'shop', showShop = view === 'shop' || (view === 'all' && careTab === 'care');
     overlay.querySelector('.pt-head h3').textContent = VIEW_TITLE[view];
-    if(showCare && info){
+    if(showCare){
+      h += `<div class="pt-tabs pt-ctabs">${[['care', '🐾 돌보기'], ['room', '🏠 방 꾸미기'], ['friends', '🏘️ 친구 방']].map(([k, l]) => `<button type="button" class="pt-tab ${careTab === k ? 'on' : ''}" data-ctab="${k}">${l}</button>`).join('')}</div>`;
+      if(careTab === 'room') h += roomHtml(info, now);
+      if(careTab === 'friends') h += friendsHtml(now);
+    }
+    if(showCare && careTab === 'care' && info){
       const c = careNow(owned[info.id], now);
       const inf = PET_INFO[info.id];
       const nextNeed = c.stage < 2 ? PET_RULES.evolve[c.stage] : null;
@@ -882,19 +1216,20 @@ export function mountPets(deps, opts){
         <div class="pt-msg">${escapeHtml(msg || hint)}</div>
       </div></div>
       <div class="pt-note">데려간 펫과 함께 문제를 맞히면 경험치와 기분이 올라요 · 배부름·기분은 1시간에 1씩 줄어요 · ${R.poopEveryMs / 3600000}시간마다, 그리고 밥을 먹으면 똥을 싸요 · 똥이 ${R.sickPoop}개 쌓이거나 배부름이 0이 되면 아파요 · 산책은 ${R.walkCooldownMs / 60000}분에 한 번 (가끔 동전을 주워요) · 재우면 ${R.sleepMs / 60000}분 뒤 체력이 가득 차요</div></div>`;
-    } else if(showCare){
+    } else if(showCare && careTab === 'care'){
       h += `<div class="pt-sec"><h4>🐾 데려가는 펫</h4><div class="pt-note">아직 펫이 없어요. ${showShop ? '아래 상점에서' : '상점에서'} 골라 보세요! 펫이 생기면 수업 게임 전광판과 혼자 연습 화면에 내 캐릭터로 나와요.</div>${showShop ? '' : '<button type="button" class="pt-act gold" data-view="shop">🏪 상점으로 가기</button>'}</div>`;
     }
-    const ownIds = showCare ? PET_ORDER.filter(id => owned[id]) : [];
+    const ownIds = showCare && careTab === 'care' ? PET_ORDER.filter(id => owned[id]) : [];
     if(ownIds.length){
       h += `<div class="pt-sec"><h4>📦 내가 가진 펫 (${ownIds.length})</h4><div class="pt-note">누르면 그 펫을 데려가요</div><div class="pt-owned">${ownIds.map(id => {
         const c = careNow(owned[id], now);
         return `<button type="button" class="pt-own ${data.active === id ? 'on' : ''}" data-own="${id}"><span data-slot="own-${id}"></span>${escapeHtml(PET_INFO[id].names[c.stage])}</button>`;
       }).join('')}</div></div>`;
     }
-    if(view === 'care' && info) h += `<div class="pt-sec"><button type="button" class="pt-act" data-view="shop">🏪 상점에서 새 펫 보기</button></div>`;
+    if(view === 'care' && careTab === 'care' && info) h += `<div class="pt-sec"><button type="button" class="pt-act" data-view="shop">🏪 상점에서 새 펫 보기</button></div>`;
     if(view === 'shop' && info) h += `<div class="pt-sec"><div class="pt-note">지금 데려가는 펫: <b>${escapeHtml(PET_INFO[info.id].names[info.s])}</b> · 밥 주기·진화는 🐾 펫 키우기에서 해요 <button type="button" class="pt-act" data-view="care">🐾 펫 키우기로 가기</button></div></div>`;
     if(showShop){
+    h += `<div class="pt-note" style="margin-top:12px">🛋️ 벽지·가구·장난감은 🐾 펫 키우기 → 🏠 방 꾸미기에서 사서 바로 끼워요</div>`;
     h += `<div class="pt-sec"><h4>${view === 'shop' ? '🛒 펫 고르기' : '🏪 상점'}</h4><div class="pt-note">🪙 코인 모으기: 혼자 연습·수업 게임 정답 1개 = 1코인 + 1·2·3등 보너스 ${PET_RULES.classBonus.join('·')}코인 · 한국사·세계사 코인은 하나로 합쳐져요</div>
       <h4 class="pt-sub-h">🧺 용품 <small>펫 키우기에서 없으면 바로 사서 줄 수도 있어요</small></h4>
       <div class="pt-goods">${Object.entries(PET_RULES.items).map(([k, it]) => `<div class="pt-good"><b>${it.label}</b><span>${k === 'rice' ? `배부름 +${it.food} (먹으면 똥 하나)` : k === 'snack' ? `배부름 +${it.food} · 기분 +${it.fun}` : '아플 때 먹이면 나아요'}</span><small>가진 개수 ${((data.items || {})[k] | 0)}개</small><button type="button" class="pt-buy" data-buyitem="${k}" ${(data.coins || 0) >= it.price ? '' : 'disabled'}>🪙 ${it.price}코인에 사기</button></div>`).join('')}</div>
@@ -923,12 +1258,21 @@ export function mountPets(deps, opts){
     }
     frag.innerHTML = h;
     // 캔버스 끼우기
-    if(info){
+    {
       const slot = frag.querySelector('[data-slot="big"]');
       if(slot){
         if(!sceneCv) sceneCv = sceneCanvas({});
-        Object.assign(sceneCv._scene, { id: info.id, s: info.s, m: info.m, poop: info.p });
+        Object.assign(sceneCv._scene, info ? { id: info.id, s: info.s, m: info.m, poop: info.p } : { id: null }, { room: data.room, playUntil: data.playUntil || 0 });
         slot.appendChild(sceneCv);
+      }
+      const fslot = frag.querySelector('[data-slot="friend"]');
+      if(fslot && friendSel && friends){
+        const f = friends.find(x => x.name === friendSel);
+        if(f){
+          if(!friendCv || friendCv._who !== f.name){ friendCv = sceneCanvas({}); friendCv._who = f.name; }
+          Object.assign(friendCv._scene, f.info ? { id: f.info.id, s: f.info.s, m: f.info.m, poop: f.info.p } : { id: null }, { room: f.d.room, playUntil: f.d.playUntil || 0 });
+          fslot.appendChild(friendCv);
+        }
       }
     }
     ownIds.forEach(id => {
@@ -983,7 +1327,7 @@ export function mountPets(deps, opts){
         if(!cur.active || !cur.owned[cur.active]) cur.active = id;
         return cur;
       });
-      if(res && res.committed){ toast(`🎉 ${inf.names[0]}가 생겼어요!`, data.active === id ? '지금부터 게임에 함께 나가요 · 🐾 펫 키우기에서 돌봐 주세요' : '🐾 펫 키우기의 내가 가진 펫에서 누르면 데려가요'); }
+      if(res && res.committed){ toast(`🎉 ${josa(inf.names[0], '이', '가')} 생겼어요!`, data.active === id ? '지금부터 게임에 함께 나가요 · 🐾 펫 키우기에서 돌봐 주세요' : '🐾 펫 키우기의 내가 가진 펫에서 누르면 데려가요'); }
       return;
     }
     if(kind === 'own'){
@@ -1002,8 +1346,78 @@ export function mountPets(deps, opts){
       if(res && res.committed) toast(`${it.label} 1개를 샀어요!`, '🐾 펫 키우기에서 줄 수 있어요');
       return;
     }
+    if(kind === 'place'){
+      const [slot, did] = id.split(':');
+      const dk = SLOT_KIND[slot], it = DECOR[dk] && DECOR[dk][did];
+      if(!it) return;
+      let bought = false;
+      const res = await tx((cur) => {
+        bought = false;
+        const room = Object.assign({}, DEFAULT_ROOM, cur.room || {});
+        if(room[slot] === did) return;
+        const other = slot === 'left' ? 'right' : slot === 'right' ? 'left' : null;
+        const need = (other && did !== 'none' && room[other] === did) ? 2 : 1;
+        cur.deco = cur.deco || {};
+        const key = dk + '_' + did;
+        const have = it.price === 0 ? Infinity : (cur.deco[key] | 0);
+        if(have < need){
+          if((cur.coins || 0) < it.price) return;
+          cur.coins -= it.price;
+          cur.deco[key] = (cur.deco[key] | 0) + 1;
+          bought = true;
+        }
+        room[slot] = did;
+        cur.room = room;
+        return cur;
+      });
+      if(res && res.committed) setMsg(did === 'none' ? `${SLOT_LABEL[slot]} 자리를 비웠어요` : bought ? `🪙 ${josa(it.name, '을', '를')} 사서 끼웠어요!` : `${josa(it.name, '을', '를')} 끼웠어요`);
+      return;
+    }
+    if(kind === 'heart'){
+      const fname = id, me = ident;
+      let fresh = null;
+      const res = await runTransaction(ref(db, `pets/${me.cls}/${fname}`), (cur) => {
+        if(!cur) return null;   // 아직 서버 값을 못 받았으면 null로 시도 → 서버가 다른 값이면 진짜 값으로 다시 불림
+        const now = nowMs(), dk = dayKey(now), mk = nameKey(me.name);
+        cur.heartDay = (cur.heartDay && cur.heartDay.k === dk) ? cur.heartDay : { k: dk, by: {} };
+        cur.heartDay.by = cur.heartDay.by || {};
+        if(cur.heartDay.by[mk]) return;
+        cur.heartDay.by[mk] = true;
+        cur.hearts = (cur.hearts | 0) + 1;
+        const p = cur.active && cur.owned && cur.owned[cur.active];
+        if(p){ const c = careNow(p, now, roomCozy(cur.room)); c.fun = clamp(c.fun + PET_RULES.heartFun); cur.owned[cur.active] = storeCare(c, now); }
+        cur.heartNews = cur.heartNews || {};
+        cur.heartNews['h' + now.toString(36) + Math.random().toString(36).slice(2, 5)] = { f: me.name, at: now };
+        return cur;
+      }).catch(() => null);
+      if(res && res.committed){
+        fresh = res.snapshot.val() || {};
+        if(friends){ const i = friends.findIndex(x => x.name === fname); if(i >= 0) friends[i] = friendEntry(fname, fresh, nowMs()); }
+        setMsg(`❤️ ${fname}에게 하트를 보냈어요!`);
+      } else setMsg('오늘은 이미 하트를 줬어요');
+      return;
+    }
     const aid = data.active;
     if(!aid) return;
+    if(kind === 'play'){
+      let fun = 0;
+      const res = await tx((cur, now) => {
+        const p = cur.owned && cur.owned[cur.active];
+        const room = Object.assign({}, DEFAULT_ROOM, cur.room || {});
+        const toy = DECOR.toy[room.toy];
+        if(!p || !toy || room.toy === 'none' || (cur.toyNext || 0) > now) return;
+        const c = careNow(p, now, roomCozy(room)), m = moodOf(c, now);
+        if(m === 'sleep' || m === 'walk') return;
+        fun = toy.fun;
+        c.fun = clamp(c.fun + toy.fun);
+        cur.owned[cur.active] = storeCare(c, now);
+        cur.toyNext = now + PET_RULES.toyCooldownMs;
+        cur.playUntil = now + PET_RULES.toyPlayMs;
+        return cur;
+      });
+      if(res && res.committed) setMsg(`🧸 신나게 놀았어요! 기분 +${fun}`);
+      return;
+    }
     if(kind === 'rice' || kind === 'snack' || kind === 'med'){
       const it = PET_RULES.items[kind];
       let why = '';
@@ -1096,6 +1510,7 @@ export function mountPets(deps, opts){
 
   function open(v){
     view = (v === 'shop' || v === 'care') ? v : 'all';
+    careTab = 'care';
     if(overlay){ render(); return; }
     overlay = document.createElement('div');
     overlay.className = 'pt-overlay';
@@ -1105,9 +1520,15 @@ export function mountPets(deps, opts){
       const b = e.target.closest('button');
       if(!b || b.disabled) return;
       if(b.dataset.tab){ shopTab = b.dataset.tab; render(); return; }
-      if(b.dataset.view){ view = b.dataset.view; overlay.querySelector('.pt-body').scrollTop = 0; render(); updateButtons(); return; }
+      if(b.dataset.view){ careTab = 'care'; view = b.dataset.view; overlay.querySelector('.pt-body').scrollTop = 0; render(); updateButtons(); return; }
       if(b.dataset.buy){ act('buy', b.dataset.buy); return; }
       if(b.dataset.buyitem){ act('buyitem', b.dataset.buyitem); return; }
+      if(b.dataset.ctab){ careTab = b.dataset.ctab; friendSel = null; msg = ''; if(careTab === 'friends') friends = null; overlay.querySelector('.pt-body').scrollTop = 0; render(); return; }
+      if(b.dataset.place){ act('place', b.dataset.place); return; }
+      if(b.dataset.friend){ friendSel = b.dataset.friend; msg = ''; overlay.querySelector('.pt-body').scrollTop = 0; render(); return; }
+      if(b.dataset.fback){ friendSel = null; msg = ''; render(); return; }
+      if(b.dataset.freload){ friends = null; render(); return; }
+      if(b.dataset.heart){ act('heart', b.dataset.heart); return; }
       if(b.dataset.own){ act('own', b.dataset.own); return; }
       if(b.dataset.act){ act(b.dataset.act); }
     });
@@ -1124,7 +1545,7 @@ export function mountPets(deps, opts){
       lastMood = m;
     }, 1000);
   }
-  function close(){ clearInterval(tickTimer); tickTimer = null; sceneCv = null; if(overlay){ overlay.remove(); overlay = null; } }
+  function close(){ clearInterval(tickTimer); tickTimer = null; sceneCv = null; friendCv = null; friendSel = null; friends = null; if(overlay){ overlay.remove(); overlay = null; } }
   document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && overlay) close(); });
 
   const api = {
@@ -1142,7 +1563,9 @@ export function mountPets(deps, opts){
         data = snap.val() || {};
         loaded = true;
         if(first){ first = false; welcomeIfNeeded(); }
+        CUR_COZY = roomCozy(data.room);
         showGifts();
+        showHearts();
         sync();
         updateButtons();
         checkReady();
