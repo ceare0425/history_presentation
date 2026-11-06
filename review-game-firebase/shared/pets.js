@@ -403,7 +403,10 @@ export function drawPet(ctx, id, si, ox, oy, mods){
 }
 
 // ── 움직이는 캔버스 (숨쉬기·눈 깜빡임·기분 말풍선) ─────────────
-const reduceMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// 펫 도트는 작은 그림이 살짝 들썩이고 깜빡이는 정도라, 기기의 '동작 줄이기·애니메이션 제거'(절전 모드에서 자동으로
+// 켜지는 기기가 많음) 설정과 상관없이 항상 움직이게 한다 (2026-11-06 사용자 요청). 다시 설정을 따르게 하려면
+// 아래를 matchMedia('(prefers-reduced-motion: reduce)').matches 로 바꾸면 된다 — 그때도 멈춘 그림은 계속 다시 그려진다.
+const reduceMotion = false;
 const actors = new Set();
 let loopOn = false, lastStill = -1e9;
 // '애니메이션 줄이기'(동작 줄이기)가 켜진 기기에서도 그림은 계속 다시 그려야 한다 — 펫을 사거나 기분·장면이 바뀌면
