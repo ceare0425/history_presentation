@@ -24,13 +24,15 @@
 // ── 규칙 숫자 ─────────────────────────────────────────
 export const PET_RULES = {
   welcome: 200,          // 처음 받는 축하 코인 (한 번만)
-  classBonus: [10, 6, 3],// 수업 게임 개인전 1·2·3등 보너스
-  teamBonus: 5,          // 수업 게임 팀전 1등 팀 보너스
+  coinPerCorrect: 5,     // 정답 1개당 코인 (혼자 연습·수업 게임 공통, 상한 없음)
+  classBonus: [50, 30, 15],// 수업 게임 개인전 1·2·3등 보너스
+  teamBonus: 25,         // 수업 게임 팀전 1등 팀 보너스
+  pigUnlock: 25000,      // 금돼지 해금: 누적 코인
   // 상점 용품 (가지고 있으면 그걸 쓰고, 없으면 펫 키우기에서 바로 사서 줄 수 있음)
   items: {
-    rice:  { label: '🍙 밥',   price: 10, food: 30 },            // 먹으면 똥이 하나 생김
-    snack: { label: '🍪 간식', price: 15, food: 10, fun: 15 },
-    med:   { label: '💊 약',   price: 20 }                        // 아플 때만 먹일 수 있음
+    rice:  { label: '🍙 밥',   price: 30, food: 30 },            // 먹으면 똥이 하나 생김
+    snack: { label: '🍪 간식', price: 40, food: 10, fun: 15 },
+    med:   { label: '💊 약',   price: 50 }                        // 아플 때만 먹일 수 있음
   },
   poopEveryMs: 6 * 3600000, // 이만큼 지날 때마다 똥이 하나 생김
   poopMax: 5,            // 똥은 최대 이만큼 쌓임
@@ -38,7 +40,7 @@ export const PET_RULES = {
   walkMs: 20000,         // 산책 나가 있는 시간 (그동안 화면에서 걷는 모습)
   walkCooldownMs: 60 * 60000, // 산책은 이 간격마다 한 번
   walkFun: 20, walkEnergy: 10, walkFood: 5,   // 산책: 기분 +, 체력 -, 배부름 -
-  walkCoinChance: 0.3, walkCoinMax: 5,         // 산책하다 동전을 주울 확률·최대 개수
+  walkCoinChance: 0.3, walkCoinMax: 15,         // 산책하다 동전을 주울 확률·최대 개수
   cozyStep: 0.04, cozyMax: 0.5,  // 아늑함 1점마다 기분이 4%씩 천천히 떨어짐 (최대 50%)
   cozyHappy: 8,          // 아늑함이 이보다 높으면 '신남' 기준이 60 → 50으로 낮아짐
   toyCooldownMs: 30 * 60000, toyPlayMs: 6000,  // 장난감 같이 놀기 간격 · 노는 장면 길이
@@ -306,7 +308,7 @@ export const PET_INFO = {
   ],
   "lore": "최치원 설화에 나오는 금돼지. 다 크면 금빛으로 변하고 엽전을 품어요.",
   "rare": true,
-  "unlock": "코인 누적 5,000개 모으기"
+  "unlock": "코인 누적 25,000개 모으기"
  },
  "kraken": {
   "price": 2500,
@@ -345,6 +347,42 @@ export const PET_INFO = {
   "unlock": "수업 게임 1등 3번 하기"
  }
 };
+
+// ── 펫 능력: 아이템전(난타전·매운맛)에서만 발휘 ──
+// 세기는 진화 단계(1·2·3단계)마다 오르고, 희귀 펫은 한 단계 더 세다. 아픈 펫은 능력을 못 쓴다.
+// vals[0~3] = 1단계 · 2단계 · 3단계 · 희귀 3단계
+export const PET_ABILITY = {
+  guard:   { icon: '🛡️', name: '수호',       vals: [1, 2, 3, 4],     text: v => `방해 공격을 한 판에 ${v}번까지 막아 줘요` },
+  gift:    { icon: '🎁', name: '선물',       vals: [15, 12, 10, 8],  text: v => `정답 ${v}개마다 랜덤 아이템을 하나 더 받아요` },
+  extend:  { icon: '⏳', name: '시간 늘리기', vals: [20, 35, 50, 70], text: v => `내가 쓴 아이템 효과 시간이 ${v}% 늘어나요` },
+  streak:  { icon: '🔥', name: '연속 지키기', vals: [1, 2, 3, 4],     text: v => `틀려도 연속 정답이 안 끊기게 한 판에 ${v}번 지켜 줘요` },
+  quick:   { icon: '⚡', name: '순발력',     vals: [1, 2, 3, 4],     text: v => `빨리 맞혀 +3층이 되는 시간이 5초에서 ${5 + v}초로 늘어나요` },
+  lucky:   { icon: '🍀', name: '행운',       vals: [5, 8, 12, 15],   text: v => `정답마다 ${v}% 확률로 +1층 더 올라가요` },
+  shorten: { icon: '💨', name: '털어내기',    vals: [20, 35, 50, 60], text: v => `안개·얼음 같은 방해 시간이 ${v}% 줄어요` }
+};
+export const PET_SKILL = {
+  haechi: 'guard', turtle: 'guard', bulgasari: 'guard', hyeonmu: 'guard', cerberus: 'guard',
+  dokkaebi: 'gift', scarab: 'gift', camel: 'gift', pig: 'gift',
+  owl: 'extend', sphinx: 'extend', bonghwang: 'extend', phoenix: 'extend',
+  tiger: 'quick', griffin: 'quick', giraffe: 'quick', samjogo: 'quick',
+  sapsal: 'streak', elephant: 'streak', mammoth: 'streak', minotaur: 'streak',
+  dragon: 'lucky', wyvern: 'lucky', gumiho: 'lucky',
+  wolf: 'shorten', anubis: 'shorten', kraken: 'shorten'
+};
+export function petAbility(id, stage){
+  const key = PET_SKILL[id], a = PET_ABILITY[key];
+  if(!a) return null;
+  const tier = Math.min(3, (stage | 0) + (PET_INFO[id] && PET_INFO[id].rare ? 1 : 0));
+  return { key, icon: a.icon, name: a.name, v: a.vals[tier], text: a.text(a.vals[tier]) };
+}
+// 단계별 세기 한 줄 (상점 카드용): 예) 1번 → 2번 → 3번
+function abilityLadder(id){
+  const a = PET_ABILITY[PET_SKILL[id]]; if(!a) return '';
+  const r = PET_INFO[id] && PET_INFO[id].rare ? 1 : 0;
+  const k = PET_SKILL[id];
+  const unit = { guard: '번', gift: '개마다', extend: '%', streak: '번', lucky: '%', shorten: '%', quick: '초' }[k];
+  return [0, 1, 2].map(s => (k === 'quick' ? 5 + a.vals[s + r] : a.vals[s + r]) + unit).join(' → ');
+}
 export const PET_ORDER = DATA.pets.map(p => p.id);
 
 const petById = {};
@@ -872,7 +910,7 @@ function rareProgress(id, d, ext){
       return { ok: set.size >= 30, text: `${Math.min(set.size, 30)} / 30일` };
     }
     case 'phoenix':  return { ok: (d.soloBest || 0) >= 100, text: `최고 ${d.soloBest || 0} / 100층` };
-    case 'pig':      return { ok: (d.earned || 0) >= 5000, text: `${(d.earned || 0).toLocaleString()} / 5,000코인` };
+    case 'pig':      return { ok: (d.earned || 0) >= PET_RULES.pigUnlock, text: `${(d.earned || 0).toLocaleString()} / ${PET_RULES.pigUnlock.toLocaleString()}코인` };
     case 'kraken':   return { ok: (d.maxDay || 0) >= 100, text: `최고 ${d.maxDay || 0} / 100문제` };
     case 'cerberus': { const n = logCount('soloraidd2'); return { ok: n > 0, text: n > 0 ? '달성' : '아직' }; }
     case 'minotaur': { const n = logCount('first'); return { ok: n >= 3, text: `${Math.min(n, 3)} / 3번` }; }
@@ -971,6 +1009,8 @@ function addCss(){
   .pt-evo .pt-cv{ width:48px; height:48px; }
   .pt-evo .pt-cv.lk{ filter:brightness(0) opacity(.25); }
   .pt-lore{ font-size:.76rem; color:#6b7280; line-height:1.4; }
+  .pt-skill{ font-size:.78rem; line-height:1.4; background:#f3f0ff; border:1px solid #ddd3ff; color:#3b2a7a; border-radius:8px; padding:5px 8px; margin:4px 0; text-align:left; }
+  .pt-skill small{ display:block; color:#6b5fa8; font-size:.7rem; }
   .pt-lock{ font-size:.76rem; color:#8a5a00; background:#fff6dc; border-radius:8px; padding:4px 8px; line-height:1.4; }
   .pt-lock.ok{ color:#1f7a3a; background:#e8f7ec; }
   .pt-overlay button.pt-buy{ width:100%; padding:7px; font-size:.86rem; font-weight:800; border-radius:10px; border:none; background:#ffcf3f; color:#5a3b00; cursor:pointer; transition:none; }
@@ -1292,6 +1332,7 @@ export function mountPets(deps, opts){
       const hint = c.stage < 2 && !ready ? (c.exp >= (nextNeed || 0) && c.stage === 1 ? '😊 신남 상태가 되면 진화할 수 있어요 (배부름·기분·체력 60 이상, 똥 없음, 안 아픔)' : `데려가서 문제를 ${nextNeed - c.exp}개 더 맞히면 진화할 수 있어요`) : '';
       h += `<div class="pt-sec"><h4>🐾 데려가는 펫</h4><div class="pt-mine"><div class="pt-big" data-slot="big"></div><div class="pt-mine-info">
         <div class="pt-mine-name">${escapeHtml(inf.names[c.stage])}<small>${c.stage + 1}단계 · ${MOOD_LABEL[info.m]}</small></div>
+        ${(() => { const ab = petAbility(info.id, c.stage); return ab ? `<div class="pt-skill">${ab.icon} <b>${escapeHtml(ab.name)}</b> ${escapeHtml(ab.text)}<small>${c.sick ? '🤒 아픈 동안은 능력을 못 써요' : '수업 게임 아이템전에서 발휘돼요'}${c.stage < 2 ? ` · 진화하면 ${escapeHtml(abilityLadder(info.id))}` : ''}</small></div>` : ''; })()}
         ${bar('🍙 배부름', c.food)}${bar('😊 기분', c.fun)}${bar('⚡ 체력', c.energy)}
         <div class="pt-bar"><span style="text-align:left">💩 똥</span><span class="pt-poops">${c.poop ? '💩'.repeat(c.poop) : '깨끗해요 ✨'}</span><span></span></div>
         ${nextNeed ? `<div class="pt-bar"><span style="text-align:left">✨ 경험치</span><i><b class="exp" style="width:${Math.min(100, c.exp / nextNeed * 100)}%"></b></i><span>${Math.min(c.exp, nextNeed)}/${nextNeed}</span></div>` : `<div class="pt-note">✨ 다 자랐어요! (맞힌 문제 ${c.exp}개)</div>`}
@@ -1321,7 +1362,7 @@ export function mountPets(deps, opts){
     if(view === 'care' && careTab === 'care' && info) h += `<div class="pt-sec"><button type="button" class="pt-act" data-view="shop">🏪 상점에서 새 펫 보기</button></div>`;
     if(view === 'shop' && info) h += `<div class="pt-sec"><div class="pt-note">지금 데려가는 펫: <b>${escapeHtml(PET_INFO[info.id].names[info.s])}</b> · 밥 주기·진화는 🐾 펫 키우기에서 해요 <button type="button" class="pt-act" data-view="care">🐾 펫 키우기로 가기</button></div></div>`;
     if(showShop){
-    h += `<div class="pt-sec"><h4>${view === 'shop' ? '🛒 펫 고르기' : '🏪 상점'}</h4><div class="pt-note">🪙 코인 모으기: 혼자 연습·수업 게임 정답 1개 = 1코인 + 1·2·3등 보너스 ${PET_RULES.classBonus.join('·')}코인 · 한국사·세계사 코인은 하나로 합쳐져요</div>
+    h += `<div class="pt-sec"><h4>${view === 'shop' ? '🛒 펫 고르기' : '🏪 상점'}</h4><div class="pt-note">🪙 코인 모으기: 혼자 연습·수업 게임 정답 1개 = ${PET_RULES.coinPerCorrect}코인 + 1·2·3등 보너스 ${PET_RULES.classBonus.join('·')}코인 · 한국사·세계사 코인은 하나로 합쳐져요</div>
       <h4 class="pt-sub-h">🧺 용품 <small>펫 키우기에서 없으면 바로 사서 줄 수도 있어요</small></h4>
       <div class="pt-goods">${Object.entries(PET_RULES.items).map(([k, it]) => `<div class="pt-good"><b>${it.label}</b><span>${k === 'rice' ? `배부름 +${it.food} (먹으면 똥 하나)` : k === 'snack' ? `배부름 +${it.food} · 기분 +${it.fun}` : '아플 때 먹이면 나아요'}</span><small>가진 개수 ${((data.items || {})[k] | 0)}개</small><button type="button" class="pt-buy" data-buyitem="${k}" ${(data.coins || 0) >= it.price ? '' : 'disabled'}>🪙 ${it.price}코인에 사기</button></div>`).join('')}</div>
       <h4 class="pt-sub-h">🐾 펫 · 🛋️ 꾸미기</h4>
@@ -1343,7 +1384,7 @@ export function mountPets(deps, opts){
       const btnText = have ? '✔ 가지고 있어요' : (inf.rare && !(ext && rareProgress(id, data, ext).ok)) ? '🔒 조건을 채우면 열려요' : (data.coins || 0) < inf.price ? `🪙 ${(inf.price - (data.coins || 0)).toLocaleString()}코인 더 필요해요` : `🪙 ${inf.price.toLocaleString()}코인에 사기`;
       h += `<div class="pt-card ${inf.rare ? 'rare' : ''}"><div class="pt-card-top"><b>${escapeHtml(inf.name)}</b>${inf.rare ? '<span class="pt-rare">희귀</span>' : ''}<span class="pt-price">🪙 ${inf.price.toLocaleString()}</span></div>
         <div class="pt-evo" data-slot="evo-${id}"></div>
-        <div class="pt-lore">${escapeHtml(inf.lore)}</div>${lockHtml}
+        <div class="pt-lore">${escapeHtml(inf.lore)}</div>${(() => { const ab = petAbility(id, 0); return ab ? `<div class="pt-skill">${ab.icon} <b>${escapeHtml(ab.name)}</b> ${escapeHtml(ab.text)}<small>아이템전 능력 · 진화하면 ${escapeHtml(abilityLadder(id))}</small></div>` : ''; })()}${lockHtml}
         <button type="button" class="pt-buy" data-buy="${id}" ${canBuy ? '' : 'disabled'}>${btnText}</button></div>`;
     });
     h += `</div>${shopTab === 'decor' ? '' : '<div class="pt-note" style="margin-top:8px">진화 전 모습은 상점에서도 볼 수 있어요. 3단계 모습은 펫을 키워서 확인해 보세요!</div>'}</div>`;
@@ -1683,7 +1724,7 @@ export function mountPets(deps, opts){
       }, () => { loaded = true; updateButtons(); if(overlay) render(); });
       if(overlay) render();
     },
-    // 문제를 풀 때마다: 맞히면 코인 +1 (상한 없음), 데려간 펫 경험치·기분 +, 체력 -
+    // 문제를 풀 때마다: 맞히면 코인 +coinPerCorrect (상한 없음), 데려간 펫 경험치·기분 +, 체력 -
     recordAnswer(correct){
       if(!ident || !correct) return;
       tx((cur, now) => {
@@ -1691,8 +1732,8 @@ export function mountPets(deps, opts){
         const day = (cur.day && cur.day.k === dk) ? cur.day : { k: dk, c: 0 };
         day.c = (day.c || 0) + 1;
         cur.maxDay = Math.max(cur.maxDay || 0, day.c);
-        cur.coins = (cur.coins || 0) + 1;
-        cur.earned = (cur.earned || 0) + 1;
+        cur.coins = (cur.coins || 0) + PET_RULES.coinPerCorrect;
+        cur.earned = (cur.earned || 0) + PET_RULES.coinPerCorrect;
         cur.day = day;
         const p = cur.active && cur.owned && cur.owned[cur.active];
         if(p){
@@ -1708,7 +1749,7 @@ export function mountPets(deps, opts){
         if(!a.cv) return;
         const pop = document.createElement('span');
         pop.className = 'pt-coinpop';
-        pop.textContent = '+1🪙';
+        pop.textContent = `+${PET_RULES.coinPerCorrect}🪙`;
         const host = a.el;
         if(getComputedStyle(host).position === 'static') host.style.position = 'relative';
         pop.style.left = '70%'; pop.style.top = '-6px';
@@ -1741,6 +1782,13 @@ export function mountPets(deps, opts){
     // 정답·오답 몸짓 (게임 화면 캐릭터)
     react(correct){ avatars.forEach(a => jumpPetCanvas(a.cv, correct)); },
     hasPet(){ return !!activeInfo(); },
+    // 아이템전 능력: {key, icon, name, v, text, petName, sick} 또는 null
+    ability(){
+      const i = activeInfo(); if(!i) return null;
+      const ab = petAbility(i.id, i.s); if(!ab) return null;
+      const inf = PET_INFO[i.id];
+      return Object.assign(ab, { petName: (inf && inf.names[i.s]) || '', sick: i.m === 'sick' });
+    },
     petInfo: activeInfo,
     syncPet: () => sync(true),
     // 게임 화면의 캐릭터 자리 (원래 이모지가 들어 있던 요소) — 펫이 있으면 펫 그림으로 바뀐다
