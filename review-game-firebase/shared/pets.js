@@ -54,12 +54,12 @@ export const PET_RULES = {
   evolve: [300, 1000],   // 2단계·3단계로 진화하는 경험치 (3단계는 기분 좋음 상태여야 함)
   // 📝 오늘의 퀴즈: 하루 n문제, 맞히면 coin·펫 기분 fun, 다 맞히면 bonus 코인 + 간식 1개
   quiz: { n: 3, coin: 10, fun: 5, bonus: 20 },
-  // 🗺️ 탐험: 짧게(1시간)·길게(3시간). 떠날 때 체력·배부름이 줄고, 돌아오면 rolls번 뽑는다
-  //   한 번 뽑을 때마다 cardChance 확률로 그 장소 유물 카드, 아니면 coinMin~coinMax 코인
+  // 🗺️ 탐험: 짧게(1시간)·길게(3시간). 떠날 때 체력·배부름이 줄고, 돌아오면 1시간에 한 번씩(rolls번) 뽑는다
+  //   한 번 뽑을 때마다 cardChance 확률로 그 장소 유물 카드, 아니면 코인 coinMin~coinMax (지금은 1시간당 20코인 고정)
   explore: {
     short: { ms: 60 * 60000, energy: 20, food: 10, rolls: 1, label: '1시간' },
     long:  { ms: 3 * 60 * 60000, energy: 35, food: 20, rolls: 3, label: '3시간' },
-    cardChance: 0.05, coinMin: 10, coinMax: 50,
+    cardChance: 0.05, coinMin: 20, coinMax: 20,
     minFood: 20, fun: 10, dupCoins: 20, placeBonus: 100, freshChance: 0.7
   },
   // 🎮 간식 받기 미니게임: 30초, 하루 plays판까지 보상(점수/2 코인, 최대 coinMax)
@@ -1484,7 +1484,7 @@ export function mountPets(deps, opts){
   // ── 🗺️ 탐험 ──
   function exploreHtml(info, now){
     const R = PET_RULES.explore, x = data.explore, rel = data.relics || {};
-    let s = `<div class="pt-sec"><h4>🗺️ 펫 탐험</h4><div class="pt-note">펫을 역사 속 장소로 탐험 보내면 그 시대의 유물 카드를 가져와요. 돌아올 때 ${R.short.label}은 ${R.short.rolls}번, ${R.long.label}은 ${R.long.rolls}번 선물을 뽑아요 · 한 번마다 ${Math.round(R.cardChance * 100)}% 확률로 유물 카드, 아니면 🪙${R.coinMin}~${R.coinMax} · 이미 있는 유물은 🪙${R.dupCoins}으로 바꿔 줘요 · 한 장소의 유물 4장을 다 모으면 🪙${R.placeBonus}</div>`;
+    let s = `<div class="pt-sec"><h4>🗺️ 펫 탐험</h4><div class="pt-note">펫을 역사 속 장소로 탐험 보내면 그 시대의 유물 카드를 가져와요. 돌아올 때 ${R.short.label}은 ${R.short.rolls}번, ${R.long.label}은 ${R.long.rolls}번 선물을 뽑아요 · 한 번마다 ${Math.round(R.cardChance * 100)}% 확률로 유물 카드, 아니면 🪙${R.coinMin === R.coinMax ? R.coinMin : R.coinMin + '~' + R.coinMax} (1시간마다 한 번) · 이미 있는 유물은 🪙${R.dupCoins}으로 바꿔 줘요 · 한 장소의 유물 4장을 다 모으면 🪙${R.placeBonus}</div>`;
     if(lastFind){
       const pl = PLACE_BY[lastFind.place];
       s += `<div class="pt-find"><b>🎁 ${escapeHtml(pl.n)}에서 가져온 선물</b>${lastFind.got.map(g => { if(g.coin) return `<div class="pt-relic got coin"><span>🪙</span><div><b>코인 ${g.coin}개</b><p>${escapeHtml(pl.n)}에서 주운 동전이에요</p></div></div>`; const r = pl.relics[g.j]; return `<div class="pt-relic got"><span>${r.e}</span><div><b>${escapeHtml(r.n)}</b>${g.dup ? ' <small>(이미 있어서 🪙' + R.dupCoins + ')</small>' : ' <small>새 유물!</small>'}<p>${escapeHtml(r.d)}</p></div></div>`; }).join('')}<div class="pt-note">모두 합쳐 🪙 +${lastFind.coins}${lastFind.done ? ` · 🏆 ${escapeHtml(pl.n)} 유물을 모두 모았어요!` : ''}</div><button type="button" class="pt-act" data-xok="1">확인</button></div>`;
