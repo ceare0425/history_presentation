@@ -658,7 +658,52 @@ export const DECOR = {
       R(ctx, x + 2, y + 1 + a, 9, 3, W); R(ctx, x + 3, y + 2 + a, 7, 1, D);
       R(ctx, x + 9, y - 3 + b, 3, 5, W); P(ctx, x + 12, y - 2 + b, W); P(ctx, x + 10, y - 2 + b, '#2b2233');
       R(ctx, x + 8, y - 3 + b, 1, 4, '#e5484d');
-      P(ctx, x + 1, y + 1 + a, '#e5484d'); P(ctx, x, y + 2 + a, '#e5484d'); } }
+      P(ctx, x + 1, y + 1 + a, '#e5484d'); P(ctx, x, y + 2 + a, '#e5484d'); } },
+    bear:  { name: '곰인형', price: 160, cozy: 2, fun: 11, draw(ctx, t, play){
+      const up = play ? Math.round(Math.abs(Math.sin(t / 220)) * 3) : 0, x = 45, y = 27 - up;
+      const B = '#eab676', L = '#fbe3c0', O = '#6b3f22', K = '#2b2233', blink = t % 3200 < 160;
+      const wave = play && Math.sin(t / 150) > 0;
+      const body = [[2, 0, 2, 2], [8, 0, 2, 2], [3, 1, 6, 1], [2, 2, 8, 5], [2, 7, 8, 3], [1, 7, 1, 3], [10, wave ? 4 : 7, 1, 3], [1, 9, 3, 2], [8, 9, 3, 2]];
+      R(ctx, x, 37, 12, 1, 'rgba(0,0,0,.2)');
+      body.forEach(([dx, dy, w, h]) => R(ctx, x + dx - 1, y + dy - 1, w + 2, h + 2, O));
+      body.forEach(([dx, dy, w, h]) => R(ctx, x + dx, y + dy, w, h, B));
+      P(ctx, x + 3, y + 1, '#f2a0a0'); P(ctx, x + 8, y + 1, '#f2a0a0');
+      if(blink){ R(ctx, x + 3, y + 3, 2, 1, K); R(ctx, x + 7, y + 3, 2, 1, K); }
+      else { P(ctx, x + 4, y + 3, K); P(ctx, x + 7, y + 3, K); }
+      R(ctx, x + 4, y + 5, 4, 2, L); R(ctx, x + 5, y + 5, 2, 1, K);
+      R(ctx, x + 4, y + 8, 4, 2, L);
+      P(ctx, x + 4, y + 7, '#e5484d'); P(ctx, x + 7, y + 7, '#e5484d'); R(ctx, x + 5, y + 7, 2, 1, '#a5302a');
+      P(ctx, x + 2, y + 10, L); P(ctx, x + 9, y + 10, L); } },
+    car:   { name: '장난감 자동차', price: 140, cozy: 1, fun: 11, draw(ctx, t, play){
+      const mv = play ? Math.round(Math.sin(t / 400) * 4) : 0, x = 46 + mv, C = '#3b6fe0', G = '#bfe3ff';
+      R(ctx, x, 37, 11, 1, 'rgba(0,0,0,.18)');
+      R(ctx, x + 3, 31, 5, 1, C); R(ctx, x + 2, 32, 7, 1, C); R(ctx, x + 3, 32, 2, 1, G); R(ctx, x + 6, 32, 2, 1, G);
+      R(ctx, x, 33, 11, 3, C); R(ctx, x + 1, 35, 9, 1, '#2a4fa8'); P(ctx, x + 10, 34, '#ffe066'); P(ctx, x, 34, '#e5484d');
+      const spin = Math.floor(t / (play ? 80 : 500)) % 2;
+      [2, 7].forEach(wx => { R(ctx, x + wx, 36, 2, 2, '#2b2233'); P(ctx, x + wx + spin, 36, '#9aa3b5'); });
+      if(play && Math.abs(Math.cos(t / 400)) > .3){ const back = Math.cos(t / 400) > 0 ? -2 : 12; P(ctx, x + back, 35, '#dddddd'); P(ctx, x + back + (back < 0 ? -1 : 1), 34, '#eeeeee'); } } },
+    blocks:{ name: '쌓기 블록', price: 100, cozy: 1, fun: 9, draw(ctx, t, play){
+      const x = 45, hop = play ? Math.round(Math.abs(Math.sin(t / 200)) * 4) : 0, tilt = play && Math.sin(t / 100) > 0 ? 1 : 0;
+      const blk = (bx, by, c, d) => { R(ctx, bx, by, 4, 4, c); R(ctx, bx, by + 3, 4, 1, d); P(ctx, bx + 1, by + 1, '#ffffff'); };
+      R(ctx, x, 37, 14, 1, 'rgba(0,0,0,.18)');
+      blk(x, 33, '#e5484d', '#a5302a'); blk(x + 4, 33, '#3b6fe0', '#2a4fa8');
+      blk(x + 2 + tilt, 29 - hop, '#f2c230', '#c98a12');
+      R(ctx, x + 11, 34, 1, 1, '#3fae6a'); R(ctx, x + 10, 35, 3, 1, '#3fae6a'); R(ctx, x + 9, 36, 5, 1, '#2f8a52'); } },
+    ottogi:{ name: '오뚝이', price: 110, cozy: 1, fun: 10, draw(ctx, t, play){
+      const x = 46, sway = play ? Math.sin(t / 150) * 2.5 : Math.sin(t / 700) * 1;
+      R(ctx, x + 1, 37, 7, 1, 'rgba(0,0,0,.18)');
+      for(let py = 24; py <= 37; py++){
+        const sh = Math.round(sway * (37 - py) / 12);
+        for(let px = 0; px <= 8; px++){
+          let c = null;
+          if(Math.hypot(px - 4, py - 33.5) <= 4) c = Math.hypot(px - 4, py - 34) <= 2 ? '#fff3b0' : '#e5484d';
+          else if(Math.hypot(px - 4, py - 27) <= 3) c = py <= 25 ? '#2b2233' : '#ffe0c0';
+          if(px === 3 && py === 27 || px === 5 && py === 27) c = '#2b2233';
+          if(px === 4 && py === 29) c = '#e5484d';
+          if((px === 2 || px === 6) && py === 28) c = '#ff9aa8';
+          if(c) P(ctx, x + px + sh, py, c);
+        }
+      } } }
   }
 };
 export const SLOT_LABEL = { paper: '🧱 벽지', floor: '🟫 바닥', window: '🪟 창문', wall: '🖼️ 벽 장식', left: '🪑 왼쪽 가구', right: '🪑 오른쪽 가구', rug: '🟥 러그', toy: '🧸 장난감' };
