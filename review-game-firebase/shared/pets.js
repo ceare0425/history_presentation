@@ -634,7 +634,60 @@ export const DECOR = {
   floor: {
     wood:    { name: '나무 마루', price: 0, cozy: 0, draw(ctx){ R(ctx, 0, 28, 64, 12, '#b9824f'); for(let y = 30; y < 40; y += 3) R(ctx, 0, y, 64, 1, '#9c6a3d'); for(let i = 0; i < 4; i++) for(let x = (i % 2 ? 9 : 2); x < 64; x += 14) P(ctx, x, 28 + i * 3, '#9c6a3d'); } },
     jangpan: { name: '노란 장판', price: 100, cozy: 1, draw(ctx){ R(ctx, 0, 28, 64, 12, '#e6c464'); for(let x = 0; x < 64; x += 10) R(ctx, x, 28, 1, 12, '#d6b04e'); R(ctx, 0, 33, 64, 1, '#d6b04e'); } },
-    marble:  { name: '대리석 바닥', price: 150, cozy: 1, draw(ctx){ for(let y = 28; y < 40; y += 3) for(let x = 0; x < 64; x += 4) R(ctx, x, y, 4, 3, ((x / 4 + (y - 28) / 3) % 2) ? '#e9e9ef' : '#c9cad6'); } }
+    marble:  { name: '대리석 바닥', price: 150, cozy: 1, draw(ctx){ for(let y = 28; y < 40; y += 3) for(let x = 0; x < 64; x += 4) R(ctx, x, y, 4, 3, ((x / 4 + (y - 28) / 3) % 2) ? '#e9e9ef' : '#c9cad6'); } },
+    checker: { name: '파스텔 체크 타일', price: 140, cozy: 1, draw(ctx){
+      for(let y = 28; y < 40; y += 3) for(let x = 0; x < 64; x += 4){
+        const on = ((x / 4) + ((y - 28) / 3)) % 2;
+        R(ctx, x, y, 4, 3, on ? '#f7cfdc' : '#fff7fa'); P(ctx, x, y, on ? '#fbe3ea' : '#ffffff');
+      } } },
+    herring: { name: '쪽매 마루', price: 180, cozy: 2, draw(ctx){
+      for(let sy = 0; sy < 3; sy++) for(let sx = 0; sx < 16; sx++){
+        const x0 = sx * 4, y0 = 28 + sy * 4, horiz = (sx + sy) % 2 === 0;
+        for(let k = 0; k < 2; k++){
+          const c = (k + sx + sy) % 2 ? '#d29e68' : '#b98450';
+          if(horiz) R(ctx, x0, y0 + k * 2, 4, 2, c); else R(ctx, x0 + k * 2, y0, 2, 4, c);
+        }
+        if(horiz) R(ctx, x0, y0 + 2, 4, 1, '#a8733f'); else R(ctx, x0 + 2, y0, 1, 4, '#a8733f');
+        R(ctx, x0, y0, 4, 1, '#8f6036'); R(ctx, x0, y0, 1, 4, '#8f6036');
+      } } },
+    daecheong: { name: '한옥 대청마루', price: 160, cozy: 2, draw(ctx){
+      R(ctx, 0, 28, 64, 12, '#c48c55');
+      for(let x = 0; x < 64; x += 16){ R(ctx, x, 28, 2, 12, '#7a4b2a'); }
+      for(let y = 28; y < 40; y += 3) for(let x = 2; x < 64; x += 16){ R(ctx, x, y, 14, 1, '#a8733f'); if(((x >> 4) + y) % 2) R(ctx, x, y + 1, 14, 2, '#cf9a63'); }
+      R(ctx, 0, 28, 64, 1, '#6b4423'); } },
+    cobble:  { name: '돌길 바닥', price: 140, cozy: 1, draw(ctx){
+      R(ctx, 0, 28, 64, 12, '#6f6a62');
+      const cols = ['#b8b4ac', '#a9a49a', '#c4bfb5', '#9d978c'];
+      for(let r = 0; r < 4; r++){ const y = 28 + r * 3, off = r % 2 ? 3 : 0;
+        for(let x = -off, i = 0; x < 64; x += 6, i++){ R(ctx, x + 1, y, 4, 2, cols[(i + r) % 4]); P(ctx, x + 1, y, '#d6d2ca'); } } } },
+    mosaic:  { name: '로마 모자이크', price: 220, cozy: 2, draw(ctx){
+      R(ctx, 0, 28, 64, 12, '#efe4cc');
+      for(let x = 0; x < 64; x++){ P(ctx, x, 28, '#8b3a2a'); P(ctx, x, 39, '#8b3a2a'); if(x % 4 < 2){ P(ctx, x, 29, '#2f5fb0'); P(ctx, x, 38, '#2f5fb0'); } }
+      for(let cx = 6; cx < 64; cx += 12) for(let dy = -3; dy <= 3; dy++) for(let dx = -3; dx <= 3; dx++){
+        const d = Math.abs(dx) + Math.abs(dy);
+        if(d <= 3) P(ctx, cx + dx, 34 + dy, d === 3 ? '#8b3a2a' : d === 2 ? '#e3b04b' : d === 1 ? '#2f5fb0' : '#ffffff');
+      } } },
+    flower:  { name: '꽃 잔디', price: 200, cozy: 2, draw(ctx, t){
+      R(ctx, 0, 28, 64, 12, '#8cc46a');
+      for(let i = 0; i < 40; i++){ const x = (i * 37) % 64, y = 29 + (i * 7) % 11; P(ctx, x, y, '#6aa84f'); P(ctx, x, y - 1, (i % 3) ? '#7bb85d' : '#5f9e45'); }
+      [[4, 31, '#ff8fa3'], [15, 36, '#ffffff'], [26, 30, '#ffd84a'], [39, 37, '#ff8fa3'], [50, 32, '#c38bff'], [59, 37, '#ffffff'], [33, 34, '#ffd84a']].forEach(([x, y, c], i) => {
+        const s = Math.sin(t / 700 + i) > 0 ? 1 : 0;
+        P(ctx, x + s, y - 1, c); P(ctx, x - 1 + s, y, c); P(ctx, x + 1 + s, y, c); P(ctx, x + s, y + 1, c); P(ctx, x + s, y, '#ffcf3f'); P(ctx, x, y + 2, '#3f7d52');
+      }); } },
+    royal:   { name: '왕실 카펫', price: 200, cozy: 2, draw(ctx){
+      R(ctx, 0, 28, 64, 12, '#9e2a2a');
+      R(ctx, 0, 28, 64, 1, '#e3b04b'); R(ctx, 0, 39, 64, 1, '#e3b04b'); R(ctx, 0, 30, 64, 1, '#c98a12'); R(ctx, 0, 37, 64, 1, '#c98a12');
+      for(let cx = 4; cx < 64; cx += 8) for(let dy = -2; dy <= 2; dy++) for(let dx = -2; dx <= 2; dx++){
+        const d = Math.abs(dx) + Math.abs(dy);
+        if(d === 2) P(ctx, cx + dx, 33 + dy + 1, '#e3b04b'); else if(d === 0) P(ctx, cx, 34, '#f6e2a4');
+      } } },
+    starfloor: { name: '별빛 바닥', price: 240, cozy: 3, draw(ctx, t){
+      for(let y = 28; y < 40; y++) R(ctx, 0, y, 64, 1, y < 32 ? '#2c3270' : y < 36 ? '#252a5e' : '#1f2350');
+      [[3, 30], [11, 35], [19, 31], [27, 38], [34, 33], [42, 29], [49, 36], [57, 31], [61, 38], [8, 38], [38, 37], [24, 34]].forEach(([x, y], i) => {
+        const on = (t / 600 + i * 0.7) % 3 > .8;
+        P(ctx, x, y, on ? '#fff3b0' : '#8f95c9');
+        if(on && i % 3 === 0){ P(ctx, x - 1, y, '#c9c3ff'); P(ctx, x + 1, y, '#c9c3ff'); P(ctx, x, y - 1, '#c9c3ff'); P(ctx, x, y + 1, '#c9c3ff'); }
+      }); } }
   },
   window: {
     basic: { name: '네모 창문', price: 0, cozy: 1, draw(ctx, t, hour){
@@ -723,7 +776,76 @@ export const DECOR = {
       R(ctx, x + 3, 12, 11, 2, '#e9e5da'); R(ctx, x + 2, 11, 13, 1, '#d4cfc1'); R(ctx, x + 5, 14, 7, 15, '#f2efe6');
       for(let i = 6; i < 12; i += 2) R(ctx, x + i, 14, 1, 15, '#d4cfc1');
       R(ctx, x + 3, 29, 11, 2, '#e9e5da'); R(ctx, x + 2, 31, 13, 1, '#c9c3b2');
-      R(ctx, x + 6, 6, 5, 5, '#e9e5da'); P(ctx, x + 7, 8, '#9a958a'); P(ctx, x + 9, 8, '#9a958a'); R(ctx, x + 5, 5, 7, 1, '#7fae4a'); } }
+      R(ctx, x + 6, 6, 5, 5, '#e9e5da'); P(ctx, x + 7, 8, '#9a958a'); P(ctx, x + 9, 8, '#9a958a'); R(ctx, x + 5, 5, 7, 1, '#7fae4a'); } },
+    // ── 🏺 유물 기념 가구: 상점에서 팔지 않고, 탐험으로 그 장소 유물 4장을 다 모으면 생긴다 ──
+    gramophone: { name: '경성 축음기', relic: 'gyeongseong', price: 0, cozy: 3, draw(ctx, t, x){
+      R(ctx, x + 2, 24, 12, 1, '#6b4423'); R(ctx, x + 3, 25, 1, 6, '#6b4423'); R(ctx, x + 12, 25, 1, 6, '#6b4423'); R(ctx, x + 3, 28, 10, 1, '#8b5a33');
+      R(ctx, x + 4, 20, 8, 4, '#8b5a33'); R(ctx, x + 4, 20, 8, 1, '#a8733f'); P(ctx, x + 10, 22, '#d9a640');
+      const sp = Math.floor(t / 150) % 2; R(ctx, x + 4, 19, 7, 1, '#2b2233'); P(ctx, x + 5 + sp * 3, 19, '#5b5b6b');
+      [[8, 18, 1], [8, 17, 1], [8, 16, 2], [7, 15, 3], [6, 14, 5], [5, 13, 6], [4, 12, 8]].forEach(([dx, y, w]) => R(ctx, x + dx, y, w, 1, '#d9a640'));
+      R(ctx, x + 5, 12, 6, 1, '#a8741a'); R(ctx, x + 6, 13, 4, 1, '#c08a2a');
+      const ny = 9 - Math.floor((t / 300) % 4); P(ctx, x + 13, ny, '#2b2233'); P(ctx, x + 13, ny + 1, '#2b2233'); P(ctx, x + 12, ny + 2, '#2b2233'); P(ctx, x + 14, ny, '#2b2233'); } },
+    taegukgi: { name: '태극기 깃대', relic: 'manchuria', price: 0, cozy: 3, draw(ctx, t, x){
+      R(ctx, x + 3, 9, 1, 22, '#8b5a33'); P(ctx, x + 3, 8, '#d9a640'); R(ctx, x + 1, 30, 5, 1, '#6b4423');
+      for(let dx = 0; dx < 11; dx++){
+        const w = Math.sin(t / 300 - dx / 2) > 0.4 && dx > 2 ? 1 : 0;
+        for(let dy = 0; dy < 8; dy++){
+          const tx = dx - 5, ty = dy - 3.5, d = Math.hypot(tx, ty);
+          let c = '#ffffff';
+          if(d <= 2.3) c = ty < 0 ? '#c2334d' : '#2f5fb0';
+          if((dx === 1 || dx === 2 || dx === 8 || dx === 9) && (dy === 1 || dy === 2 || dy === 5 || dy === 6) && (dx + dy) % 2 === 0) c = '#2b2233';
+          P(ctx, x + 4 + dx, 9 + dy + w, c);
+        }
+      } } },
+    gov_desk: { name: '임시 정부 책상', relic: 'shanghai', price: 0, cozy: 3, draw(ctx, t, x){
+      R(ctx, x + 1, 22, 15, 2, '#7a4b2a'); R(ctx, x + 2, 24, 1, 7, '#6b4423'); R(ctx, x + 14, 24, 1, 7, '#6b4423'); R(ctx, x + 9, 24, 5, 3, '#8b5a33'); P(ctx, x + 11, 25, '#d9a640');
+      R(ctx, x + 3, 19, 7, 3, '#2b2233'); R(ctx, x + 4, 20, 5, 1, '#5b5b6b'); R(ctx, x + 4, 16, 5, 3, '#fffaf0'); R(ctx, x + 5, 17, 3, 1, '#9aa3b5');
+      R(ctx, x + 13, 15, 1, 7, '#d9a640'); R(ctx, x + 11, 14, 4, 2, '#3f7d52'); R(ctx, x + 12, 21, 3, 1, '#d9a640');
+      if(Math.sin(t / 500) > 0) P(ctx, x + 6, 15, '#2b2233'); } },
+    ballot: { name: '투표함', relic: 'democracy', price: 0, cozy: 3, draw(ctx, t, x){
+      R(ctx, x + 3, 20, 10, 11, '#c8a070'); R(ctx, x + 3, 19, 10, 1, '#a8804f'); R(ctx, x + 3, 30, 10, 1, '#8b6a3f'); R(ctx, x + 6, 19, 4, 1, '#2b2233');
+      R(ctx, x + 5, 23, 6, 4, '#f4ead2'); P(ctx, x + 8, 24, '#c2334d'); P(ctx, x + 8, 25, '#c2334d'); P(ctx, x + 9, 25, '#c2334d');
+      const py = 12 + Math.floor((t / 220) % 8); if(py < 19) R(ctx, x + 7, py, 2, Math.min(3, 19 - py), '#ffffff'); } },
+    tv: { name: '흑백 텔레비전', relic: 'industry', price: 0, cozy: 3, draw(ctx, t, x){
+      R(ctx, x + 4, 28, 1, 3, '#4a2c18'); R(ctx, x + 11, 28, 1, 3, '#4a2c18');
+      R(ctx, x + 2, 17, 12, 11, '#7a5236'); R(ctx, x + 2, 17, 12, 1, '#8b5a33');
+      for(let y = 0; y < 8; y++) R(ctx, x + 3, 18 + y, 8, 1, ((y + Math.floor(t / 120)) % 4) ? '#b9c2c9' : '#d9e0e5');
+      R(ctx, x + 4, 22, 2, 2, '#5b6470'); R(ctx, x + 8, 21, 2, 3, '#5b6470');
+      P(ctx, x + 12, 19, '#d9a640'); P(ctx, x + 12, 22, '#d9a640'); R(ctx, x + 12, 25, 1, 1, '#2b2233');
+      P(ctx, x + 7, 16, '#2b2233'); P(ctx, x + 6, 15, '#2b2233'); P(ctx, x + 5, 14, '#2b2233'); P(ctx, x + 9, 16, '#2b2233'); P(ctx, x + 10, 15, '#2b2233'); P(ctx, x + 11, 14, '#2b2233'); } },
+    ziggurat: { name: '지구라트 모형', relic: 'mesopotamia', price: 0, cozy: 3, draw(ctx, t, x){
+      R(ctx, x + 1, 27, 14, 4, '#c9a36b'); R(ctx, x + 3, 23, 10, 4, '#d6b27a'); R(ctx, x + 5, 19, 6, 4, '#e0be88'); R(ctx, x + 6, 16, 4, 3, '#b8864f');
+      R(ctx, x + 1, 27, 14, 1, '#a8803f'); R(ctx, x + 3, 23, 10, 1, '#b8904f'); R(ctx, x + 5, 19, 6, 1, '#c9a060');
+      R(ctx, x + 7, 19, 2, 12, '#9a7536'); for(let y = 20; y < 31; y += 2) R(ctx, x + 7, y, 2, 1, '#b8904f');
+      P(ctx, x + 7, 17, '#2b2233'); P(ctx, x + 8, 17, '#2b2233'); } },
+    obelisk: { name: '오벨리스크', relic: 'egypt', price: 0, cozy: 3, draw(ctx, t, x){
+      R(ctx, x + 3, 29, 10, 2, '#b89a62'); R(ctx, x + 4, 28, 8, 1, '#c9ab72');
+      for(let y = 11; y < 28; y++){ const w = 3 + Math.floor((y - 11) / 6); const lx = x + 8 - Math.ceil(w / 2); R(ctx, lx, y, w, 1, '#e3c88e'); P(ctx, lx, y, '#c9ab72'); }
+      P(ctx, x + 7, 9, '#ffd84a'); R(ctx, x + 6, 10, 3, 1, '#ffd84a'); if(Math.sin(t / 400) > 0.6) P(ctx, x + 8, 8, '#fff3b0');
+      [[7, 14], [8, 16], [7, 18], [8, 20], [7, 22], [8, 24], [7, 26]].forEach(([dx, y]) => P(ctx, x + dx, y, '#8b6a3f')); } },
+    amphora: { name: '그리스 항아리', relic: 'greecerome', price: 0, cozy: 3, draw(ctx, t, x){
+      R(ctx, x + 4, 29, 8, 2, '#7a4b2a');
+      const prof = [3, 3, 4, 6, 8, 9, 10, 10, 10, 9, 8, 7, 5, 4, 5];
+      prof.forEach((w, i) => { const y = 14 + i, lx = x + 8 - Math.ceil(w / 2); R(ctx, lx, y, w, 1, i >= 6 && i <= 9 ? '#2b2233' : '#c96a3a'); });
+      [[6, 20], [8, 21], [10, 20], [7, 22], [9, 22]].forEach(([dx, y]) => P(ctx, x + dx, y, '#c96a3a'));
+      P(ctx, x + 4, 16, '#c96a3a'); P(ctx, x + 4, 17, '#c96a3a'); P(ctx, x + 11, 16, '#c96a3a'); P(ctx, x + 11, 17, '#c96a3a'); P(ctx, x + 7, 18, '#e89a6a'); } },
+    sancai: { name: '당삼채 낙타', relic: 'silkroad', price: 0, cozy: 3, draw(ctx, t, x){
+      const g = ['............hh..', '...........hhhh.', '...........hh...', '..........hh....', '....b..b..hh....', '...bbbbbbbhh....', '..bgggbbbbbb....', '.bbggbbbbbbb....', '.bbbbbbbbbbb....', '..bbbbbbbbb.....', '..b.b....b.b....', '..b.b....b.b....', '..b.b....b.b....', '..c.c....c.c....', '.ccccccccccccc..'];
+      const C = { b: '#b5692e', g: '#3f9a52', h: '#f0d79a', c: '#3f9a52' }, nod = Math.sin(t / 900) > 0.5 ? 1 : 0;
+      g.forEach((row, y) => row.split('').forEach((ch, dx) => { if(ch !== '.') P(ctx, x + dx, 17 + y + (ch === 'h' && y < 3 ? nod : 0), C[ch]); }));
+      P(ctx, x + 13, 18 + nod, '#2b2233'); } },
+    ger: { name: '게르 모형', relic: 'mongol', price: 0, cozy: 3, draw(ctx, t, x){
+      R(ctx, x + 1, 23, 15, 8, '#f4efe4'); R(ctx, x + 1, 25, 15, 1, '#c2334d'); R(ctx, x + 1, 29, 15, 1, '#c2334d');
+      [[17, 7], [18, 9], [19, 11], [20, 13], [21, 15], [22, 15]].forEach(([y, w]) => R(ctx, x + 8 - Math.floor(w / 2), y, w, 1, '#e9e1cf'));
+      R(ctx, x + 3, 21, 11, 1, '#2f5fb0'); P(ctx, x + 8, 16, '#8b5a33');
+      R(ctx, x + 7, 25, 3, 6, '#e5484d'); P(ctx, x + 8, 27, '#d9a640');
+      const sy = 14 - Math.floor((t / 400) % 4); P(ctx, x + 8 + (sy % 2), sy, '#d0d4dc'); } },
+    easel: { name: '르네상스 이젤', relic: 'renaissance', price: 0, cozy: 3, draw(ctx, t, x){
+      for(let k = 0; k < 19; k++){ P(ctx, x + 8 - Math.round(k * 5 / 19), 12 + k, '#7a4b2a'); P(ctx, x + 8 + Math.round(k * 5 / 19), 12 + k, '#7a4b2a'); }
+      R(ctx, x + 2, 23, 13, 1, '#7a4b2a');
+      R(ctx, x + 3, 12, 11, 11, '#7a4b2a'); R(ctx, x + 4, 13, 9, 9, '#9fc3e0'); R(ctx, x + 4, 18, 9, 4, '#7fae6a');
+      R(ctx, x + 7, 15, 3, 4, '#3a2a1e'); R(ctx, x + 8, 16, 1, 2, '#e8c49a'); R(ctx, x + 6, 19, 5, 3, '#3a3a2a'); P(ctx, x + 8, 19, '#e8c49a');
+      [[2, 29, '#e5484d'], [4, 30, '#3b6fe0'], [3, 31, '#f2c230']].forEach(([dx, y, c]) => P(ctx, x + dx, y, c)); } }
   },
   rug: {
     none:   { name: '없음', price: 0, cozy: 0, draw(){} },
@@ -1087,6 +1209,8 @@ function addCss(){
   .pt-evo .pt-cv{ width:48px; height:48px; }
   .pt-evo .pt-cv.lk{ filter:brightness(0) opacity(.25); }
   .pt-lore{ font-size:.76rem; color:#6b7280; line-height:1.4; }
+  .pt-good.relic{ border-color:#fde68a; background:#fffbeb; }
+  .pt-overlay .pt-item.relic{ border-color:#fcd34d; }
   .pt-quiz{ display:flex; flex-direction:column; gap:8px; margin-top:6px; }
   .pt-qcard{ border:2px solid #c7d2fe; background:#eef2ff; border-radius:12px; padding:10px 12px; }
   .pt-qno{ font-weight:800; font-size:.85rem; color:#4338ca; }
@@ -1305,7 +1429,8 @@ export function mountPets(deps, opts){
     });
   }
 
-  const decoHave = (kind, id) => DECOR[kind][id] && DECOR[kind][id].price === 0 ? Infinity : ((data.deco || {})[kind + '_' + id] | 0);
+  // 🏺 유물 기념 가구는 그 장소 유물을 다 모았으면(relicDone) 1개 가진 것으로 친다
+  const decoHave = (kind, id) => { const it = DECOR[kind][id]; if(!it) return 0; if(it.relic) return (data.relicDone || {})[it.relic] ? 1 : 0; return it.price === 0 ? Infinity : ((data.deco || {})[kind + '_' + id] | 0); };
   function roomHtml(info, now){
     const room = Object.assign({}, DEFAULT_ROOM, data.room || {});
     const cozy = roomCozy(room), coins = data.coins || 0;
@@ -1324,14 +1449,14 @@ export function mountPets(deps, opts){
       const kind = SLOT_KIND[slot];
       const other = slot === 'left' ? 'right' : slot === 'right' ? 'left' : null;
       const mine = Object.entries(DECOR[kind]).filter(([id]) => decoHave(kind, id) > 0);
-      const bought = mine.some(([, it]) => it.price);
+      const bought = mine.some(([, it]) => it.price || it.relic);
       s += `<div class="pt-sec pt-slot"><h4>${SLOT_LABEL[slot]}</h4><div class="pt-items">` + mine.map(([id, it]) => {
         const on = room[slot] === id;
         const need = (other && id !== 'none' && room[other] === id) ? 2 : 1;
         const have = decoHave(kind, id);
         const can = have >= need;
         const tag = on ? '✓ 끼움' : can ? '끼우기' : '1개뿐 (양쪽엔 2개 필요)';
-        return `<button type="button" class="pt-item ${on ? 'on' : ''}" data-place="${slot}:${id}" ${on || !can ? 'disabled' : ''}>${escapeHtml(it.name)} <small>${tag}${it.cozy ? ' · 아늑+' + it.cozy : ''}${have !== Infinity && have > 1 ? ' · ' + have + '개' : ''}</small></button>`;
+        return `<button type="button" class="pt-item ${on ? 'on' : ''} ${it.relic ? 'relic' : ''}" data-place="${slot}:${id}" ${on || !can ? 'disabled' : ''}>${it.relic ? '🏺 ' : ''}${escapeHtml(it.name)} <small>${tag}${it.cozy ? ' · 아늑+' + it.cozy : ''}${have !== Infinity && have > 1 ? ' · ' + have + '개' : ''}</small></button>`;
       }).join('') + (bought ? '' : `<span class="pt-empty">아직 산 물건이 없어요</span>`) + `</div></div>`;
     });
     return s;
@@ -1362,8 +1487,16 @@ export function mountPets(deps, opts){
           <button type="button" class="pt-buy" data-buydeco="${kind}:${id}" ${full || coins < it.price ? 'disabled' : ''}>${full ? '✔ 가지고 있어요' : `🪙 ${it.price} 사기`}</button></div></div>`;
       }).join('') + `</div>`;
     });
+    s += `<h4 class="pt-sub-h">🏺 유물 기념 가구 <small>상점에서 팔지 않아요 · 🗺️ 탐험으로 한 장소의 유물 4장을 다 모으면 생겨요</small></h4><div class="pt-goods pt-decor">` +
+      Object.entries(DECOR.furn).filter(([, it]) => it.relic).map(([id, it]) => {
+        const pl = PLACE_BY[it.relic], got = decoHave('furn', id) > 0, on = shopPrev && shopPrev.kind === 'furn' && shopPrev.id === id;
+        const n = pl ? pl.relics.filter((_, j) => ((data.relics || {})[pl.id + '_' + j] | 0) > 0).length : 0;
+        return `<div class="pt-good relic ${on ? 'on' : ''}"><b>🏺 ${escapeHtml(it.name)}</b><span>아늑함 +${it.cozy} · ${pl ? escapeHtml(pl.e + ' ' + pl.n) : ''} 유물 ${n}/4</span><small>${got ? '✔ 받았어요 · 🏠 방 꾸미기에서 끼워요' : '🔒 유물 4장을 모으면 생겨요'}</small>
+          <div class="pt-good-btns"><button type="button" class="pt-act" data-dprev="furn:${id}">👀 미리보기</button></div></div>`;
+      }).join('') + `</div>`;
     return s;
   }
+  function relicFurnOf(placeId){ return Object.entries(DECOR.furn).find(([, it]) => it.relic === placeId) || null; }
   function friendsHtml(now){
     if(!friendCls) friendCls = ident.cls;
     const grade = ident.cls.split('-')[0];
@@ -1484,10 +1617,10 @@ export function mountPets(deps, opts){
   // ── 🗺️ 탐험 ──
   function exploreHtml(info, now){
     const R = PET_RULES.explore, x = data.explore, rel = data.relics || {};
-    let s = `<div class="pt-sec"><h4>🗺️ 펫 탐험</h4><div class="pt-note">펫을 역사 속 장소로 탐험 보내면 그 시대의 유물 카드를 가져와요. 돌아올 때 ${R.short.label}은 ${R.short.rolls}번, ${R.long.label}은 ${R.long.rolls}번 선물을 뽑아요 · 한 번마다 ${Math.round(R.cardChance * 100)}% 확률로 유물 카드, 아니면 🪙${R.coinMin === R.coinMax ? R.coinMin : R.coinMin + '~' + R.coinMax} (1시간마다 한 번) · 이미 있는 유물은 🪙${R.dupCoins}으로 바꿔 줘요 · 한 장소의 유물 4장을 다 모으면 🪙${R.placeBonus}</div>`;
+    let s = `<div class="pt-sec"><h4>🗺️ 펫 탐험</h4><div class="pt-note">펫을 역사 속 장소로 탐험 보내면 그 시대의 유물 카드를 가져와요. 돌아올 때 ${R.short.label}은 ${R.short.rolls}번, ${R.long.label}은 ${R.long.rolls}번 선물을 뽑아요 · 한 번마다 ${Math.round(R.cardChance * 100)}% 확률로 유물 카드, 아니면 🪙${R.coinMin === R.coinMax ? R.coinMin : R.coinMin + '~' + R.coinMax} (1시간마다 한 번) · 이미 있는 유물은 🪙${R.dupCoins}으로 바꿔 줘요 · 한 장소의 유물 4장을 다 모으면 🪙${R.placeBonus}과 그 장소의 🏺 기념 가구</div>`;
     if(lastFind){
       const pl = PLACE_BY[lastFind.place];
-      s += `<div class="pt-find"><b>🎁 ${escapeHtml(pl.n)}에서 가져온 선물</b>${lastFind.got.map(g => { if(g.coin) return `<div class="pt-relic got coin"><span>🪙</span><div><b>코인 ${g.coin}개</b><p>${escapeHtml(pl.n)}에서 주운 동전이에요</p></div></div>`; const r = pl.relics[g.j]; return `<div class="pt-relic got"><span>${r.e}</span><div><b>${escapeHtml(r.n)}</b>${g.dup ? ' <small>(이미 있어서 🪙' + R.dupCoins + ')</small>' : ' <small>새 유물!</small>'}<p>${escapeHtml(r.d)}</p></div></div>`; }).join('')}<div class="pt-note">모두 합쳐 🪙 +${lastFind.coins}${lastFind.done ? ` · 🏆 ${escapeHtml(pl.n)} 유물을 모두 모았어요!` : ''}</div><button type="button" class="pt-act" data-xok="1">확인</button></div>`;
+      s += `<div class="pt-find"><b>🎁 ${escapeHtml(pl.n)}에서 가져온 선물</b>${lastFind.got.map(g => { if(g.coin) return `<div class="pt-relic got coin"><span>🪙</span><div><b>코인 ${g.coin}개</b><p>${escapeHtml(pl.n)}에서 주운 동전이에요</p></div></div>`; const r = pl.relics[g.j]; return `<div class="pt-relic got"><span>${r.e}</span><div><b>${escapeHtml(r.n)}</b>${g.dup ? ' <small>(이미 있어서 🪙' + R.dupCoins + ')</small>' : ' <small>새 유물!</small>'}<p>${escapeHtml(r.d)}</p></div></div>`; }).join('')}<div class="pt-note">모두 합쳐 🪙 +${lastFind.coins}${lastFind.done ? ` · 🏆 ${escapeHtml(pl.n)} 유물을 모두 모았어요! 🏺 기념 가구 ‘${escapeHtml((relicFurnOf(pl.id) || [0, { name: '' }])[1].name)}’를 받았어요 (🏠 방 꾸미기)` : ''}</div><button type="button" class="pt-act" data-xok="1">확인</button></div>`;
     }
     if(x && x.place){
       const pl = PLACE_BY[x.place] || { e: '🗺️', n: '어딘가' };
@@ -1518,7 +1651,8 @@ export function mountPets(deps, opts){
     const total = PLACES.length * 4, have = PLACES.reduce((a, pl) => a + pl.relics.filter((_, j) => (rel[pl.id + '_' + j] | 0) > 0).length, 0);
     s += `<div class="pt-sec"><h4>🏺 유물 도감 <small>${have} / ${total}</small></h4>`;
     PLACES.forEach(pl => {
-      s += `<div class="pt-dexrow"><div class="pt-dexhead">${pl.e} ${escapeHtml(pl.n)} <small>${pl.s} · ${escapeHtml(pl.era)}</small></div><div class="pt-dex">${pl.relics.map((r, j) => (rel[pl.id + '_' + j] | 0) > 0
+      const rf = relicFurnOf(pl.id), done = !!(data.relicDone || {})[pl.id];
+      s += `<div class="pt-dexrow"><div class="pt-dexhead">${pl.e} ${escapeHtml(pl.n)} <small>${pl.s} · ${escapeHtml(pl.era)} · 다 모으면 🪙${PET_RULES.explore.placeBonus}${rf ? ' + 🏺 ' + escapeHtml(rf[1].name) : ''}${done ? ' ✔ 받음' : ''}</small></div><div class="pt-dex">${pl.relics.map((r, j) => (rel[pl.id + '_' + j] | 0) > 0
         ? `<div class="pt-relic"><span>${r.e}</span><div><b>${escapeHtml(r.n)}</b><p>${escapeHtml(r.d)}</p></div></div>`
         : `<div class="pt-relic lk"><span>❔</span><div><b>???</b><p>${escapeHtml(pl.n)}에 탐험을 가면 찾을 수 있어요</p></div></div>`).join('')}</div></div>`;
     });
@@ -1859,7 +1993,7 @@ export function mountPets(deps, opts){
         if(room[slot] === did) return;
         const other = slot === 'left' ? 'right' : slot === 'right' ? 'left' : null;
         const need = (other && did !== 'none' && room[other] === did) ? 2 : 1;
-        const have = it.price === 0 ? Infinity : (((cur.deco || {})[dk + '_' + did]) | 0);
+        const have = it.relic ? ((cur.relicDone || {})[it.relic] ? 1 : 0) : it.price === 0 ? Infinity : (((cur.deco || {})[dk + '_' + did]) | 0);
         if(have < need) return;                       // 산 물건만 끼울 수 있다 (여기서는 절대 결제하지 않음)
         room[slot] = did;
         cur.room = room;
@@ -1973,7 +2107,7 @@ export function mountPets(deps, opts){
         found = { place: pl.id, got, coins, done };
         return cur;
       });
-      if(res && res.committed && found){ lastFind = found; render(); const fd = overlay && overlay.querySelector('.pt-find'); if(fd && fd.scrollIntoView) fd.scrollIntoView({ block: 'nearest' }); }
+      if(res && res.committed && found){ lastFind = found; if(found.done){ const rf = relicFurnOf(found.place); toast(`🏆 ${PLACE_BY[found.place].n} 유물을 모두 모았어요!`, rf ? `🏺 기념 가구 ‘${rf[1].name}’ · 🪙 +${PET_RULES.explore.placeBonus}` : `🪙 +${PET_RULES.explore.placeBonus}`); } render(); const fd = overlay && overlay.querySelector('.pt-find'); if(fd && fd.scrollIntoView) fd.scrollIntoView({ block: 'nearest' }); }
       return;
     }
     const aid = data.active;
