@@ -860,7 +860,16 @@ function addCss(){
   .pt-mine .pt-big .pt-cv{ width:120px; height:120px; }
   .pt-mine .pt-big .pt-scene{ width:256px; height:160px; border-radius:6px; }
   .pt-ctabs{ padding:2px 0 4px; margin:0 0 2px; }
-  .pt-items{ display:flex; flex-wrap:wrap; gap:6px; }
+  .pt-items{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .pt-empty{ font-size:.76rem; color:#9ca3af; }
+  .pt-prev{ position:sticky; top:-12px; z-index:2; margin-bottom:6px; box-shadow:0 6px 12px -8px rgba(0,0,0,.25); }
+  .pt-good.on{ border-style:solid; border-color:#6c8cf5; background:#f1f5ff; }
+  .pt-good-btns{ display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+  .pt-good-btns .pt-buy{ flex:1; width:auto !important; }
+  .pt-overlay .pt-good-btns button{ white-space:nowrap; font-size:.8rem; padding:6px 8px; }
+  .pt-goods.pt-decor{ grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); }
+  .pt-cls{ gap:4px; }
+  .pt-cls .pt-tab{ padding:3px 9px !important; font-size:.8rem !important; }
   .pt-overlay button.pt-item{ width:auto; flex:0 0 auto; font-size:.82rem; font-weight:700; padding:5px 10px; border-radius:10px; border:2px solid #e5e7eb; background:#fff; color:#374151; cursor:pointer; transition:none; }
   .pt-overlay button.pt-item small{ color:#a86b00; font-weight:800; margin-left:2px; }
   .pt-overlay button.pt-item.on{ border-color:#6c8cf5; background:#f1f5ff; box-shadow:0 0 0 1px #6c8cf5 inset; }
@@ -928,7 +937,7 @@ function addCss(){
   @keyframes ptIn{ from{ transform:translateY(10px); opacity:0; } to{ transform:none; opacity:1; } }
   .pt-coinpop{ position:absolute; font-weight:900; color:#d99a00; font-size:.85rem; pointer-events:none; animation:ptCoin .9s ease-out forwards; text-shadow:0 1px 0 #fff; white-space:nowrap; }
   @keyframes ptCoin{ from{ opacity:1; transform:translateY(0); } to{ opacity:0; transform:translateY(-26px); } }
-  @media (max-width:520px){ .pt-mine .pt-big .pt-cv{ width:96px; height:96px; } .pt-mine .pt-big .pt-scene{ width:256px; height:160px; max-width:100%; } .pt-mine{ justify-content:center; } .pt-shop{ grid-template-columns:1fr; } }
+  @media (max-width:520px){ .pt-mine .pt-big .pt-cv{ width:96px; height:96px; } .pt-mine .pt-big .pt-scene{ width:256px; height:160px; max-width:100%; } .pt-mine{ justify-content:center; } .pt-prev{ flex-wrap:nowrap; gap:10px; padding:8px; } .pt-prev .pt-big .pt-scene{ width:144px; height:90px; } .pt-prev .pt-mine-info{ min-width:0; } .pt-prev .pt-mine-name{ font-size:.9rem; } .pt-prev .pt-mine-name small{ display:block; margin:2px 0 0; font-size:.7rem; } .pt-shop{ grid-template-columns:1fr; } }
   `;
   document.head.appendChild(st);
 }
@@ -946,7 +955,8 @@ export function mountPets(deps, opts){
   let tickTimer = null;
   let lastMood = null;
   let careTab = 'care';     // 펫 키우기 탭: 'care' 돌보기 · 'room' 방 꾸미기 · 'friends' 친구 방
-  let friends = null, friendsBusy = false, friendSel = null, friendCv = null;
+  let friends = null, friendsBusy = false, friendSel = null, friendCv = null, friendCls = null;
+  let shopPrev = null, prevCv = null;   // 상점 꾸미기 미리보기 {kind, id}
   let view = 'all';         // 'all' 펫+상점 한 창 · 'shop' 상점만 · 'care' 펫 키우기만
   let ext = null;           // 희귀 해금 조건용 칭호 기록 (상점을 열 때 한 번 불러옴)
   let msg = '';
@@ -1023,7 +1033,7 @@ export function mountPets(deps, opts){
     const g = data.heartNews || {};
     const keys = Object.keys(g).filter(k => !heartShown.has(k)).sort();
     if(!keys.length) return;
-    keys.forEach(k => { heartShown.add(k); toast(`❤️ ${josa((g[k] || {}).f || '친구', '이', '가')} 하트를 보냈어요!`, `펫 기분 +${PET_RULES.heartFun}`); });
+    keys.forEach(k => { heartShown.add(k); const x = g[k] || {}; const who = (x.c && x.c !== ident.cls ? x.c.split('-')[1] + '반 ' : '') + (x.f || '친구'); toast(`❤️ ${josa(who, '이', '가')} 하트를 보냈어요!`, `펫 기분 +${PET_RULES.heartFun}`); });
     tx((cur) => {
       if(!cur.heartNews) return;
       let changed = false;
@@ -1095,59 +1105,96 @@ export function mountPets(deps, opts){
       <div class="pt-bar"><span style="text-align:left">❤️ 하트</span><span class="pt-poops">친구에게 받은 하트 ${data.hearts | 0}개</span><span></span></div>
       <div class="pt-acts"><button type="button" class="pt-act gold" data-act="play" ${info && room.toy !== 'none' && !busy && !toyLeft ? '' : 'disabled'}>${room.toy === 'none' ? '🧸 장난감을 끼우면 같이 놀 수 있어요' : toyLeft ? `🧸 같이 놀기 <small>(${toyLeft}분 뒤)</small>` : `🧸 ${josa(toy.name, '으로')} 같이 놀기 <small>(기분 +${toy.fun})</small>`}</button></div>
       <div class="pt-msg">${escapeHtml(msg)}</div>
-    </div></div><div class="pt-note">가진 물건은 누르면 바로 끼우고, 없는 물건은 코인으로 사서 끼워요. 산 물건은 빼도 계속 가지고 있어요. 같은 가구를 양쪽에 두려면 두 개가 필요해요.</div></div>`;
+    </div></div><div class="pt-note">가지고 있는 물건만 보여요. 누르면 바로 끼워지고 코인은 들지 않아요. 새 물건은 🏪 상점 → 🛋️ 꾸미기에서 미리 보고 살 수 있어요. 같은 가구를 양쪽에 두려면 두 개가 필요해요.</div>
+      <button type="button" class="pt-act gold" data-goshop="decor">🛋️ 꾸미기 상점 가기</button></div>`;
     Object.keys(SLOT_LABEL).forEach(slot => {
       const kind = SLOT_KIND[slot];
       const other = slot === 'left' ? 'right' : slot === 'right' ? 'left' : null;
-      s += `<div class="pt-sec pt-slot"><h4>${SLOT_LABEL[slot]}</h4><div class="pt-items">` + Object.entries(DECOR[kind]).map(([id, it]) => {
+      const mine = Object.entries(DECOR[kind]).filter(([id]) => decoHave(kind, id) > 0);
+      const bought = mine.some(([, it]) => it.price);
+      s += `<div class="pt-sec pt-slot"><h4>${SLOT_LABEL[slot]}</h4><div class="pt-items">` + mine.map(([id, it]) => {
         const on = room[slot] === id;
         const need = (other && id !== 'none' && room[other] === id) ? 2 : 1;
         const have = decoHave(kind, id);
         const can = have >= need;
-        const tag = on ? '✓ 끼움' : can ? (it.price ? '가짐 · 끼우기' : '끼우기') : `🪙${it.price}`;
-        return `<button type="button" class="pt-item ${on ? 'on' : ''}" data-place="${slot}:${id}" ${on || (!can && coins < it.price) ? 'disabled' : ''}>${escapeHtml(it.name)} <small>${tag}${it.cozy ? ' · 아늑+' + it.cozy : ''}</small></button>`;
-      }).join('') + `</div></div>`;
+        const tag = on ? '✓ 끼움' : can ? '끼우기' : '1개뿐 (양쪽엔 2개 필요)';
+        return `<button type="button" class="pt-item ${on ? 'on' : ''}" data-place="${slot}:${id}" ${on || !can ? 'disabled' : ''}>${escapeHtml(it.name)} <small>${tag}${it.cozy ? ' · 아늑+' + it.cozy : ''}${have !== Infinity && have > 1 ? ' · ' + have + '개' : ''}</small></button>`;
+      }).join('') + (bought ? '' : `<span class="pt-empty">아직 산 물건이 없어요</span>`) + `</div></div>`;
+    });
+    return s;
+  }
+  function clsLabel(c){ const [g, n] = String(c).split('-'); return `${g}학년 ${n}반`; }
+  // 상점 🛋️ 꾸미기: 위에 '내 방에 끼워 보면' 미리보기, 아래에 물건 목록 (사기를 눌러야만 결제)
+  const SHOP_KINDS = [['paper', '🧱 벽지'], ['floor', '🟫 바닥'], ['window', '🪟 창문'], ['wall', '🖼️ 벽 장식'], ['furn', '🪑 가구 (왼쪽·오른쪽 자리, 2개까지)'], ['rug', '🟥 러그'], ['toy', '🧸 장난감']];
+  const prevSlot = (kind) => kind === 'furn' ? 'left' : kind;
+  function prevRoom(){
+    const saved = Object.assign({}, DEFAULT_ROOM, data.room || {});
+    if(!shopPrev) return saved;
+    return Object.assign({}, saved, { [prevSlot(shopPrev.kind)]: shopPrev.id });
+  }
+  function decorShopHtml(){
+    const coins = data.coins || 0, saved = Object.assign({}, DEFAULT_ROOM, data.room || {});
+    const pit = shopPrev && DECOR[shopPrev.kind][shopPrev.id];
+    const c0 = roomCozy(saved), c1 = roomCozy(prevRoom());
+    let s = `<div class="pt-mine pt-prev"><div class="pt-big" data-slot="shopprev"></div><div class="pt-mine-info">
+      <div class="pt-mine-name">${pit ? `👀 ${escapeHtml(pit.name)} 미리보기` : '👀 미리보기'}<small>${pit ? '내 방에 끼우면 이렇게 보여요 · 아직 코인이 나가지 않았어요' : '물건의 미리보기를 누르면 내 방에 끼운 모습이 여기 보여요'}</small></div>
+      ${pit ? `<div class="pt-bar"><span style="text-align:left">🛋️ 아늑함</span><span class="pt-poops">${c0} → ${c1}${c1 > c0 ? ' ⬆' : ''}</span><span></span></div>` : ''}
+    </div></div>`;
+    SHOP_KINDS.forEach(([kind, label]) => {
+      s += `<h4 class="pt-sub-h">${label}</h4><div class="pt-goods pt-decor">` + Object.entries(DECOR[kind]).filter(([, it]) => it.price).map(([id, it]) => {
+        const have = ((data.deco || {})[kind + '_' + id]) | 0, max = kind === 'furn' ? 2 : 1;
+        const full = have >= max, on = shopPrev && shopPrev.kind === kind && shopPrev.id === id;
+        return `<div class="pt-good ${on ? 'on' : ''}"><b>${escapeHtml(it.name)}</b><span>아늑함 +${it.cozy}${it.fun ? ` · 같이 놀면 기분 +${it.fun}` : ''}</span><small>가진 개수 ${have}개</small>
+          <div class="pt-good-btns"><button type="button" class="pt-act" data-dprev="${kind}:${id}">👀 미리보기</button>
+          <button type="button" class="pt-buy" data-buydeco="${kind}:${id}" ${full || coins < it.price ? 'disabled' : ''}>${full ? '✔ 가지고 있어요' : `🪙 ${it.price} 사기`}</button></div></div>`;
+      }).join('') + `</div>`;
     });
     return s;
   }
   function friendsHtml(now){
-    if(!friends){ if(!friendsBusy) loadFriends(); return `<div class="pt-sec"><p class="pt-note">같은 반 친구 방을 불러오는 중…</p></div>`; }
+    if(!friendCls) friendCls = ident.cls;
+    const grade = ident.cls.split('-')[0];
+    const pick = `<div class="pt-tabs pt-cls">${Array.from({ length: 10 }, (_, i) => `${grade}-${i + 1}`).map(c => `<button type="button" class="pt-tab ${friendCls === c ? 'on' : ''}" data-fcls="${c}">${c.split('-')[1]}반${c === ident.cls ? ' (우리 반)' : ''}</button>`).join('')}</div>`;
+    if(!friends){ if(!friendsBusy) loadFriends(); return pick + `<div class="pt-sec"><p class="pt-note">${clsLabel(friendCls)} 친구 방을 불러오는 중…</p></div>`; }
     if(friendSel){
       const f = friends.find(x => x.name === friendSel);
       if(f){
         const dk = dayKey(now), hd = f.d.heartDay;
-        const gave = !!(hd && hd.k === dk && hd.by && hd.by[nameKey(ident.name)]);
+        const gave = !!(hd && hd.k === dk && hd.by && (hd.by[heartKey()] || (f.cls === ident.cls && hd.by[nameKey(ident.name)])));
         const pn = f.info ? PET_INFO[f.info.id].names[f.info.s] : '펫 없음';
-        return `<div class="pt-sec"><button type="button" class="pt-act" data-fback="1">← 친구 목록</button><h4>🏘️ ${escapeHtml(f.name)}의 방</h4>
+        return `<div class="pt-sec"><button type="button" class="pt-act" data-fback="1">← ${clsLabel(f.cls)} 목록</button><h4>🏘️ ${f.cls !== ident.cls ? clsLabel(f.cls) + ' ' : ''}${escapeHtml(f.name)}의 방</h4>
           <div class="pt-mine"><div class="pt-big" data-slot="friend"></div><div class="pt-mine-info">
             <div class="pt-mine-name">${escapeHtml(pn)}<small>${f.info ? MOOD_LABEL[f.info.m] : ''}</small></div>
             <div class="pt-bar"><span style="text-align:left">🛋️ 아늑함</span><i><b class="exp" style="width:${Math.min(100, roomCozy(f.d.room) / 18 * 100)}%"></b></i><span>${roomCozy(f.d.room)}</span></div>
             <div class="pt-bar"><span style="text-align:left">❤️ 하트</span><span class="pt-poops">받은 하트 ${f.d.hearts | 0}개</span><span></span></div>
             <div class="pt-acts"><button type="button" class="pt-act ${gave ? '' : 'warn'}" data-heart="${escapeHtml(f.name)}" ${gave ? 'disabled' : ''}>${gave ? '❤️ 오늘 하트를 줬어요' : `❤️ 하트 주기 <small>(친구 펫 기분 +${PET_RULES.heartFun})</small>`}</button></div>
             <div class="pt-msg">${escapeHtml(msg)}</div>
-          </div></div><div class="pt-note">하트는 친구 한 명에게 하루에 한 번 줄 수 있어요.</div></div>`;
+          </div></div><div class="pt-note">하트는 친구 한 명에게 하루에 한 번 줄 수 있어요. 같은 학년 다른 반 친구에게도 줄 수 있어요.</div></div>`;
       }
     }
-    if(!friends.length) return `<div class="pt-sec"><p class="pt-note">아직 같은 반(${escapeHtml(ident.cls.replace('-', '학년 '))}반)에 펫을 키우는 친구가 없어요.</p></div>`;
-    return `<div class="pt-sec"><h4>🏘️ 같은 반 친구 방 (${friends.length}명)</h4><div class="pt-note">친구를 누르면 그 친구 방에 놀러 가요</div><div class="pt-friends">${friends.map(f =>
+    if(!friends.length) return pick + `<div class="pt-sec"><p class="pt-note">아직 ${clsLabel(friendCls)}에는 펫 기록이 있는 친구가 없어요.</p></div>`;
+    return pick + `<div class="pt-sec"><h4>🏘️ ${clsLabel(friendCls)}${friendCls === ident.cls ? '(우리 반)' : ''} 친구 방 (${friends.length}명)</h4><div class="pt-note">친구를 누르면 그 친구 방에 놀러 가요</div><div class="pt-friends">${friends.map(f =>
       `<button type="button" class="pt-friend" data-friend="${escapeHtml(f.name)}"><b>${escapeHtml(f.name)}</b><span>${f.info ? escapeHtml(PET_INFO[f.info.id].names[f.info.s]) : '펫 없음'} · 🛋️${roomCozy(f.d.room)} · ❤️${f.d.hearts | 0}</span></button>`).join('')}</div>
       <button type="button" class="pt-act" data-freload="1" style="margin-top:8px">↻ 새로 불러오기</button></div>`;
   }
-  function friendEntry(name, d, now){
+  // 하트 준 사람 표시 키: 다른 반 동명이인과 겹치지 않게 반까지 넣는다
+  const heartKey = () => nameKey(ident.cls + '_' + ident.name);
+  function friendEntry(name, d, now, cls){
     const id = d.active && d.owned && d.owned[d.active] && petById[d.active] ? d.active : null;
     let info = null;
     if(id){ const c = careNow(d.owned[id], now, roomCozy(d.room)); info = { id, s: c.stage, m: moodOf(c, now), p: c.poop }; }
-    return { name, d, info };
+    return { name, d, info, cls: cls || friendCls || ident.cls };
   }
   async function loadFriends(){
     if(!ident) return;
     friendsBusy = true;
     const me = ident;
     try{
-      const snap = await get(ref(db, `pets/${me.cls}`));
-      if(me !== ident) return;
+      const cls = friendCls || me.cls;
+      const snap = await get(ref(db, `pets/${cls}`));
+      if(me !== ident || cls !== (friendCls || me.cls)) return;
       const now = nowMs();
-      friends = Object.entries(snap.val() || {}).filter(([n]) => n !== me.name).map(([n, d]) => friendEntry(n, d || {}, now)).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      friends = Object.entries(snap.val() || {}).filter(([n]) => !(cls === me.cls && n === me.name)).map(([n, d]) => friendEntry(n, d || {}, now, cls)).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
     }catch(_e){ friends = []; }
     friendsBusy = false;
     render();
@@ -1229,14 +1276,14 @@ export function mountPets(deps, opts){
     if(view === 'care' && careTab === 'care' && info) h += `<div class="pt-sec"><button type="button" class="pt-act" data-view="shop">🏪 상점에서 새 펫 보기</button></div>`;
     if(view === 'shop' && info) h += `<div class="pt-sec"><div class="pt-note">지금 데려가는 펫: <b>${escapeHtml(PET_INFO[info.id].names[info.s])}</b> · 밥 주기·진화는 🐾 펫 키우기에서 해요 <button type="button" class="pt-act" data-view="care">🐾 펫 키우기로 가기</button></div></div>`;
     if(showShop){
-    h += `<div class="pt-note" style="margin-top:12px">🛋️ 벽지·가구·장난감은 🐾 펫 키우기 → 🏠 방 꾸미기에서 사서 바로 끼워요</div>`;
     h += `<div class="pt-sec"><h4>${view === 'shop' ? '🛒 펫 고르기' : '🏪 상점'}</h4><div class="pt-note">🪙 코인 모으기: 혼자 연습·수업 게임 정답 1개 = 1코인 + 1·2·3등 보너스 ${PET_RULES.classBonus.join('·')}코인 · 한국사·세계사 코인은 하나로 합쳐져요</div>
       <h4 class="pt-sub-h">🧺 용품 <small>펫 키우기에서 없으면 바로 사서 줄 수도 있어요</small></h4>
       <div class="pt-goods">${Object.entries(PET_RULES.items).map(([k, it]) => `<div class="pt-good"><b>${it.label}</b><span>${k === 'rice' ? `배부름 +${it.food} (먹으면 똥 하나)` : k === 'snack' ? `배부름 +${it.food} · 기분 +${it.fun}` : '아플 때 먹이면 나아요'}</span><small>가진 개수 ${((data.items || {})[k] | 0)}개</small><button type="button" class="pt-buy" data-buyitem="${k}" ${(data.coins || 0) >= it.price ? '' : 'disabled'}>🪙 ${it.price}코인에 사기</button></div>`).join('')}</div>
-      <h4 class="pt-sub-h">🐾 펫</h4>
-      <div class="pt-tabs"><button type="button" class="pt-tab ${shopTab === 'normal' ? 'on' : ''}" data-tab="normal">일반 펫</button><button type="button" class="pt-tab ${shopTab === 'rare' ? 'on' : ''}" data-tab="rare">✦ 희귀 펫</button></div>
+      <h4 class="pt-sub-h">🐾 펫 · 🛋️ 꾸미기</h4>
+      <div class="pt-tabs"><button type="button" class="pt-tab ${shopTab === 'normal' ? 'on' : ''}" data-tab="normal">일반 펫</button><button type="button" class="pt-tab ${shopTab === 'rare' ? 'on' : ''}" data-tab="rare">✦ 희귀 펫</button><button type="button" class="pt-tab ${shopTab === 'decor' ? 'on' : ''}" data-tab="decor">🛋️ 꾸미기</button></div>
+      ${shopTab === 'decor' ? decorShopHtml() : ''}
       <div class="pt-shop">`;
-    PET_ORDER.filter(id => !!PET_INFO[id].rare === (shopTab === 'rare')).forEach(id => {
+    PET_ORDER.filter(id => shopTab !== 'decor' && !!PET_INFO[id].rare === (shopTab === 'rare')).forEach(id => {
       const inf = PET_INFO[id];
       const have = !!owned[id];
       let lockHtml = '', canBuy = !have && (data.coins || 0) >= inf.price;
@@ -1254,7 +1301,7 @@ export function mountPets(deps, opts){
         <div class="pt-lore">${escapeHtml(inf.lore)}</div>${lockHtml}
         <button type="button" class="pt-buy" data-buy="${id}" ${canBuy ? '' : 'disabled'}>${btnText}</button></div>`;
     });
-    h += `</div><div class="pt-note" style="margin-top:8px">진화 전 모습은 상점에서도 볼 수 있어요. 3단계 모습은 펫을 키워서 확인해 보세요!</div></div>`;
+    h += `</div>${shopTab === 'decor' ? '' : '<div class="pt-note" style="margin-top:8px">진화 전 모습은 상점에서도 볼 수 있어요. 3단계 모습은 펫을 키워서 확인해 보세요!</div>'}</div>`;
     }
     frag.innerHTML = h;
     // 캔버스 끼우기
@@ -1265,7 +1312,13 @@ export function mountPets(deps, opts){
         Object.assign(sceneCv._scene, info ? { id: info.id, s: info.s, m: info.m, poop: info.p } : { id: null }, { room: data.room, playUntil: data.playUntil || 0 });
         slot.appendChild(sceneCv);
       }
-      const fslot = frag.querySelector('[data-slot="friend"]');
+      const pslot = frag.querySelector('[data-slot="shopprev"]');
+      if(pslot){
+        if(!prevCv) prevCv = sceneCanvas({});
+        Object.assign(prevCv._scene, info ? { id: info.id, s: info.s, m: info.m === 'walk' || info.m === 'sleep' ? 'normal' : info.m, poop: 0 } : { id: null }, { room: prevRoom(), playUntil: 0 });
+        pslot.appendChild(prevCv);
+      }
+      const fslot = frag.querySelector('[data-slot="friend"]');   // 친구 방
       if(fslot && friendSel && friends){
         const f = friends.find(x => x.name === friendSel);
         if(f){
@@ -1350,35 +1403,43 @@ export function mountPets(deps, opts){
       const [slot, did] = id.split(':');
       const dk = SLOT_KIND[slot], it = DECOR[dk] && DECOR[dk][did];
       if(!it) return;
-      let bought = false;
       const res = await tx((cur) => {
-        bought = false;
         const room = Object.assign({}, DEFAULT_ROOM, cur.room || {});
         if(room[slot] === did) return;
         const other = slot === 'left' ? 'right' : slot === 'right' ? 'left' : null;
         const need = (other && did !== 'none' && room[other] === did) ? 2 : 1;
-        cur.deco = cur.deco || {};
-        const key = dk + '_' + did;
-        const have = it.price === 0 ? Infinity : (cur.deco[key] | 0);
-        if(have < need){
-          if((cur.coins || 0) < it.price) return;
-          cur.coins -= it.price;
-          cur.deco[key] = (cur.deco[key] | 0) + 1;
-          bought = true;
-        }
+        const have = it.price === 0 ? Infinity : (((cur.deco || {})[dk + '_' + did]) | 0);
+        if(have < need) return;                       // 산 물건만 끼울 수 있다 (여기서는 절대 결제하지 않음)
         room[slot] = did;
         cur.room = room;
         return cur;
       });
-      if(res && res.committed) setMsg(did === 'none' ? `${SLOT_LABEL[slot]} 자리를 비웠어요` : bought ? `🪙 ${josa(it.name, '을', '를')} 사서 끼웠어요!` : `${josa(it.name, '을', '를')} 끼웠어요`);
+      if(res && res.committed) setMsg(did === 'none' ? `${SLOT_LABEL[slot]} 자리를 비웠어요` : `${josa(it.name, '을', '를')} 끼웠어요`);
+      return;
+    }
+    if(kind === 'buydeco'){
+      const [dk, did] = id.split(':');
+      const it = DECOR[dk] && DECOR[dk][did];
+      if(!it || !it.price) return;
+      const res = await tx((cur) => {
+        cur.deco = cur.deco || {};
+        const key = dk + '_' + did, have = cur.deco[key] | 0;
+        if(have >= (dk === 'furn' ? 2 : 1) || (cur.coins || 0) < it.price) return;
+        cur.coins -= it.price;
+        cur.deco[key] = have + 1;
+        return cur;
+      });
+      if(res && res.committed) toast(`🛋️ ${josa(it.name, '을', '를')} 샀어요!`, '🐾 펫 키우기 → 🏠 방 꾸미기에서 끼워 보세요');
       return;
     }
     if(kind === 'heart'){
       const fname = id, me = ident;
+      const fe = friends && friends.find(x => x.name === fname);
+      const fcls = (fe && fe.cls) || me.cls;
       let fresh = null;
-      const res = await runTransaction(ref(db, `pets/${me.cls}/${fname}`), (cur) => {
+      const res = await runTransaction(ref(db, `pets/${fcls}/${fname}`), (cur) => {
         if(!cur) return null;   // 아직 서버 값을 못 받았으면 null로 시도 → 서버가 다른 값이면 진짜 값으로 다시 불림
-        const now = nowMs(), dk = dayKey(now), mk = nameKey(me.name);
+        const now = nowMs(), dk = dayKey(now), mk = nameKey(me.cls + '_' + me.name);
         cur.heartDay = (cur.heartDay && cur.heartDay.k === dk) ? cur.heartDay : { k: dk, by: {} };
         cur.heartDay.by = cur.heartDay.by || {};
         if(cur.heartDay.by[mk]) return;
@@ -1387,12 +1448,12 @@ export function mountPets(deps, opts){
         const p = cur.active && cur.owned && cur.owned[cur.active];
         if(p){ const c = careNow(p, now, roomCozy(cur.room)); c.fun = clamp(c.fun + PET_RULES.heartFun); cur.owned[cur.active] = storeCare(c, now); }
         cur.heartNews = cur.heartNews || {};
-        cur.heartNews['h' + now.toString(36) + Math.random().toString(36).slice(2, 5)] = { f: me.name, at: now };
+        cur.heartNews['h' + now.toString(36) + Math.random().toString(36).slice(2, 5)] = { f: me.name, c: me.cls, at: now };
         return cur;
       }).catch(() => null);
       if(res && res.committed){
         fresh = res.snapshot.val() || {};
-        if(friends){ const i = friends.findIndex(x => x.name === fname); if(i >= 0) friends[i] = friendEntry(fname, fresh, nowMs()); }
+        if(friends){ const i = friends.findIndex(x => x.name === fname); if(i >= 0) friends[i] = friendEntry(fname, fresh, nowMs(), fcls); }
         setMsg(`❤️ ${fname}에게 하트를 보냈어요!`);
       } else setMsg('오늘은 이미 하트를 줬어요');
       return;
@@ -1519,15 +1580,19 @@ export function mountPets(deps, opts){
       if(e.target === overlay || e.target.closest('.pt-close')){ close(); return; }
       const b = e.target.closest('button');
       if(!b || b.disabled) return;
-      if(b.dataset.tab){ shopTab = b.dataset.tab; render(); return; }
+      if(b.dataset.tab){ shopTab = b.dataset.tab; shopPrev = null; render(); return; }
       if(b.dataset.view){ careTab = 'care'; view = b.dataset.view; overlay.querySelector('.pt-body').scrollTop = 0; render(); updateButtons(); return; }
       if(b.dataset.buy){ act('buy', b.dataset.buy); return; }
       if(b.dataset.buyitem){ act('buyitem', b.dataset.buyitem); return; }
       if(b.dataset.ctab){ careTab = b.dataset.ctab; friendSel = null; msg = ''; if(careTab === 'friends') friends = null; overlay.querySelector('.pt-body').scrollTop = 0; render(); return; }
       if(b.dataset.place){ act('place', b.dataset.place); return; }
+      if(b.dataset.buydeco){ act('buydeco', b.dataset.buydeco); return; }
+      if(b.dataset.dprev){ const [k, i] = b.dataset.dprev.split(':'); shopPrev = { kind: k, id: i }; render(); const pv = overlay.querySelector('.pt-prev'); if(pv && pv.scrollIntoView) pv.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
+      if(b.dataset.goshop){ view = 'shop'; shopTab = b.dataset.goshop; careTab = 'care'; shopPrev = null; overlay.querySelector('.pt-body').scrollTop = 0; render(); updateButtons(); return; }
       if(b.dataset.friend){ friendSel = b.dataset.friend; msg = ''; overlay.querySelector('.pt-body').scrollTop = 0; render(); return; }
       if(b.dataset.fback){ friendSel = null; msg = ''; render(); return; }
       if(b.dataset.freload){ friends = null; render(); return; }
+      if(b.dataset.fcls){ friendCls = b.dataset.fcls; friends = null; friendSel = null; msg = ''; render(); return; }
       if(b.dataset.heart){ act('heart', b.dataset.heart); return; }
       if(b.dataset.own){ act('own', b.dataset.own); return; }
       if(b.dataset.act){ act(b.dataset.act); }
@@ -1545,7 +1610,7 @@ export function mountPets(deps, opts){
       lastMood = m;
     }, 1000);
   }
-  function close(){ clearInterval(tickTimer); tickTimer = null; sceneCv = null; friendCv = null; friendSel = null; friends = null; if(overlay){ overlay.remove(); overlay = null; } }
+  function close(){ clearInterval(tickTimer); tickTimer = null; sceneCv = null; friendCv = null; friendSel = null; friends = null; friendCls = null; shopPrev = null; prevCv = null; if(overlay){ overlay.remove(); overlay = null; } }
   document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && overlay) close(); });
 
   const api = {
