@@ -432,6 +432,39 @@
       <div class="msg" id="rosterXlsxMsg"></div>
     </div>
   </details>
+
+  <details class="card" style="grid-column:1 / -1" id="coinCard">
+    <summary class="card-h2">⑧ 🪙 코인 주기 (펫)</summary>
+    <div class="sub" style="margin-top:-6px;">학생을 골라 코인을 주거나 뺄 수 있어요. 코인은 <b>한국사·세계사 공용</b>이라 어느 관리자 화면에서 줘도 같아요. 학생 화면에는 <b>🎁 선생님이 코인을 주셨어요!</b> 알림이 이유와 함께 떠요(지금 접속 중이면 바로, 아니면 다음 접속 때). 명단에 있는 학생과 펫 기록이 있는 학생이 함께 보여요.</div>
+    <div class="row" style="align-items:flex-start; margin-top:10px; gap:16px; flex-wrap:wrap;">
+      <div style="flex:0 0 150px;">
+        <label>학년 · 반 선택</label>
+        <select id="coinGradeSel">
+          <option value="1">1학년</option>
+          <option value="2">2학년</option>
+        </select>
+        <select id="coinClassSel" style="margin-top:6px;"></select>
+        <label style="margin-top:14px;">코인 수</label>
+        <input type="number" id="coinAmount" value="10" min="1" max="10000" step="1">
+        <label style="margin-top:10px;">이유 (학생에게 보여요, 선택)</label>
+        <input type="text" id="coinReason" maxlength="40" placeholder="예: 발표 잘함">
+        <div class="btnrow" style="flex-direction:column; align-items:stretch;">
+          <button type="button" id="coinGiveBtn">🪙 선택한 학생에게 주기</button>
+          <button type="button" id="coinTakeBtn" class="secondary">선택한 학생에게서 빼기</button>
+        </div>
+        <div class="msg" id="coinMsg"></div>
+      </div>
+      <div style="flex:1; min-width:280px;">
+        <div class="muted" id="coinCount" style="font-size:.8rem; margin-bottom:6px;"></div>
+        <div style="overflow-x:auto; max-height:460px; overflow-y:auto;">
+          <table>
+            <thead><tr><th style="width:34px;"><input type="checkbox" id="coinAll" title="전체 선택"></th><th>이름</th><th>코인</th><th>지금까지 모은 코인</th><th>데려간 펫</th></tr></thead>
+            <tbody id="coinRows"><tr><td colspan="5" class="muted">불러오는 중…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </details>
 </div>
 
 <div id="chatModal" class="modal-back hidden">
@@ -482,8 +515,9 @@ import {
   fmtTime, escapeHtml, parseQuestionLine, unitsFromQuestions, poolFromQuestions, renderUnitGroups, shuffle,
   normalizeChapter, chapterOfQuestion, compareChapters, DEFAULT_COURSE, normalizeCourse, courseOfQuestion,
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS,
-  presenceRef, chatRef, isOffline, sweepOfflinePlayers, watchForUpdate
+  presenceRef, chatRef, isOffline, sweepOfflinePlayers, watchForUpdate, runTransaction
 } from '../shared/lib.js?v=20261012b';
+import { PET_INFO } from '../shared/pets.js?v=20261106d';
 import { buildTitleBook, unitDrawersHtml, UNIT_DRAWER_CSS, RARITY } from '../shared/titles.js?v=20261022a';
 
 const ROOM = 'korea';
@@ -2227,6 +2261,94 @@ function loadRosterForClass(){
 el('rosterGradeSel').onchange = () => { el('rosterMsg').textContent = ''; loadRosterForClass(); };
 el('rosterClassSel').onchange = () => { el('rosterMsg').textContent = ''; loadRosterForClass(); };
 loadRosterForClass();
+
+// ── ⑧ 🪙 코인 주기 (펫, shared/pets.js의 pets/<학년-반>/<이름>) ──────────────
+// 카드를 펼쳤을 때만 그 반의 펫 기록을 구독한다(닫으면 구독 해제). 주고 빼는 건 학생별 트랜잭션이라
+// 학생이 같은 순간 문제를 맞혀 코인을 받아도 서로 덮어쓰지 않는다. 학생 화면 알림은 gifts/<키>로 남긴다.
+for(let c=1;c<=10;c++){
+  const opt = document.createElement('option');
+  opt.value = String(c); opt.textContent = c + '반';
+  el('coinClassSel').appendChild(opt);
+}
+const coinState = { unsub:null, pets:{}, roster:{}, checked:new Set(), key:null };
+const coinKey = () => el('coinGradeSel').value + '-' + el('coinClassSel').value;
+function renderCoinRows(){
+  const names = [...new Set([...Object.keys(coinState.roster), ...Object.keys(coinState.pets)])].sort((a,b)=>a.localeCompare(b,'ko'));
+  [...coinState.checked].forEach(n => { if(!names.includes(n)) coinState.checked.delete(n); });
+  el('coinCount').textContent = names.length ? `학생 ${names.length}명 · 선택 ${coinState.checked.size}명` : '';
+  el('coinAll').checked = names.length > 0 && coinState.checked.size === names.length;
+  if(!names.length){ el('coinRows').innerHTML = '<tr><td colspan="5" class="muted">이 학년·반은 명단도 펫 기록도 없어요. 학생이 한 번 접속하거나 ⑦에서 명단을 등록하면 나타나요.</td></tr>'; return; }
+  el('coinRows').innerHTML = names.map(n => {
+    const p = coinState.pets[n] || {};
+    const pet = p.active && PET_INFO[p.active] ? PET_INFO[p.active].names[((p.owned||{})[p.active]||{}).stage|0] : '—';
+    return `<tr><td><input type="checkbox" data-coin-name="${escapeHtml(n)}" ${coinState.checked.has(n)?'checked':''}></td><td>${escapeHtml(n)}${coinState.roster[n] ? '' : ' <span class="muted" style="font-size:.75rem;">(명단 밖)</span>'}</td><td><b>${(p.coins||0).toLocaleString()}</b></td><td class="muted">${(p.earned||0).toLocaleString()}</td><td>${escapeHtml(pet)}</td></tr>`;
+  }).join('');
+}
+async function loadCoinClass(){
+  if(coinState.unsub){ coinState.unsub(); coinState.unsub = null; }
+  const key = coinKey();
+  coinState.key = key; coinState.pets = {}; coinState.roster = {}; coinState.checked.clear();
+  el('coinRows').innerHTML = '<tr><td colspan="5" class="muted">불러오는 중…</td></tr>';
+  try{ const s = await get(ref(db, 'roster/' + key)); if(coinState.key === key) coinState.roster = s.val() || {}; }catch(_e){}
+  if(coinState.key !== key || !el('coinCard').open) return;
+  coinState.unsub = onValue(ref(db, 'pets/' + key), snap => { coinState.pets = snap.val() || {}; renderCoinRows(); },
+    err => { el('coinRows').innerHTML = `<tr><td colspan="5" class="muted">펫 기록을 불러오지 못했어요 (${escapeHtml(err.message)}). Firebase 규칙에 pets가 게시됐는지 확인해 주세요.</td></tr>`; });
+}
+el('coinCard').addEventListener('toggle', () => {
+  if(el('coinCard').open) loadCoinClass();
+  else if(coinState.unsub){ coinState.unsub(); coinState.unsub = null; }
+});
+el('coinGradeSel').onchange = () => { el('coinMsg').textContent = ''; if(el('coinCard').open) loadCoinClass(); };
+el('coinClassSel').onchange = () => { el('coinMsg').textContent = ''; if(el('coinCard').open) loadCoinClass(); };
+el('coinRows').addEventListener('change', e => {
+  const n = e.target.dataset && e.target.dataset.coinName;
+  if(n == null) return;
+  if(e.target.checked) coinState.checked.add(n); else coinState.checked.delete(n);
+  renderCoinRows();
+});
+el('coinAll').onchange = () => {
+  const names = [...new Set([...Object.keys(coinState.roster), ...Object.keys(coinState.pets)])];
+  coinState.checked = new Set(el('coinAll').checked ? names : []);
+  renderCoinRows();
+};
+async function giveCoins(sign){
+  const msg = el('coinMsg');
+  const amt = Math.floor(Number(el('coinAmount').value));
+  const reason = el('coinReason').value.trim().slice(0, 40);
+  const names = [...coinState.checked];
+  const key = coinState.key;
+  if(!names.length){ msg.className = 'msg err'; msg.textContent = '코인을 줄 학생을 먼저 체크해 주세요.'; return; }
+  if(!(amt >= 1 && amt <= 10000)){ msg.className = 'msg err'; msg.textContent = '코인 수는 1~10000 사이로 넣어 주세요.'; return; }
+  el('coinGiveBtn').disabled = el('coinTakeBtn').disabled = true;
+  msg.className = 'msg'; msg.textContent = '처리 중…';
+  let ok = 0, clamped = 0, skipped = 0; const fail = [];
+  for(const n of names){
+    try{
+      let clip = false, zero = false;
+      const now = serverNow();
+      const gk = 'g' + now.toString(36) + Math.random().toString(36).slice(2, 6);
+      const res = await runTransaction(ref(db, `pets/${key}/${n}`), cur => {
+        cur = cur || {};
+        clip = false;
+        let d = sign * amt;
+        zero = false;
+        if(d < 0 && (cur.coins || 0) + d < 0){ d = -(cur.coins || 0); clip = true; }
+        if(d === 0){ zero = true; return; }   // 이미 0개인 학생에게서 빼기 — 바꿀 것도 알릴 것도 없음
+        cur.coins = (cur.coins || 0) + d;
+        if(d > 0) cur.earned = (cur.earned || 0) + d;
+        cur.gifts = cur.gifts || {};
+        cur.gifts[gk] = { a: d, r: reason || null, at: now };
+        return cur;
+      });
+      if(res && res.committed){ ok++; if(clip) clamped++; } else if(zero) skipped++; else fail.push(n);
+    }catch(err){ fail.push(n + '(' + err.message + ')'); }
+  }
+  el('coinGiveBtn').disabled = el('coinTakeBtn').disabled = false;
+  msg.className = fail.length ? 'msg err' : 'msg ok';
+  msg.textContent = `${ok}명에게 코인 ${amt}개를 ${sign > 0 ? '줬어요' : '뺐어요'}.` + (clamped ? ` (${clamped}명은 가진 코인이 모자라 0개까지만 뺐어요)` : '') + (skipped ? ` · ${skipped}명은 이미 0개라 그대로예요` : '') + (fail.length ? ` 실패: ${fail.join(', ')}` : '');
+}
+el('coinGiveBtn').onclick = () => giveCoins(1);
+el('coinTakeBtn').onclick = () => giveCoins(-1);
 
 el('rosterSaveBtn').onclick = async () => {
   const label = rosterKeyLabel();

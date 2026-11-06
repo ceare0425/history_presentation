@@ -10,6 +10,7 @@
 //   soloBest       혼자 연습 탑 오르기 최고 층 (불사조 해금 조건, 이 기능 이후 기록부터)
 //   bonus/<라운드token>: 받은 수업 게임 등수 보너스 (같은 라운드는 한 번만)
 //   active         데려가는 펫 id
+//   gifts/<키>: {a, r, at}  선생님이 주거나 뺀 코인 알림 (관리자 화면 ⑧) — 학생 화면이 알림을 띄우고 지운다
 //   items: {rice, snack, med}  가지고 있는 밥·간식·약 개수 (상점 용품)
 //   owned/<펫id>: {stage, exp, food, fun, energy, t, sleepUntil, at, poop, poopT, sick, walkUntil, walkNext}
 //       stage 0·1·2 진화 단계 · exp 데려가서 맞힌 문제 수 · food/fun/energy 0~100 (t 시각 기준 값, 시간이 지나면 줄어듦)
@@ -765,6 +766,27 @@ export function mountPets(deps, opts){
     });
   }
 
+  // 🎁 선생님이 준 코인 알림 (관리자 화면에서 gifts/<키>로 남김) — 띄운 뒤 지운다
+  const giftShown = new Set();
+  function showGifts(){
+    const g = data.gifts || {};
+    const keys = Object.keys(g).filter(k => !giftShown.has(k)).sort();
+    if(!keys.length) return;
+    keys.forEach(k => {
+      giftShown.add(k);
+      const x = g[k] || {}, a = x.a | 0;
+      if(a === 0) return;
+      if(a > 0) toast(`🎁 선생님이 코인 ${a}개를 주셨어요!`, x.r ? `이유: ${x.r}` : '🏪 상점에서 써 보세요');
+      else toast(`🪙 선생님이 코인 ${-a}개를 가져가셨어요`, x.r ? `이유: ${x.r}` : '');
+    });
+    tx((cur) => {
+      if(!cur.gifts) return;
+      let changed = false;
+      keys.forEach(k => { if(cur.gifts[k]){ delete cur.gifts[k]; changed = true; } });
+      return changed ? cur : undefined;
+    });
+  }
+
   function checkReady(){
     const info = activeInfo();
     if(!info) return;
@@ -1113,6 +1135,7 @@ export function mountPets(deps, opts){
         data = snap.val() || {};
         loaded = true;
         if(first){ first = false; welcomeIfNeeded(); }
+        showGifts();
         sync();
         updateButtons();
         checkReady();
