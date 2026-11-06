@@ -336,6 +336,8 @@
     75%{ transform:translate(var(--x3),var(--y3)) rotate(-8deg); }
     100%{ transform:translate(var(--x4),var(--y4)) rotate(4deg); }
   }
+  .pet-ab-line{ text-align:center; font-size:.74rem; font-weight:700; color:#5b4bb0; flex:0 0 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pet-ab-line:empty{ display:none; }
   .item-hint-line{ text-align:center; font-size:.78rem; color:var(--sub); flex:0 0 auto; min-height:1.05em; margin-top:.6vh; }
   .item-bar{ margin-top:.6vh; flex:0 0 auto; min-height:64px; display:flex; gap:8px; }
   .item-btn{
@@ -520,6 +522,7 @@
       </div>
 
       <div class="item-hint-line" id="itemHintLine"></div>
+      <div class="pet-ab-line" id="petAbLine"></div>
       <div class="item-bar" id="itemBar"></div>
     </div>
   </div>
@@ -568,7 +571,7 @@ import {
   ITEMS, ITEM_FX_MS, rollItem, rollLottery, inTopGroup, inTopRanks, NANTA_TARGET_TOP, inBottomGroup, inLowerHalf, isLastGroup, attackCandidates, pickAttackTarget, pickTargetTeam, teamAttackBias, isTeamLeader
 } from '../shared/lib.js?v=20261023a';
 import { mountTitles } from '../shared/titles.js?v=20261022a';
-import { mountPets } from '../shared/pets.js?v=20261106i';
+import { mountPets } from '../shared/pets.js?v=20261106j';
 
 const ROOM = 'korea';
 const STORAGE_ID_KEY = 'rg_fb_' + ROOM + '_player_id';
@@ -670,6 +673,12 @@ let myShieldUntil = 0;       // '쉴드' — 5초간 모든 방해 공격에 무
 let randomboxOfferPending = false; // 교사가 뿌린 '랜덤박스' 제안 — 이미 아이템이 있어 교체 여부를 물어보는 중
 let myCloverUntil = 0;       // '네잎클로버' — 30초간 정답마다 50% +1층
 let myAnthemNext = 0;        // '팀 응원가' — 남은 2배 정답 수(팀 전체 각자)
+// 🐾 펫 능력 (아이템전 전용 · shared/pets.js PET_ABILITY) — 한 판 동안 쓴 횟수, 선물로 맡아 둔 아이템
+let petGuardUsed = 0, petStreakUsed = 0, petGiftCount = 0, petSpareItem = null, petSpareSince = 0, petAbText = null;
+function petAb(){ if(!itemsOn() || roundState.raid_mode) return null; const a = pets.ability(); return a && !a.sick ? a : null; }
+function petAbIs(k){ const a = petAb(); return a && a.key === k ? a : null; }
+function petLong(ms){ const a = petAbIs('extend'); return a ? Math.round(ms * (1 + a.v / 100)) : ms; }    // ⏳ 시간 늘리기
+function petShort(ms){ const a = petAbIs('shorten'); return a ? Math.round(ms * (1 - a.v / 100)) : ms; }  // 💨 털어내기
 let myMirrorUntil = 0;       // '반사경' — 10초간 첫 견제 반사
 let mySirenUntil = 0;        // '사이렌' — 반사경과 동일(이름만 다름), 10초간 첫 견제 반사
 let myUndoAvailable = false; // '되돌리기' 가능 (방금 오답 직후, 다음 제출 전까지)
@@ -1114,6 +1123,8 @@ async function submitAnswerCore(){
 
   if(correct){
     gain = computeGain(elapsed);
+    { const pq = petAbIs('quick');   // 🐾 펫 '순발력': +3층이 되는 시간(5초)을 늘려 준다
+      if(pq && gain < 3 && elapsed <= 5 + pq.v){ gain = 3; showItemAlert(`🐾 ${pq.petName}의 순발력! ${Math.round(elapsed)}초에 맞혀도 +3${unitLabel()}`); } }
     if(mySnailNext > 0){
       // '느림보' 피격: 2배 찬스·축제·부스터·골든벨 등 어떤 효과와 겹쳐도 무조건 +1층 고정.
       // 부스터·응원가 횟수와 골든벨·인생 한방·눈덩이는 소모하지 않고 다음 정답으로 넘긴다.
@@ -1129,6 +1140,7 @@ async function submitAnswerCore(){
       if(myBoost > 0){ gain *= 2; myBoost--; }                  // '부스터'
       if(myGoldenbellArmed){ gain *= 3; myGoldenbellArmed = false; showItemAlert(`🎯 골든벨 성공! ×3 → +${gain}${unitLabel()}!`); } // '골든벨'
       if(serverNow() < myCloverUntil && Math.random() < 0.5){ gain += 1; showItemAlert(`🍀 행운! +1${unitLabel()} 더!`); } // '네잎클로버'
+      { const pa = petAbIs('lucky'); if(pa && Math.random() < pa.v / 100){ gain += 1; showItemAlert(`🐾 ${pa.petName}의 행운! +1${unitLabel()} 더!`); } }   // 🐾 펫 '행운'
       if(serverNow() < myComboSparkUntil){ comboSparkStreak = p.streak || 0; }   // '콤보 스파크' — 카드 뒤집기는 답 처리 후 진행
       if(mySnowballArmed){ const streakNow = p.streak || 0; const add = Math.min(ITEM_FX_MS.snowballCap, Math.max(1, streakNow)); gain += add; mySnowballArmed = false; showItemAlert(`🌀 눈덩이! 연속 ${streakNow} → +${add}${unitLabel()} 추가!`); } // '눈덩이' (최대 ITEM_FX_MS.snowballCap층)
       if(myJackpotArmed){ gain = 20; myJackpotArmed = false; showItemAlert(`🎲 인생 한방 대성공! +20${unitLabel()} 🎉`); } // '인생 한방' (다른 배수 무시, 고정 +20)
@@ -1154,6 +1166,16 @@ async function submitAnswerCore(){
     if(itemsOn() && !heldItem && p.streak > 0 && (itemsMode === 'nanta' || p.streak % 3 === 0)){
       heldItem = rollItem(itemRollOpts());
     }
+    // 🐾 펫 '선물': 정답 N개마다 아이템 하나 더 — 들고 있는 게 있으면 맡아 두었다가 지금 아이템을 쓰면 준다
+    { const pa = petAbIs('gift');
+      if(pa && (++petGiftCount) % pa.v === 0){
+        const g = rollItem(itemRollOpts());
+        if(g){
+          const got = !heldItem;
+          if(got) heldItem = g; else petSpareItem = g;
+          showItemAlert(`🐾 ${pa.petName}의 선물! ${ITEMS[g].emoji} ${ITEMS[g].name}${got ? '' : ' (지금 아이템을 쓰면 받아요)'}`);
+        }
+      } }
   } else {
     p.wrong = (p.wrong||0) + 1;
     let undoFloorDelta = 0;
@@ -1182,7 +1204,12 @@ async function submitAnswerCore(){
     myUndoAvailable = true;
     myUndoStreak = p.streak || 0;
     myUndoFloorDelta = undoFloorDelta;
+    const petSt = petAbIs('streak');
     if(myShield){ myShield = false; showItemAlert('🛡️ 콤보 방패로 연속을 지켰어요!'); }
+    else if(!vested && petSt && (p.streak || 0) >= 2 && petStreakUsed < petSt.v){   // 🐾 펫 '연속 지키기' (2연속 이상일 때만 써서 아깝지 않게)
+      petStreakUsed++;
+      showItemAlert(`🐾 ${petSt.petName} 덕분에 ${p.streak}연속을 지켰어요! (남은 ${petSt.v - petStreakUsed}번)`);
+    }
     else if(!vested) p.streak = 0;
     // 틀린 문제는 잠시 후 다시 출제. 틀릴수록 간격을 늘리고 RETRY_TRIES번까지만 강제로 다시 낸다
     const misses = (retryMiss[answeredQid] = (retryMiss[answeredQid]||0) + 1);
@@ -1391,6 +1418,7 @@ function tick(){
       myFogUntil = 0; myIceUntil = 0; myEarthquakeUntil = 0; myBeeUntil = 0; myWaterballoonUntil = 0;
       myGoldenbellArmed = false; myJackpotArmed = false; mySnowballArmed = false; myVestUntil = 0; myShieldUntil = 0; myCloverUntil = 0; myAnthemNext = 0; myMirrorUntil = 0; mySirenUntil = 0;
       myUndoAvailable = false; myUndoFloorDelta = 0; randomboxOfferPending = false;
+      petGuardUsed = 0; petStreakUsed = 0; petGiftCount = 0; petSpareItem = null; petSpareSince = 0;
       myStealDefenses.forEach(d=>clearTimeout(d.timer)); myStealDefenses = []; myStealAttackUntil = 0;
       syncStealActive();
       clearTimeout(iceTimer); clearTimeout(fogTimer); clearTimeout(earthquakeTimer); clearTimeout(beeTimer); clearTimeout(waterballoonTimer);
@@ -1413,6 +1441,17 @@ function tick(){
       assignNextQuestion();
     }
     saveFxState();
+    // 🐾 펫이 맡아 둔 선물: 아이템 칸이 1.2초 넘게 비어 있으면 건넨다 (아이템을 쓰는 도중에 끼어들지 않게)
+    if(petSpareItem && !heldItem && !randomboxOfferPending && itemsOn() && !roundEnded()){
+      if(!petSpareSince) petSpareSince = serverNow();
+      else if(serverNow() - petSpareSince > 1200){
+        heldItem = petSpareItem; petSpareItem = null; petSpareSince = 0;
+        update(roomRef(ROOM, 'players', playerId), { item: heldItem, name: playerName, lastActive: serverNow() });
+        showItemAlert(`🐾 펫이 맡아 둔 ${ITEMS[heldItem].emoji} ${ITEMS[heldItem].name} 받기!`);
+        renderItemBar();
+      }
+    } else petSpareSince = 0;
+    renderPetAbLine();
     const bonus = activeBonus(roundState, serverNow());
     updateBanner('bonusBanner', !!bonus, ()=> el('bonusRemain').textContent = bonus.remaining);
     updateBanner('festivalBanner', serverNow() < festivalUntil, ()=>{
@@ -1477,7 +1516,8 @@ function saveFxState(){
     undo: myUndoAvailable, undoStreak: myUndoStreak, undoFloor: myUndoFloorDelta,
     fx: { fog: myFogUntil, ice: myIceUntil, waterballoon: myWaterballoonUntil, earthquake: myEarthquakeUntil, bee: myBeeUntil },
     steals: myStealDefenses.map(d => ({ amt: d.amt, deadline: d.deadline, attackerId: d.attackerId || null })),
-    mine: minePending, combo: comboPending, seen
+    mine: minePending, combo: comboPending, seen,
+    pet: { g: petGuardUsed, s: petStreakUsed, c: petGiftCount, spare: petSpareItem }
   };
   try{ localStorage.setItem(FX_STORE_KEY, JSON.stringify(state)); }catch(_e){}
 }
@@ -1490,6 +1530,7 @@ function restoreFxState(s){
   myVestUntil = s.vest || 0; myShieldUntil = s.barrier || 0; myCloverUntil = s.clover || 0; myAnthemNext = s.anthem || 0;
   myMirrorUntil = s.mirror || 0; mySirenUntil = s.siren || 0; myImmuneUntil = s.immune || 0; myStealAttackUntil = s.stealAtk || 0;
   myUndoAvailable = !!s.undo; myUndoStreak = s.undoStreak || 0; myUndoFloorDelta = s.undoFloor || 0;
+  { const pt = s.pet || {}; petGuardUsed = pt.g || 0; petStreakUsed = pt.s || 0; petGiftCount = pt.c || 0; petSpareItem = pt.spare || null; }
   // 시간형 방해는 남은 시간만큼 다시 건다 (문제는 곧이어 새로 나오며, renderQuestion이 지진·얼음 상태를 이어받는다)
   TIMED_FX.forEach(t => {
     const until = (s.fx && s.fx[t]) || 0;
@@ -1744,6 +1785,25 @@ function itemDescFor(k, it, nanta){
 function rivalizeDesc(d){
   return String(d || '').replace(/선두권\(또는 지목된 상대\)|선두권|상위권/g, '라이벌');
 }
+// 🐾 게임 화면 아래 '내 펫 능력' 한 줄 — 아이템전에서만
+function renderPetAbLine(){
+  const line = el('petAbLine');
+  if(!line) return;
+  let txt = '';
+  if(itemsOn() && !roundState.raid_mode){
+    const a = pets.ability();
+    if(a && a.sick) txt = `🐾 ${a.petName} — 아파서 능력을 못 써요 (펫 키우기에서 약을 주세요)`;
+    else if(a){
+      const st = a.key === 'guard' ? `방해 막기 ${Math.max(0, a.v - petGuardUsed)}번 남음`
+        : a.key === 'streak' ? `연속 지키기 ${Math.max(0, a.v - petStreakUsed)}번 남음`
+        : a.key === 'gift' ? (petSpareItem ? `선물 맡아 두는 중: ${ITEMS[petSpareItem].emoji} ${ITEMS[petSpareItem].name}` : `선물까지 정답 ${a.v - petGiftCount % a.v}개`)
+        : a.text;
+      txt = `🐾 ${a.petName} · ${a.icon} ${a.name}: ${st}`;
+    }
+  }
+  if(txt !== petAbText){ petAbText = txt; line.textContent = txt; }
+}
+
 function renderItemGuide(){
   const box = el('itemGuide');
   if(!box) return;
@@ -1753,7 +1813,8 @@ function renderItemGuide(){
   const rivalGuide = !roundState.team_mode && (roundState.rival_mode || rivalRound());   // 라이벌전: 방해는 라이벌에게만
   el('itemGuideIntro').textContent = (rivalGuide ? '⚔️ 라이벌전이라 방해 아이템은 내 라이벌에게만 날아가요. ' : '') + (nanta
     ? '정답을 맞힐 때마다 아이템을 1개 받아요 (최대 1개 보유, 버리기도 가능)'
-    : '3연속 정답마다 아이템을 1개 받아요 (최대 1개 보유, 버리기도 가능)');
+    : '3연속 정답마다 아이템을 1개 받아요 (최대 1개 보유, 버리기도 가능)')
+    + (()=>{ const a = pets.ability(); return a ? ` · 🐾 내 펫 ${a.petName}의 능력: ${a.icon} ${a.name} — ${a.text}${a.sick ? ' (지금은 아파서 못 써요)' : ''}` : ''; })();
   const groups = {};
   Object.entries(ITEMS).forEach(([k, it])=>{
     if(k === 'randombox') return;   // 랜덤박스는 스스로 뽑지 못하고 선생님이 뿌릴 때만 받음
@@ -2021,7 +2082,7 @@ function clearIncomingFx(outcome){
 }
 
 async function applySelfItem(key){
-  if(key === 'boost'){ myBoost = 3; showItemAlert('⚡ 부스터! 다음 정답 3개 2배'); }
+  if(key === 'boost'){ myBoost = Math.round(petLong(3000) / 1000); showItemAlert(`⚡ 부스터! 다음 정답 ${myBoost}개 2배`); }
   else if(key === 'ladder'){ showItemAlert(`🪜 사다리 +2${unitLabel()}!`); await bumpFloor(2); }
   else if(key === 'rocket'){ showItemAlert(`🚀 로켓 +5${unitLabel()}!`); await bumpFloor(5); }
   else if(key === 'reroll'){ rerollQuestion(); showItemAlert('🔁 새 문제로 교체!'); }
@@ -2033,25 +2094,25 @@ async function applySelfItem(key){
   // (토스트는 '문제가 바뀔 때까지' 유지되는 방식이라 효과가 먼저 끝나도 안 사라진 것처럼 보이는 문제가 있었음)
   else if(key === 'soloFest'){
     const dur = isLastGroup(allPlayers, playerId) ? ITEM_FX_MS.soloFestLast : ITEM_FX_MS.soloFest;
-    mySoloFestUntil = serverNow() + dur;
+    mySoloFestUntil = serverNow() + petLong(dur);
   }
   else if(key === 'goldenbell'){ myGoldenbellArmed = true; showItemAlert('🎯 골든벨! 다음 정답은 ×3, 틀리면 -2층'); }
   else if(key === 'jackpot'){ myJackpotArmed = true; showItemAlert(`🎲 인생 한방! 다음 정답 +20${unitLabel()}, 틀리면 -10${unitLabel()}`); }
   else if(key === 'snowball'){ mySnowballArmed = true; }
-  else if(key === 'vest'){ myVestUntil = serverNow() + ITEM_FX_MS.vest; }
-  else if(key === 'barrier'){ myShieldUntil = serverNow() + ITEM_FX_MS.barrier; }
-  else if(key === 'clover'){ myCloverUntil = serverNow() + ITEM_FX_MS.clover; }
+  else if(key === 'vest'){ myVestUntil = serverNow() + petLong(ITEM_FX_MS.vest); }
+  else if(key === 'barrier'){ myShieldUntil = serverNow() + petLong(ITEM_FX_MS.barrier); }
+  else if(key === 'clover'){ myCloverUntil = serverNow() + petLong(ITEM_FX_MS.clover); }
   else if(key === 'mirror'){
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.mirrorNanta : ITEM_FX_MS.mirror;
-    myMirrorUntil = Math.max(serverNow(), myMirrorUntil) + dur;   // 아직 반사경이 남아있으면 새로 쓴 만큼 이어서 누적
+    myMirrorUntil = Math.max(serverNow(), myMirrorUntil) + petLong(dur);   // 아직 반사경이 남아있으면 새로 쓴 만큼 이어서 누적
   }
   else if(key === 'siren'){   // 반사경과 완전히 동일(이름만 다름)
     const dur = itemsMode === 'nanta' ? ITEM_FX_MS.sirenNanta : ITEM_FX_MS.siren;
-    mySirenUntil = Math.max(serverNow(), mySirenUntil) + dur;
+    mySirenUntil = Math.max(serverNow(), mySirenUntil) + petLong(dur);
   }
   else if(key === 'comboSpark'){
     const dur = isLastGroup(allPlayers, playerId) ? ITEM_FX_MS.comboSparkLast : ITEM_FX_MS.comboSpark;
-    myComboSparkUntil = serverNow() + dur;
+    myComboSparkUntil = serverNow() + petLong(dur);
   }
   else if(key === 'roulette'){
     const d = Math.floor(Math.random() * 8) + 1;   // +1 ~ +8
@@ -2300,7 +2361,8 @@ function handleItemEvents(obj){
         shield: '🔰 상대의 쉴드 때문에 강탈에 실패했어요…',
         mirror: '🪞 강탈이 나에게 되돌아와요!',
         siren:  '🚨 강탈이 나에게 되돌아와요!',
-        immune: '🛡️ 상대가 무적 상태라 강탈에 실패했어요…'
+        immune: '🛡️ 상대가 무적 상태라 강탈에 실패했어요…',
+        pet:    '🐾 상대의 펫이 강탈을 막았어요…'
       }[e.outcome];
       if(blockedMsg){ showItemAlert(blockedMsg); return; }
       if(e.outcome === 'cure'){
@@ -2375,6 +2437,14 @@ function handleItemEvents(obj){
       // 무적은 막아도 소멸하지 않는다 — 무적이 끝날 때까지 모든 방해를 계속 막는다
       tellStealBlocked('immune');
       showItemAlert('🛡️ 무적 상태로 방해를 막아냈다!');
+      return;
+    }
+    // 🐾 펫 '수호': 한 판에 정해진 횟수만큼 방해를 막는다
+    const petG = petAbIs('guard');
+    if(petG && petGuardUsed < petG.v){
+      petGuardUsed++;
+      tellStealBlocked('pet');
+      showItemAlert(`🐾 ${petG.petName} 덕분에 방해를 막았어요! (남은 ${petG.v - petGuardUsed}번)`);
       return;
     }
     // 무적은 맞은 순간부터 — 시간형 방해(안개·얼음·물풍선·지진·벌떼)는 4초, 즉시형(미끄럼틀·강탈 등)은 2초. 시간형이 걸려 있어도 4초가 지나면 다른 방해가 겹칠 수 있다
@@ -2472,7 +2542,7 @@ function applyIncomingFx(type, attackerId, reflected, durOverride){
   // item-alert 토스트는 따로 띄우지 않는다 (안 그러면 알림이 2개씩 뜸)
   if(type === 'fog'){
     const box = el('qbox');
-    const dur = durOverride || (itemsMode === 'nanta' ? ITEM_FX_MS.fogNanta : spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog);
+    const dur = durOverride || petShort(itemsMode === 'nanta' ? ITEM_FX_MS.fogNanta : spicy ? ITEM_FX_MS.fogSpicy : ITEM_FX_MS.fog);
     el('fogLabel').textContent = reflected ? '반사당한 안개' : '안개';
     box.classList.add('fogged');
     myFogUntil = serverNow() + dur;
@@ -2482,7 +2552,7 @@ function applyIncomingFx(type, attackerId, reflected, durOverride){
       myFogUntil = 0;
     }, dur);
   } else if(type === 'ice'){
-    const dur = durOverride || (itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice);
+    const dur = durOverride || petShort(itemsMode === 'nanta' ? ITEM_FX_MS.iceNanta : spicy ? ITEM_FX_MS.iceSpicy : ITEM_FX_MS.ice);
     el('iceLabel').textContent = reflected ? '반사당한 얼음' : '얼음';
     myIceUntil = serverNow() + dur;
     el('submitBtn').disabled = true;   // 입력은 그대로 두고 제출만 막음
@@ -2492,7 +2562,7 @@ function applyIncomingFx(type, attackerId, reflected, durOverride){
       if(!roundEnded() && !isFrozen()){ el('answerInput').disabled = false; el('submitBtn').disabled = mineOpen(); }
     }, dur);
   } else if(type === 'waterballoon'){   // 얼음과 완전히 동일한 효과(이름·멘트만 다름)
-    const dur = durOverride || (itemsMode === 'nanta' ? ITEM_FX_MS.waterballoonNanta : spicy ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon);
+    const dur = durOverride || petShort(itemsMode === 'nanta' ? ITEM_FX_MS.waterballoonNanta : spicy ? ITEM_FX_MS.waterballoonSpicy : ITEM_FX_MS.waterballoon);
     el('waterballoonLabel').textContent = reflected ? '반사당한 물풍선' : '물풍선';
     myWaterballoonUntil = serverNow() + dur;
     el('submitBtn').disabled = true;   // 입력은 그대로 두고 제출만 막음
@@ -2503,7 +2573,7 @@ function applyIncomingFx(type, attackerId, reflected, durOverride){
     }, dur);
   } else if(type === 'earthquake'){
     const box = el('qbox');
-    const dur = durOverride || (itemsMode === 'nanta' ? ITEM_FX_MS.earthquakeNanta : spicy ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake);
+    const dur = durOverride || petShort(itemsMode === 'nanta' ? ITEM_FX_MS.earthquakeNanta : spicy ? ITEM_FX_MS.earthquakeSpicy : ITEM_FX_MS.earthquake);
     el('earthquakeLabel').textContent = reflected ? '반사당한 지진' : '지진';
     box.classList.add('shaking');
     startScramble();
@@ -2516,7 +2586,7 @@ function applyIncomingFx(type, attackerId, reflected, durOverride){
     }, dur);
   } else if(type === 'bee'){
     const box = el('qbox');
-    const dur = durOverride || (itemsMode === 'nanta' ? ITEM_FX_MS.beeNanta : spicy ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee);
+    const dur = durOverride || petShort(itemsMode === 'nanta' ? ITEM_FX_MS.beeNanta : spicy ? ITEM_FX_MS.beeSpicy : ITEM_FX_MS.bee);
     el('beeLabel').textContent = reflected ? '반사당한 벌떼' : '벌떼';
     // 휴대폰(터치 기기·좁은 화면)은 벌집 가림막 + 벌 18마리로 렉을 막고, PC는 원래대로 벌 900마리
     const lowPower = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || window.innerWidth < 700;
