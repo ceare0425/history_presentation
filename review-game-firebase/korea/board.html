@@ -132,6 +132,8 @@
     font-size:1.8rem; margin-bottom:4px; filter:drop-shadow(0 4px 6px rgba(0,0,0,.4));
     transform-origin:center bottom;
   }
+  .climber .avatar.pet{ line-height:0; }
+  .climber .avatar.pet canvas{ width:60px; height:60px; image-rendering:pixelated; image-rendering:crisp-edges; display:block; }
   .climber.leveling .avatar{ animation:levelPop .6s ease; }
   @keyframes levelPop{
     0%{ transform:scale(1) translateY(0); }
@@ -418,6 +420,7 @@
 <script type="module">
 import { roomRef, ref, db, update, onValue, serverNow, fmtTime, escapeHtml, rankedPlayers, teamInfo, teamStandings, activeBonus, ITEMS, ITEM_FX_MS, TEAM_OPTIONS, sweepOfflinePlayers, watchForUpdate } from '../shared/lib.js?v=20261012b';
 import { RARITY } from '../shared/titles.js?v=20261022a';
+import { petCanvas, updatePetCanvas } from '../shared/pets.js?v=20261106b';
 
 const ROOM = 'korea';
 const el = (id) => document.getElementById(id);
@@ -794,7 +797,16 @@ function renderTower(players, leaderId){
 
     const tInfo = (roundState.team_mode && p.team) ? teamInfo(p.team) : null;
     node.querySelector('.floorno').textContent = floor;
-    node.querySelector('.avatar').textContent = avatar;
+    // 🐾 펫을 데려온 학생은 이모지 대신 펫 도트 그림 (shared/pets.js) — 매 렌더마다 새로 만들지 않고 그림만 바꾼다
+    const avEl = node.querySelector('.avatar');
+    const pInfo = p.pet && p.pet.id ? p.pet : null;
+    if(pInfo){
+      if(!avEl._pcv){ avEl.textContent = ''; avEl._pcv = petCanvas(pInfo); avEl.appendChild(avEl._pcv); avEl.classList.add('pet'); }
+      else updatePetCanvas(avEl._pcv, pInfo);
+    } else {
+      if(avEl._pcv){ avEl._pcv.remove(); avEl._pcv = null; avEl.classList.remove('pet'); }
+      if(avEl.textContent !== avatar) avEl.textContent = avatar;
+    }
     const colEl = node.querySelector('.col');
     colEl.style.height = Math.max(6,h)+'px';
     if(tInfo) colEl.style.setProperty('--team-color', tInfo.color);

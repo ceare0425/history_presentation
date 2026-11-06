@@ -450,6 +450,7 @@
       <div class="setup-msg" id="setupMsg"></div>
       <button id="startBtn">▶ 연습 시작</button>
       <button type="button" id="titlesBtnSetup">🏅 칭호 도감</button>
+      <button type="button" id="petsBtnSetup">🐾 내 펫 · 상점</button>
     </div>
   </div>
 
@@ -540,6 +541,7 @@
       <button id="retryBtn">↺ 다른 범위로 다시 연습하기</button>
       <button id="dashFromEndBtn" class="secondary" style="margin-top:10px;">📊 내 학습 기록 보기</button>
       <button type="button" id="titlesBtnEnd">🏅 칭호 도감</button>
+      <button type="button" id="petsBtnEnd">🐾 내 펫 · 상점</button>
     </div>
   </div>
 
@@ -577,6 +579,7 @@ import {
   chapterOfQuestion
 } from '../shared/lib.js?v=20261012b';
 import { mountTitles } from '../shared/titles.js?v=20261022a';
+import { mountPets } from '../shared/pets.js?v=20261106b';
 
 const ROOM = 'world';
 const SUBJECT_NAME = '세계사'; // pages.json의 과목명과 일치해야 "다시 배우기" 링크가 매칭됨
@@ -614,6 +617,8 @@ const titles = mountTitles({ db, ref, get, update, onValue, runTransaction, serv
   room: ROOM,
   getQuestions: () => questionsObj
 });
+// 🐾 펫 (shared/pets.js) — 맞히면 코인(하루 상한), 데려간 펫이 캐릭터 자리에 나온다 · 한국사·세계사 공용
+const pets = mountPets({ db, ref, get, runTransaction, onValue, serverNow, escapeHtml }, { source: 'solo' });
 let allUnits = [];
 let selectedUnits = new Set();
 
@@ -1031,9 +1036,18 @@ document.addEventListener('keydown', e=>{
 const openTitlesCheck = () => {
   if(!classKey() || !myName()){ alert('학년·반·이름을 먼저 입력해 주세요.'); return false; }
   titles.setIdentity(classKey(), myName());
+  pets.setIdentity(classKey(), myName());
 };
 titles.bindButton(el('titlesBtnSetup'), openTitlesCheck);
 titles.bindButton(el('titlesBtnEnd'), openTitlesCheck);
+const openPetsCheck = () => {
+  if(!classKey() || !myName()){ alert('학년·반·이름을 먼저 입력해 주세요.'); return false; }
+  pets.setIdentity(classKey(), myName());
+};
+pets.bindButton(el('petsBtnSetup'), openPetsCheck);
+pets.bindButton(el('petsBtnEnd'), openPetsCheck);
+pets.bindAvatar(el('avatarChar'));
+if(classKey() && myName()) pets.setIdentity(classKey(), myName());   // 저장된 이름이 있으면 코인을 바로 보여 준다
 
 onValue(roomRef(ROOM,'questions'), (snap)=>{
   questionsObj = snap.val() || {};
@@ -1200,6 +1214,7 @@ function playCharacterReaction(correct){
   const av = el('avatarChar');
   av.classList.remove('happy','sad');
   void av.offsetWidth;
+  if(pets.hasPet()){ pets.react(correct); return; }   // 🐾 펫이 있으면 펫이 뛰거나 시무룩해진다
   av.textContent = correct ? AVATAR_HAPPY : AVATAR_SAD;
   av.classList.add(correct ? 'happy' : 'sad');
   setTimeout(()=>{
@@ -1249,6 +1264,7 @@ function submitAnswer(){
   const elapsed = (serverNow() - currentStartedAt) / 1000;
   const correct = isCorrect(text, q.answers);
   titles.recordAnswer(answeredQid, correct);
+  pets.recordAnswer(correct);   // 🐾 코인 +1 · 펫 경험치
   if(sessionMode === 'raid'){ const api = raidApi(); if(api) api.answer(correct, elapsed); }   // 정답이면 보스 공격, 틀리면 반격
   let gain = 0;
 
@@ -1292,7 +1308,8 @@ function submitAnswer(){
   lastFloor = floor;
   syncSoloLog(false);
   if(streak >= 20) titles.unlockHidden('flawless');                      // 숨은 칭호 '무결점' (20연속 정답)
-  if(correctCount >= 100) titles.unlockHidden('marathon');               // 숨은 칭호 '마라토너'
+  if(correctCount >= 100) titles.unlockHidden('marathon');
+  if(sessionMode === 'tower') pets.noteSoloFloor(floor);                // 🐾 불사조 해금 조건(탑 100층)               // 숨은 칭호 '마라토너'
   flashFeedback(correct, q.answers[0], gain, wasRetry, usedHint);
   playCharacterReaction(correct);
 
@@ -1839,6 +1856,7 @@ el('startBtn').onclick = async () => {
   // 이번 세션 정보 기록용으로 저장 (종료 시 선생님 화면으로 보냄)
   localStorage.setItem(STORAGE_NAME_KEY, nameNow);
   titles.setIdentity(classKey(), myName());
+  pets.setIdentity(classKey(), myName());
   sessionClassKey = classKey();
   sessionStartedAt = serverNow();
   sessionUnits = units;
@@ -1887,6 +1905,7 @@ function startReviewSession(qids, label){
   queue = []; retryList = []; retryMiss = {}; currentQid = null; currentQuestion = null; lastQid = null;
 
   titles.setIdentity(classKey(), myName());
+  pets.setIdentity(classKey(), myName());
   sessionClassKey = classKey();
   sessionStartedAt = serverNow();
   sessionUnits = [label || '복습 추천'];
