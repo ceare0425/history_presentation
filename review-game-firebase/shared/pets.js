@@ -60,7 +60,8 @@ export const PET_RULES = {
     short: { ms: 60 * 60000, energy: 20, food: 10, rolls: 1, label: '1시간' },
     long:  { ms: 3 * 60 * 60000, energy: 35, food: 20, rolls: 3, label: '3시간' },
     cardChance: 0.05, coinMin: 20, coinMax: 20,
-    minFood: 20, fun: 10, dupCoins: 20, placeBonus: 100, freshChance: 0.7
+    minFood: 20, fun: 10, dupCoins: 20, placeBonus: 100, freshChance: 0.7,
+    maxPets: 3   // 한꺼번에 탐험 보낼 수 있는 펫 수
   },
   // 🎮 간식 받기 미니게임: 30초, 하루 plays판까지 보상(점수/2 코인, 최대 coinMax)
   mini: { ms: 30000, plays: 3, coinMax: 20, fun: 10, energy: 5 }
@@ -1286,7 +1287,7 @@ export function mountPets(deps, opts){
   let friends = null, friendsBusy = false, friendSel = null, friendCv = null, friendCls = null;
   let shopPrev = null, prevCv = null;   // 상점 꾸미기 미리보기 {kind, id}
   let qbank = {}, quizBusy = false, quizState = null, quizFb = null;   // 📝 오늘의 퀴즈: 문제 은행 캐시 · 오늘 문제 {day, qs, err} · 방금 답한 결과
-  let lastFind = null, xToasted = {};   // 🗺️ 방금 받은 탐험 선물 · 돌아옴 알림을 띄운 탐험
+  let lastFind = null, xToasted = {}, xSel = null;   // 🗺️ 방금 받은 탐험 선물 목록 · 돌아옴 알림을 띄운 탐험 · 탐험 보낼 펫
   let miniBox = null;                   // 🎮 미니게임 창
   let view = 'all';         // 'all' 펫+상점 한 창 · 'shop' 상점만 · 'care' 펫 키우기만
   let ext = null;           // 희귀 해금 조건용 칭호 기록 (상점을 열 때 한 번 불러옴)
@@ -1318,14 +1319,29 @@ export function mountPets(deps, opts){
     const c = careNow(data.owned[data.active], now);
     return { id: data.active, s: c.stage, m: isAway(data.active, now) ? 'explore' : moodOf(c, now), p: c.poop };
   }
-  function isAway(id, now){ const x = data.explore; return !!(x && x.place && x.pid === id && x.until > (now || nowMs())); }
-  // 🗺️ 탐험에서 돌아왔으면 한 번 알려 준다
+  // 🗺️ 탐험 중인 펫들 { 펫id: {place, long, at, until} } — 예전 한 마리 기록(explore)도 함께 읽는다
+  function tripsOf(d){
+    const t = Object.assign({}, (d && d.explores) || {});
+    const x = d && d.explore;
+    if(x && x.place && x.pid && !t[x.pid]) t[x.pid] = x;
+    Object.keys(t).forEach(k => { if(!t[k] || !t[k].place) delete t[k]; });
+    return t;
+  }
+  function endTrip(cur, pid){
+    if(cur.explores){ delete cur.explores[pid]; if(!Object.keys(cur.explores).length) cur.explores = null; }
+    if(cur.explore && cur.explore.pid === pid) cur.explore = null;
+  }
+  function isAway(id, now){ const x = tripsOf(data)[id]; return !!(x && x.until > (now || nowMs())); }
+  const petName = (id, now) => PET_INFO[id] ? PET_INFO[id].names[careNow((data.owned || {})[id] || {}, now || nowMs()).stage] : '펫';
+  // 🗺️ 탐험에서 돌아왔으면 펫마다 한 번 알려 준다
   function checkExploreBack(){
-    const x = data.explore;
-    if(!x || !x.place || x.until > nowMs() || xToasted[x.until]) return;
-    xToasted[x.until] = true;
-    const nm = PET_INFO[x.pid] ? PET_INFO[x.pid].names[careNow((data.owned || {})[x.pid] || {}, nowMs()).stage] : '펫';
-    toast(`🗺️ ${josa(nm, '이', '가')} 탐험에서 돌아왔어요!`, '🐾 펫 키우기 → 🗺️ 탐험에서 가져온 선물을 받아요');
+    const now = nowMs();
+    Object.entries(tripsOf(data)).forEach(([pid, x]) => {
+      const k = pid + ':' + x.until;
+      if(x.until > now || xToasted[k]) return;
+      xToasted[k] = true;
+      toast(`🗺️ ${josa(petName(pid, now), '이', '가')} 탐험에서 돌아왔어요!`, '🐾 펫 키우기 → 🗺️ 탐험에서 가져온 선물을 받아요');
+    });
   }
   function sync(force){
     const info = activeInfo();
@@ -1634,32 +1650,51 @@ export function mountPets(deps, opts){
 
   // ── 🗺️ 탐험 ──
   function exploreHtml(info, now){
-    const R = PET_RULES.explore, x = data.explore, rel = data.relics || {};
+    const R = PET_RULES.explore, rel = data.relics || {};
     let s = `<div class="pt-sec"><h4>🗺️ 펫 탐험</h4><div class="pt-note">펫을 역사 속 장소로 탐험 보내면 그 시대의 유물 카드를 가져와요. 돌아올 때 ${R.short.label}은 ${R.short.rolls}번, ${R.long.label}은 ${R.long.rolls}번 선물을 뽑아요 · 한 번마다 ${Math.round(R.cardChance * 100)}% 확률로 유물 카드, 아니면 🪙${R.coinMin === R.coinMax ? R.coinMin : R.coinMin + '~' + R.coinMax} (1시간마다 한 번) · 이미 있는 유물은 🪙${R.dupCoins}으로 바꿔 줘요 · 한 장소의 유물 4장을 다 모으면 🪙${R.placeBonus}과 그 장소의 🏺 기념 가구</div>`;
-    if(lastFind){
-      const pl = PLACE_BY[lastFind.place];
-      s += `<div class="pt-find"><b>🎁 ${escapeHtml(pl.n)}에서 가져온 선물</b>${lastFind.got.map(g => { if(g.coin) return `<div class="pt-relic got coin"><span>🪙</span><div><b>코인 ${g.coin}개</b><p>${escapeHtml(pl.n)}에서 주운 동전이에요</p></div></div>`; const r = pl.relics[g.j]; return `<div class="pt-relic got"><span>${r.e}</span><div><b>${escapeHtml(r.n)}</b>${g.dup ? ' <small>(이미 있어서 🪙' + R.dupCoins + ')</small>' : ' <small>새 유물!</small>'}<p>${escapeHtml(r.d)}</p></div></div>`; }).join('')}<div class="pt-note">모두 합쳐 🪙 +${lastFind.coins}${lastFind.done ? ` · 🏆 ${escapeHtml(pl.n)} 유물을 모두 모았어요! 🏺 기념 가구 ‘${escapeHtml((relicFurnOf(pl.id) || [0, { name: '' }])[1].name)}’를 받았어요 (🏠 방 꾸미기)` : ''}</div><button type="button" class="pt-act" data-xok="1">확인</button></div>`;
+    if(lastFind && lastFind.length){
+      const tot = lastFind.reduce((a, f) => a + f.coins, 0);
+      s += `<div class="pt-find">${lastFind.map(f => {
+        const pl = PLACE_BY[f.place];
+        return `<b>🎁 ${escapeHtml(f.nm)}${josa(f.nm, '이', '가').slice(f.nm.length)} ${escapeHtml(pl.n)}에서 가져온 선물</b>${f.got.map(g => { if(g.coin) return `<div class="pt-relic got coin"><span>🪙</span><div><b>코인 ${g.coin}개</b><p>${escapeHtml(pl.n)}에서 주운 동전이에요</p></div></div>`; const r = pl.relics[g.j]; return `<div class="pt-relic got"><span>${r.e}</span><div><b>${escapeHtml(r.n)}</b>${g.dup ? ' <small>(이미 있어서 🪙' + R.dupCoins + ')</small>' : ' <small>새 유물!</small>'}<p>${escapeHtml(r.d)}</p></div></div>`; }).join('')}${f.done ? `<div class="pt-note">🏆 ${escapeHtml(pl.n)} 유물을 모두 모았어요! 🪙 +${R.placeBonus} · 🏺 기념 가구 ‘${escapeHtml((relicFurnOf(pl.id) || [0, { name: '' }])[1].name)}’를 받았어요 (🏠 방 꾸미기)</div>` : ''}`;
+      }).join('')}<div class="pt-note">모두 합쳐 🪙 +${tot}</div><button type="button" class="pt-act" data-xok="1">확인</button></div>`;
     }
-    if(x && x.place){
-      const pl = PLACE_BY[x.place] || { e: '🗺️', n: '어딘가' };
-      const nm = PET_INFO[x.pid] ? PET_INFO[x.pid].names[careNow((data.owned || {})[x.pid] || {}, now).stage] : '펫';
-      const left = x.until - now, total = Math.max(1, x.until - (x.at || x.until - R.short.ms));
-      s += left > 0
-        ? `<div class="pt-explore"><div>${pl.e} <b>${escapeHtml(nm)}</b>${josa(nm, '이', '가').slice(nm.length)} <b>${escapeHtml(pl.n)}</b> 탐험 중… <b>${fmtLeft(left)}</b> 뒤 돌아와요</div><div class="pt-bar"><span></span><i><b class="exp" style="width:${Math.min(100, (1 - left / total) * 100)}%"></b></i><span></span></div><small>탐험 중인 펫은 돌보기·산책을 할 수 없어요 (다른 펫은 괜찮아요)</small></div>`
-        : `<div class="pt-explore done">${pl.e} <b>${escapeHtml(nm)}</b>${josa(nm, '이', '가').slice(nm.length)} ${escapeHtml(pl.n)}에서 돌아왔어요! <button type="button" class="pt-act gold" data-xclaim="1">🎁 가져온 선물 받기</button></div>`;
-    } else if(!info){
+    const T = tripsOf(data), tids = PET_ORDER.filter(id => T[id]).concat(Object.keys(T).filter(id => !PET_INFO[id]));
+    const awayN = tids.filter(id => T[id].until > now).length, backN = tids.length - awayN;
+    if(tids.length){
+      if(backN >= 2) s += `<div class="pt-acts"><button type="button" class="pt-act gold" data-xclaim="all">🎁 돌아온 펫 ${backN}마리 선물 모두 받기</button></div>`;
+      tids.forEach(pid => {
+        const x = T[pid], pl = PLACE_BY[x.place] || { e: '🗺️', n: '어딘가' }, nm = petName(pid, now);
+        const left = x.until - now, total = Math.max(1, x.until - (x.at || x.until - R.short.ms));
+        s += left > 0
+          ? `<div class="pt-explore"><div>${pl.e} <b>${escapeHtml(nm)}</b>${josa(nm, '이', '가').slice(nm.length)} <b>${escapeHtml(pl.n)}</b> 탐험 중… <b>${fmtLeft(left)}</b> 뒤 돌아와요</div><div class="pt-bar"><span></span><i><b class="exp" style="width:${Math.min(100, (1 - left / total) * 100)}%"></b></i><span></span></div></div>`
+          : `<div class="pt-explore done">${pl.e} <b>${escapeHtml(nm)}</b>${josa(nm, '이', '가').slice(nm.length)} ${escapeHtml(pl.n)}에서 돌아왔어요! <button type="button" class="pt-act gold" data-xclaim="${pid}">🎁 가져온 선물 받기</button></div>`;
+      });
+      if(awayN) s += `<div class="pt-note">탐험 중인 펫은 돌보기·산책을 할 수 없어요 (다른 펫은 괜찮아요)</div>`;
+    }
+    const owned = data.owned || {};
+    const free = PET_ORDER.filter(id => owned[id] && !T[id]);
+    if(!PET_ORDER.some(id => owned[id])){
       s += `<p class="pt-note">펫이 있어야 탐험을 보낼 수 있어요.</p>`;
+    } else if(awayN >= R.maxPets){
+      s += `<p class="pt-note">한 번에 ${R.maxPets}마리까지 탐험을 보낼 수 있어요. 펫이 돌아오면 또 보내 주세요!</p>`;
+    } else if(!free.length){
+      s += `<p class="pt-note">${backN ? '돌아온 펫의 선물을 받으면 다시 탐험을 보낼 수 있어요.' : '가진 펫이 모두 탐험 중이에요.'}</p>`;
     } else {
-      const c = careNow(data.owned[info.id], now);
-      const why = c.sick ? '🤒 아픈 펫은 탐험을 갈 수 없어요' : info.m === 'sleep' ? '💤 자는 중이에요' : info.m === 'walk' ? '🦮 산책 중이에요'
+      const sel = free.includes(xSel) ? xSel : free.includes(data.active) ? data.active : free[0];
+      const c = careNow(owned[sel], now), m = moodOf(c, now);
+      const why = c.sick ? '🤒 아픈 펫은 탐험을 갈 수 없어요' : m === 'sleep' ? '💤 자는 중이에요' : m === 'walk' ? '🦮 산책 중이에요'
         : c.food < R.minFood ? `🍙 배부름이 ${R.minFood} 이상이어야 떠날 수 있어요` : c.energy < R.short.energy ? `⚡ 체력이 ${R.short.energy} 이상이어야 떠날 수 있어요` : '';
-      s += `<div class="pt-note">떠나면 ${R.short.label}: 체력 −${R.short.energy} · 배부름 −${R.short.food} / ${R.long.label}: 체력 −${R.long.energy} · 배부름 −${R.long.food}${why ? ` · <b class="pt-warn">${why}</b>` : ''}</div>`;
+      s += `<h4 class="pt-sub-h">🐾 탐험 보낼 펫 <small>여러 마리를 한꺼번에 보낼 수 있어요 (최대 ${R.maxPets}마리 · 지금 ${awayN}마리 탐험 중)</small></h4>`;
+      if(free.length > 1) s += `<div class="pt-tabs">${free.map(id => `<button type="button" class="pt-tab ${id === sel ? 'on' : ''}" data-xsel="${id}">${escapeHtml(petName(id, now))}</button>`).join('')}</div>`;
+      s += `<div class="pt-note"><b>${escapeHtml(petName(sel, now))}</b> · 🍙 ${Math.round(c.food)} · ⚡ ${Math.round(c.energy)} — 떠나면 ${R.short.label}: 체력 −${R.short.energy} · 배부름 −${R.short.food} / ${R.long.label}: 체력 −${R.long.energy} · 배부름 −${R.long.food}${why ? ` · <b class="pt-warn">${why}</b>` : ''}</div>`;
       ['한국사', '세계사'].forEach(sub => {
         s += `<h4 class="pt-sub-h">${sub === '한국사' ? '🏯 한국사' : '🌍 세계사'}</h4><div class="pt-places">`;
         PLACES.filter(pl => pl.s === sub).forEach(pl => {
           const n = pl.relics.filter((_, j) => (rel[pl.id + '_' + j] | 0) > 0).length;
-          s += `<div class="pt-place"><b>${pl.e} ${escapeHtml(pl.n)}</b><small>${escapeHtml(pl.era)} · 유물 ${n}/4${n >= 4 ? ' ✔' : ''}</small>
-            <div class="pt-acts"><button type="button" class="pt-act" data-xgo="${pl.id}:0" ${why ? 'disabled' : ''}>⏱️ ${R.short.label}</button><button type="button" class="pt-act gold" data-xgo="${pl.id}:1" ${why || c.energy < R.long.energy ? 'disabled' : ''}>⏳ ${R.long.label}</button></div></div>`;
+          const here = tids.filter(id => T[id].place === pl.id).map(id => petName(id, now));
+          s += `<div class="pt-place"><b>${pl.e} ${escapeHtml(pl.n)}</b><small>${escapeHtml(pl.era)} · 유물 ${n}/4${n >= 4 ? ' ✔' : ''}${here.length ? ' · 🗺️ ' + escapeHtml(here.join(', ')) : ''}</small>
+            <div class="pt-acts"><button type="button" class="pt-act" data-xgo="${pl.id}:0:${sel}" ${why ? 'disabled' : ''}>⏱️ ${R.short.label}</button><button type="button" class="pt-act gold" data-xgo="${pl.id}:1:${sel}" ${why || c.energy < R.long.energy ? 'disabled' : ''}>⏳ ${R.long.label}</button></div></div>`;
         });
         s += `</div>`;
       });
@@ -1833,7 +1868,7 @@ export function mountPets(deps, opts){
         return `<button type="button" class="pt-act ${cls || ''}" data-act="${k}" ${can ? '' : 'disabled'}>${it.label} ${have > 0 ? `<small>(${have}개)</small>` : `<small>(🪙${it.price})</small>`}</button>`;
       };
       const walkLeft = c.walkNext > now ? Math.ceil((c.walkNext - now) / 60000) : 0;
-      const status = info.m === 'explore' ? `🗺️ 탐험 중… ${fmtLeft(data.explore.until - now)} 뒤 돌아와요 (🗺️ 탐험 탭)`
+      const status = info.m === 'explore' ? `🗺️ 탐험 중… ${fmtLeft((tripsOf(data)[info.id] || { until: now }).until - now)} 뒤 돌아와요 (🗺️ 탐험 탭)`
         : info.m === 'walk' ? `🦮 산책 중… ${Math.max(0, Math.ceil((c.walkUntil - now) / 1000))}초 뒤 돌아와요`
         : info.m === 'sleep' ? `💤 쿨쿨 자는 중… ${Math.max(1, Math.ceil((c.sleepUntil - now) / 60000))}분 뒤 일어나요`
         : c.sick ? `🤒 아파요! 💊 약을 먹여 주세요${c.poop >= R.sickPoop ? ' (먼저 🧹 똥을 치워야 해요)' : c.food <= 0 ? ' (먼저 🍙 밥을 줘야 해요)' : ''} · 아픈 동안은 경험치가 오르지 않아요`
@@ -1869,7 +1904,7 @@ export function mountPets(deps, opts){
     if(ownIds.length){
       h += `<div class="pt-sec"><h4>📦 내가 가진 펫 (${ownIds.length})</h4><div class="pt-note">누르면 그 펫을 데려가요</div><div class="pt-owned">${ownIds.map(id => {
         const c = careNow(owned[id], now);
-        return `<button type="button" class="pt-own ${data.active === id ? 'on' : ''}" data-own="${id}"><span data-slot="own-${id}"></span>${escapeHtml(PET_INFO[id].names[c.stage])}</button>`;
+        return `<button type="button" class="pt-own ${data.active === id ? 'on' : ''}" data-own="${id}"><span data-slot="own-${id}"></span>${escapeHtml(PET_INFO[id].names[c.stage])}${isAway(id, now) ? ' 🗺️' : ''}</button>`;
       }).join('')}</div></div>`;
     }
     if(view === 'care' && careTab === 'care' && info) h += `<div class="pt-sec"><button type="button" class="pt-act" data-view="shop">🏪 상점에서 새 펫 보기</button></div>`;
@@ -2096,59 +2131,71 @@ export function mountPets(deps, opts){
     }
     if(kind === 'xclaim'){
       const R = PET_RULES.explore;
-      let found = null;
+      let found = [];
       const res = await tx((cur, now) => {
-        const x = cur.explore;
-        if(!x || !x.place || x.until > now) return;
-        const pl = PLACE_BY[x.place];
-        if(!pl){ cur.explore = null; return cur; }
-        const L = x.long ? R.long : R.short;
+        found = [];
+        const T = tripsOf(cur);
+        const ids = Object.keys(T).filter(pid => T[pid].until <= now && (id === 'all' || pid === id));
+        if(!ids.length) return;
         cur.relics = cur.relics || {};
-        const got = [];
-        let coins = 0;
-        for(let k = 0; k < L.rolls; k++){
-          if(Math.random() >= R.cardChance){ const cn = R.coinMin + Math.floor(Math.random() * (R.coinMax - R.coinMin + 1)); coins += cn; got.push({ coin: cn }); continue; }
-          const fresh = pl.relics.map((_, j) => j).filter(j => !((cur.relics[pl.id + '_' + j] | 0) > 0));
-          const j = fresh.length && Math.random() < R.freshChance ? fresh[Math.floor(Math.random() * fresh.length)] : Math.floor(Math.random() * pl.relics.length);
-          const key = pl.id + '_' + j, dup = (cur.relics[key] | 0) > 0;
-          cur.relics[key] = (cur.relics[key] | 0) + 1;
-          if(dup) coins += R.dupCoins;
-          got.push({ j, dup });
-        }
         cur.relicDone = cur.relicDone || {};
-        let done = false;
-        if(!cur.relicDone[pl.id] && pl.relics.every((_, j) => (cur.relics[pl.id + '_' + j] | 0) > 0)){ cur.relicDone[pl.id] = now; coins += R.placeBonus; done = true; }
+        let coins = 0;
+        ids.forEach(pid => {
+          const x = T[pid], pl = PLACE_BY[x.place];
+          endTrip(cur, pid);
+          if(!pl) return;
+          const L = x.long ? R.long : R.short;
+          const got = [];
+          let cn0 = 0;
+          for(let k = 0; k < L.rolls; k++){
+            if(Math.random() >= R.cardChance){ const cn = R.coinMin + Math.floor(Math.random() * (R.coinMax - R.coinMin + 1)); cn0 += cn; got.push({ coin: cn }); continue; }
+            const fresh = pl.relics.map((_, j) => j).filter(j => !((cur.relics[pl.id + '_' + j] | 0) > 0));
+            const j = fresh.length && Math.random() < R.freshChance ? fresh[Math.floor(Math.random() * fresh.length)] : Math.floor(Math.random() * pl.relics.length);
+            const key = pl.id + '_' + j, dup = (cur.relics[key] | 0) > 0;
+            cur.relics[key] = (cur.relics[key] | 0) + 1;
+            if(dup) cn0 += R.dupCoins;
+            got.push({ j, dup });
+          }
+          let done = false;
+          if(!cur.relicDone[pl.id] && pl.relics.every((_, j) => (cur.relics[pl.id + '_' + j] | 0) > 0)){ cur.relicDone[pl.id] = now; cn0 += R.placeBonus; done = true; }
+          const p = cur.owned && cur.owned[pid];
+          if(p){ const c = careNow(p, now); c.fun = clamp(c.fun + R.fun); cur.owned[pid] = storeCare(c, now); }
+          coins += cn0;
+          found.push({ pid, nm: PET_INFO[pid] ? PET_INFO[pid].names[p ? careNow(p, now).stage : 0] : '펫', place: pl.id, got, coins: cn0, done });
+        });
         cur.coins = (cur.coins || 0) + coins; cur.earned = (cur.earned || 0) + coins;
-        const p = cur.owned && cur.owned[x.pid];
-        if(p){ const c = careNow(p, now); c.fun = clamp(c.fun + R.fun); cur.owned[x.pid] = storeCare(c, now); }
-        cur.explore = null;
-        found = { place: pl.id, got, coins, done };
         return cur;
       });
-      if(res && res.committed && found){ lastFind = found; if(found.done){ const rf = relicFurnOf(found.place); toast(`🏆 ${PLACE_BY[found.place].n} 유물을 모두 모았어요!`, rf ? `🏺 기념 가구 ‘${rf[1].name}’ · 🪙 +${PET_RULES.explore.placeBonus}` : `🪙 +${PET_RULES.explore.placeBonus}`); } render(); const fd = overlay && overlay.querySelector('.pt-find'); if(fd && fd.scrollIntoView) fd.scrollIntoView({ block: 'nearest' }); }
+      if(res && res.committed && found.length){
+        lastFind = found;
+        found.filter(f => f.done).forEach(f => { const rf = relicFurnOf(f.place); toast(`🏆 ${PLACE_BY[f.place].n} 유물을 모두 모았어요!`, rf ? `🏺 기념 가구 ‘${rf[1].name}’ · 🪙 +${R.placeBonus}` : `🪙 +${R.placeBonus}`); });
+        render(); const fd = overlay && overlay.querySelector('.pt-find'); if(fd && fd.scrollIntoView) fd.scrollIntoView({ block: 'nearest' });
+      }
+      return;
+    }
+    if(kind === 'xgo'){
+      const R = PET_RULES.explore;
+      const [place, lg, pid] = String(id).split(':');
+      const L = lg === '1' ? R.long : R.short;
+      if(!PLACE_BY[place] || !pid) return;
+      const res = await tx((cur, now) => {
+        const p = cur.owned && cur.owned[pid];
+        const T = tripsOf(cur);
+        if(!p || T[pid] || Object.keys(T).filter(k => T[k].until > now).length >= R.maxPets) return;
+        const c = careNow(p, now), m = moodOf(c, now);
+        if(m === 'sleep' || m === 'walk' || c.sick || c.energy < L.energy || c.food < R.minFood) return;
+        c.energy = clamp(c.energy - L.energy); c.food = clamp(c.food - L.food);
+        cur.owned[pid] = storeCare(c, now);
+        T[pid] = { place, long: lg === '1', at: now, until: now + L.ms };
+        cur.explores = T; cur.explore = null;
+        return cur;
+      });
+      if(res && res.committed){ lastFind = null; xSel = null; const nm = petName(pid); toast(`🗺️ ${josa(nm, '이', '가')} ${PLACE_BY[place].n}(으)로 탐험 출발!`, `${L.label} 뒤 돌아와요`); }
       return;
     }
     const aid = data.active;
     if(!aid) return;
     if(isAway(aid)){ setMsg('🗺️ 탐험 중이라 지금은 할 수 없어요'); return; }
-    if(kind === 'xgo'){
-      const R = PET_RULES.explore;
-      const [place, lg] = String(id).split(':');
-      const L = lg === '1' ? R.long : R.short;
-      if(!PLACE_BY[place]) return;
-      const res = await tx((cur, now) => {
-        const p = cur.owned && cur.owned[aid];
-        if(!p || (cur.explore && cur.explore.place)) return;
-        const c = careNow(p, now), m = moodOf(c, now);
-        if(m === 'sleep' || m === 'walk' || c.sick || c.energy < L.energy || c.food < R.minFood) return;
-        c.energy = clamp(c.energy - L.energy); c.food = clamp(c.food - L.food);
-        cur.owned[aid] = storeCare(c, now);
-        cur.explore = { pid: aid, place, long: lg === '1', at: now, until: now + L.ms };
-        return cur;
-      });
-      if(res && res.committed){ lastFind = null; toast(`🗺️ ${PLACE_BY[place].n}(으)로 탐험 출발!`, `${L.label} 뒤 돌아와요`); }
-      return;
-    }
     if(kind === 'play'){
       let fun = 0;
       const res = await tx((cur, now) => {
@@ -2287,7 +2334,8 @@ export function mountPets(deps, opts){
       if(b.dataset.qskip){ act('quiz', null); return; }
       if(b.dataset.qretry){ quizState = null; render(); return; }
       if(b.dataset.xgo){ act('xgo', b.dataset.xgo); return; }
-      if(b.dataset.xclaim){ act('xclaim'); return; }
+      if(b.dataset.xclaim){ act('xclaim', b.dataset.xclaim); return; }
+      if(b.dataset.xsel){ xSel = b.dataset.xsel; render(); return; }
       if(b.dataset.xok){ lastFind = null; render(); return; }
       if(b.dataset.mini){ startMini(); return; }
       if(b.dataset.act){ act(b.dataset.act); }
@@ -2308,7 +2356,7 @@ export function mountPets(deps, opts){
       if(!overlay) return;
       const i = activeInfo();
       const m = i ? i.m : null;
-      if(m === 'walk' || m === 'sleep' || m !== lastMood || (careTab === 'explore' && data.explore && data.explore.place)){ render(); sync(); }
+      if(m === 'walk' || m === 'sleep' || m !== lastMood || (careTab === 'explore' && Object.keys(tripsOf(data)).length)){ render(); sync(); }
       lastMood = m;
     }, 1000);
   }
@@ -2320,7 +2368,7 @@ export function mountPets(deps, opts){
       name = String(name || '').trim().slice(0, 20);
       if(ident && cls && name && ident.cls === String(cls) && ident.name === name) return;
       if(unsub){ unsub(); unsub = null; }
-      data = {}; loaded = false; lastSig = null; ext = null; readyToasted = {}; quizState = null; quizFb = null; lastFind = null; xToasted = {};
+      data = {}; loaded = false; lastSig = null; ext = null; readyToasted = {}; quizState = null; quizFb = null; lastFind = null; xToasted = {}; xSel = null;
       ident = (cls && name) ? { cls: String(cls), name } : null;
       updateButtons();
       sync(true);
