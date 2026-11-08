@@ -550,10 +550,21 @@ function loop(t){
 }
 function addActor(cv, draw){
   const a = { cv, ctx: cv.getContext('2d'), draw, seen: false };
+  cv._actor = a;
   actors.add(a);
   try{ a.draw(a.ctx, 0); }catch(_e){}   // 첫 프레임을 기다리지 않고 바로 한 번 그린다
   if(!loopOn){ loopOn = true; lastStill = -1e9; requestAnimationFrame(loop); }
   return a;
+}
+// 재사용하는 캔버스(펫 키우기 장면 등)는 탭을 옮기면 화면에서 빠져 움직임 목록에서 지워진다 —
+// 다시 화면에 붙일 때 이걸 불러 움직임을 되살린다 (안 그러면 마지막 모습으로 멈춰 있음)
+function reviveActor(cv){
+  const a = cv && cv._actor;
+  if(!a || actors.has(a)) return;
+  a.seen = false;
+  actors.add(a);
+  try{ a.draw(a.ctx, 0); }catch(_e){}
+  if(!loopOn){ loopOn = true; lastStill = -1e9; requestAnimationFrame(loop); }
 }
 // info: {id, s(단계), m(기분)} → 20×20 캔버스. 몸짓은 기분에 따라 다르다.
 export function petCanvas(info, px){
@@ -1944,13 +1955,13 @@ export function mountPets(deps, opts){
       if(slot){
         if(!sceneCv) sceneCv = sceneCanvas({});
         Object.assign(sceneCv._scene, info ? { id: info.id, s: info.s, m: info.m, poop: info.p } : { id: null }, { room: data.room, playUntil: data.playUntil || 0 });
-        slot.appendChild(sceneCv);
+        slot.appendChild(sceneCv); reviveActor(sceneCv);
       }
       const pslot = frag.querySelector('[data-slot="shopprev"]');
       if(pslot){
         if(!prevCv) prevCv = sceneCanvas({});
         Object.assign(prevCv._scene, info ? { id: info.id, s: info.s, m: info.m === 'walk' || info.m === 'sleep' ? 'normal' : info.m, poop: 0 } : { id: null }, { room: prevRoom(), playUntil: 0 });
-        pslot.appendChild(prevCv);
+        pslot.appendChild(prevCv); reviveActor(prevCv);
       }
       const fslot = frag.querySelector('[data-slot="friend"]');   // 친구 방
       if(fslot && friendSel && friends){
@@ -1958,7 +1969,7 @@ export function mountPets(deps, opts){
         if(f){
           if(!friendCv || friendCv._who !== f.name){ friendCv = sceneCanvas({}); friendCv._who = f.name; }
           Object.assign(friendCv._scene, f.info ? { id: f.info.id, s: f.info.s, m: f.info.m, poop: f.info.p } : { id: null }, { room: f.d.room, playUntil: f.d.playUntil || 0 });
-          fslot.appendChild(friendCv);
+          fslot.appendChild(friendCv); reviveActor(friendCv);
         }
       }
     }
