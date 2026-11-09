@@ -64,7 +64,12 @@ export const PET_RULES = {
     maxPets: 3   // 한꺼번에 탐험 보낼 수 있는 펫 수
   },
   // 🎮 간식 받기 미니게임: 30초, 하루 plays판까지 보상(점수/2 코인, 최대 coinMax)
-  mini: { ms: 30000, plays: 3, coinMax: 20, fun: 10, energy: 5 },
+  mini: { ms: 30000, plays: 3, coinMax: 20, coinDiv: 4, fun: 10, energy: 5,   // 보상 = 점수 ÷ coinDiv (최대 coinMax)
+    combo: [[10, 3], [5, 2]],   // 연속으로 받은 수 → 점수 배율 (💩·💣을 맞으면 끊김)
+    feverMs: 5000,              // 마지막 이만큼은 🌟 피버 타임: 점수 2배 · 간식이 쏟아짐
+    starMs: 5000, magnetMs: 4000, stunMs: 2000, clockMs: 3000, clockMax: 2,   // ⭐ 커지기 · 🧲 자석 · 💣 기절 · ⏰ 시간 + (한 판 최대 clockMax번)
+    // [종류, 점수, 나오는 비율] — 특별 아이템(star·magnet·bomb·clock)은 점수 대신 효과
+    kinds: [['rice', 1, 52], ['heart', 2, 20], ['coin', 3, 9], ['poop', -2, 24], ['star', 0, 2.2], ['magnet', 0, 2.2], ['bomb', 0, 4], ['clock', 0, 1.6]] },
   // 🌟 오늘의 소원: 하루 한 가지(학생·날짜마다 정해짐) — 들어주면 코인 coin + 간식 snack개 + 데려가는 펫 기분 fun
   wish: { coin: 30, snack: 1, fun: 10 }
 };
@@ -519,7 +524,11 @@ const ICONS = {
   sick:  ['.mmm.', 'mmwmm', 'mwwwm', 'mmwmm', '.mmm.'],
   poop:  ['...o...', '..obo..', '.obbbo.', 'obbdbbo', 'ooooooo'],
   poopS: ['..o..', '.obo.', 'obbbo', 'ooooo'],
-  coin:  ['.ooo.', 'oggGo', 'ogGgo', 'oggGo', '.ooo.']
+  coin:  ['.ooo.', 'oggGo', 'ogGgo', 'oggGo', '.ooo.'],
+  star:  ['...y...', '..yyy..', 'yyyyyyy', '.yyyyy.', '.yy.yy.', 'y.....y'],
+  magnet:['ww..ww', 'mm..mm', 'mm..mm', 'mm..mm', 'mmmmmm', '.mmmm.'],
+  bomb:  ['....y.', '...k..', '.kkkk.', 'kkwkkk', 'kkkkkk', '.kkkk.'],
+  clock: ['.kkkkk.', 'kwwkwwk', 'kwwkwwk', 'kwwkkwk', 'kwwwwwk', 'kwwwwwk', '.kkkkk.']
 };
 const POOP_COL = { b: '#9a6534', d: '#6b4220', o: '#3a2412' };
 function drawIcon(ctx, name, ox, oy, colors){
@@ -1282,6 +1291,11 @@ function addCss(){
   .pt-mini-panel{ background:#fff; border-radius:18px; padding:12px; width:min(340px, 94vw); margin:auto; text-align:center; font-family:inherit; }
   .pt-mini-hud{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-weight:800; margin-bottom:6px; }
   .pt-mini-hud .sc{ font-size:1.2rem; color:#b45309; } .pt-mini-hud .tm{ color:#374151; }
+  .pt-mini-hud .cb{ font-size:.85rem; color:#9ca3af; min-width:84px; }
+  .pt-mini-hud .cb.on{ color:#ea580c; } .pt-mini-hud .cb.fv{ color:#db2777; animation:ptFever .5s infinite alternate; }
+  .pt-mini-hud .tm.add{ color:#16a34a; }
+  @keyframes ptFever{ from{ transform:scale(1); } to{ transform:scale(1.12); } }
+  .pt-mini-tip{ font-size:.75rem; color:#6b7280; margin-top:6px; line-height:1.45; }
   .pt-mini-x{ border:none; background:#f3f4f6; border-radius:999px; width:32px; height:32px; font-size:1rem; cursor:pointer; }
   .pt-mini canvas{ width:100%; height:auto; aspect-ratio:3/4; image-rendering:pixelated; border-radius:12px; touch-action:none; display:block; background:#bfe6ff; }
   .pt-mini-end p{ margin:6px 0; } .pt-mini-end .big{ font-size:1.4rem; font-weight:900; }
@@ -1797,8 +1811,8 @@ export function mountPets(deps, opts){
       why = info.m === 'explore' ? '🗺️ 탐험 중이에요' : c.sick ? '🤒 아픈 펫은 쉬어야 해요' : info.m === 'sleep' ? '💤 자는 중이에요' : info.m === 'walk' ? '🦮 산책 중이에요' : c.energy < M.energy ? `⚡ 체력이 ${M.energy} 이상이어야 해요` : '';
     }
     return `<div class="pt-sec"><h4>🎮 간식 받기</h4><div class="pt-mine"><div class="pt-mine-info">
-      <div class="pt-note">${M.ms / 1000}초 동안 하늘에서 떨어지는 간식을 펫이 받아요! 🍙 +1 · ❤️ +2 · 🪙 +3 · 💩는 −2<br>화면을 누른 채 좌우로 움직이거나 ← → 키로 펫을 움직여요.</div>
-      <div class="pt-note">오늘 보상 ${Math.max(0, M.plays - used)} / ${M.plays}판 남음 · 보상: 점수의 절반만큼 코인(최대 🪙${M.coinMax}) + 펫 기분 +${M.fun} · 체력 −${M.energy}${used >= M.plays ? ' · 보상이 없어도 계속 놀 수 있어요' : ''}</div>
+      <div class="pt-note">${M.ms / 1000}초 동안 하늘에서 떨어지는 간식을 펫이 받아요! 🍙 +1 · ❤️ +2 · 🪙 +3 · 💩는 −2<br>🔥 연속으로 받으면 콤보 — 5콤보 ×2 · 10콤보 ×3 (💩·💣을 맞으면 끊겨요) · 점점 빨라지고, 🌟 마지막 ${M.feverMs / 1000}초는 피버 타임 ×2!<br>⭐ 잠깐 커지기 · 🧲 간식 끌어오기 · ⏰ 시간 +${M.clockMs / 1000}초 · 💣 맞으면 ${M.stunMs / 1000}초 기절<br>화면을 누른 채 좌우로 움직이거나 ← → 키로 펫을 움직여요.</div>
+      <div class="pt-note">오늘 보상 ${Math.max(0, M.plays - used)} / ${M.plays}판 남음 · 보상: 점수 ÷ ${M.coinDiv}만큼 코인(최대 🪙${M.coinMax}) + 펫 기분 +${M.fun} · 체력 −${M.energy}${used >= M.plays ? ' · 보상이 없어도 계속 놀 수 있어요' : ''}</div>
       <div class="pt-note">🏆 내 최고 점수 <b>${data.miniBest | 0}점</b></div>
       ${why ? `<div class="pt-status bad">${why}</div>` : ''}
       <button type="button" class="pt-act go" data-mini="1" ${why ? 'disabled' : ''}>▶ 시작하기</button>
@@ -1813,15 +1827,26 @@ export function mountPets(deps, opts){
     const W = 96, H = 128, PY = H - 18;
     miniBox = document.createElement('div');
     miniBox.className = 'pt-mini';
-    miniBox.innerHTML = `<div class="pt-mini-panel"><div class="pt-mini-hud"><b class="sc">0점</b><span class="tm">${M.ms / 1000}초</span><button type="button" class="pt-mini-x">✕</button></div><canvas width="${W}" height="${H}"></canvas><div class="pt-mini-end"></div></div>`;
+    miniBox.innerHTML = `<div class="pt-mini-panel"><div class="pt-mini-hud"><b class="sc">0점</b><span class="cb">콤보 0</span><span class="tm">${M.ms / 1000}초</span><button type="button" class="pt-mini-x">✕</button></div><canvas width="${W}" height="${H}"></canvas>
+      <div class="pt-mini-tip">🔥 연속으로 받으면 콤보 (5콤보 ×2 · 10콤보 ×3) · 🌟 마지막 ${M.feverMs / 1000}초는 피버 ×2<br>⭐ 커지기 · 🧲 자석 · ⏰ 시간 +${M.clockMs / 1000}초 · 💣 맞으면 기절!</div><div class="pt-mini-end"></div></div>`;
     document.body.appendChild(miniBox);
     const box = miniBox, cv = box.querySelector('canvas'), ctx = cv.getContext('2d');
-    const scEl = box.querySelector('.sc'), tmEl = box.querySelector('.tm'), endEl = box.querySelector('.pt-mini-end');
+    const scEl = box.querySelector('.sc'), tmEl = box.querySelector('.tm'), cbEl = box.querySelector('.cb'), endEl = box.querySelector('.pt-mini-end'), tipEl = box.querySelector('.pt-mini-tip');
     box.querySelector('.pt-mini-x').onclick = closeMini;
     let px = W / 2 - 8, target = null, keyDir = 0, score = 0, items = [], pops = [], sadUntil = 0, nextSpawn = 0, start = 0, last = 0, raf = 0, over = false;
-    const KINDS = [['rice', 1, 52], ['heart', 2, 20], ['coin', 3, 9], ['poop', -2, 24]];
-    const pickKind = () => { let r = Math.random() * KINDS.reduce((a, k) => a + k[2], 0); for(const k of KINDS){ r -= k[2]; if(r <= 0) return k; } return KINDS[0]; };
-    const ICON_COL = { rice: { k: '#3f7d52' }, coin: { o: '#a8740a', g: '#ffd84a', G: '#fff3a8' }, poop: POOP_COL, heart: {} };
+    let combo = 0, maxCombo = 0, feverOn = false, dur = M.ms, clocks = 0, bigUntil = 0, magUntil = 0, stunUntil = 0, timeFlash = 0, feverPts = 0;
+    const KINDS = M.kinds;
+    const SPECIAL = { star: 1, magnet: 1, bomb: 1, clock: 1 };
+    const pickKind = (fever, el) => {
+      // 피버 중에는 💩·💣 대신 간식만, 처음 6초는 💣 없음, ⏰은 한 판 최대 clockMax번
+      const ks = KINDS.filter(k => !(fever && (k[1] < 0 || SPECIAL[k[0]])) && !(k[0] === 'bomb' && el < 6000) && !(k[0] === 'clock' && clocks >= M.clockMax));
+      let r = Math.random() * ks.reduce((a, k) => a + k[2], 0);
+      for(const k of ks){ r -= k[2]; if(r <= 0) return k; }
+      return ks[0];
+    };
+    const ICON_COL = { rice: { k: '#3f7d52' }, coin: { o: '#a8740a', g: '#ffd84a', G: '#fff3a8' }, poop: POOP_COL, heart: {},
+      star: { y: '#ffcf3f' }, magnet: { m: '#e5484d', w: '#d1d5db' }, bomb: { k: '#2b2233', w: '#9ca3af', y: '#ff9a3c' }, clock: { k: '#1d4ed8', w: '#ffffff' } };
+    const multOf = (c) => { for(const [n, x] of M.combo) if(c >= n) return x; return 1; };
     const toX = (clientX) => { const r = cv.getBoundingClientRect(); return (clientX - r.left) / r.width * W - 8; };
     cv.addEventListener('pointerdown', (e) => { target = toX(e.clientX); try{ cv.setPointerCapture(e.pointerId); }catch(_e){} e.preventDefault(); });
     cv.addEventListener('pointermove', (e) => { if(e.buttons || e.pointerType === 'touch' || e.pointerType === 'mouse') target = toX(e.clientX); });
@@ -1830,35 +1855,74 @@ export function mountPets(deps, opts){
     };
     document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey);
     box._stop = () => { over = true; cancelAnimationFrame(raf); document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); };
-    function draw(t){
-      ctx.fillStyle = '#bfe6ff'; ctx.fillRect(0, 0, W, H);
+    function hud(t, fever){
+      const mult = multOf(combo) * (fever ? 2 : 1);
+      cbEl.textContent = fever ? `🌟 피버 ×${mult}` : combo >= 2 ? `🔥 ${combo}콤보${mult > 1 ? ' ×' + mult : ''}` : '콤보 0';
+      cbEl.className = 'cb' + (fever ? ' fv' : combo >= 2 ? ' on' : '');
+      tmEl.className = 'tm' + (t < timeFlash ? ' add' : '');
+    }
+    function draw(t, fever){
+      const sky = fever ? ((t / 180) % 2 < 1 ? '#ffd6ec' : '#ffe9a8') : '#bfe6ff';
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
       ctx.fillStyle = '#ffffff'; for(let i = 0; i < 3; i++){ const x = Math.round(((i * 37 + t / 80) % 130)) - 20; ctx.fillRect(x, 14 + i * 22, 10, 2); ctx.fillRect(x + 2, 12 + i * 22, 6, 2); }
+      if(fever){ ctx.fillStyle = '#ffffff'; for(let i = 0; i < 8; i++){ const sx = (i * 29 + Math.floor(t / 90) * 7) % W, sy = (i * 41 + Math.floor(t / 90) * 5) % (H - 20); ctx.fillRect(sx, sy, 1, 1); } }
       ctx.fillStyle = '#8cc46a'; ctx.fillRect(0, H - 4, W, 4);
       items.forEach(it => drawIcon(ctx, it.k[0], Math.round(it.x), Math.round(it.y), ICON_COL[it.k[0]]));
-      const closed = ((t / 1000) % 3.1) < 0.12, sad = t < sadUntil;
-      drawPet(ctx, info.id, info.s, Math.round(px), PY - (sad ? 0 : (Math.abs(Math.sin(t / 200)) > .7 ? 1 : 0)), { closed, sad });
+      const stun = t < stunUntil, big = t < bigUntil;
+      const closed = stun || ((t / 1000) % 3.1) < 0.12, sad = stun || t < sadUntil;
+      const hop = sad ? 0 : (Math.abs(Math.sin(t / 200)) > .7 ? 1 : 0);
+      if(big){
+        ctx.save(); ctx.translate(Math.round(px) - 8, PY - 16 - hop); ctx.scale(2, 2);
+        drawPet(ctx, info.id, info.s, 0, 0, { closed, sad }); ctx.restore();
+      } else drawPet(ctx, info.id, info.s, Math.round(px), PY - hop, { closed, sad });
+      if(t < magUntil){ ctx.strokeStyle = (t / 120) % 2 < 1 ? '#e5484d' : '#93c5fd'; ctx.strokeRect(Math.round(px) - (big ? 9 : 1) + .5, PY - (big ? 17 : 1) + .5, big ? 33 : 17, big ? 33 : 17); }
       ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center';
-      pops.forEach(pp => { ctx.fillStyle = pp.v > 0 ? '#c98a12' : '#c2334d'; ctx.fillText((pp.v > 0 ? '+' : '') + pp.v, pp.x, pp.y); });
+      if(stun){ ctx.fillStyle = '#7c3aed'; ctx.fillText('💫', px + 8 + Math.sin(t / 120) * 4, PY - (big ? 18 : 3)); }
+      pops.forEach(pp => { ctx.fillStyle = pp.c || (pp.v > 0 ? '#c98a12' : '#c2334d'); ctx.fillText(pp.txt || ((pp.v > 0 ? '+' : '') + pp.v), pp.x, pp.y); });
     }
     function step(t){
       if(over) return;
       if(!start){ start = t; last = t; nextSpawn = t + 300; }
       const dt = Math.min(0.05, (t - last) / 1000), el = t - start, prog = Math.min(1, el / M.ms);
+      if(!feverOn && el >= dur - M.feverMs) feverOn = true;   // 한 번 시작된 피버는 끝까지 (피버 중 ⏰을 받아도 이어짐)
+      const fever = feverOn && el < dur;
       last = t;
-      if(target != null){ const d = target - px; px += Math.sign(d) * Math.min(Math.abs(d), 110 * dt); }
-      else if(keyDir) px += keyDir * 90 * dt;
-      px = Math.max(-2, Math.min(W - 14, px));
-      if(t >= nextSpawn && el < M.ms - 600){
-        const k = pickKind();
-        items.push({ k, x: 2 + Math.random() * (W - 12), y: -8, vy: 34 + prog * 42 + Math.random() * 10 });
-        nextSpawn = t + 650 - prog * 330;
+      const big = t < bigUntil, stun = t < stunUntil;
+      if(!stun){
+        if(target != null){ const d = target - px; px += Math.sign(d) * Math.min(Math.abs(d), 110 * dt); }
+        else if(keyDir) px += keyDir * 90 * dt;
       }
-      items.forEach(it => { it.y += it.vy * dt; });
+      px = big ? Math.max(6, Math.min(W - 26, px)) : Math.max(-2, Math.min(W - 14, px));   // 커진 동안엔 큰 그림이 화면 밖으로 안 나가게
+      if(t >= nextSpawn && el < dur - 600){
+        const k = pickKind(fever, el);
+        items.push({ k, x: 2 + Math.random() * (W - 12), y: -8, vy: (fever ? 70 : 30 + prog * 60) + Math.random() * 12 });
+        nextSpawn = t + (fever ? 150 : 700 - prog * 420);
+      }
+      const cx = px + 8;
+      items.forEach(it => {
+        it.y += it.vy * dt;
+        if(t < magUntil && it.k[1] > 0 && it.y > 10){ const d = cx - (it.x + 3); it.x += Math.sign(d) * Math.min(Math.abs(d), 70 * dt); }
+      });
+      // 받는 칸: 보통 펫 16칸, ⭐ 커지면 32칸
+      const hx0 = big ? px - 6 : px + 2, hx1 = big ? px + 22 : px + 14, hy0 = big ? PY - 15 : PY + 1;
       items = items.filter(it => {
-        if(it.y + 6 >= PY + 1 && it.y <= PY + 10 && it.x + 6 > px + 2 && it.x < px + 14){
-          score = Math.max(0, score + it.k[1]);
-          pops.push({ x: it.x + 3, y: PY - 2, v: it.k[1], until: t + 600 });
-          if(it.k[1] < 0) sadUntil = t + 700;
+        if(it.y + 6 >= hy0 && it.y <= PY + 10 && it.x + 6 > hx0 && it.x < hx1){
+          const nm = it.k[0], px0 = it.x + 3, py0 = (big ? PY - 18 : PY - 2);
+          if(nm === 'star'){ bigUntil = t + M.starMs; pops.push({ x: px0, y: py0, txt: '⭐ 커졌다!', c: '#b45309', until: t + 900 }); }
+          else if(nm === 'magnet'){ magUntil = t + M.magnetMs; pops.push({ x: px0, y: py0, txt: '🧲 자석!', c: '#be123c', until: t + 900 }); }
+          else if(nm === 'clock'){ clocks++; dur += M.clockMs; timeFlash = t + 900; pops.push({ x: px0, y: py0, txt: `⏰ +${M.clockMs / 1000}초`, c: '#1d4ed8', until: t + 900 }); }
+          else if(nm === 'bomb'){
+            if(big){ pops.push({ x: px0, y: py0, txt: '💥 튕겼다!', c: '#6b7280', until: t + 800 }); }   // 커진 동안엔 폭탄도 튕겨 냄
+            else { stunUntil = t + M.stunMs; combo = 0; sadUntil = t + M.stunMs; pops.push({ x: px0, y: py0, txt: '💣 기절!', c: '#7c3aed', until: t + 900 }); }
+          }
+          else if(it.k[1] < 0){ score = Math.max(0, score + it.k[1]); combo = 0; sadUntil = t + 700; pops.push({ x: px0, y: py0, v: it.k[1], until: t + 600 }); }
+          else {
+            combo++; maxCombo = Math.max(maxCombo, combo);
+            const mult = multOf(combo) * (fever ? 2 : 1), v = it.k[1] * mult;
+            score += v; if(fever) feverPts += v;
+            pops.push({ x: px0, y: py0, v, c: mult >= 4 ? '#db2777' : mult > 1 ? '#ea580c' : null, until: t + 600 });
+            if(combo === 5 || combo === 10 || (combo > 10 && combo % 10 === 0)) pops.push({ x: W / 2, y: 30, txt: `🔥 ${combo}콤보!`, c: '#ea580c', until: t + 900 });
+          }
           scEl.textContent = score + '점';
           return false;
         }
@@ -1866,9 +1930,10 @@ export function mountPets(deps, opts){
       });
       pops = pops.filter(pp => { pp.y -= 18 * dt; return t < pp.until; });
       ctx.clearRect(0, 0, W, H);
-      draw(t);
-      tmEl.textContent = Math.max(0, Math.ceil((M.ms - el) / 1000)) + '초';
-      if(el >= M.ms){ finish(); return; }
+      draw(t, fever);
+      hud(t, fever);
+      tmEl.textContent = Math.max(0, Math.ceil((dur - el) / 1000)) + '초';
+      if(el >= dur){ finish(); return; }
       raf = requestAnimationFrame(step);
     }
     async function finish(){
@@ -1882,7 +1947,7 @@ export function mountPets(deps, opts){
         best = cur.miniBest; reward = -1;
         if((z.n | 0) < M.plays){
           z.n = (z.n | 0) + 1;
-          reward = Math.min(M.coinMax, Math.floor(score / 2));
+          reward = Math.min(M.coinMax, Math.floor(score / M.coinDiv));
           cur.coins = (cur.coins || 0) + reward;
           cur.earned = (cur.earned || 0) + reward;
           const p = cur.owned && cur.owned[info.id];
@@ -1895,12 +1960,13 @@ export function mountPets(deps, opts){
       });
       if(miniBox !== box) return;
       const ok = res && res.committed;
-      endEl.innerHTML = `<p class="big">🎉 ${score}점!</p><p>${!ok ? '저장하지 못했어요' : reward >= 0 ? `🪙 +${reward} · 펫 기분 +${M.fun} · 오늘 보상 ${Math.max(0, playsLeft)}판 남음` : '오늘 보상은 다 받았어요 (최고 점수는 기록돼요)'}</p><p>🏆 최고 ${best}점${score >= best && score > 0 ? ' — 새 기록!' : ''}</p>
+      if(tipEl) tipEl.remove();
+      endEl.innerHTML = `<p class="big">🎉 ${score}점!</p><p>🔥 최고 ${maxCombo}콤보 · 🌟 피버로 ${feverPts}점</p><p>${!ok ? '저장하지 못했어요' : reward >= 0 ? `🪙 +${reward} · 펫 기분 +${M.fun} · 오늘 보상 ${Math.max(0, playsLeft)}판 남음` : '오늘 보상은 다 받았어요 (최고 점수는 기록돼요)'}</p><p>🏆 최고 ${best}점${score >= best && score > 0 ? ' — 새 기록!' : ''}</p>
         <div class="pt-acts"><button type="button" class="pt-act go" data-again="1">▶ 다시 하기</button><button type="button" class="pt-act" data-done="1">닫기</button></div>`;
       endEl.querySelector('[data-again]').onclick = () => { closeMini(); startMini(); };
       endEl.querySelector('[data-done]').onclick = closeMini;
     }
-    draw(0);
+    draw(0, false);
     raf = requestAnimationFrame(step);
   }
 
