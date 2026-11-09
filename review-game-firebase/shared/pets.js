@@ -70,6 +70,9 @@ export const PET_RULES = {
     starMs: 5000, magnetMs: 4000, stunMs: 2000, clockMs: 3000, clockMax: 2,   // ⭐ 커지기 · 🧲 자석 · 💣 기절 · ⏰ 시간 + (한 판 최대 clockMax번)
     // [종류, 점수, 나오는 비율] — 특별 아이템(star·magnet·bomb·clock)은 점수 대신 효과
     kinds: [['rice', 1, 52], ['heart', 2, 20], ['coin', 3, 9], ['poop', -2, 24], ['star', 0, 2.2], ['magnet', 0, 2.2], ['bomb', 0, 4], ['clock', 0, 1.6]] },
+  // 🃏 유물 짝 맞추기: 유물 pairs가지를 2장씩 → 똑같은 카드 짝 찾기 · sec초 · 처음 peekMs 동안 앞면 공개
+  //   점수: 짝 match점 + 연속 짝마다 streak점씩 더 + 다 찾으면 남은 1초당 timePt점 · 보상은 간식 받기와 하루 판수(mini.plays)를 함께 씀
+  memo: { pairs: 8, sec: 60, peekMs: 2500, flipMs: 700, match: 10, streak: 5, timePt: 1, coinMax: 20, coinDiv: 6, fun: 10, energy: 5 },
   // 🌟 오늘의 소원: 하루 한 가지(학생·날짜마다 정해짐) — 들어주면 코인 coin + 간식 snack개 + 데려가는 펫 기분 fun
   wish: { coin: 30, snack: 1, fun: 10 }
 };
@@ -81,7 +84,7 @@ export const WISHES = {
   clean:   { goal: 1,  icon: '🧹', label: '똥 치우기',        ask: '내 자리를 깨끗하게 치워 줄래?' },
   heart:   { goal: 2,  icon: '❤️', label: '친구에게 하트',     ask: '친구들이랑 친해지고 싶어! 친구 방 2곳에 하트를 보내 줘!' },
   quiz:    { goal: 1,  icon: '📝', label: '오늘의 퀴즈 끝내기', ask: '오늘의 퀴즈, 끝까지 같이 풀어 보자!' },
-  mini:    { goal: 1,  icon: '🎮', label: '간식 받기 놀이',    ask: '심심해~ 간식 받기 놀이 한 판만 하자!' },
+  mini:    { goal: 1,  icon: '🎮', label: '놀이 한 판',        ask: '심심해~ 놀이 한 판만 하자! (간식 받기나 유물 짝 맞추기)' },
   explore: { goal: 1,  icon: '🗺️', label: '탐험 보내기',      ask: '옛날 사람들이 살던 곳에 탐험을 떠나 보고 싶어!' }
 };
 
@@ -1234,6 +1237,8 @@ function addCss(){
   .pt-acts{ display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
   .pt-overlay button.pt-act{ width:auto; flex:0 0 auto; font-size:.86rem; font-weight:800; padding:7px 12px; border-radius:10px; border:2px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; transition:none; }
   .pt-overlay button.pt-act.go{ background:#6c8cf5; border-color:#6c8cf5; color:#fff; }
+  .pt-mini button.pt-act{ width:auto; flex:0 0 auto; font-size:.86rem; font-weight:800; padding:7px 12px; border-radius:10px; border:2px solid #d1d5db; background:#fff; color:#374151; cursor:pointer; transition:none; }
+  .pt-mini button.pt-act.go{ background:#6c8cf5; border-color:#6c8cf5; color:#fff; }   /* 미니게임 창은 펫 창 밖(body)에 붙어서 따로 지정 */
   .pt-overlay button.pt-act.gold{ background:#ffcf3f; border-color:#e0a920; color:#5a3b00; }
   .pt-overlay button.pt-act:disabled{ opacity:.45; cursor:default; }
   .pt-msg{ font-size:.82rem; color:#4b5563; min-height:1.1em; }
@@ -1295,6 +1300,17 @@ function addCss(){
   .pt-mini-hud .cb.on{ color:#ea580c; } .pt-mini-hud .cb.fv{ color:#db2777; animation:ptFever .5s infinite alternate; }
   .pt-mini-hud .tm.add{ color:#16a34a; }
   @keyframes ptFever{ from{ transform:scale(1); } to{ transform:scale(1.12); } }
+  .pt-memo-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  .pt-mc{ aspect-ratio:3/4; border:none; border-radius:10px; padding:3px; margin:0; cursor:pointer; background:linear-gradient(135deg,#7c5cff,#4f8cff); color:#fff; font-family:inherit; display:flex; align-items:center; justify-content:center; min-width:0; }
+  .pt-mc .f{ display:none; flex-direction:column; align-items:center; gap:2px; min-width:0; }
+  .pt-mc .b{ font-size:1.35rem; }
+  .pt-mc.up, .pt-mc.done{ background:#fff8e1; color:#3b2f1e; box-shadow:inset 0 0 0 2px #f6d77a; }
+  .pt-mc.up .f, .pt-mc.done .f{ display:flex; } .pt-mc.up .b, .pt-mc.done .b{ display:none; }
+  .pt-mc.done{ opacity:.5; cursor:default; }
+  .pt-mc.bad{ box-shadow:inset 0 0 0 3px #e5484d; }
+  .pt-mc .e{ font-size:1.3rem; line-height:1.1; } .pt-mc small{ font-size:.6rem; line-height:1.2; word-break:keep-all; overflow-wrap:anywhere; text-align:center; }
+  .pt-memo-msg{ min-height:3.9em; font-size:.78rem; color:#374151; margin:6px 0; line-height:1.4; }
+  .pt-mini-hud .pv{ width:36px; height:36px; display:inline-flex; } .pt-mini-hud .pv .pt-cv{ width:36px; height:36px; }
   .pt-mini-tip{ font-size:.75rem; color:#6b7280; margin-top:6px; line-height:1.45; }
   .pt-mini-x{ border:none; background:#f3f4f6; border-radius:999px; width:32px; height:32px; font-size:1rem; cursor:pointer; }
   .pt-mini canvas{ width:100%; height:auto; aspect-ratio:3/4; image-rendering:pixelated; border-radius:12px; touch-action:none; display:block; background:#bfe6ff; }
@@ -1802,7 +1818,7 @@ export function mountPets(deps, opts){
 
   // ── 🎮 미니게임: 간식 받기 ──
   function gameHtml(info, now){
-    const M = PET_RULES.mini, dk = dayKey(now);
+    const M = PET_RULES.mini, G = PET_RULES.memo, dk = dayKey(now);
     const used = data.mini && data.mini.k === dk ? (data.mini.n | 0) : 0;
     let why = '';
     if(!info) why = '펫이 있어야 놀 수 있어요';
@@ -1810,12 +1826,18 @@ export function mountPets(deps, opts){
       const c = careNow(data.owned[info.id], now);
       why = info.m === 'explore' ? '🗺️ 탐험 중이에요' : c.sick ? '🤒 아픈 펫은 쉬어야 해요' : info.m === 'sleep' ? '💤 자는 중이에요' : info.m === 'walk' ? '🦮 산책 중이에요' : c.energy < M.energy ? `⚡ 체력이 ${M.energy} 이상이어야 해요` : '';
     }
-    return `<div class="pt-sec"><h4>🎮 간식 받기</h4><div class="pt-mine"><div class="pt-mine-info">
+    return `<div class="pt-sec"><h4>🎮 놀이</h4>
+      <div class="pt-note">오늘 보상 <b>${Math.max(0, M.plays - used)} / ${M.plays}판</b> 남음 (두 놀이 합쳐서) · 한 판마다 펫 기분 +${M.fun} · 체력 −${M.energy}${used >= M.plays ? ' · 보상이 없어도 계속 놀 수 있어요' : ''}</div>
+      ${why ? `<div class="pt-status bad">${why}</div>` : ''}</div>
+    <div class="pt-sec"><h4>🍙 간식 받기</h4><div class="pt-mine"><div class="pt-mine-info">
       <div class="pt-note">${M.ms / 1000}초 동안 하늘에서 떨어지는 간식을 펫이 받아요! 🍙 +1 · ❤️ +2 · 🪙 +3 · 💩는 −2<br>🔥 연속으로 받으면 콤보 — 5콤보 ×2 · 10콤보 ×3 (💩·💣을 맞으면 끊겨요) · 점점 빨라지고, 🌟 마지막 ${M.feverMs / 1000}초는 피버 타임 ×2!<br>⭐ 잠깐 커지기 · 🧲 간식 끌어오기 · ⏰ 시간 +${M.clockMs / 1000}초 · 💣 맞으면 ${M.stunMs / 1000}초 기절<br>화면을 누른 채 좌우로 움직이거나 ← → 키로 펫을 움직여요.</div>
-      <div class="pt-note">오늘 보상 ${Math.max(0, M.plays - used)} / ${M.plays}판 남음 · 보상: 점수 ÷ ${M.coinDiv}만큼 코인(최대 🪙${M.coinMax}) + 펫 기분 +${M.fun} · 체력 −${M.energy}${used >= M.plays ? ' · 보상이 없어도 계속 놀 수 있어요' : ''}</div>
-      <div class="pt-note">🏆 내 최고 점수 <b>${data.miniBest | 0}점</b></div>
-      ${why ? `<div class="pt-status bad">${why}</div>` : ''}
-      <button type="button" class="pt-act go" data-mini="1" ${why ? 'disabled' : ''}>▶ 시작하기</button>
+      <div class="pt-note">보상: 점수 ÷ ${M.coinDiv}만큼 코인(최대 🪙${M.coinMax}) · 🏆 내 최고 <b>${data.miniBest | 0}점</b></div>
+      <button type="button" class="pt-act go" data-mini="1" ${why ? 'disabled' : ''}>▶ 간식 받기 시작</button>
+    </div></div></div>
+    <div class="pt-sec"><h4>🃏 유물 짝 맞추기</h4><div class="pt-mine"><div class="pt-mine-info">
+      <div class="pt-note">카드 ${G.pairs * 2}장 속에서 <b>똑같은 유물 카드 2장</b>을 찾아요. 처음 ${G.peekMs / 1000}초 동안 앞면을 보여 줘요!<br>짝마다 ${G.match}점 · 연속으로 맞히면 ${G.streak}점씩 더 · ${G.sec}초 안에 다 찾으면 남은 1초당 ${G.timePt}점 · 맞히면 그 유물 이야기가 나와요</div>
+      <div class="pt-note">보상: 점수 ÷ ${G.coinDiv}만큼 코인(최대 🪙${G.coinMax}) · 🏆 내 최고 <b>${data.memoBest | 0}점</b></div>
+      <button type="button" class="pt-act go" data-memo="1" ${why ? 'disabled' : ''}>▶ 짝 맞추기 시작</button>
     </div></div></div>`;
   }
   function closeMini(){ if(miniBox){ miniBox._stop && miniBox._stop(); miniBox.remove(); miniBox = null; } }
@@ -1968,6 +1990,108 @@ export function mountPets(deps, opts){
     }
     draw(0, false);
     raf = requestAnimationFrame(step);
+  }
+
+  // ── 🃏 유물 짝 맞추기 ── 유물 카드 pairs가지를 2장씩 섞어 놓고 똑같은 카드 2장을 찾는다 (머리 쓰는 퀴즈 말고 기억력 놀이)
+  function startMemo(){
+    const info = activeInfo();
+    if(!info || miniBox) return;
+    const M = PET_RULES.mini, G = PET_RULES.memo, c0 = careNow(data.owned[info.id], nowMs());
+    if(c0.sick || info.m === 'sleep' || info.m === 'walk' || info.m === 'explore' || c0.energy < M.energy) return;
+    const cards = [];
+    // 그림 문자가 겹치는 유물(예: 📜 여러 장)은 한 판에 하나만 — 그림만 보고도 짝이 헷갈리지 않게
+    const seenE = new Set();
+    shuffleArr(PLACES.flatMap(pl => pl.relics)).filter(r => !seenE.has(r.e) && seenE.add(r.e)).slice(0, G.pairs).forEach((r, i) => {
+      cards.push({ p: i, e: r.e, n: r.n, d: r.d });
+      cards.push({ p: i, e: r.e, n: r.n, d: r.d });
+    });
+    shuffleArr(cards);
+    miniBox = document.createElement('div');
+    miniBox.className = 'pt-mini';
+    miniBox.innerHTML = `<div class="pt-mini-panel"><div class="pt-mini-hud"><span class="pv"></span><b class="sc">0점</b><span class="cb">짝 0/${G.pairs}</span><span class="tm">${G.sec}초</span><button type="button" class="pt-mini-x">✕</button></div>
+      <div class="pt-memo-msg">👀 잘 봐 두세요! 곧 카드가 뒤집혀요</div>
+      <div class="pt-memo-grid">${cards.map((c, i) => `<button type="button" class="pt-mc up" data-i="${i}"><span class="f"><span class="e">${c.e}</span><small>${escapeHtml(c.n)}</small></span><span class="b">🐾</span></button>`).join('')}</div>
+      <div class="pt-mini-tip">똑같은 유물 카드 2장을 찾아요 · 연속으로 맞히면 보너스 · 다 찾으면 남은 시간도 점수!</div><div class="pt-mini-end"></div></div>`;
+    document.body.appendChild(miniBox);
+    const box = miniBox, grid = box.querySelector('.pt-memo-grid'), btns = [...grid.querySelectorAll('.pt-mc')];
+    const scEl = box.querySelector('.sc'), tmEl = box.querySelector('.tm'), cbEl = box.querySelector('.cb'), msgEl = box.querySelector('.pt-memo-msg'), endEl = box.querySelector('.pt-mini-end'), tipEl = box.querySelector('.pt-mini-tip');
+    const pv = petCanvas({ id: info.id, s: info.s, m: 'happy' }, 36);
+    box.querySelector('.pv').appendChild(pv);
+    box.querySelector('.pt-mini-x').onclick = closeMini;
+    let playing = false, over = false, open = [], matched = 0, score = 0, streak = 0, bestStreak = 0, t0 = 0, timer = 0, flipT = 0;
+    const peekT = setTimeout(() => {
+      if(over) return;
+      btns.forEach(b => b.classList.remove('up'));
+      playing = true; t0 = Date.now();
+      msgEl.textContent = '카드 두 장을 눌러 짝을 찾아요!';
+      timer = setInterval(tick, 200);
+    }, G.peekMs);
+    box._stop = () => { over = true; playing = false; clearInterval(timer); clearTimeout(peekT); clearTimeout(flipT); };
+    const leftMs = () => G.sec * 1000 - (Date.now() - t0);
+    function tick(){ const l = leftMs(); tmEl.textContent = Math.max(0, Math.ceil(l / 1000)) + '초'; if(l <= 0) finish(false); }
+    grid.addEventListener('click', (e) => {
+      const b = e.target.closest('.pt-mc');
+      if(!b || !playing || over || open.length >= 2 || b.classList.contains('up') || b.classList.contains('done')) return;
+      const i = +b.dataset.i;
+      b.classList.add('up'); open.push(i);
+      if(open.length < 2) return;
+      const [x, y] = open, A = cards[x], B = cards[y];
+      if(A.p === B.p){
+        streak++; bestStreak = Math.max(bestStreak, streak); matched++;
+        const add = G.match + (streak - 1) * G.streak;
+        score += add;
+        [x, y].forEach(k => { btns[k].classList.remove('up'); btns[k].classList.add('done'); });
+        open = [];
+        const r = A;
+        msgEl.innerHTML = `✨ +${add}점${streak > 1 ? ` (${streak}연속!)` : ''} · <b>${r.e} ${escapeHtml(r.n)}</b> — ${escapeHtml(r.d)}`;
+        jumpPetCanvas(pv, true);
+        if(matched >= G.pairs) finish(true);
+      } else {
+        streak = 0;
+        jumpPetCanvas(pv, false);
+        [x, y].forEach(k => btns[k].classList.add('bad'));
+        msgEl.textContent = '앗, 짝이 아니에요! 자리를 기억해 두세요';
+        flipT = setTimeout(() => { [x, y].forEach(k => btns[k].classList.remove('up', 'bad')); open = []; }, G.flipMs);
+      }
+      scEl.textContent = score + '점';
+      cbEl.textContent = `짝 ${matched}/${G.pairs}`;
+    });
+    async function finish(all){
+      if(over) return;
+      const left = Math.max(0, Math.ceil(leftMs() / 1000));
+      box._stop();
+      const bonus = all ? left * G.timePt : 0;
+      score += bonus;
+      scEl.textContent = score + '점';
+      btns.forEach(b => { if(!b.classList.contains('done')) b.classList.add('up'); });
+      if(tipEl) tipEl.remove();
+      endEl.innerHTML = '<p>점수 계산 중…</p>';
+      let reward = -1, best = 0, playsLeft = 0;
+      const res = await tx((cur, now) => {
+        const dk = dayKey(now);
+        const z = cur.mini && cur.mini.k === dk ? cur.mini : { k: dk, n: 0 };
+        cur.memoBest = Math.max(cur.memoBest | 0, score);
+        best = cur.memoBest; reward = -1;
+        if((z.n | 0) < M.plays){
+          z.n = (z.n | 0) + 1;
+          reward = Math.min(G.coinMax, Math.floor(score / G.coinDiv));
+          cur.coins = (cur.coins || 0) + reward;
+          cur.earned = (cur.earned || 0) + reward;
+          const p = cur.owned && cur.owned[info.id];
+          if(p){ const c = careNow(p, now); c.fun = clamp(c.fun + G.fun); c.energy = clamp(c.energy - G.energy); cur.owned[info.id] = storeCare(c, now); }
+        }
+        playsLeft = M.plays - z.n;
+        cur.mini = z;
+        wishBump(cur, now, 'mini');
+        return cur;
+      });
+      if(miniBox !== box) return;
+      const ok = res && res.committed;
+      endEl.innerHTML = `<p class="big">${all ? '🎉' : '⏰'} ${score}점!</p><p>${all ? `🃏 모두 찾았어요! 남은 ${left}초 → +${bonus}점` : `시간 끝! ${matched} / ${G.pairs}쌍 찾았어요`} · 🔥 최고 ${bestStreak}연속</p><p>${!ok ? '저장하지 못했어요' : reward >= 0 ? `🪙 +${reward} · 펫 기분 +${G.fun} · 오늘 보상 ${Math.max(0, playsLeft)}판 남음` : '오늘 보상은 다 받았어요 (최고 점수는 기록돼요)'}</p><p>🏆 최고 ${best}점${score >= best && score > 0 ? ' — 새 기록!' : ''}</p>
+        <div class="pt-acts"><button type="button" class="pt-act go" data-again="1">▶ 다시 하기</button><button type="button" class="pt-act" data-done="1">닫기</button></div>`;
+      endEl.querySelector('[data-again]').onclick = () => { closeMini(); startMemo(); };
+      endEl.querySelector('[data-done]').onclick = closeMini;
+    }
   }
 
   function render(){
@@ -2502,6 +2626,7 @@ export function mountPets(deps, opts){
       if(b.dataset.xsel){ xSel = b.dataset.xsel; render(); return; }
       if(b.dataset.xok){ lastFind = null; render(); return; }
       if(b.dataset.mini){ startMini(); return; }
+      if(b.dataset.memo){ startMemo(); return; }
       if(b.dataset.act){ act(b.dataset.act); }
     });
     overlay.addEventListener('submit', (e) => {
