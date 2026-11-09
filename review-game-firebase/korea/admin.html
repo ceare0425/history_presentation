@@ -535,7 +535,7 @@ import {
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS,
   presenceRef, chatRef, isOffline, sweepOfflinePlayers, watchForUpdate, runTransaction
 } from '../shared/lib.js?v=20261012b';
-import { PET_INFO, PET_ORDER, PET_RULES, PLACES, MOOD_LABEL, careNow, moodOf, roomCozy, petCanvas, drawRoom, drawPet } from '../shared/pets.js?v=20261109b';
+import { PET_INFO, PET_ORDER, PET_RULES, PLACES, MOOD_LABEL, careNow, moodOf, roomCozy, petCanvas, drawRoom, drawPet, WISHES, dayKey } from '../shared/pets.js?v=20261109c';
 import { buildTitleBook, unitDrawersHtml, UNIT_DRAWER_CSS, RARITY } from '../shared/titles.js?v=20261022a';
 
 const ROOM = 'korea';
@@ -2156,7 +2156,9 @@ function renderPetsPane(d){
     ['키우는 펫', `${ids.length} / ${PET_ORDER.length}마리`],
     ['방 아늑함', '🛋️ ' + cozy],
     ['받은 하트', '❤️ ' + (d.hearts | 0)],
-    ['유물 도감', `${relicHave} / ${relicTotal}장` + (placeDone ? ` · 완성 ${placeDone}곳` : '')]
+    ['유물 도감', `${relicHave} / ${relicTotal}장` + (placeDone ? ` · 완성 ${placeDone}곳` : '')],
+    ['오늘의 소원', (() => { const w = d.wish; if(!w || w.k !== dayKey(now) || !WISHES[w.t]) return '아직 진행 없음'; const W = WISHES[w.t]; return `${W.icon} ${escapeHtml(W.label)} ${Math.min(w.n | 0, W.goal)}/${W.goal}` + (w.got ? ' ✅' : (w.n | 0) >= W.goal ? ' (선물 대기)' : ''); })()],
+    ['들어준 소원', '🌟 ' + (d.wishes | 0) + '번']
   ].map(([k, v]) => `<div class="stat-cell"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('') + '</div>';
   h += '<div class="pool-count"><b>🏠 꾸민 방</b> · 데리고 다니는 펫과 함께 (탐험 중이면 빈 방)</div><canvas class="pet-room" id="petRoomCv" width="64" height="40"></canvas>';
   h += `<div class="pool-count"><b>🐾 키우는 펫</b> ${ids.length}마리 · ⭐ 데리고 다니는 펫이 맨 앞</div>`;

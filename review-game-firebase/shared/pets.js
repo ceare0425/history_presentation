@@ -64,7 +64,20 @@ export const PET_RULES = {
     maxPets: 3   // 한꺼번에 탐험 보낼 수 있는 펫 수
   },
   // 🎮 간식 받기 미니게임: 30초, 하루 plays판까지 보상(점수/2 코인, 최대 coinMax)
-  mini: { ms: 30000, plays: 3, coinMax: 20, fun: 10, energy: 5 }
+  mini: { ms: 30000, plays: 3, coinMax: 20, fun: 10, energy: 5 },
+  // 🌟 오늘의 소원: 하루 한 가지(학생·날짜마다 정해짐) — 들어주면 코인 coin + 간식 snack개 + 데려가는 펫 기분 fun
+  wish: { coin: 30, snack: 1, fun: 10 }
+};
+// 🌟 펫이 말하는 소원 종류 — goal번 하면 이뤄짐 (어느 펫으로 해도 됨)
+export const WISHES = {
+  correct: { goal: 10, icon: '✏️', label: '문제 맞히기',      ask: '오늘 나랑 같이 문제 10개 맞혀 줄래?' },
+  walk:    { goal: 2,  icon: '🦮', label: '산책 가기',        ask: '밖에 나가고 싶어! 산책 2번 가자!' },
+  feed:    { goal: 2,  icon: '🍙', label: '밥·간식 주기',     ask: '배고파~ 맛있는 거 2번 먹고 싶어! (밥이나 간식)' },
+  clean:   { goal: 1,  icon: '🧹', label: '똥 치우기',        ask: '내 자리를 깨끗하게 치워 줄래?' },
+  heart:   { goal: 2,  icon: '❤️', label: '친구에게 하트',     ask: '친구들이랑 친해지고 싶어! 친구 방 2곳에 하트를 보내 줘!' },
+  quiz:    { goal: 1,  icon: '📝', label: '오늘의 퀴즈 끝내기', ask: '오늘의 퀴즈, 끝까지 같이 풀어 보자!' },
+  mini:    { goal: 1,  icon: '🎮', label: '간식 받기 놀이',    ask: '심심해~ 간식 받기 놀이 한 판만 하자!' },
+  explore: { goal: 1,  icon: '🗺️', label: '탐험 보내기',      ask: '옛날 사람들이 살던 곳에 탐험을 떠나 보고 싶어!' }
 };
 
 // ── 도트 데이터 (16×16, 8글자 줄은 좌우 대칭으로 펼침) ───────────
@@ -1182,6 +1195,15 @@ function addCss(){
   .pt-poops{ grid-column:2 / 4; font-size:.86rem; letter-spacing:1px; }
   .pt-status{ font-size:.84rem; font-weight:800; color:#8a5a00; background:#fff3d6; border-radius:8px; padding:5px 9px; }
   .pt-status.bad{ color:#b42318; background:#fde8e7; }
+  .pt-wish{ background:#fff8e1; border:2px solid #f6d77a; border-radius:12px; padding:10px 12px; }
+  .pt-wish.done{ background:#eafaf0; border-color:#8fd6a6; }
+  .pt-wish.got{ background:#f4f6fa; border-color:#d9dee8; }
+  .pt-wish-say{ font-size:.92rem; margin:2px 0 8px; line-height:1.45; }
+  .pt-wish .pt-act{ margin-top:8px; }
+  .pt-wish-goal{ display:flex; justify-content:space-between; gap:8px; font-size:.82rem; font-weight:700; margin-bottom:4px; }
+  .pt-wish-track{ height:10px; background:#00000014; border-radius:6px; overflow:hidden; }
+  .pt-wish-track b{ display:block; height:100%; background:linear-gradient(90deg,#f6b73c,#f08a24); border-radius:6px; }
+  .pt-wish.done .pt-wish-track b{ background:#3fb36a; }
   .pt-overlay button.pt-act.warn{ background:#e5484d; border-color:#e5484d; color:#fff; }
   .pt-overlay button.pt-act small{ font-weight:700; opacity:.8; }
   .pt-sub-h{ margin:10px 0 6px !important; font-size:.92rem !important; }
@@ -1298,6 +1320,7 @@ export function mountPets(deps, opts){
   let friends = null, friendsBusy = false, friendSel = null, friendCv = null, friendCls = null;
   let shopPrev = null, prevCv = null;   // 상점 꾸미기 미리보기 {kind, id}
   let qbank = {}, quizBusy = false, quizState = null, quizFb = null;   // 📝 오늘의 퀴즈: 문제 은행 캐시 · 오늘 문제 {day, qs, err} · 방금 답한 결과
+  let wishToasted = null;              // 🌟 소원이 이뤄졌다는 알림을 띄운 날
   let lastFind = null, xToasted = {}, xSel = null;   // 🗺️ 방금 받은 탐험 선물 목록 · 돌아옴 알림을 띄운 탐험 · 탐험 보낼 펫
   let miniBox = null;                   // 🎮 미니게임 창
   let view = 'all';         // 'all' 펫+상점 한 창 · 'shop' 상점만 · 'care' 펫 키우기만
@@ -1444,6 +1467,46 @@ export function mountPets(deps, opts){
   }
 
   // 지갑·펫 기록 한 번에 고치기 (여러 탭에서 동시에 풀어도 코인이 꼬이지 않게 트랜잭션으로)
+  // ── 🌟 오늘의 소원 ── 종류는 날짜+학생으로 정해져(새로고침해도 그대로), 진행은 각 행동의 트랜잭션 안에서 함께 저장한다
+  function wishKind(dk){
+    const ks = Object.keys(WISHES), str = dk + '|' + (ident ? ident.cls + '|' + ident.name : '');
+    let h = 7;
+    for(let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+    return ks[h % ks.length];
+  }
+  function wishOf(d, now){
+    const dk = dayKey(now), w = d && d.wish && d.wish.k === dk && WISHES[d.wish.t] ? d.wish : null;
+    return { k: dk, t: w ? w.t : wishKind(dk), n: w ? (w.n | 0) : 0, got: !!(w && w.got) };
+  }
+  // 소원 진행 +n (펫이 있을 때만) — 바뀌었으면 true
+  function wishBump(cur, now, t, n){
+    if(!cur || !cur.owned || !Object.keys(cur.owned).length) return false;
+    const w = wishOf(cur, now), W = WISHES[w.t];
+    if(w.t !== t || w.got || w.n >= W.goal) return false;
+    w.n = Math.min(W.goal, w.n + (n || 1));
+    cur.wish = w;
+    return true;
+  }
+  function checkWish(){
+    const w = data.wish;
+    if(!w || !WISHES[w.t] || w.got || (w.n | 0) < WISHES[w.t].goal || w.k !== dayKey(nowMs()) || wishToasted === w.k) return;
+    wishToasted = w.k;
+    toast('🌟 펫의 소원을 들어줬어요!', '🐾 펫 키우기 → 돌보기에서 선물을 받아요');
+  }
+  function wishHtml(info, now){
+    const R = PET_RULES.wish, w = wishOf(data, now), W = WISHES[w.t], done = w.n >= W.goal;
+    const nm = PET_INFO[info.id] ? PET_INFO[info.id].names[info.s] : '펫';
+    const cnt = data.wishes | 0;
+    return `<div class="pt-sec pt-wish ${w.got ? 'got' : done ? 'done' : ''}"><h4>🌟 오늘의 소원</h4>
+      <div class="pt-wish-say"><b>${escapeHtml(nm)}</b>: “${escapeHtml(W.ask)}”</div>
+      <div class="pt-wish-goal"><span>${W.icon} ${escapeHtml(W.label)}</span><b>${w.n} / ${W.goal}</b></div>
+      <div class="pt-wish-track"><b style="width:${Math.min(100, w.n / W.goal * 100)}%"></b></div>
+      ${w.got ? `<div class="pt-note">✅ 오늘 소원을 들어줬어요! 내일 새 소원을 말해 줄 거예요 · 지금까지 들어준 소원 ${cnt}번</div>`
+        : `<button type="button" class="pt-act ${done ? 'go' : ''}" data-act="wish" ${done ? '' : 'disabled'}>${done ? '🎁 소원 선물 받기' : '🎁 선물'} <small>🪙${R.coin} · 🍪${R.snack} · 기분+${R.fun}</small></button>
+           <div class="pt-note">소원은 하루에 하나, 날마다 바뀌어요 · 지금까지 들어준 소원 ${cnt}번</div>`}
+    </div>`;
+  }
+
   function tx(fn){
     if(!ident) return Promise.resolve(null);
     return runTransaction(ref(db, base()), (cur) => fn(cur || {}, nowMs())).catch(() => null);
@@ -1827,6 +1890,7 @@ export function mountPets(deps, opts){
         }
         playsLeft = M.plays - z.n;
         cur.mini = z;
+        wishBump(cur, now, 'mini');
         return cur;
       });
       if(miniBox !== box) return;
@@ -1889,6 +1953,7 @@ export function mountPets(deps, opts){
         : c.energy < 20 ? '😪 지쳤어요. 재워 주세요'
         : c.fun < 25 ? '😞 심심해요. 산책을 가거나 같이 문제를 풀어요' : '';
       const hint = c.stage < 2 && !ready ? (c.exp >= (nextNeed || 0) && c.stage === 1 ? '😊 신남 상태가 되면 진화할 수 있어요 (배부름·기분·체력 60 이상, 똥 없음, 안 아픔)' : `데려가서 문제를 ${nextNeed - c.exp}개 더 맞히면 진화할 수 있어요`) : '';
+      h += wishHtml(info, now);
       h += `<div class="pt-sec"><h4>🐾 데려가는 펫</h4><div class="pt-mine"><div class="pt-big" data-slot="big"></div><div class="pt-mine-info">
         <div class="pt-mine-name">${escapeHtml(inf.names[c.stage])}<small>${c.stage + 1}단계 · ${MOOD_LABEL[info.m]}</small></div>
         ${(() => { const ab = petAbility(info.id, c.stage); return ab ? `<div class="pt-skill">${ab.icon} <b>${escapeHtml(ab.name)}</b> ${escapeHtml(ab.text)}<small>${c.sick ? '🤒 아픈 동안은 능력을 못 써요' : '수업 게임 아이템전에서 발휘돼요'}${c.stage < 2 ? ` · 진화하면 ${escapeHtml(abilityLadder(info.id))}` : ''}</small></div>` : ''; })()}
@@ -2104,6 +2169,7 @@ export function mountPets(deps, opts){
         fresh = res.snapshot.val() || {};
         if(friends){ const i = friends.findIndex(x => x.name === fname); if(i >= 0) friends[i] = friendEntry(fname, fresh, nowMs(), fcls); }
         setMsg(`❤️ ${fname}에게 하트를 보냈어요!`);
+        tx((cur, now) => wishBump(cur, now, 'heart') ? cur : undefined);
       } else setMsg('오늘은 이미 하트를 줬어요');
       return;
     }
@@ -2130,6 +2196,7 @@ export function mountPets(deps, opts){
           cur.coins += R.bonus; cur.earned = (cur.earned || 0) + R.bonus;
           cur.items = cur.items || {}; cur.items.snack = (cur.items.snack | 0) + 1;
         }
+        if(z.i >= (z.ids || []).length) wishBump(cur, now, 'quiz');
         return cur;
       });
       if(res && res.committed){
@@ -2199,9 +2266,26 @@ export function mountPets(deps, opts){
         cur.owned[pid] = storeCare(c, now);
         T[pid] = { place, long: lg === '1', at: now, until: now + L.ms };
         cur.explores = T; cur.explore = null;
+        wishBump(cur, now, 'explore');
         return cur;
       });
       if(res && res.committed){ lastFind = null; xSel = null; const nm = petName(pid); toast(`🗺️ ${josa(nm, '이', '가')} ${PLACE_BY[place].n}(으)로 탐험 출발!`, `${L.label} 뒤 돌아와요`); }
+      return;
+    }
+    if(kind === 'wish'){
+      const R = PET_RULES.wish;
+      const res = await tx((cur, now) => {
+        const w = wishOf(cur, now);
+        if(w.got || w.n < WISHES[w.t].goal) return;
+        w.got = true; cur.wish = w;
+        cur.wishes = (cur.wishes | 0) + 1;
+        cur.coins = (cur.coins || 0) + R.coin; cur.earned = (cur.earned || 0) + R.coin;
+        cur.items = cur.items || {}; cur.items.snack = (cur.items.snack | 0) + R.snack;
+        const p = cur.active && cur.owned && cur.owned[cur.active];
+        if(p){ const c = careNow(p, now); c.fun = clamp(c.fun + R.fun); cur.owned[cur.active] = storeCare(c, now); }
+        return cur;
+      });
+      if(res && res.committed){ setMsg('🌟 소원을 들어줘서 고맙대요!'); toast('🌟 소원 선물을 받았어요!', `🪙 +${R.coin} · 🍪 간식 ${R.snack}개 · 펫 기분 +${R.fun}`); }
       return;
     }
     const aid = data.active;
@@ -2250,6 +2334,7 @@ export function mountPets(deps, opts){
         if(kind === 'rice') c.poop = Math.min(PET_RULES.poopMax, c.poop + 1);
         if(kind === 'med'){ c.sick = false; c.fun = clamp(c.fun + 10); }
         cur.owned[aid] = storeCare(c, now);
+        if(kind !== 'med') wishBump(cur, now, 'feed');
         return cur;
       });
       if(res && res.committed) setMsg(kind === 'rice' ? '🍙 냠냠! 배부름이 올랐어요 · 먹었더니 똥을 쌌어요 💩' : kind === 'snack' ? '🍪 맛있다! 기분이 올랐어요' : '💊 약을 먹고 다 나았어요!');
@@ -2262,6 +2347,7 @@ export function mountPets(deps, opts){
         if(!c.poop || moodOf(c, now) === 'walk') return;
         c.poop = 0; c.poopT = now; c.fun = clamp(c.fun + 3);
         cur.owned[aid] = storeCare(c, now);
+        wishBump(cur, now, 'clean');
         return cur;
       });
       if(res && res.committed) setMsg('🧹 싹싹! 깨끗해졌어요 ✨');
@@ -2281,6 +2367,7 @@ export function mountPets(deps, opts){
         cur.owned[aid] = storeCare(c, now);
         cur.coins = (cur.coins || 0) + found;
         cur.earned = (cur.earned || 0) + found;
+        wishBump(cur, now, 'walk');
         return cur;
       });
       if(res && res.committed){
@@ -2379,7 +2466,7 @@ export function mountPets(deps, opts){
       name = String(name || '').trim().slice(0, 20);
       if(ident && cls && name && ident.cls === String(cls) && ident.name === name) return;
       if(unsub){ unsub(); unsub = null; }
-      data = {}; loaded = false; lastSig = null; ext = null; readyToasted = {}; quizState = null; quizFb = null; lastFind = null; xToasted = {}; xSel = null;
+      data = {}; loaded = false; lastSig = null; ext = null; readyToasted = {}; quizState = null; quizFb = null; lastFind = null; xToasted = {}; xSel = null; wishToasted = null;
       ident = (cls && name) ? { cls: String(cls), name } : null;
       updateButtons();
       sync(true);
@@ -2393,6 +2480,7 @@ export function mountPets(deps, opts){
         showGifts();
         showHearts();
         checkExploreBack();
+        checkWish();
         sync();
         updateButtons();
         checkReady();
@@ -2419,6 +2507,7 @@ export function mountPets(deps, opts){
           c.energy = clamp(c.energy - PET_RULES.energyPerCorrect);
           cur.owned[cur.active] = storeCare(c, now);
         }
+        wishBump(cur, now, 'correct');
         return cur;
       });
       avatars.forEach(a => {
