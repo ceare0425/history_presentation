@@ -123,6 +123,20 @@
   .tt-sec{ margin-bottom:16px; }
   .tt-sec h4{ margin:0 0 4px; font-size:.92rem; color:var(--sky1); }
   .tt-note{ font-size:.76rem; color:var(--sub); margin-bottom:6px; }
+  .pet-room{ width:320px; max-width:100%; height:auto; aspect-ratio:64/40; image-rendering:pixelated; border-radius:8px; display:block; margin:6px 0 14px; }
+  .pet-own{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; margin:6px 0 14px; }
+  .pet-card{ display:flex; gap:10px; align-items:flex-start; border:1px solid var(--line); border-radius:10px; padding:10px; }
+  .pet-card.on{ border-color:var(--sky1); background:#f4f7fd; }
+  .pet-card canvas{ width:64px; height:64px; image-rendering:pixelated; flex-shrink:0; }
+  .pet-card .pinfo{ flex:1; min-width:0; }
+  .pet-card .pn{ font-weight:800; font-size:.9rem; }
+  .pet-card .pn small{ font-weight:600; color:var(--sub); font-size:.7rem; margin-left:4px; }
+  .pet-card .pm{ font-size:.74rem; color:var(--sub); margin:2px 0 5px; }
+  .pet-bar{ display:flex; align-items:center; gap:6px; font-size:.7rem; color:var(--sub); margin-top:2px; }
+  .pet-bar .bl{ width:52px; flex-shrink:0; white-space:nowrap; }
+  .pet-bar i{ flex:1; height:6px; background:#e6e9f0; border-radius:4px; overflow:hidden; }
+  .pet-bar i b{ display:block; height:100%; border-radius:4px; }
+  .pet-bar .bv{ width:30px; text-align:right; flex-shrink:0; white-space:nowrap; }
   .tt-unit{ padding:6px 0; border-bottom:1px dashed var(--line); }
   .tt-drawer > summary.tt-chap{ margin:0; padding:6px 10px; }
   .tt-chap{ margin:12px 0 2px; padding:3px 9px; border-radius:7px; background:rgba(127,127,127,.13); font-size:.8rem; font-weight:800; }
@@ -488,6 +502,7 @@
     <div class="modal-tabs" id="soloModalTabs">
       <button type="button" class="modal-tab active" data-tab="stats">📊 누적 현황</button>
       <button type="button" class="modal-tab" data-tab="titles">🏅 칭호 도감</button>
+      <button type="button" class="modal-tab" data-tab="pets">🐾 펫</button>
     </div>
     <div id="soloModalStatsPane">
       <div class="stat-grid" id="soloModalStats"></div>
@@ -504,6 +519,9 @@
     <div id="soloModalTitlesPane" class="hidden">
       <div id="soloModalTitlesBody">불러오는 중…</div>
     </div>
+    <div id="soloModalPetsPane" class="hidden">
+      <div id="soloModalPetsBody">불러오는 중…</div>
+    </div>
   </div>
 </div>
 
@@ -517,7 +535,7 @@ import {
   teamInfo, teamStandings, activeBonus, TEAM_OPTIONS, ITEMS,
   presenceRef, chatRef, isOffline, sweepOfflinePlayers, watchForUpdate, runTransaction
 } from '../shared/lib.js?v=20261012b';
-import { PET_INFO } from '../shared/pets.js?v=20261109b';
+import { PET_INFO, PET_ORDER, PET_RULES, PLACES, MOOD_LABEL, careNow, moodOf, roomCozy, petCanvas, drawRoom, drawPet } from '../shared/pets.js?v=20261109b';
 import { buildTitleBook, unitDrawersHtml, UNIT_DRAWER_CSS, RARITY } from '../shared/titles.js?v=20261022a';
 
 const ROOM = 'world';
@@ -2051,7 +2069,116 @@ el('soloModalTabs').addEventListener('click', (ev)=>{
   const tab = btn.dataset.tab;
   el('soloModalStatsPane').classList.toggle('hidden', tab !== 'stats');
   el('soloModalTitlesPane').classList.toggle('hidden', tab !== 'titles');
+  el('soloModalPetsPane').classList.toggle('hidden', tab !== 'pets');
+  if(tab === 'pets') loadAndRenderPetsPane(true); // 펫 상태는 시간에 따라 바뀌므로 탭을 열 때마다 새로 읽는다
 });
+
+// ── 🐾 펫 탭 (pets/<학년-반>/<이름>, 학생 화면 shared/pets.js와 같은 계산으로 지금 상태를 보여준다) ──
+let soloPetsLoadedKey = null;
+function petBarHtml(label, v, color){
+  v = Math.max(0, Math.min(100, v || 0));
+  return `<div class="pet-bar"><span class="bl">${label}</span><i><b style="width:${v}%; background:${color};"></b></i><span class="bv">${Math.round(v)}</span></div>`;
+}
+function petLeftLabel(ms){
+  const m = Math.max(0, Math.ceil(ms / 60000));
+  return m >= 60 ? `${Math.floor(m / 60)}시간 ${m % 60}분` : `${m}분`;
+}
+// 학생 화면과 같은 규칙: explores/{펫id} + 예전 한 마리 기록 explore
+function petTripsOf(d){
+  const t = Object.assign({}, (d && d.explores) || {});
+  const x = d && d.explore;
+  if(x && x.place && x.pid && !t[x.pid]) t[x.pid] = x;
+  Object.keys(t).forEach(k => { if(!t[k] || !t[k].place) delete t[k]; });
+  return t;
+}
+function renderPetsPane(d){
+  const box = el('soloModalPetsBody');
+  if(!d){ box.innerHTML = '<div class="unit-acc-row muted">아직 펫 기록이 없어요. (펫 화면에 들어간 적도, 코인을 받은 적도 없는 학생)</div>'; return; }
+  const now = serverNow();
+  const owned = d.owned || {};
+  const cozy = roomCozy(d.room);
+  const ids = PET_ORDER.filter(id => owned[id]);
+  const trips = petTripsOf(d);
+  const away = (id) => !!(trips[id] && trips[id].until > now);
+  const rel = d.relics || {};
+  const relicTotal = PLACES.reduce((a, pl) => a + pl.relics.length, 0);
+  const relicHave = PLACES.reduce((a, pl) => a + pl.relics.filter((_, j) => (rel[pl.id + '_' + j] | 0) > 0).length, 0);
+  const placeDone = PLACES.filter(pl => (d.relicDone || {})[pl.id]).length;
+  let h = '<div class="stat-grid">' + [
+    ['보유 코인', '🪙 ' + (d.coins || 0).toLocaleString()],
+    ['지금까지 모은 코인', (d.earned || 0).toLocaleString()],
+    ['키우는 펫', `${ids.length} / ${PET_ORDER.length}마리`],
+    ['방 아늑함', '🛋️ ' + cozy],
+    ['받은 하트', '❤️ ' + (d.hearts | 0)],
+    ['유물 도감', `${relicHave} / ${relicTotal}장` + (placeDone ? ` · 완성 ${placeDone}곳` : '')]
+  ].map(([k, v]) => `<div class="stat-cell"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('') + '</div>';
+  h += '<div class="pool-count"><b>🏠 꾸민 방</b> · 데리고 다니는 펫과 함께 (탐험 중이면 빈 방)</div><canvas class="pet-room" id="petRoomCv" width="64" height="40"></canvas>';
+  h += `<div class="pool-count"><b>🐾 키우는 펫</b> ${ids.length}마리 · ⭐ 데리고 다니는 펫이 맨 앞</div>`;
+  if(!ids.length){
+    h += '<div class="unit-acc-row muted">아직 펫을 사지 않았어요.</div>';
+  }else{
+    if(d.active && ids.includes(d.active)){ ids.splice(ids.indexOf(d.active), 1); ids.unshift(d.active); }
+    h += '<div class="pet-own">' + ids.map(id => {
+      const info = PET_INFO[id];
+      const c = careNow(owned[id], now, cozy);
+      const trip = away(id) ? trips[id] : null;
+      const m = trip ? 'explore' : moodOf(c, now);
+      const next = c.stage < 2 ? PET_RULES.evolve[c.stage] : null;
+      const pl = trip ? PLACES.find(p => p.id === trip.place) : null;
+      let state = MOOD_LABEL[m] || m;
+      if(trip) state += ` · ${pl ? pl.e + ' ' + escapeHtml(pl.n) + ' ' : ''}(${petLeftLabel(trip.until - now)} 뒤 돌아옴)`;
+      if(c.poop) state += ` · 💩${c.poop}`;
+      return `<div class="pet-card${id === d.active ? ' on' : ''}" data-pet-id="${id}">
+        <span class="pcv"></span>
+        <div class="pinfo">
+          <div class="pn">${id === d.active ? '⭐ ' : ''}${escapeHtml(info.names[c.stage] || info.name)}<small>${[info.names[c.stage] === info.name ? '' : escapeHtml(info.name), info.rare ? '✨희귀' : '', (c.stage + 1) + '단계'].filter(Boolean).join(' · ')}</small></div>
+          <div class="pm">${state}</div>
+          ${petBarHtml('🍙 배', c.food, '#f2a43a')}
+          ${petBarHtml('🎈 기분', c.fun, '#e86a92')}
+          ${petBarHtml('⚡ 힘', c.energy, '#4fa3e0')}
+          <div class="pet-bar"><span class="bl">✨ 경험</span><i><b style="width:${next ? Math.min(100, c.exp / next * 100) : 100}%; background:#7e5bd6;"></b></i><span class="bv" style="width:auto;">${Math.round(c.exp)}${next ? '/' + next : ''}</span></div>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+  box.innerHTML = h;
+  // 펫 그림(학생 화면과 같은 움직이는 도트)
+  box.querySelectorAll('.pet-card').forEach(card => {
+    const id = card.dataset.petId;
+    const c = careNow(owned[id], now, cozy);
+    const cv = petCanvas({ id, s: c.stage, m: away(id) ? 'normal' : moodOf(c, now), p: c.poop }, 64);
+    card.querySelector('.pcv').replaceWith(cv);
+  });
+  // 방: 지금 시각의 창밖 + 데리고 다니는 펫
+  const roomCv = el('petRoomCv');
+  if(roomCv){
+    const ctx = roomCv.getContext('2d');
+    const nd = new Date(now);
+    drawRoom(ctx, d.room, 0, nd.getHours(), nd.getMinutes(), false);
+    const a = d.active;
+    if(a && owned[a] && PET_INFO[a] && !away(a)){
+      const c = careNow(owned[a], now, cozy), m = moodOf(c, now);
+      drawPet(ctx, a, c.stage, 22, 19, { closed: m === 'sleep', sad: m === 'hungry' || m === 'sad' || m === 'dirty' || m === 'sick' });
+    }
+  }
+}
+async function loadAndRenderPetsPane(force){
+  if(!soloModalSel) return;
+  const key = titlesKey(soloModalSel);
+  if(!force && soloPetsLoadedKey === key) return;
+  soloPetsLoadedKey = key;
+  const { name, cls } = soloModalSel;
+  if(!cls){ el('soloModalPetsBody').innerHTML = '<div class="unit-acc-row muted">학년·반 정보가 없는 기록이라 펫을 찾을 수 없어요.</div>'; return; }
+  try{
+    const snap = await get(ref(db, `pets/${cls}/${name}`));
+    if(titlesKey(soloModalSel) !== key) return;
+    renderPetsPane(snap.val());
+  }catch(err){
+    if(titlesKey(soloModalSel) !== key) return;
+    soloPetsLoadedKey = null;
+    el('soloModalPetsBody').innerHTML = `<div class="unit-acc-row muted">펫 정보를 불러오지 못했습니다: ${escapeHtml(err.message)}</div>`;
+  }
+}
 
 el('soloRecent').addEventListener('click', (ev)=>{
   const groupRow = ev.target.closest('.solo-group-row');
@@ -2069,10 +2196,14 @@ el('soloRecent').addEventListener('click', (ev)=>{
   el('soloModalTabs').querySelectorAll('.modal-tab').forEach(b=>b.classList.toggle('active', b.dataset.tab === 'stats'));
   el('soloModalStatsPane').classList.remove('hidden');
   el('soloModalTitlesPane').classList.add('hidden');
+  el('soloModalPetsPane').classList.add('hidden');
   el('soloModalTitlesBody').innerHTML = '불러오는 중…';
+  el('soloModalPetsBody').innerHTML = '불러오는 중…';
+  soloPetsLoadedKey = null;
   soloTitlesLoadedKey = null; // 내용을 '불러오는 중'으로 비웠으니 같은 학생을 다시 열어도 새로 불러온다
   renderSoloModal();
   loadAndRenderTitlesPane(); // 탭을 누르기 전에 미리 불러와 둔다(위 설명 참고)
+  loadAndRenderPetsPane();   // 펫 탭도 미리 불러와 둔다(팝업 출렁임 방지) — 탭을 누르면 최신 상태로 한 번 더 읽음
 });
 el('soloModalClose').onclick = closeSoloModal;
 el('soloModal').addEventListener('click', (ev)=>{ if(ev.target === el('soloModal')) closeSoloModal(); });
