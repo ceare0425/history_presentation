@@ -77,7 +77,7 @@ export const PET_RULES = {
   wish: { coin: 30, snack: 1, fun: 10 },
   // 📅 출석: 하루 한 번 도장 → coin 코인. 7일 연속마다(7·14·21·28…) 보너스 = weekCoin × (몇 주째, 최대 weekMax주) 코인 + 간식 weekSnack개
   //   하루라도 빠지면 연속은 1부터 다시(펫은 벌 받지 않음). 기념 가구는 DECOR의 att 조건(누적 출석 total · 최고 연속 best)
-  attend: { coin: 10, weekCoin: 30, weekMax: 4, weekSnack: 1 }
+  attend: { coin: 10, weekCoin: 30, weekMax: 4, weekSnack: 1, monthDays: 15 }   // monthDays: 한 달에 이만큼 이상 출석하면 그 달 '개근 액자'
 };
 // 🌟 펫이 말하는 소원 종류 — goal번 하면 이뤄짐 (어느 펫으로 해도 됨)
 export const WISHES = {
@@ -998,6 +998,37 @@ export const DECOR = {
       } } }
   }
 };
+// ── 📅 출석 기념 가구 더하기: 누적 30·50·100일 + 한 달에 monthDays일 이상 출석한 달마다 '○월 개근 액자'(12종) ──
+// 조건(att): total 누적 출석일 · best 최고 연속일 · mon 그 달(1~12)에 개근한 적 있음(att.mdone)
+Object.assign(DECOR.wall, {
+  stampframe: { name: '출석 스탬프 액자', att: { total: 30 }, price: 0, cozy: 3, draw(ctx){
+    const x = 45, y = 5; R(ctx, x, y, 13, 11, '#8b5a33'); R(ctx, x + 1, y + 1, 11, 9, '#fffaf0');
+    for(let r = 0; r < 2; r++) for(let c = 0; c < 3; c++){ R(ctx, x + 2 + c * 3, y + 2 + r * 3, 2, 2, '#e5484d'); P(ctx, x + 2 + c * 3, y + 2 + r * 3, '#ff9aa8'); }
+    R(ctx, x + 2, y + 8, 9, 1, '#cfc8b8'); } },
+  diploma: { name: '개근상 액자', att: { total: 100 }, price: 0, cozy: 5, draw(ctx, t){
+    const x = 44, y = 4; R(ctx, x, y, 15, 12, '#ffcf3f'); R(ctx, x, y, 15, 1, '#fff3b0'); R(ctx, x, y + 11, 15, 1, '#c98a12'); R(ctx, x + 1, y + 1, 13, 10, '#fffaf0');
+    R(ctx, x + 3, y + 3, 9, 1, '#9aa3b5'); R(ctx, x + 3, y + 5, 9, 1, '#9aa3b5'); R(ctx, x + 3, y + 7, 5, 1, '#9aa3b5');
+    R(ctx, x + 9, y + 7, 3, 3, '#e5484d'); P(ctx, x + 9, y + 10, '#c2334d'); P(ctx, x + 11, y + 10, '#c2334d');
+    if(Math.floor(t / 400) % 3 === 0) P(ctx, x + 14, y + 1, '#ffffff'); } }
+});
+Object.assign(DECOR.furn, {
+  medalstand: { name: '출석 메달 진열대', att: { total: 50 }, price: 0, cozy: 4, draw(ctx, t, x){
+    R(ctx, x + 2, 28, 12, 3, '#6b4423'); R(ctx, x + 3, 25, 10, 3, '#8b5a33'); R(ctx, x + 4, 19, 8, 6, '#2f3f6b'); R(ctx, x + 4, 19, 8, 1, '#c98a12');
+    R(ctx, x + 5, 20, 1, 4, '#e5484d'); R(ctx, x + 10, 20, 1, 4, '#e5484d'); R(ctx, x + 6, 22, 4, 4, '#ffcf3f'); R(ctx, x + 7, 23, 2, 2, '#fff3b0'); P(ctx, x + 7, 24, '#c98a12');
+    if(Math.floor(t / 500) % 2) P(ctx, x + 11, 21, '#ffffff'); } }
+});
+const MON_COLOR = ['#5b9bd5', '#e58aa0', '#7fc97f', '#f4a6c0', '#6fbf73', '#4fa3e0', '#f2a43a', '#3aa38f', '#d9a640', '#c2663a', '#8a6b4f', '#7e8fc0'];
+const DIGITS = ['111101101101111', '010110010010111', '111001111100111', '111001111001111', '101101111001001', '111100111001111', '111100111101111', '111001001001001', '111101111101111', '111101111001111'];
+for(let n = 1; n <= 12; n++){
+  DECOR.wall['att_m' + n] = { name: n + '월 개근 액자', att: { mon: n }, price: 0, cozy: 2, draw(ctx){
+    const x = 45, y = 5, acc = MON_COLOR[n - 1];
+    R(ctx, x, y, 13, 11, acc); R(ctx, x + 1, y + 1, 11, 9, '#fffaf0');
+    const s = String(n), w = s.length * 4 - 1;
+    for(let k = 0; k < s.length; k++){ const g = DIGITS[+s[k]]; for(let i = 0; i < 15; i++) if(g[i] === '1') P(ctx, x + 1 + Math.floor((11 - w) / 2) + k * 4 + i % 3, y + 2 + Math.floor(i / 3), '#2b2233'); }
+    R(ctx, x + 2, y + 8, 9, 1, acc); P(ctx, x + 10, y + 3, '#e5484d'); P(ctx, x + 11, y + 2, '#e5484d'); } };
+}
+// 출석 기념 가구 목록: [칸(wall·furn), id, 물건]
+const attItems = () => ['wall', 'furn'].flatMap(k => Object.entries(DECOR[k]).filter(([, it]) => it.att).map(([id, it]) => [k, id, it]));
 export const SLOT_LABEL = { paper: '🧱 벽지', floor: '🟫 바닥', window: '🪟 창문', wall: '🖼️ 벽 장식', left: '🪑 왼쪽 가구', right: '🪑 오른쪽 가구', rug: '🟥 러그', toy: '🧸 장난감' };
 export const SLOT_KIND = { paper: 'paper', floor: 'floor', window: 'window', wall: 'wall', left: 'furn', right: 'furn', rug: 'rug', toy: 'toy' };
 export const DEFAULT_ROOM = { paper: 'cream', floor: 'wood', window: 'basic', wall: 'none', left: 'none', right: 'none', rug: 'none', toy: 'none' };
@@ -1243,6 +1274,10 @@ function addCss(){
   .pt-att-d.on b{ position:absolute; inset:14%; border:3px solid #e5484d; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; transform:rotate(-12deg); background:#ffffffcc; }
   .pt-att-fur{ display:flex; justify-content:space-between; gap:8px; font-size:.84rem; font-weight:700; margin-top:6px; }
   .pt-attbar button{ width:100%; }
+  .pt-att-mons{ display:grid; grid-template-columns:repeat(6,1fr); gap:5px; }
+  .pt-att-m{ text-align:center; padding:5px 0; border-radius:8px; background:#f3f4f6; color:#9ca3af; font-size:.8rem; font-weight:800; }
+  .pt-att-m.on{ background:#fff1f1; color:#e5484d; outline:2px solid #e5484d; outline-offset:-2px; }
+  .pt-att-m.cur:not(.on){ outline:2px dashed #3b82f6; outline-offset:-2px; color:#3b82f6; }
   .pt-wish{ background:#fff8e1; border:2px solid #f6d77a; border-radius:12px; padding:10px 12px; }
   .pt-wish.done{ background:#eafaf0; border-color:#8fd6a6; }
   .pt-wish.got{ background:#f4f6fa; border-color:#d9dee8; }
@@ -1561,7 +1596,8 @@ export function mountPets(deps, opts){
     toast('🌟 펫의 소원을 들어줬어요!', '🐾 펫 키우기 → 돌보기에서 선물을 받아요');
   }
   // ── 📅 출석 ── 하루 한 번(서버 시각 기준 날짜) · 기록은 att {last, streak, best, total, days{날짜:1}}
-  const attOk = (need, a) => isAdminView() || (!!need && Object.keys(need).every(k => ((a || {})[k] | 0) >= need[k]));
+  const attOk = (need, a) => isAdminView() || (!!need && Object.keys(need).every(k => k === 'mon' ? !!(((a || {}).mdone || {})[need.mon]) : ((a || {})[k] | 0) >= need[k]));
+  const attCond = (need) => need.mon ? `${need.mon}월에 ${PET_RULES.attend.monthDays}일 이상 출석` : need.total ? `누적 출석 ${need.total}일` : `${need.best}일 연속 출석`;
   function attOf(d, now){
     const a = (d && d.att) || {}, dk = dayKey(now), yk = dayKey(now - 86400000), today = a.last === dk, live = today || a.last === yk;
     return { today, streak: live ? (a.streak | 0) : 0, best: a.best | 0, total: a.total | 0, days: a.days || {} };
@@ -1583,10 +1619,13 @@ export function mountPets(deps, opts){
     const nextTxt = a.today ? `다음 보너스(${(Math.floor(s / 7) + 1) * 7}일 연속)까지 ${left}일`
       : left === 1 ? `🎉 오늘 도장을 찍으면 ${s + 1}일 연속 보너스!` : `오늘 포함 ${left}일 도장을 찍으면 ${(Math.floor(s / 7) + 1) * 7}일 연속 보너스`;
     const dots = Array.from({ length: 7 }, (_, i) => `<i class="${i < inWeek ? 'on' : ''} ${i === 6 ? 'bonus' : ''}"></i>`).join('');
-    const furs = Object.entries(DECOR.furn).filter(([, it]) => it.att).map(([id, it]) => {
+    const furs = attItems().filter(([, , it]) => !it.att.mon).map(([, , it]) => {
       const k = Object.keys(it.att)[0], need = it.att[k], have = a[k], got = attOk(it.att, data.att);
-      return `<div class="pt-att-fur"><span>📅 ${escapeHtml(it.name)} <small>(${k === 'total' ? '누적 출석 ' + need + '일' : need + '일 연속 출석'})</small></span><b>${got ? '✔ 받았어요' : Math.min(have, need) + ' / ' + need}</b></div>`;
+      return `<div class="pt-att-fur"><span>📅 ${escapeHtml(it.name)} <small>(${attCond(it.att)})</small></span><b>${got ? '✔ 받았어요' : Math.min(have, need) + ' / ' + need}</b></div>`;
     }).join('');
+    const nowMon = new Date(now).getMonth() + 1, thisMk = dayKey(now).slice(0, 6), thisCnt = Object.keys(a.days).filter(k => k.startsWith(thisMk)).length;
+    const mdone = (data.att || {}).mdone || {};
+    const monBadges = Array.from({ length: 12 }, (_, i) => `<span class="pt-att-m ${attOk({ mon: i + 1 }, data.att) ? 'on' : ''} ${i + 1 === nowMon ? 'cur' : ''}">${i + 1}월</span>`).join('');
     return `<div class="pt-sec"><h4>📅 출석 도장</h4>
       <div class="pt-att-top"><div><b>${s}일</b>연속 출석</div><div><b>${a.best}일</b>최고 연속</div><div><b>${a.total}일</b>누적 출석</div></div>
       <button type="button" class="pt-act ${a.today ? '' : 'go'}" data-act="att" ${a.today ? 'disabled' : ''}>${a.today ? '✅ 오늘 출석 완료! 내일 또 만나요' : '📅 오늘 출석 도장 찍기'} <small>🪙${R.coin}</small></button>
@@ -1595,7 +1634,9 @@ export function mountPets(deps, opts){
       <div class="pt-sec"><h4>🗓️ 출석 스탬프판</h4>
       <div class="pt-att-nav"><button type="button" class="pt-att-btn" data-attm="-1" ${attOff <= -12 ? 'disabled' : ''}>◀</button><span>${y}년 ${m + 1}월 · ${cnt}일 출석</span><button type="button" class="pt-att-btn" data-attm="1" ${attOff >= 0 ? 'disabled' : ''}>▶</button></div>
       <div class="pt-att-cal">${cells}</div></div>
-      <div class="pt-sec"><h4>🎁 출석 기념 가구</h4>${furs}<div class="pt-note">조건을 채우면 🏠 방 꾸미기에서 끼울 수 있는 가구가 저절로 생겨요</div></div>`;
+      <div class="pt-sec"><h4>🎁 출석 기념 가구</h4>${furs}<div class="pt-note">조건을 채우면 🏠 방 꾸미기에서 끼울 수 있는 가구가 저절로 생겨요</div></div>
+      <div class="pt-sec"><h4>🏅 월 개근 액자</h4><div class="pt-att-mons">${monBadges}</div>
+      <div class="pt-note">한 달에 ${R.monthDays}일 이상 출석하면 그 달의 개근 액자를 받아요 (${nowMon}월 ${Math.min(thisCnt, R.monthDays)} / ${R.monthDays}일${mdone[nowMon] ? ' · ✔ 이번 달 액자 받음' : ''}) · 1~12월을 모두 모아 보세요! 한 번 받은 액자는 해가 바뀌어도 그대로예요</div></div>`;
   }
   function wishHtml(info, now){
     const R = PET_RULES.wish, w = wishOf(data, now), W = WISHES[w.t], done = w.n >= W.goal;
@@ -1707,10 +1748,10 @@ export function mountPets(deps, opts){
           <div class="pt-good-btns"><button type="button" class="pt-act" data-dprev="furn:${id}">👀 미리보기</button></div></div>`;
       }).join('') + `</div>`;
     s += `<h4 class="pt-sub-h">📅 출석 기념 가구 <small>상점에서 팔지 않아요 · 📅 출석 탭에서 도장을 모으면 생겨요</small></h4><div class="pt-goods pt-decor">` +
-      Object.entries(DECOR.furn).filter(([, it]) => it.att).map(([id, it]) => {
-        const got = decoHave('furn', id) > 0, on = shopPrev && shopPrev.kind === 'furn' && shopPrev.id === id, k = Object.keys(it.att)[0];
-        return `<div class="pt-good relic ${on ? 'on' : ''}"><b>📅 ${escapeHtml(it.name)}</b><span>아늑함 +${it.cozy} · ${k === 'total' ? '누적 출석 ' + it.att[k] + '일' : it.att[k] + '일 연속 출석'}</span><small>${got ? '✔ 받았어요 · 🏠 방 꾸미기에서 끼워요' : '🔒 출석 도장을 모으면 생겨요'}</small>
-          <div class="pt-good-btns"><button type="button" class="pt-act" data-dprev="furn:${id}">👀 미리보기</button></div></div>`;
+      attItems().map(([kind, id, it]) => {
+        const got = decoHave(kind, id) > 0, on = shopPrev && shopPrev.kind === kind && shopPrev.id === id;
+        return `<div class="pt-good relic ${on ? 'on' : ''}"><b>📅 ${escapeHtml(it.name)}</b><span>아늑함 +${it.cozy} · ${attCond(it.att)}</span><small>${got ? '✔ 받았어요 · 🏠 방 꾸미기에서 끼워요' : '🔒 출석 도장을 모으면 생겨요'}</small>
+          <div class="pt-good-btns"><button type="button" class="pt-act" data-dprev="${kind}:${id}">👀 미리보기</button></div></div>`;
       }).join('') + `</div>`;
     return s;
   }
@@ -2556,8 +2597,9 @@ export function mountPets(deps, opts){
         let coin = R.coin, snack = 0;
         if(streak % 7 === 0){ coin += attBonus(streak / 7); snack = R.weekSnack; }
         const days = a.days || {}; days[dk] = 1;
-        const next = { last: dk, streak, best: Math.max(a.best | 0, streak), total: (a.total | 0) + 1, days };
-        const fur = Object.values(DECOR.furn).filter(it => it.att && !attOk(it.att, a) && attOk(it.att, next)).map(it => it.name);
+        const next = { last: dk, streak, best: Math.max(a.best | 0, streak), total: (a.total | 0) + 1, days, mdone: Object.assign({}, a.mdone) };
+        if(Object.keys(days).filter(k => k.startsWith(dk.slice(0, 6))).length >= R.monthDays) next.mdone[+dk.slice(4, 6)] = 1;   // 이번 달 개근
+        const fur = attItems().filter(([, , it]) => !attOk(it.att, a) && attOk(it.att, next)).map(([, , it]) => it.name);
         cur.att = next;
         cur.coins = (cur.coins || 0) + coin; cur.earned = (cur.earned || 0) + coin;
         if(snack){ cur.items = cur.items || {}; cur.items.snack = (cur.items.snack | 0) + snack; }
