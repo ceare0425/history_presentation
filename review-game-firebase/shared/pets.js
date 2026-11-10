@@ -74,7 +74,10 @@ export const PET_RULES = {
   //   점수: 짝 match점 + 연속 짝마다 streak점씩 더 + 다 찾으면 남은 1초당 timePt점 · 보상은 간식 받기와 하루 판수(mini.plays)를 함께 씀
   memo: { pairs: 8, sec: 60, peekMs: 2500, flipMs: 700, match: 10, streak: 5, timePt: 1, coinMax: 20, coinDiv: 6, fun: 10, energy: 5 },
   // 🌟 오늘의 소원: 하루 한 가지(학생·날짜마다 정해짐) — 들어주면 코인 coin + 간식 snack개 + 데려가는 펫 기분 fun
-  wish: { coin: 30, snack: 1, fun: 10 }
+  wish: { coin: 30, snack: 1, fun: 10 },
+  // 📅 출석: 하루 한 번 도장 → coin 코인. 7일 연속마다(7·14·21·28…) 보너스 = weekCoin × (몇 주째, 최대 weekMax주) 코인 + 간식 weekSnack개
+  //   하루라도 빠지면 연속은 1부터 다시(펫은 벌 받지 않음). 기념 가구는 DECOR의 att 조건(누적 출석 total · 최고 연속 best)
+  attend: { coin: 10, weekCoin: 30, weekMax: 4, weekSnack: 1 }
 };
 // 🌟 펫이 말하는 소원 종류 — goal번 하면 이뤄짐 (어느 펫으로 해도 됨)
 export const WISHES = {
@@ -814,6 +817,20 @@ export const DECOR = {
       for(let i = 6; i < 12; i += 2) R(ctx, x + i, 14, 1, 15, '#d4cfc1');
       R(ctx, x + 3, 29, 11, 2, '#e9e5da'); R(ctx, x + 2, 31, 13, 1, '#c9c3b2');
       R(ctx, x + 6, 6, 5, 5, '#e9e5da'); P(ctx, x + 7, 8, '#9a958a'); P(ctx, x + 9, 8, '#9a958a'); R(ctx, x + 5, 5, 7, 1, '#7fae4a'); } },
+    // ── 📅 출석 기념 가구: 상점에서 팔지 않고, 출석 기록(att)이 조건(total 누적 출석일 · best 최고 연속일)을 채우면 생긴다 ──
+    stampdesk: { name: '출석 도장 책상', att: { total: 15 }, price: 0, cozy: 3, draw(ctx, t, x){
+      R(ctx, x + 1, 22, 15, 2, '#8b5a33'); R(ctx, x + 1, 22, 15, 1, '#a8733f'); R(ctx, x + 2, 24, 1, 7, '#6b4423'); R(ctx, x + 14, 24, 1, 7, '#6b4423'); R(ctx, x + 3, 25, 10, 1, '#6b4423');
+      R(ctx, x + 2, 13, 9, 9, '#fffaf0'); R(ctx, x + 2, 13, 9, 2, '#e5484d');
+      for(let r = 0; r < 3; r++) for(let c = 0; c < 4; c++){ const on = (r * 4 + c) % 3 !== 2; R(ctx, x + 3 + c * 2, 16 + r * 2, 1, 1, on ? '#e5484d' : '#cfc8b8'); }
+      R(ctx, x + 12, 17, 3, 3, '#2b2233'); R(ctx, x + 12, 20, 3, 2, '#e5484d'); R(ctx, x + 13, 15, 1, 2, '#6b4423');
+      if(Math.floor(t / 600) % 3 === 0) P(ctx, x + 13, 22, '#ffd27a'); } },
+    trophy: { name: '출석왕 황금 트로피', att: { best: 28 }, price: 0, cozy: 4, draw(ctx, t, x){
+      R(ctx, x + 4, 29, 8, 2, '#6b4423'); R(ctx, x + 5, 27, 6, 2, '#8b5a33'); R(ctx, x + 7, 22, 2, 5, '#c98a12');
+      R(ctx, x + 4, 14, 8, 8, '#ffcf3f'); R(ctx, x + 5, 22, 6, 1, '#e0a020'); R(ctx, x + 4, 14, 8, 1, '#fff3b0'); R(ctx, x + 5, 15, 1, 6, '#fff3b0');
+      R(ctx, x + 2, 15, 2, 1, '#e0a020'); R(ctx, x + 2, 16, 1, 3, '#e0a020'); R(ctx, x + 3, 19, 1, 1, '#e0a020');
+      R(ctx, x + 12, 15, 2, 1, '#e0a020'); R(ctx, x + 13, 16, 1, 3, '#e0a020'); R(ctx, x + 12, 19, 1, 1, '#e0a020');
+      R(ctx, x + 7, 16, 2, 4, '#e5484d'); P(ctx, x + 7, 15, '#e5484d'); P(ctx, x + 8, 15, '#e5484d');
+      const s = Math.floor(t / 300) % 4; P(ctx, x + 2 + s * 4, 11 - (s % 2) * 2, '#fff3b0'); } },
     // ── 🏺 유물 기념 가구: 상점에서 팔지 않고, 탐험으로 그 장소 유물 4장을 다 모으면 생긴다 ──
     gramophone: { name: '경성 축음기', relic: 'gyeongseong', price: 0, cozy: 3, draw(ctx, t, x){
       R(ctx, x + 2, 24, 12, 1, '#6b4423'); R(ctx, x + 3, 25, 1, 6, '#6b4423'); R(ctx, x + 12, 25, 1, 6, '#6b4423'); R(ctx, x + 3, 28, 10, 1, '#8b5a33');
@@ -1207,6 +1224,25 @@ function addCss(){
   .pt-poops{ grid-column:2 / 4; font-size:.86rem; letter-spacing:1px; }
   .pt-status{ font-size:.84rem; font-weight:800; color:#8a5a00; background:#fff3d6; border-radius:8px; padding:5px 9px; }
   .pt-status.bad{ color:#b42318; background:#fde8e7; }
+  .pt-att-top{ display:flex; flex-wrap:wrap; gap:8px; margin:4px 0 8px; }
+  .pt-att-top div{ flex:1 1 90px; background:#fff; border:2px solid #e5e7eb; border-radius:10px; padding:6px 8px; text-align:center; font-size:.74rem; color:#6b7280; font-weight:700; }
+  .pt-att-top b{ display:block; font-size:1.2rem; color:#1f2937; }
+  .pt-att-week{ display:flex; gap:5px; margin:6px 0; }
+  .pt-att-week i{ flex:1; height:12px; border-radius:6px; background:#00000014; }
+  .pt-att-week i.on{ background:linear-gradient(90deg,#f6b73c,#f08a24); }
+  .pt-att-week i.bonus{ outline:2px solid #e5484d; outline-offset:1px; }
+  .pt-att-nav{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:8px 0 4px; font-weight:800; font-size:.9rem; }
+  .pt-overlay button.pt-att-btn{ width:auto; padding:3px 12px; font-size:.82rem; font-weight:800; border-radius:999px; border:2px solid #e5e7eb; background:#fff; color:#374151; cursor:pointer; }
+  .pt-overlay button.pt-att-btn:disabled{ opacity:.35; cursor:default; }
+  .pt-att-cal{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .pt-att-cal em{ font-style:normal; text-align:center; font-size:.72rem; font-weight:800; color:#9ca3af; }
+  .pt-att-d{ position:relative; aspect-ratio:1; border-radius:8px; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-size:.74rem; color:#6b7280; font-weight:700; }
+  .pt-att-d.fut{ opacity:.45; }
+  .pt-att-d.today{ outline:2px solid #3b82f6; }
+  .pt-att-d.on{ background:#fff1f1; color:#e5484d; }
+  .pt-att-d.on b{ position:absolute; inset:14%; border:3px solid #e5484d; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; transform:rotate(-12deg); background:#ffffffcc; }
+  .pt-att-fur{ display:flex; justify-content:space-between; gap:8px; font-size:.84rem; font-weight:700; margin-top:6px; }
+  .pt-attbar button{ width:100%; }
   .pt-wish{ background:#fff8e1; border:2px solid #f6d77a; border-radius:12px; padding:10px 12px; }
   .pt-wish.done{ background:#eafaf0; border-color:#8fd6a6; }
   .pt-wish.got{ background:#f4f6fa; border-color:#d9dee8; }
@@ -1350,7 +1386,8 @@ export function mountPets(deps, opts){
   let friends = null, friendsBusy = false, friendSel = null, friendCv = null, friendCls = null;
   let shopPrev = null, prevCv = null;   // 상점 꾸미기 미리보기 {kind, id}
   let qbank = {}, quizBusy = false, quizState = null, quizFb = null;   // 📝 오늘의 퀴즈: 문제 은행 캐시 · 오늘 문제 {day, qs, err} · 방금 답한 결과
-  let wishToasted = null;              // 🌟 소원이 이뤄졌다는 알림을 띄운 날
+  let attOff = 0;                      // 📅 출석 달력: 0 이번 달, -1 지난달…
+  let wishToasted = null;             // 🌟 소원이 이뤄졌다는 알림을 띄운 날
   let lastFind = null, xToasted = {}, xSel = null;   // 🗺️ 방금 받은 탐험 선물 목록 · 돌아옴 알림을 띄운 탐험 · 탐험 보낼 펫
   let miniBox = null;                   // 🎮 미니게임 창
   let view = 'all';         // 'all' 펫+상점 한 창 · 'shop' 상점만 · 'care' 펫 키우기만
@@ -1523,6 +1560,43 @@ export function mountPets(deps, opts){
     wishToasted = w.k;
     toast('🌟 펫의 소원을 들어줬어요!', '🐾 펫 키우기 → 돌보기에서 선물을 받아요');
   }
+  // ── 📅 출석 ── 하루 한 번(서버 시각 기준 날짜) · 기록은 att {last, streak, best, total, days{날짜:1}}
+  const attOk = (need, a) => isAdminView() || (!!need && Object.keys(need).every(k => ((a || {})[k] | 0) >= need[k]));
+  function attOf(d, now){
+    const a = (d && d.att) || {}, dk = dayKey(now), yk = dayKey(now - 86400000), today = a.last === dk, live = today || a.last === yk;
+    return { today, streak: live ? (a.streak | 0) : 0, best: a.best | 0, total: a.total | 0, days: a.days || {} };
+  }
+  const attBonus = (week) => PET_RULES.attend.weekCoin * Math.min(week, PET_RULES.attend.weekMax);
+  function attHtml(now){
+    const R = PET_RULES.attend, a = attOf(data, now), todayK = dayKey(now), d0 = new Date(now);
+    const md = new Date(d0.getFullYear(), d0.getMonth() + attOff, 1), y = md.getFullYear(), m = md.getMonth();
+    const dim = new Date(y, m + 1, 0).getDate(), mk = '' + y + String(m + 1).padStart(2, '0');
+    let cells = ['일', '월', '화', '수', '목', '금', '토'].map(w => `<em>${w}</em>`).join(''), cnt = 0;
+    for(let i = 0; i < md.getDay(); i++) cells += '<i></i>';
+    for(let d = 1; d <= dim; d++){
+      const k = mk + String(d).padStart(2, '0'), on = !!a.days[k];
+      if(on) cnt++;
+      cells += `<span class="pt-att-d ${on ? 'on' : ''} ${k === todayK ? 'today' : ''} ${k > todayK ? 'fut' : ''}">${d}${on ? '<b>✔</b>' : ''}</span>`;
+    }
+    const s = a.streak, week = Math.floor(s / 7) + 1, inWeek = s % 7 === 0 && s > 0 && a.today ? 7 : s % 7;
+    const left = 7 - s % 7;   //보너스 도장까지 남은 도장 수(오늘 안 찍었으면 오늘 포함)
+    const nextTxt = a.today ? `다음 보너스(${(Math.floor(s / 7) + 1) * 7}일 연속)까지 ${left}일`
+      : left === 1 ? `🎉 오늘 도장을 찍으면 ${s + 1}일 연속 보너스!` : `오늘 포함 ${left}일 도장을 찍으면 ${(Math.floor(s / 7) + 1) * 7}일 연속 보너스`;
+    const dots = Array.from({ length: 7 }, (_, i) => `<i class="${i < inWeek ? 'on' : ''} ${i === 6 ? 'bonus' : ''}"></i>`).join('');
+    const furs = Object.entries(DECOR.furn).filter(([, it]) => it.att).map(([id, it]) => {
+      const k = Object.keys(it.att)[0], need = it.att[k], have = a[k], got = attOk(it.att, data.att);
+      return `<div class="pt-att-fur"><span>📅 ${escapeHtml(it.name)} <small>(${k === 'total' ? '누적 출석 ' + need + '일' : need + '일 연속 출석'})</small></span><b>${got ? '✔ 받았어요' : Math.min(have, need) + ' / ' + need}</b></div>`;
+    }).join('');
+    return `<div class="pt-sec"><h4>📅 출석 도장</h4>
+      <div class="pt-att-top"><div><b>${s}일</b>연속 출석</div><div><b>${a.best}일</b>최고 연속</div><div><b>${a.total}일</b>누적 출석</div></div>
+      <button type="button" class="pt-act ${a.today ? '' : 'go'}" data-act="att" ${a.today ? 'disabled' : ''}>${a.today ? '✅ 오늘 출석 완료! 내일 또 만나요' : '📅 오늘 출석 도장 찍기'} <small>🪙${R.coin}</small></button>
+      <div class="pt-att-week">${dots}</div>
+      <div class="pt-note">${nextTxt} · 7일 연속마다(7·14·21·28…) 보너스: ${week}번째는 🪙+${attBonus(week)} · 🍪 간식 ${R.weekSnack}개 (🪙 보너스는 최대 ${R.weekMax}번째 금액까지 올라가요) · 하루 빠지면 연속은 1일부터 다시 시작해요 (펫은 괜찮아요)</div></div>
+      <div class="pt-sec"><h4>🗓️ 출석 스탬프판</h4>
+      <div class="pt-att-nav"><button type="button" class="pt-att-btn" data-attm="-1" ${attOff <= -12 ? 'disabled' : ''}>◀</button><span>${y}년 ${m + 1}월 · ${cnt}일 출석</span><button type="button" class="pt-att-btn" data-attm="1" ${attOff >= 0 ? 'disabled' : ''}>▶</button></div>
+      <div class="pt-att-cal">${cells}</div></div>
+      <div class="pt-sec"><h4>🎁 출석 기념 가구</h4>${furs}<div class="pt-note">조건을 채우면 🏠 방 꾸미기에서 끼울 수 있는 가구가 저절로 생겨요</div></div>`;
+  }
   function wishHtml(info, now){
     const R = PET_RULES.wish, w = wishOf(data, now), W = WISHES[w.t], done = w.n >= W.goal;
     const nm = PET_INFO[info.id] ? PET_INFO[info.id].names[info.s] : '펫';
@@ -1568,7 +1642,7 @@ export function mountPets(deps, opts){
   }
 
   // 🏺 유물 기념 가구는 그 장소 유물을 다 모았으면(relicDone) 1개 가진 것으로 친다
-  const decoHave = (kind, id) => { const it = DECOR[kind][id]; if(!it) return 0; if(it.relic) return (data.relicDone || {})[it.relic] ? 1 : 0; return it.price === 0 ? Infinity : ((data.deco || {})[kind + '_' + id] | 0); };
+  const decoHave = (kind, id) => { const it = DECOR[kind][id]; if(!it) return 0; if(it.att) return attOk(it.att, data.att) ? 1 : 0; if(it.relic) return (data.relicDone || {})[it.relic] ? 1 : 0; return it.price === 0 ? Infinity : ((data.deco || {})[kind + '_' + id] | 0); };
   function roomHtml(info, now){
     const room = Object.assign({}, DEFAULT_ROOM, data.room || {});
     const cozy = roomCozy(room), coins = data.coins || 0;
@@ -1587,14 +1661,14 @@ export function mountPets(deps, opts){
       const kind = SLOT_KIND[slot];
       const other = slot === 'left' ? 'right' : slot === 'right' ? 'left' : null;
       const mine = Object.entries(DECOR[kind]).filter(([id]) => decoHave(kind, id) > 0);
-      const bought = mine.some(([, it]) => it.price || it.relic);
+      const bought = mine.some(([, it]) => it.price || it.relic || it.att);
       s += `<div class="pt-sec pt-slot"><h4>${SLOT_LABEL[slot]}</h4><div class="pt-items">` + mine.map(([id, it]) => {
         const on = room[slot] === id;
         const need = (other && id !== 'none' && room[other] === id) ? 2 : 1;
         const have = decoHave(kind, id);
         const can = have >= need;
         const tag = on ? '✓ 끼움' : can ? '끼우기' : '1개뿐 (양쪽엔 2개 필요)';
-        return `<button type="button" class="pt-item ${on ? 'on' : ''} ${it.relic ? 'relic' : ''}" data-place="${slot}:${id}" ${on || !can ? 'disabled' : ''}>${it.relic ? '🏺 ' : ''}${escapeHtml(it.name)} <small>${tag}${it.cozy ? ' · 아늑+' + it.cozy : ''}${have !== Infinity && have > 1 ? ' · ' + have + '개' : ''}</small></button>`;
+        return `<button type="button" class="pt-item ${on ? 'on' : ''} ${it.relic || it.att ? 'relic' : ''}" data-place="${slot}:${id}" ${on || !can ? 'disabled' : ''}>${it.relic ? '🏺 ' : it.att ? '📅 ' : ''}${escapeHtml(it.name)} <small>${tag}${it.cozy ? ' · 아늑+' + it.cozy : ''}${have !== Infinity && have > 1 ? ' · ' + have + '개' : ''}</small></button>`;
       }).join('') + (bought ? '' : `<span class="pt-empty">아직 산 물건이 없어요</span>`) + `</div></div>`;
     });
     return s;
@@ -1630,6 +1704,12 @@ export function mountPets(deps, opts){
         const pl = PLACE_BY[it.relic], got = decoHave('furn', id) > 0, on = shopPrev && shopPrev.kind === 'furn' && shopPrev.id === id;
         const n = pl ? pl.relics.filter((_, j) => ((data.relics || {})[pl.id + '_' + j] | 0) > 0).length : 0;
         return `<div class="pt-good relic ${on ? 'on' : ''}"><b>🏺 ${escapeHtml(it.name)}</b><span>아늑함 +${it.cozy} · ${pl ? escapeHtml(pl.e + ' ' + pl.n) : ''} 유물 ${n}/4</span><small>${got ? '✔ 받았어요 · 🏠 방 꾸미기에서 끼워요' : '🔒 유물 4장을 모으면 생겨요'}</small>
+          <div class="pt-good-btns"><button type="button" class="pt-act" data-dprev="furn:${id}">👀 미리보기</button></div></div>`;
+      }).join('') + `</div>`;
+    s += `<h4 class="pt-sub-h">📅 출석 기념 가구 <small>상점에서 팔지 않아요 · 📅 출석 탭에서 도장을 모으면 생겨요</small></h4><div class="pt-goods pt-decor">` +
+      Object.entries(DECOR.furn).filter(([, it]) => it.att).map(([id, it]) => {
+        const got = decoHave('furn', id) > 0, on = shopPrev && shopPrev.kind === 'furn' && shopPrev.id === id, k = Object.keys(it.att)[0];
+        return `<div class="pt-good relic ${on ? 'on' : ''}"><b>📅 ${escapeHtml(it.name)}</b><span>아늑함 +${it.cozy} · ${k === 'total' ? '누적 출석 ' + it.att[k] + '일' : it.att[k] + '일 연속 출석'}</span><small>${got ? '✔ 받았어요 · 🏠 방 꾸미기에서 끼워요' : '🔒 출석 도장을 모으면 생겨요'}</small>
           <div class="pt-good-btns"><button type="button" class="pt-act" data-dprev="furn:${id}">👀 미리보기</button></div></div>`;
       }).join('') + `</div>`;
     return s;
@@ -2109,12 +2189,16 @@ export function mountPets(deps, opts){
     const showCare = view !== 'shop', showShop = view === 'shop' || (view === 'all' && careTab === 'care');
     overlay.querySelector('.pt-head h3').textContent = VIEW_TITLE[view];
     if(showCare){
-      h += `<div class="pt-tabs pt-ctabs">${[['care', '🐾 돌보기'], ['quiz', '📝 퀴즈'], ['explore', '🗺️ 탐험'], ['game', '🎮 놀이'], ['room', '🏠 방 꾸미기'], ['friends', '🏘️ 친구 방']].map(([k, l]) => `<button type="button" class="pt-tab ${careTab === k ? 'on' : ''}" data-ctab="${k}">${l}</button>`).join('')}</div>`;
+      h += `<div class="pt-tabs pt-ctabs">${[['care', '🐾 돌보기'], ['att', '📅 출석'], ['quiz', '📝 퀴즈'], ['explore', '🗺️ 탐험'], ['game', '🎮 놀이'], ['room', '🏠 방 꾸미기'], ['friends', '🏘️ 친구 방']].map(([k, l]) => `<button type="button" class="pt-tab ${careTab === k ? 'on' : ''}" data-ctab="${k}">${l}</button>`).join('')}</div>`;
       if(careTab === 'room') h += roomHtml(info, now);
       if(careTab === 'friends') h += friendsHtml(now);
+      if(careTab === 'att') h += attHtml(now);
       if(careTab === 'quiz') h += quizHtml(now);
       if(careTab === 'explore') h += exploreHtml(info, now);
       if(careTab === 'game') h += gameHtml(info, now);
+    }
+    if(showCare && careTab === 'care' && !attOf(data, now).today){
+      h += `<div class="pt-sec pt-attbar"><button type="button" class="pt-act go" data-ctab="att">📅 오늘 출석 도장을 아직 안 찍었어요! <small>🪙${PET_RULES.attend.coin}</small></button></div>`;
     }
     if(showCare && careTab === 'care' && info){
       const c = careNow(owned[info.id], now);
@@ -2312,7 +2396,7 @@ export function mountPets(deps, opts){
         if(room[slot] === did) return;
         const other = slot === 'left' ? 'right' : slot === 'right' ? 'left' : null;
         const need = (other && did !== 'none' && room[other] === did) ? 2 : 1;
-        const have = it.relic ? ((cur.relicDone || {})[it.relic] ? 1 : 0) : it.price === 0 ? Infinity : (((cur.deco || {})[dk + '_' + did]) | 0);
+        const have = it.att ? (attOk(it.att, cur.att) ? 1 : 0) : it.relic ? ((cur.relicDone || {})[it.relic] ? 1 : 0) : it.price === 0 ? Infinity : (((cur.deco || {})[dk + '_' + did]) | 0);
         if(have < need) return;                       // 산 물건만 끼울 수 있다 (여기서는 절대 결제하지 않음)
         room[slot] = did;
         cur.room = room;
@@ -2462,6 +2546,30 @@ export function mountPets(deps, opts){
       if(res && res.committed){ lastFind = null; xSel = null; const nm = petName(pid); toast(`🗺️ ${josa(nm, '이', '가')} ${PLACE_BY[place].n}(으)로 탐험 출발!`, `${L.label} 뒤 돌아와요`); }
       return;
     }
+    if(kind === 'att'){
+      const R = PET_RULES.attend;
+      let got = null;
+      const res = await tx((cur, now) => {
+        const dk = dayKey(now), a = cur.att || {};
+        if(a.last === dk) return;   // 오늘은 이미 찍음
+        const streak = a.last === dayKey(now - 86400000) ? (a.streak | 0) + 1 : 1;
+        let coin = R.coin, snack = 0;
+        if(streak % 7 === 0){ coin += attBonus(streak / 7); snack = R.weekSnack; }
+        const days = a.days || {}; days[dk] = 1;
+        const next = { last: dk, streak, best: Math.max(a.best | 0, streak), total: (a.total | 0) + 1, days };
+        const fur = Object.values(DECOR.furn).filter(it => it.att && !attOk(it.att, a) && attOk(it.att, next)).map(it => it.name);
+        cur.att = next;
+        cur.coins = (cur.coins || 0) + coin; cur.earned = (cur.earned || 0) + coin;
+        if(snack){ cur.items = cur.items || {}; cur.items.snack = (cur.items.snack | 0) + snack; }
+        got = { streak, coin, snack, fur };
+        return cur;
+      });
+      if(res && res.committed && got){
+        toast(`📅 출석 도장 쾅! ${got.streak}일 연속`, `🪙 +${got.coin}${got.snack ? ` · 🍪 간식 ${got.snack}개 (7일 연속 보너스!)` : ''}`);
+        got.fur.forEach(n => setTimeout(() => toast(`🎁 출석 기념 가구 ‘${n}’이(가) 생겼어요!`, '🏠 방 꾸미기에서 끼워 보세요'), 1500));
+      }
+      return;
+    }
     if(kind === 'wish'){
       const R = PET_RULES.wish;
       const res = await tx((cur, now) => {
@@ -2609,6 +2717,7 @@ export function mountPets(deps, opts){
       if(b.dataset.buy){ act('buy', b.dataset.buy); return; }
       if(b.dataset.buyitem){ act('buyitem', b.dataset.buyitem); return; }
       if(b.dataset.ctab){ careTab = b.dataset.ctab; friendSel = null; msg = ''; quizFb = null; if(careTab === 'quiz' && quizState && quizState.err) quizState = null; if(careTab === 'friends') friends = null; overlay.querySelector('.pt-body').scrollTop = 0; render(); return; }
+      if(b.dataset.attm){ attOff = Math.max(-12, Math.min(0, attOff + (+b.dataset.attm))); render(); return; }
       if(b.dataset.place){ act('place', b.dataset.place); return; }
       if(b.dataset.buydeco){ act('buydeco', b.dataset.buydeco); return; }
       if(b.dataset.dprev){ const [k, i] = b.dataset.dprev.split(':'); shopPrev = { kind: k, id: i }; render(); const pv = overlay.querySelector('.pt-prev'); if(pv && pv.scrollIntoView) pv.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
