@@ -1,0 +1,25 @@
+# ── GitHub에 올리지 않는 파일 모음 ─────────────────────────
+# (Pages 배포 용량과 저장소 크기를 줄이기 위해 모아 둠. 로컬 파일은 그대로 남아 있음)
+
+# 학습지·자료 원본 PDF — 슬라이드는 HTML로 만들어 쓰므로 PDF는 올리지 않는다
+# (세계사 단원 PDF 272MB, 한국사 PDF 111MB가 기록에 남아 저장소가 커진 원인)
+*.pdf
+
+# Claude Code 개인 설정 (내 컴퓨터 권한 설정, 공유 불필요)
+.claude/settings.local.json
+
+# 운영체제·편집기가 만드는 파일
+Thumbs.db
+desktop.ini
+.DS_Store
+~$*
+*.tmp
+*.bak
+*.log
+
+# 파이썬 실행 흔적
+__pycache__/
+*.pyc
+
+# 작업용 임시 폴더
+scratch/
