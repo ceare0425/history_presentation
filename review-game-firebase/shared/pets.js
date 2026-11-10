@@ -1265,13 +1265,24 @@ function addCss(){
   .pt-att-nav{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:8px 0 4px; font-weight:800; font-size:.9rem; }
   .pt-overlay button.pt-att-btn{ width:auto; padding:3px 12px; font-size:.82rem; font-weight:800; border-radius:999px; border:2px solid #e5e7eb; background:#fff; color:#374151; cursor:pointer; }
   .pt-overlay button.pt-att-btn:disabled{ opacity:.35; cursor:default; }
-  .pt-att-cal{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
-  .pt-att-cal em{ font-style:normal; text-align:center; font-size:.72rem; font-weight:800; color:#9ca3af; }
-  .pt-att-d{ position:relative; aspect-ratio:1; border-radius:8px; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-size:.74rem; color:#6b7280; font-weight:700; }
-  .pt-att-d.fut{ opacity:.45; }
-  .pt-att-d.today{ outline:2px solid #3b82f6; }
-  .pt-att-d.on{ background:#fff1f1; color:#e5484d; }
-  .pt-att-d.on b{ position:absolute; inset:14%; border:3px solid #e5484d; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; transform:rotate(-12deg); background:#ffffffcc; }
+  .pt-att-board{ background:linear-gradient(180deg,#fff0f5,#fff8e8); border:3px dashed #ffb7cf; border-radius:18px; padding:8px 8px 10px; }
+  .pt-att-cal{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .pt-att-cal em{ font-style:normal; text-align:center; font-size:.74rem; font-weight:800; color:#b08a9a; }
+  .pt-att-cal em:first-child{ color:#ef6b7a; } .pt-att-cal em:nth-child(7){ color:#5b8fe0; }
+  .pt-att-d{ position:relative; aspect-ratio:1; border-radius:14px; background:#fff; border:2px dotted #f3cfdc; display:flex; align-items:flex-end; justify-content:flex-start; padding:1px 4px; font-size:.68rem; color:#b9a1ab; font-weight:800; }
+  .pt-att-d.sun{ color:#ef6b7a; } .pt-att-d.sat{ color:#5b8fe0; }
+  .pt-att-d.fut{ opacity:.5; }
+  .pt-att-d i{ font-style:normal; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.35rem; padding-bottom:6px; transform:rotate(-8deg); }
+  .pt-att-d:nth-of-type(odd) i{ transform:rotate(7deg); }
+  .pt-att-d.on{ border:2px solid transparent; }
+  .pt-att-d.c0{ background:#ffe3ec; } .pt-att-d.c1{ background:#fff0c9; } .pt-att-d.c2{ background:#dff5e3; } .pt-att-d.c3{ background:#e1ecff; } .pt-att-d.c4{ background:#efe3ff; }
+  .pt-att-d.on.bonus{ background:linear-gradient(135deg,#ffe58a,#ffb84d); border-color:#f0a020; }
+  .pt-att-d.bonus i{ font-size:1.5rem; }
+  .pt-att-d.bonus::after{ content:'7일!'; position:absolute; top:1px; right:3px; font-size:.55rem; color:#b45309; font-weight:900; }
+  .pt-att-d.today{ border:2px dashed #ff6f9c; background:#fff; color:#ff6f9c; }
+  .pt-att-d.today.on{ border:2px solid #ff6f9c; }
+  .pt-att-d.today:not(.on) i{ font-size:.7rem; padding:0; color:#ff6f9c; animation:ptAttHere 1s ease-in-out infinite; transform:none; }
+  @keyframes ptAttHere{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-3px); } }
   .pt-att-fur{ display:flex; justify-content:space-between; gap:8px; font-size:.84rem; font-weight:700; margin-top:6px; }
   .pt-attbar button{ width:100%; }
   .pt-att-mons{ display:grid; grid-template-columns:repeat(6,1fr); gap:5px; }
@@ -1596,7 +1607,8 @@ export function mountPets(deps, opts){
     toast('🌟 펫의 소원을 들어줬어요!', '🐾 펫 키우기 → 돌보기에서 선물을 받아요');
   }
   // ── 📅 출석 ── 하루 한 번(서버 시각 기준 날짜) · 기록은 att {last, streak, best, total, days{날짜:1}}
-  const attOk = (need, a) => isAdminView() || (!!need && Object.keys(need).every(k => k === 'mon' ? !!(((a || {}).mdone || {})[need.mon]) : ((a || {})[k] | 0) >= need[k]));
+  const attHave = (need, a) => !!need && Object.keys(need).every(k => k === 'mon' ? !!(((a || {}).mdone || {})[need.mon]) : ((a || {})[k] | 0) >= need[k]);   // 실제로 채웠는지
+  const attOk = (need, a) => isAdminView() || attHave(need, a);   // 관리자 확인 계정은 모두 열림
   const attCond = (need) => need.mon ? `${need.mon}월에 ${PET_RULES.attend.monthDays}일 이상 출석` : need.total ? `누적 출석 ${need.total}일` : `${need.best}일 연속 출석`;
   function attOf(d, now){
     const a = (d && d.att) || {}, dk = dayKey(now), yk = dayKey(now - 86400000), today = a.last === dk, live = today || a.last === yk;
@@ -1610,9 +1622,12 @@ export function mountPets(deps, opts){
     let cells = ['일', '월', '화', '수', '목', '금', '토'].map(w => `<em>${w}</em>`).join(''), cnt = 0;
     for(let i = 0; i < md.getDay(); i++) cells += '<i></i>';
     for(let d = 1; d <= dim; d++){
-      const k = mk + String(d).padStart(2, '0'), on = !!a.days[k];
+      const k = mk + String(d).padStart(2, '0'), on = !!a.days[k], dow = (md.getDay() + d - 1) % 7;
       if(on) cnt++;
-      cells += `<span class="pt-att-d ${on ? 'on' : ''} ${k === todayK ? 'today' : ''} ${k > todayK ? 'fut' : ''}">${d}${on ? '<b>✔</b>' : ''}</span>`;
+      let run = 0;   // 이날까지 이어진 연속 출석일 (7의 배수 날은 보너스 도장)
+      if(on) for(let q = new Date(y, m, d, 12).getTime(); a.days[dayKey(q)]; q -= 86400000) run++;
+      const bonus = on && run > 0 && run % 7 === 0, stamp = bonus ? '🎁' : ['🐾', '🐶', '🐱', '🐰', '🐻', '🐥'][d % 6];
+      cells += `<span class="pt-att-d ${on ? 'on c' + (d % 5) : ''} ${bonus ? 'bonus' : ''} ${dow === 0 ? 'sun' : dow === 6 ? 'sat' : ''} ${k === todayK ? 'today' : ''} ${k > todayK ? 'fut' : ''}">${d}${on ? `<i>${stamp}</i>` : k === todayK ? '<i>여기!</i>' : ''}</span>`;
     }
     const s = a.streak, week = Math.floor(s / 7) + 1, inWeek = s % 7 === 0 && s > 0 && a.today ? 7 : s % 7;
     const left = 7 - s % 7;   //보너스 도장까지 남은 도장 수(오늘 안 찍었으면 오늘 포함)
@@ -1620,12 +1635,12 @@ export function mountPets(deps, opts){
       : left === 1 ? `🎉 오늘 도장을 찍으면 ${s + 1}일 연속 보너스!` : `오늘 포함 ${left}일 도장을 찍으면 ${(Math.floor(s / 7) + 1) * 7}일 연속 보너스`;
     const dots = Array.from({ length: 7 }, (_, i) => `<i class="${i < inWeek ? 'on' : ''} ${i === 6 ? 'bonus' : ''}"></i>`).join('');
     const furs = attItems().filter(([, , it]) => !it.att.mon).map(([, , it]) => {
-      const k = Object.keys(it.att)[0], need = it.att[k], have = a[k], got = attOk(it.att, data.att);
+      const k = Object.keys(it.att)[0], need = it.att[k], have = a[k], got = attHave(it.att, data.att);
       return `<div class="pt-att-fur"><span>📅 ${escapeHtml(it.name)} <small>(${attCond(it.att)})</small></span><b>${got ? '✔ 받았어요' : Math.min(have, need) + ' / ' + need}</b></div>`;
     }).join('');
     const nowMon = new Date(now).getMonth() + 1, thisMk = dayKey(now).slice(0, 6), thisCnt = Object.keys(a.days).filter(k => k.startsWith(thisMk)).length;
     const mdone = (data.att || {}).mdone || {};
-    const monBadges = Array.from({ length: 12 }, (_, i) => `<span class="pt-att-m ${attOk({ mon: i + 1 }, data.att) ? 'on' : ''} ${i + 1 === nowMon ? 'cur' : ''}">${i + 1}월</span>`).join('');
+    const monBadges = Array.from({ length: 12 }, (_, i) => `<span class="pt-att-m ${attHave({ mon: i + 1 }, data.att) ? 'on' : ''} ${i + 1 === nowMon ? 'cur' : ''}">${i + 1}월</span>`).join('');
     return `<div class="pt-sec"><h4>📅 출석 도장</h4>
       <div class="pt-att-top"><div><b>${s}일</b>연속 출석</div><div><b>${a.best}일</b>최고 연속</div><div><b>${a.total}일</b>누적 출석</div></div>
       <button type="button" class="pt-act ${a.today ? '' : 'go'}" data-act="att" ${a.today ? 'disabled' : ''}>${a.today ? '✅ 오늘 출석 완료! 내일 또 만나요' : '📅 오늘 출석 도장 찍기'} <small>🪙${R.coin}</small></button>
@@ -1633,8 +1648,8 @@ export function mountPets(deps, opts){
       <div class="pt-note">${nextTxt} · 7일 연속마다(7·14·21·28…) 보너스: ${week}번째는 🪙+${attBonus(week)} · 🍪 간식 ${R.weekSnack}개 (🪙 보너스는 최대 ${R.weekMax}번째 금액까지 올라가요) · 하루 빠지면 연속은 1일부터 다시 시작해요 (펫은 괜찮아요)</div></div>
       <div class="pt-sec"><h4>🗓️ 출석 스탬프판</h4>
       <div class="pt-att-nav"><button type="button" class="pt-att-btn" data-attm="-1" ${attOff <= -12 ? 'disabled' : ''}>◀</button><span>${y}년 ${m + 1}월 · ${cnt}일 출석</span><button type="button" class="pt-att-btn" data-attm="1" ${attOff >= 0 ? 'disabled' : ''}>▶</button></div>
-      <div class="pt-att-cal">${cells}</div></div>
-      <div class="pt-sec"><h4>🎁 출석 기념 가구</h4>${furs}<div class="pt-note">조건을 채우면 🏠 방 꾸미기에서 끼울 수 있는 가구가 저절로 생겨요</div></div>
+      <div class="pt-att-board"><div class="pt-att-cal">${cells}</div></div></div>
+      <div class="pt-sec"><h4>🎁 출석 기념 가구</h4>${furs}<div class="pt-note">조건을 채우면 🏠 방 꾸미기에서 끼울 수 있는 가구가 저절로 생겨요${isAdminView() ? ' · 🔑 관리자 확인 계정은 가구가 처음부터 모두 열려 있어요(위 숫자는 실제 진행도)' : ''}</div></div>
       <div class="pt-sec"><h4>🏅 월 개근 액자</h4><div class="pt-att-mons">${monBadges}</div>
       <div class="pt-note">한 달에 ${R.monthDays}일 이상 출석하면 그 달의 개근 액자를 받아요 (${nowMon}월 ${Math.min(thisCnt, R.monthDays)} / ${R.monthDays}일${mdone[nowMon] ? ' · ✔ 이번 달 액자 받음' : ''}) · 1~12월을 모두 모아 보세요! 한 번 받은 액자는 해가 바뀌어도 그대로예요</div></div>`;
   }
