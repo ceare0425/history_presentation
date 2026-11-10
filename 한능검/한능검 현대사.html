@@ -291,21 +291,22 @@ body {
 }
 
 /* === TOC === */
-.toc-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0.32em; flex: 1; align-content: start; }
+.toc-list { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25em; flex: 1; align-content: start; }
 .toc-item {
   background: var(--card-bg);
   border: 1.5px solid var(--border);
   border-left: 4px solid var(--main);
   border-radius: 4px;
-  padding: 0.28em 0.55em;
+  padding: 0.16em 0.5em;
   cursor: pointer;
   transition: background 0.2s, transform 0.2s;
-  display: flex; flex-direction: column; gap: 0.05em;
+  display: grid; grid-template-columns: auto 1fr; column-gap: 0.45em; align-items: center; line-height: 1.25;
 }
 .toc-item:hover { background: rgba(139,69,19,0.07); transform: translateX(3px); }
-.toc-num { font-size: 0.85em; font-weight: 900; color: var(--accent); font-family: 'Nanum Myeongjo', serif; }
-.toc-name { font-size: 0.7em; font-weight: 700; color: var(--main); }
-.toc-sub { font-size: 0.58em; color: var(--text-sub); }
+.toc-num { font-size: 0.7em; font-weight: 900; color: var(--accent); font-family: 'Nanum Myeongjo', serif; }
+.toc-name { font-size: 0.62em; font-weight: 700; color: var(--main); }
+.toc-num { grid-row: 1 / span 2; }
+.toc-sub { grid-column: 2; font-size: 0.5em; color: var(--text-sub); }
 
 /* === Summary table === */
 .sum-table { width: 100%; border-collapse: collapse; font-size: 0.74em; }

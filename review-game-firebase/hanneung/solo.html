@@ -241,7 +241,8 @@ store.wrong = store.wrong || {};   // { '79': [번호...] }
 store.best = store.best || {};     // { '79': 점수 }
 
 const $ = id => document.getElementById(id);
-let examId = EXAM_IDS[0];
+// 이어 풀던 모의고사가 있으면 그 회차를 먼저 선택해 '이어서 풀기' 상자가 항상 보이게 한다
+let examId = (store.progress && EXAMS[store.progress.examId]) ? store.progress.examId : EXAM_IDS[0];
 let S = null;   // 현재 풀이 상태
 let timerId = null;
 
