@@ -1265,23 +1265,23 @@ function addCss(){
   .pt-att-nav{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:8px 0 4px; font-weight:800; font-size:.9rem; }
   .pt-overlay button.pt-att-btn{ width:auto; padding:3px 12px; font-size:.82rem; font-weight:800; border-radius:999px; border:2px solid #e5e7eb; background:#fff; color:#374151; cursor:pointer; }
   .pt-overlay button.pt-att-btn:disabled{ opacity:.35; cursor:default; }
-  .pt-att-board{ background:linear-gradient(180deg,#fff0f5,#fff8e8); border:3px dashed #ffb7cf; border-radius:18px; padding:8px 8px 10px; }
-  .pt-att-cal{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .pt-att-board{ background:linear-gradient(180deg,#fff0f5,#fff8e8); border:3px dashed #ffb7cf; border-radius:18px; padding:6px 5px 8px; }
+  .pt-att-cal{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
   .pt-att-cal em{ font-style:normal; text-align:center; font-size:.74rem; font-weight:800; color:#b08a9a; }
   .pt-att-cal em:first-child{ color:#ef6b7a; } .pt-att-cal em:nth-child(7){ color:#5b8fe0; }
-  .pt-att-d{ position:relative; aspect-ratio:1; border-radius:14px; background:#fff; border:2px dotted #f3cfdc; display:flex; align-items:flex-end; justify-content:flex-start; padding:1px 4px; font-size:.68rem; color:#b9a1ab; font-weight:800; }
+  .pt-att-d{ position:relative; aspect-ratio:1; border-radius:12px; background:#fff; border:2px dotted #f3cfdc; display:flex; align-items:flex-start; justify-content:flex-start; padding:1px 3px; font-size:.62rem; z-index:0; color:#b9a1ab; font-weight:800; }
   .pt-att-d.sun{ color:#ef6b7a; } .pt-att-d.sat{ color:#5b8fe0; }
   .pt-att-d.fut{ opacity:.5; }
-  .pt-att-d i{ font-style:normal; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.35rem; padding-bottom:6px; transform:rotate(-8deg); }
+  .pt-att-d i{ font-style:normal; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:2.15rem; line-height:1; padding-bottom:3px; transform:rotate(-8deg); }
   .pt-att-d:nth-of-type(odd) i{ transform:rotate(7deg); }
   .pt-att-d.on{ border:2px solid transparent; }
   .pt-att-d.c0{ background:#ffe3ec; } .pt-att-d.c1{ background:#fff0c9; } .pt-att-d.c2{ background:#dff5e3; } .pt-att-d.c3{ background:#e1ecff; } .pt-att-d.c4{ background:#efe3ff; }
   .pt-att-d.on.bonus{ background:linear-gradient(135deg,#ffe58a,#ffb84d); border-color:#f0a020; }
-  .pt-att-d.bonus i{ font-size:1.5rem; }
+  .pt-att-d.bonus i{ font-size:2.3rem; }
   .pt-att-d.bonus::after{ content:'7일!'; position:absolute; top:1px; right:3px; font-size:.55rem; color:#b45309; font-weight:900; }
   .pt-att-d.today{ border:2px dashed #ff6f9c; background:#fff; color:#ff6f9c; }
   .pt-att-d.today.on{ border:2px solid #ff6f9c; }
-  .pt-att-d.today:not(.on) i{ font-size:.7rem; padding:0; color:#ff6f9c; animation:ptAttHere 1s ease-in-out infinite; transform:none; }
+  .pt-att-d.today:not(.on) i{ font-size:.8rem; padding:0; color:#ff6f9c; animation:ptAttHere 1s ease-in-out infinite; transform:none; }
   @keyframes ptAttHere{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-3px); } }
   .pt-att-fur{ display:flex; justify-content:space-between; gap:8px; font-size:.84rem; font-weight:700; margin-top:6px; }
   .pt-attbar button{ width:100%; }
