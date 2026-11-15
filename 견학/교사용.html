@@ -562,7 +562,7 @@ function detailHTML(sid, rec){
     const raw = photos && photos[id];
     const imgSrc = typeof raw === "string" && raw.startsWith("data:image/") ? raw : "";
     const pic = !hasPhoto ? `<div class="dpic nopic">사진 없음</div>`
-      : imgSrc ? `<a href="${esc(imgSrc)}" target="_blank" rel="noopener"><img class="dpic" src="${esc(imgSrc)}" alt="" loading="lazy"></a>`
+      : imgSrc ? `<a href="#" class="openpic" title="크게 보기"><img class="dpic" src="${esc(imgSrc)}" alt="" loading="lazy"></a>`
       : photos ? `<div class="dpic nopic">사진 파일 없음 (학생 재업로드 필요)</div>`
       : `<div class="dpic nopic">⏳ 불러오는 중…</div>`;
     let rbadge = "", rbtns = "";
@@ -647,6 +647,17 @@ function exportCSV(){
 function csv(v){ v = String(v ?? ""); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }
 
 subscribe();
+document.addEventListener("click", function (e) {
+  const a = e.target.closest && e.target.closest("a.openpic");
+  if (!a) return;
+  e.preventDefault();
+  const img = a.querySelector("img");
+  if (!img) return;
+  const w = window.open("", "_blank");
+  if (!w) return;
+  w.document.write('<!doctype html><meta charset="utf-8"><title>제출 사진</title><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img style="max-width:100%;max-height:100vh" src="' + img.src + '">');
+  w.document.close();
+});
 </script>
 </body>
 </html>
