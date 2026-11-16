@@ -1805,7 +1805,7 @@ function soloRangeLabel(units){
   const chs = [...byCh.keys()].sort((a, b) => !a ? 1 : !b ? -1 : compareChapters(a, b));
   return chs.map(ch => {
     const labels = [...byCh.get(ch)].sort((a,b)=>a.localeCompare(b,'ko',{numeric:true}));
-    return (ch && (chs.length > 1 || multiCourse) ? ch + ' ' : '') + labels.join(', ');
+    return (ch ? ch + ' ' : '') + labels.join(', ');
   }).join(' / ');
 }
 
