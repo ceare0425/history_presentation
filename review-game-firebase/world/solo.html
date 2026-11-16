@@ -1067,7 +1067,7 @@ function updateRelearnBtn(){
   const btn = el('relearnBtn');
   const q = currentQuestion;
   const lesson = q ? findLessonForUnit(pagesData, SUBJECT_NAME, q.unit) : null;
-  currentRelearnUrl = lesson ? ('../../' + lesson.path) : null;
+  currentRelearnUrl = lesson ? ('../../mobile/?path=' + encodeURIComponent(lesson.path)) : null;
   btn.classList.toggle('hidden', !currentRelearnUrl);
 }
 // 새 탭이 열리면 다시 배우기 말고 딴짓도 할 수 있으므로, 연습 중에 누르면 연습을 끝내고 연다.
@@ -2429,7 +2429,7 @@ el('dashBody').addEventListener('click', (ev)=>{
   const relearnBtn = ev.target.closest('[data-relearn-unit]');
   if(relearnBtn){
     const lesson = findLessonForUnit(pagesData, SUBJECT_NAME, relearnBtn.dataset.relearnUnit);
-    if(lesson) window.open('../../' + lesson.path, '_blank');
+    if(lesson) window.open('../../mobile/?path=' + encodeURIComponent(lesson.path), '_blank');
     return;
   }
   const unbookmarkBtn = ev.target.closest('[data-unbookmark]');
