@@ -229,6 +229,7 @@
     var bits = await crypto.subtle.deriveBits({ name:'PBKDF2', hash:'SHA-256', salt:enc.encode(SALT), iterations:ITER }, key, 256);
     return Array.from(new Uint8Array(bits), function(b){ return b.toString(16).padStart(2,'0'); }).join('');
   }
+  window.__adminCheckPw = async function(pw){ return PW_HASH.indexOf(await hashPw(pw)) !== -1; };   // 코인 지급 2차 확인에서 재사용
   var busy = false;
   async function tryAuth(){
     if(busy) return;
@@ -2444,6 +2445,37 @@ el('coinAll').onchange = () => {
   coinState.checked = new Set(el('coinAll').checked ? names : []);
   renderCoinRows();
 };
+// 🔐 코인 주기·빼기 2차 확인: 관리자 비밀번호(입장할 때 쓰는 것과 같음)를 한 번 더 입력받는다. 확인하면 true, 취소하면 false.
+function askCoinPassword(summary){
+  return new Promise((resolve) => {
+    const gate = document.createElement('div');
+    gate.className = 'auth-gate';
+    gate.innerHTML = '<div class="auth-box"><div class="auth-msg">🔐 코인 지급 2차 확인</div>'
+      + '<div class="coin-pw-sum" style="white-space:pre-line; text-align:left; font-size:.85rem; margin-bottom:10px;"></div>'
+      + '<input type="password" autocomplete="off" placeholder="관리자 비밀번호" inputmode="numeric">'
+      + '<div class="auth-err"></div>'
+      + '<button type="button" class="coin-pw-ok">확인하고 진행</button>'
+      + '<button type="button" class="coin-pw-cancel" style="background:#e5e7eb; color:#374151;">취소</button></div>';
+    gate.querySelector('.coin-pw-sum').textContent = summary;
+    const input = gate.querySelector('input'), err = gate.querySelector('.auth-err');
+    let busy = false;
+    const done = (v) => { gate.remove(); resolve(v); };
+    const tryOk = async () => {
+      if(busy) return;
+      busy = true;
+      let ok = false;
+      try{ ok = !!(window.__adminCheckPw && await window.__adminCheckPw(input.value)); }catch(_e){}
+      busy = false;
+      if(ok) done(true);
+      else { err.textContent = '비밀번호가 틀렸습니다.'; input.value = ''; input.focus(); }
+    };
+    gate.querySelector('.coin-pw-ok').onclick = tryOk;
+    gate.querySelector('.coin-pw-cancel').onclick = () => done(false);
+    input.addEventListener('keydown', (ev) => { if(ev.key === 'Enter') tryOk(); else if(ev.key === 'Escape') done(false); });
+    document.body.appendChild(gate);
+    input.focus();
+  });
+}
 async function giveCoins(sign){
   const msg = el('coinMsg');
   const amt = Math.floor(Number(el('coinAmount').value));
@@ -2455,7 +2487,8 @@ async function giveCoins(sign){
   // 실수로 잘못 주거나 빼지 않도록 한 번 더 확인
   const preview = names.slice(0, 5).join(', ') + (names.length > 5 ? ` 외 ${names.length - 5}명` : '');
   const verb = sign > 0 ? '주기' : '빼기';
-  if(!confirm('정말 코인을 ' + verb + ' 할까요?' + String.fromCharCode(10, 10) + '대상: ' + names.length + '명 (' + preview + ')' + String.fromCharCode(10) + '코인: ' + amt + '개' + (sign > 0 ? '' : ' 빼기') + (reason ? String.fromCharCode(10) + '사유: ' + reason : ''))){
+  const summary = '정말 코인을 ' + verb + ' 할까요?' + String.fromCharCode(10, 10) + '대상: ' + names.length + '명 (' + preview + ')' + String.fromCharCode(10) + '코인: ' + amt + '개' + (sign > 0 ? '' : ' 빼기') + (reason ? String.fromCharCode(10) + '사유: ' + reason : '');
+  if(!(await askCoinPassword(summary))){
     msg.className = 'msg'; msg.textContent = '취소했어요.'; return;
   }
   el('coinGiveBtn').disabled = el('coinTakeBtn').disabled = true;
