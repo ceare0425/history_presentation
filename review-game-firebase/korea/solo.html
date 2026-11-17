@@ -793,9 +793,9 @@ const MODE_DESC = {
   card: '시간 제한 없이 문제를 보고 답을 떠올린 뒤 정답을 확인해요. 몰랐던 카드는 조금 뒤 다시 나오고 🔁 복습 추천에도 들어가요. 시험 직전 빠르게 훑어보기 좋아요.'
 };
 const RAID_DIFF_DESC = [
-  '정답률 80%면 대부분 이겨요. 처음이라면 여기부터!',
-  '정답률 90%는 되어야 이길 수 있어요.',
-  '정확하면서 빨리 쳐야 해요 (문제당 5초 안팎).',
+  '정답률 90%는 되어야 이겨요. 처음이라면 여기부터!',
+  '정답률 95%에 가깝게 맞혀야 이길 수 있어요.',
+  '정확하면서 아주 빨리 쳐야 해요 (문제당 5초 안팎).',
   '빠르고 거의 다 맞혀야 하는 도전 과제예요.'
 ];
 const START_LABEL = { tower: '▶ 연습 시작', raid: '👹 보스 레이드 시작', card: '🃏 암기 카드 시작' };
@@ -864,7 +864,7 @@ function startRaidFrame(){
   raidLast = null; raidEnding = false; raidLastHearts = null; raidLastShields = null;
   const f = document.createElement('iframe');
   f.title = '보스 레이드';
-  f.src = '../raid.html?solo=1&subj=korea&boss=' + raidBoss + '&name=' + encodeURIComponent(myName()) + '&v=20261014a';
+  f.src = '../raid.html?solo=1&subj=korea&boss=' + raidBoss + '&name=' + encodeURIComponent(myName()) + '&v=20261117a';
   el('raidFrameWrap').appendChild(f);
   const t0 = Date.now();
   raidLoadTimer = setInterval(()=>{
@@ -1692,6 +1692,9 @@ function showEndedView(){
   el('clearPrompt').classList.add('hidden');
   { const api = raidApi(); if(api){ try{ raidLast = api.state() || raidLast; }catch(_e){} } }
   logSoloSession();
+  // 🏆 혼자 레이드 격파 보너스(난이도별 고정 코인, 같은 판은 한 번만)
+  let raidBonus = 0;
+  if(sessionMode === 'raid' && raidLast && raidLast.result === 'win') raidBonus = pets.raidWinBonus('raid' + sessionStartedAt, sessionRaidDiff) || 0;
   stopRaidFrame();
   clearModeLayout();
   el('finalFloor').textContent = floor;
@@ -1705,7 +1708,7 @@ function showEndedView(){
   if(sessionMode === 'raid'){
     const r = raidLast;
     const diffName = ['😐 보통','😠 어려움','🔥 매우 어려움','💀 지옥'][sessionRaidDiff] || '';
-    if(r && r.result === 'win') { mr.className = 'mode-result win'; mr.textContent = `🎉 ${r.bossName} 격파! (${diffName} · ${fmtTime(Math.ceil(r.used/1000))} 만에)`; }
+    if(r && r.result === 'win') { mr.className = 'mode-result win'; mr.textContent = `🎉 ${r.bossName} 격파! (${diffName} · ${fmtTime(Math.ceil(r.used/1000))} 만에)` + (raidBonus ? ` · 🪙 보너스 +${raidBonus}` : ''); }
     else if(r && r.result === 'lose'){ mr.className = 'mode-result lose'; mr.textContent = `💀 레이드 실패 · ${r.bossName} 체력 ${Math.max(1, Math.round(r.hp / Math.max(1, r.max) * 100))}% 남음 (${diffName})`; }
     else { mr.className = 'mode-result'; mr.textContent = `👹 레이드를 중간에 마쳤어요 (${diffName})`; }
     if(r) el('finalStat').textContent += ` · 준 피해 ${r.dmg.toLocaleString('ko-KR')} · 막은 공격 ${r.parries || 0}번 · 쓰러진 횟수 ${r.kos}번`;

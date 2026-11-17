@@ -168,6 +168,8 @@ const DIFFS = [
 //   보통 70% 50 · 80% 79 · 어려움 80% 29 · 90% 58 · 매우 어려움 90% 25 (빠름 96) · 지옥 빠름 90% 26
 //   지옥만 한 번 더 체력 4750→5100(약 7%↑): 빠름 90% 30→20 · 문제당 4초 90% 83→77
 //   지옥 다시 5100→6400(승률 4~5% 목표 · 6300은 약 5.3%, 6500은 3%): 800판씩 — 빠름 90% 약 4.3 · 95% 13 · 문제당 4초 90% 36
+// 2026-11-17 '초성 힌트가 나오니 훨씬 어렵게': 체력 보통·어려움·매우 어려움 약 +50%(1950→2900·2600→3900·3150→4700), 지옥 +15%(6400→7350). 100판씩(문제당 약 8초·빠름 약 5초):
+//   보통 80% 91→42 · 90% 75 | 어려움 90% 74→20 · 95% 48 | 매우 어려움 90% 24→2 · 95%(5초) 94 | 지옥 90%(5초) 11→1 · 95%(4초) 70
 const SOLO_BASE = {
   healCastMs: 18000,         // 회복 의식: 이 시간 안에 정답 healNeed개로 끊는다
   arrestMs: 15000,           // 체포: 이 시간 안에 정답 arrestNeed개로 포승줄을 끊는다 (못 끊으면 쓰러짐)
@@ -177,17 +179,17 @@ const SOLO_BASE = {
 };
 // guardMs: 공격 예고 뒤 이 시간 안에 다음 문제를 맞히면 막는다 · attackGapMs: 예고 공격 간격 [평소 · 분노 · 광폭화]
 const SOLO_DIFFS = [
-  { name: '보통', emoji: '😐', color: '#3d8bfd', desc: '대부분 맞히면 이겨요', note: '정답률 80%면 충분',
-    p: { hp: 1950, hearts: 5, reviveMs: 5000, guardMs: 10000, attackGapMs: [12000, 10000, 8000], whistleGapMs: 18000,
+  { name: '보통', emoji: '😐', color: '#3d8bfd', desc: '거의 다 맞혀야 해요', note: '정답률 90%는 되어야',
+    p: { hp: 2900, hearts: 5, reviveMs: 5000, guardMs: 10000, attackGapMs: [12000, 10000, 8000], whistleGapMs: 18000,
          healNeed: 2, healAmount: 0.08, specialGapMs: 20000, arrestNeed: 1, censorCount: 1, minionHp: 0.06 } },
   { name: '어려움', emoji: '😠', color: '#ffb020', desc: '거의 다 맞혀야 해요', note: '정답률 90%는 되어야',
-    p: { hp: 2600, hearts: 4, reviveMs: 6000, guardMs: 9000, attackGapMs: [10000, 8500, 7000], whistleGapMs: 16000,
+    p: { hp: 3900, hearts: 4, reviveMs: 6000, guardMs: 9000, attackGapMs: [10000, 8500, 7000], whistleGapMs: 16000,
          healNeed: 2, healCastMs: 16000, healAmount: 0.1, specialGapMs: 18000, arrestNeed: 1, censorCount: 1, minionHp: 0.07 } },
   { name: '매우 어려움', emoji: '🔥', color: '#ff5a4a', desc: '빠르고 정확해야 해요', note: '빨리 쳐야 이겨요',
-    p: { hp: 3150, hearts: 4, reviveMs: 7000, guardMs: 8000, attackGapMs: [9000, 7500, 6000], whistleGapMs: 14000,
+    p: { hp: 4700, hearts: 4, reviveMs: 7000, guardMs: 8000, attackGapMs: [9000, 7500, 6000], whistleGapMs: 14000,
          healNeed: 2, healCastMs: 14000, healAmount: 0.12, specialGapMs: 16000, arrestNeed: 2, arrestMs: 16000, censorCount: 1, minionHp: 0.08 } },
   { name: '지옥', emoji: '💀', color: '#b86bff', desc: '빨라도 버티기 힘들어요', note: '도전 과제용',
-    p: { hp: 6400, hearts: 3, reviveMs: 8000, guardMs: 7000, attackGapMs: [8000, 6500, 5000], whistleGapMs: 12000,
+    p: { hp: 7350, hearts: 3, reviveMs: 8000, guardMs: 7000, attackGapMs: [8000, 6500, 5000], whistleGapMs: 12000,
          healNeed: 3, healCastMs: 15000, healAmount: 0.14, specialGapMs: 14000, arrestNeed: 2, censorCount: 1, minionHp: 0.09 } }
 ];
 if(SOLO){ DIFFS.length = 0; DIFFS.push(...SOLO_DIFFS); }

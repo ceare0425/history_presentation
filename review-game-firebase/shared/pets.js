@@ -24,6 +24,7 @@
 // ── 규칙 숫자 ─────────────────────────────────────────
 export const PET_RULES = {
   welcome: 200,          // 처음 받는 축하 코인 (한 번만)
+  raidWin: [50, 100, 200, 500],   // 🏆 혼자 보스 레이드 격파 보너스 코인 (보통·어려움·매우 어려움·지옥) — 정답당 코인과 별개로 격파했을 때 한 번
   coinPerCorrect: 5,     // 정답 1개당 코인 (혼자 연습·수업 게임 공통, 상한 없음)
   classBonus: [50, 30, 15],// 수업 게임 개인전 1·2·3등 보너스
   teamBonus: 25,         // 수업 게임 팀전 1등 팀 보너스
@@ -2900,6 +2901,23 @@ export function mountPets(deps, opts){
       }).then(res => {
         if(res && res.committed) toast(`🪙 ${teamMode ? '1등 팀' : rank + '등'} 보너스 +${amt}코인!`);
       });
+    },
+    // 혼자 보스 레이드를 격파했을 때 난이도별 보너스 (같은 레이드(token)는 한 번만). diffIdx: 0 보통 ~ 3 지옥
+    raidWinBonus(token, diffIdx){
+      const amt = PET_RULES.raidWin[diffIdx] || 0;
+      if(!ident || !token || !amt) return amt;
+      const key = String(token).replace(/[.#$\/\[\]]/g, '_');
+      tx((cur) => {
+        cur.bonus = cur.bonus || {};
+        if(cur.bonus[key]) return;
+        cur.bonus[key] = amt;
+        cur.coins = (cur.coins || 0) + amt;
+        cur.earned = (cur.earned || 0) + amt;
+        return cur;
+      }).then(res => {
+        if(res && res.committed) toast(`🏆 보스 격파 보너스 +${amt}코인!`);
+      });
+      return amt;
     },
     // 혼자 연습 탑 오르기 층수 (불사조 해금 조건)
     noteSoloFloor(floor){
