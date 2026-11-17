@@ -2111,6 +2111,35 @@ const MIN_PEERS = 5; // 이 인원 이상 모여야 '상위 %'를 보여준다
 
 let lastAgg = null;
 let lastReviewItems = []; // renderDash가 마지막으로 계산한 복습 추천(오답+오래된 정답) 목록 — "다시 풀기" 버튼에서 참조
+// 즐겨찾기를 단원(chapter)·주제(unit)별로 묶어 한 번에 해제할 수 있는 영역 HTML (시험 범위가 바뀔 때 쓰라고 만든 기능).
+// 즐겨찾기 기록에는 주제만 저장돼 있어서 단원은 문제 은행(questionsObj)에서 찾아온다.
+function bookmarkChapterOf(b){ return String((questionsObj[b.qid] || {}).chapter || ''); }
+function bookmarkGroupHtml(){
+  const chapters = new Map(); // chapter → Map(unit → 개수)
+  lastBookmarkItems.forEach(b=>{
+    const ch = bookmarkChapterOf(b), u = b.unit || '';
+    if(!chapters.has(ch)) chapters.set(ch, new Map());
+    const m = chapters.get(ch);
+    m.set(u, (m.get(u)||0) + 1);
+  });
+  const hasChapter = Array.from(chapters.keys()).some(c=>c);
+  const attr = (s)=>escapeHtml(s);
+  const rows = Array.from(chapters.entries()).map(([ch, units])=>{
+    const total = Array.from(units.values()).reduce((a,b)=>a+b, 0);
+    const head = hasChapter ? `<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0 4px;">
+        <b style="font-size:.8rem;">${escapeHtml(ch || '단원 정보 없음')} <span style="color:var(--sub); font-weight:400;">${total}문제</span></b>
+        <button type="button" class="mini-btn" data-unbm-chapter="${attr(ch)}">✕ 단원 전체 해제</button>
+      </div>` : '';
+    const chips = Array.from(units.entries()).map(([u, n])=>`<span style="display:inline-flex; align-items:center; gap:4px; margin:2px 4px 2px 0;">
+        <span class="wunit" style="margin:0;">${escapeHtml(u || '주제 없음')} · ${n}</span>
+        <button type="button" class="mini-btn" data-unbm-chapter="${attr(ch)}" data-unbm-unit="${attr(u)}">✕</button>
+      </span>`).join('');
+    return head + `<div>${chips}</div>`;
+  }).join('');
+  return `<div class="wrong-row" style="border:1px solid var(--line); border-radius:10px; margin-bottom:8px;">
+      <div style="font-size:.76rem; color:var(--sub);">🗂 시험 범위가 바뀌었나요? 단원·주제별로 한꺼번에 해제할 수 있어요.</div>${rows}</div>`;
+}
+
 let lastBookmarkItems = []; // openDash가 불러온 즐겨찾기 목록 — 대시보드 렌더·"다시 풀기"·해제 버튼에서 참조
 let lastDashList = null, lastDashSoloObj = null, lastDashReviewList = null; // 마지막으로 대시보드를 그릴 때 쓴 원본 데이터 (pages.json이 늦게 도착했을 때 재렌더링용)
 
@@ -2294,6 +2323,7 @@ function renderDash(list, soloObj){
     <div class="dash-section">
       <h3>⭐ 즐겨찾기 <span class="note">연습 중 직접 표시해 둔 문제 ${lastBookmarkItems.length}개</span></h3>
       ${lastBookmarkItems.length ? `
+        ${bookmarkGroupHtml()}
         <div class="wrong-list">
           ${lastBookmarkItems.slice(0,30).map(b=>`<div class="wrong-row">
             <span class="wunit">${escapeHtml(b.unit||'')}</span>
@@ -2430,6 +2460,25 @@ el('dashBody').addEventListener('click', (ev)=>{
   if(relearnBtn){
     const lesson = findLessonForUnit(pagesData, SUBJECT_NAME, relearnBtn.dataset.relearnUnit);
     if(lesson) window.open('../../mobile/?path=' + encodeURIComponent(lesson.path), '_blank');
+    return;
+  }
+  const groupBtn = ev.target.closest('[data-unbm-chapter]');
+  if(groupBtn){
+    const ch = groupBtn.dataset.unbmChapter;
+    const hasUnit = groupBtn.dataset.unbmUnit !== undefined;
+    const u = groupBtn.dataset.unbmUnit;
+    const targets = lastBookmarkItems.filter(x=> bookmarkChapterOf(x) === ch && (!hasUnit || (x.unit || '') === u));
+    if(!targets.length) return;
+    const label = hasUnit ? (u || '주제 없음') : (ch || '단원 정보 없음');
+    if(!confirm(`'${label}' 즐겨찾기 ${targets.length}문제를 모두 해제할까요?`)) return;
+    const cls = classKey(), nm = myName();
+    const gone = new Set(targets.map(x=>x.qid));
+    lastBookmarkItems = lastBookmarkItems.filter(x=>!gone.has(x.qid));
+    gone.forEach(qid=>{
+      bookmarkedQids.delete(qid);
+      if(cls && nm) remove(bookmarkRef(ROOM, cls, nm, qid)).catch(()=>{});
+    });
+    renderDash(lastDashList, lastDashSoloObj);
     return;
   }
   const unbookmarkBtn = ev.target.closest('[data-unbookmark]');
