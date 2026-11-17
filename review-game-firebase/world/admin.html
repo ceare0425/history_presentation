@@ -2406,6 +2406,12 @@ async function giveCoins(sign){
   const key = coinState.key;
   if(!names.length){ msg.className = 'msg err'; msg.textContent = '코인을 줄 학생을 먼저 체크해 주세요.'; return; }
   if(!(amt >= 1 && amt <= 10000)){ msg.className = 'msg err'; msg.textContent = '코인 수는 1~10000 사이로 넣어 주세요.'; return; }
+  // 실수로 잘못 주거나 빼지 않도록 한 번 더 확인
+  const preview = names.slice(0, 5).join(', ') + (names.length > 5 ? ` 외 ${names.length - 5}명` : '');
+  const verb = sign > 0 ? '주기' : '빼기';
+  if(!confirm('정말 코인을 ' + verb + ' 할까요?' + String.fromCharCode(10, 10) + '대상: ' + names.length + '명 (' + preview + ')' + String.fromCharCode(10) + '코인: ' + amt + '개' + (sign > 0 ? '' : ' 빼기') + (reason ? String.fromCharCode(10) + '사유: ' + reason : ''))){
+    msg.className = 'msg'; msg.textContent = '취소했어요.'; return;
+  }
   el('coinGiveBtn').disabled = el('coinTakeBtn').disabled = true;
   msg.className = 'msg'; msg.textContent = '처리 중…';
   let ok = 0, clamped = 0, skipped = 0; const fail = [];
