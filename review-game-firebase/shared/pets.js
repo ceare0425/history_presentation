@@ -1324,6 +1324,7 @@ function addCss(){
   .pt-mini button.pt-act.go{ background:#6c8cf5; border-color:#6c8cf5; color:#fff; }   /* 미니게임 창은 펫 창 밖(body)에 붙어서 따로 지정 */
   .pt-overlay button.pt-act.gold{ background:#ffcf3f; border-color:#e0a920; color:#5a3b00; }
   .pt-overlay button.pt-act:disabled{ opacity:.45; cursor:default; }
+  .pt-overlay button.pt-act.noitem{ opacity:.55; }
   .pt-msg{ font-size:.82rem; color:#4b5563; min-height:1.1em; }
   .pt-owned{ display:flex; gap:8px; flex-wrap:wrap; }
   .pt-overlay button.pt-own{ width:auto; flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 8px 5px; border-radius:12px; border:2px solid #e5e7eb; background:#fff; color:#374151; font-size:.74rem; font-weight:700; cursor:pointer; transition:none; }
@@ -1440,6 +1441,8 @@ export function mountPets(deps, opts){
   let view = 'all';         // 'all' 펫+상점 한 창 · 'shop' 상점만 · 'care' 펫 키우기만
   let ext = null;           // 희귀 해금 조건용 칭호 기록 (상점을 열 때 한 번 불러옴)
   let msg = '';
+  let shopHint_t = 0;
+  let shopHint = '';   // 용품이 없을 때 누르면 뜨는 상점 안내 (상점 바로가기 버튼과 함께)
   let lastSig = null;
   let readyToasted = {};
   const avatars = new Set();
@@ -2271,7 +2274,8 @@ export function mountPets(deps, opts){
       const itemBtn = (k, off, cls) => {
         const it = R.items[k], have = items[k] | 0;
         const can = !off && have > 0;   // 용품은 상점에서만 산다 — 돌보기에서는 가진 것만 쓸 수 있음
-        return `<button type="button" class="pt-act ${cls || ''}" data-act="${k}" ${can ? '' : 'disabled'}>${it.label} ${have > 0 ? `<small>(${have}개)</small>` : `<small>(없음 · 🏪 상점에서 구입)</small>`}</button>`;
+        const askShop = !off && have <= 0;   // 없을 때 눌러 보면 상점 안내가 뜬다 (버튼 자체는 흐리게)
+        return `<button type="button" class="pt-act ${cls || ''}${askShop ? ' noitem' : ''}" ${askShop ? `data-noitem="${k}"` : `data-act="${k}"`} ${can || askShop ? '' : 'disabled'}>${it.label} ${have > 0 ? `<small>(${have}개)</small>` : `<small>(없음)</small>`}</button>`;
       };
       const walkLeft = c.walkNext > now ? Math.ceil((c.walkNext - now) / 60000) : 0;
       const status = info.m === 'explore' ? `🗺️ 탐험 중… ${fmtLeft((tripsOf(data)[info.id] || { until: now }).until - now)} 뒤 돌아와요 (🗺️ 탐험 탭)`
@@ -2301,7 +2305,7 @@ export function mountPets(deps, opts){
           <button type="button" class="pt-act" data-act="sleep" ${busy || c.energy >= 95 ? 'disabled' : ''}>💤 재우기</button>
           ${c.stage < 2 ? `<button type="button" class="pt-act go" data-act="evolve" ${ready && info.m !== 'explore' ? '' : 'disabled'}>✨ 진화하기</button>` : ''}
         </div>
-        <div class="pt-msg">${escapeHtml(msg || hint)}</div>
+        ${shopHint && !msg ? `<div class="pt-msg">${escapeHtml(shopHint)} <button type="button" class="pt-act gold" data-goshop="normal">🏪 상점으로 가기</button></div>` : `<div class="pt-msg">${escapeHtml(msg || hint)}</div>`}
       </div></div>
       <div class="pt-note">데려간 펫과 함께 문제를 맞히면 경험치와 기분이 올라요 · 배부름·기분은 1시간에 1씩 줄어요 · ${R.poopEveryMs / 3600000}시간마다, 그리고 밥을 먹으면 똥을 싸요 · 똥이 ${R.sickPoop}개 쌓이거나 배부름이 0이 되면 아파요 · 산책은 ${R.walkCooldownMs / 60000}분에 한 번 (가끔 동전을 주워요) · 재우면 ${R.sleepMs / 60000}분 뒤 체력이 가득 차요</div></div>`;
     } else if(showCare && careTab === 'care'){
@@ -2799,6 +2803,12 @@ export function mountPets(deps, opts){
       if(b.dataset.xok){ lastFind = null; render(); return; }
       if(b.dataset.mini){ startMini(); return; }
       if(b.dataset.memo){ startMemo(); return; }
+      if(b.dataset.noitem){
+        const nm = { rice: '밥', snack: '간식', med: '약' }[b.dataset.noitem] || '용품';
+        shopHint = `${nm}이 없어요! 상점에서 먼저 사 주세요.`;
+        clearTimeout(shopHint_t); shopHint_t = setTimeout(() => { shopHint = ''; render(); }, 8000);
+        render(); return;
+      }
       if(b.dataset.act){ act(b.dataset.act); }
     });
     overlay.addEventListener('submit', (e) => {
