@@ -28,7 +28,7 @@ export const PET_RULES = {
   classBonus: [50, 30, 15],// 수업 게임 개인전 1·2·3등 보너스
   teamBonus: 25,         // 수업 게임 팀전 1등 팀 보너스
   pigUnlock: 25000,      // 금돼지 해금: 누적 코인
-  // 상점 용품 (가지고 있으면 그걸 쓰고, 없으면 펫 키우기에서 바로 사서 줄 수 있음)
+  // 상점 용품 (상점에서만 살 수 있고, 펫이 있어야 산다 · 펫 키우기에서는 가진 용품만 쓴다)
   items: {
     rice:  { label: '🍙 밥',   price: 30, food: 30 },            // 먹으면 똥이 하나 생김
     snack: { label: '🍪 간식', price: 40, food: 10, fun: 15 },
@@ -2266,11 +2266,11 @@ export function mountPets(deps, opts){
       const coins = data.coins || 0;
       const R = PET_RULES;
       const bar = (label, v, cls) => `<div class="pt-bar"><span style="text-align:left">${label}</span><i><b class="${cls || (v < 25 ? 'low' : '')}" style="width:${Math.max(0, Math.min(100, v))}%"></b></i><span>${Math.round(v)}</span></div>`;
-      // 용품 버튼: 가진 게 있으면 그걸 쓰고, 없으면 그 자리에서 사서 준다
+      // 용품 버튼: 가진 용품만 쓸 수 있다 (사는 건 상점에서만)
       const itemBtn = (k, off, cls) => {
         const it = R.items[k], have = items[k] | 0;
-        const can = !off && (have > 0 || coins >= it.price);
-        return `<button type="button" class="pt-act ${cls || ''}" data-act="${k}" ${can ? '' : 'disabled'}>${it.label} ${have > 0 ? `<small>(${have}개)</small>` : `<small>(🪙${it.price})</small>`}</button>`;
+        const can = !off && have > 0;   // 용품은 상점에서만 산다 — 돌보기에서는 가진 것만 쓸 수 있음
+        return `<button type="button" class="pt-act ${cls || ''}" data-act="${k}" ${can ? '' : 'disabled'}>${it.label} ${have > 0 ? `<small>(${have}개)</small>` : `<small>(없음 · 🏪 상점에서 구입)</small>`}</button>`;
       };
       const walkLeft = c.walkNext > now ? Math.ceil((c.walkNext - now) / 60000) : 0;
       const status = info.m === 'explore' ? `🗺️ 탐험 중… ${fmtLeft((tripsOf(data)[info.id] || { until: now }).until - now)} 뒤 돌아와요 (🗺️ 탐험 탭)`
@@ -2316,9 +2316,10 @@ export function mountPets(deps, opts){
     if(view === 'care' && careTab === 'care' && info) h += `<div class="pt-sec"><button type="button" class="pt-act" data-view="shop">🏪 상점에서 새 펫 보기</button></div>`;
     if(view === 'shop' && info) h += `<div class="pt-sec"><div class="pt-note">지금 데려가는 펫: <b>${escapeHtml(PET_INFO[info.id].names[info.s])}</b> · 밥 주기·진화는 🐾 펫 키우기에서 해요 <button type="button" class="pt-act" data-view="care">🐾 펫 키우기로 가기</button></div></div>`;
     if(showShop){
+    const hasPet = Object.keys(owned).length > 0;
     h += `<div class="pt-sec"><h4>${view === 'shop' ? '🛒 펫 고르기' : '🏪 상점'}</h4><div class="pt-note">🪙 코인 모으기: 혼자 연습·수업 게임 정답 1개 = ${PET_RULES.coinPerCorrect}코인 + 1·2·3등 보너스 ${PET_RULES.classBonus.join('·')}코인 · 한국사·세계사 코인은 하나로 합쳐져요</div>
-      <h4 class="pt-sub-h">🧺 용품 <small>펫 키우기에서 없으면 바로 사서 줄 수도 있어요</small></h4>
-      <div class="pt-goods">${Object.entries(PET_RULES.items).map(([k, it]) => `<div class="pt-good"><b>${it.label}</b><span>${k === 'rice' ? `배부름 +${it.food} (먹으면 똥 하나)` : k === 'snack' ? `배부름 +${it.food} · 기분 +${it.fun}` : '아플 때 먹이면 나아요'}</span><small>가진 개수 ${((data.items || {})[k] | 0)}개</small><button type="button" class="pt-buy" data-buyitem="${k}" ${(data.coins || 0) >= it.price ? '' : 'disabled'}>🪙 ${it.price}코인에 사기</button></div>`).join('')}</div>
+      <h4 class="pt-sub-h">🧺 용품 <small>${hasPet ? '용품은 여기 상점에서만 살 수 있어요 · 펫 키우기에서는 가진 용품만 줄 수 있어요' : '🐾 펫을 먼저 데려와야 용품을 살 수 있어요'}</small></h4>
+      <div class="pt-goods">${Object.entries(PET_RULES.items).map(([k, it]) => `<div class="pt-good"><b>${it.label}</b><span>${k === 'rice' ? `배부름 +${it.food} (먹으면 똥 하나)` : k === 'snack' ? `배부름 +${it.food} · 기분 +${it.fun}` : '아플 때 먹이면 나아요'}</span><small>가진 개수 ${((data.items || {})[k] | 0)}개</small><button type="button" class="pt-buy" data-buyitem="${k}" ${hasPet && (data.coins || 0) >= it.price ? '' : 'disabled'}>${hasPet ? `🪙 ${it.price}코인에 사기` : '🐾 펫이 있어야 살 수 있어요'}</button></div>`).join('')}</div>
       <h4 class="pt-sub-h">🐾 펫 · 🛋️ 꾸미기</h4>
       <div class="pt-tabs"><button type="button" class="pt-tab ${shopTab === 'normal' ? 'on' : ''}" data-tab="normal">일반 펫</button><button type="button" class="pt-tab ${shopTab === 'rare' ? 'on' : ''}" data-tab="rare">✦ 희귀 펫</button><button type="button" class="pt-tab ${shopTab === 'decor' ? 'on' : ''}" data-tab="decor">🛋️ 꾸미기</button></div>
       ${shopTab === 'decor' ? decorShopHtml() : ''}
@@ -2433,7 +2434,10 @@ export function mountPets(deps, opts){
     }
     if(kind === 'buyitem'){
       const it = PET_RULES.items[id];
+      let noPet = false;
       const res = await tx((cur) => {
+        noPet = !Object.keys(cur.owned || {}).length;
+        if(noPet) return;                       // 펫이 없으면 용품을 살 수 없다
         if((cur.coins || 0) < it.price) return;
         cur.coins -= it.price;
         cur.items = cur.items || {};
@@ -2441,6 +2445,7 @@ export function mountPets(deps, opts){
         return cur;
       });
       if(res && res.committed) toast(`${it.label} 1개를 샀어요!`, '🐾 펫 키우기에서 줄 수 있어요');
+      else if(noPet) toast('🐾 펫이 먼저 있어야 해요', '아래에서 펫을 먼저 데려오면 용품을 살 수 있어요');
       return;
     }
     if(kind === 'place'){
@@ -2682,8 +2687,8 @@ export function mountPets(deps, opts){
           if(c.food <= 0){ why = '🍙 밥부터 주세요! 굶으면 약을 먹어도 다시 아파요'; return; }
         }
         cur.items = cur.items || {};
-        if((cur.items[kind] | 0) > 0) cur.items[kind] -= 1;
-        else { if((cur.coins || 0) < it.price) return; cur.coins -= it.price; }
+        if((cur.items[kind] | 0) <= 0){ why = '🏪 용품이 없어요! 상점에서 먼저 사 주세요'; return; }   // 여기서는 절대 결제하지 않음
+        cur.items[kind] -= 1;
         if(it.food) c.food = clamp(c.food + it.food);
         if(it.fun) c.fun = clamp(c.fun + it.fun);
         if(kind === 'rice') c.poop = Math.min(PET_RULES.poopMax, c.poop + 1);
