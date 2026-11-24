@@ -1461,7 +1461,8 @@ export function mountPets(deps, opts){
     d.className = 'pt-toast';
     d.innerHTML = escapeHtml(text) + (sub ? `<small>${escapeHtml(sub)}</small>` : '');
     box.appendChild(d);
-    setTimeout(() => d.remove(), 3600);
+    while(box.children.length > 3) box.firstElementChild.remove();   // 최대 3개까지만 쌓임(오래된 것부터 제거)
+    setTimeout(() => d.remove(), 1800);
   }
 
   function activeInfo(){
