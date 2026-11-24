@@ -2864,7 +2864,9 @@ export function mountPets(deps, opts){
     // 문제를 풀 때마다: 맞히면 코인 +coinPerCorrect (상한 없음), 데려간 펫 경험치·기분 +, 체력 -
     recordAnswer(correct){
       if(!ident || !correct) return;
+      let expMsg = '';   // 경험치 안내 한 줄 (트랜잭션이 재시도돼도 마지막 값만 쓴다)
       tx((cur, now) => {
+        expMsg = '';
         const dk = dayKey(now);
         const day = (cur.day && cur.day.k === dk) ? cur.day : { k: dk, c: 0 };
         day.c = (day.c || 0) + 1;
@@ -2875,13 +2877,28 @@ export function mountPets(deps, opts){
         const p = cur.active && cur.owned && cur.owned[cur.active];
         if(p){
           const c = careNow(p, now);
-          if(c.food > 0 && !c.sick) c.exp += 1;   // 배고프거나 아프면 경험치가 오르지 않음
+          if(c.food > 0 && !c.sick){ c.exp += 1; expMsg = '+1 경험치 ⭐'; }   // 배고프거나 아프면 경험치가 오르지 않음
+          else expMsg = c.sick ? '🤒 펫이 아파서 경험치 못 얻음' : '🍙 펫이 배고파서 경험치 못 얻음';
           c.fun = clamp(c.fun + PET_RULES.funPerCorrect);
           c.energy = clamp(c.energy - PET_RULES.energyPerCorrect);
           cur.owned[cur.active] = storeCare(c, now);
         }
         wishBump(cur, now, 'correct');
         return cur;
+      }).then(() => {
+        if(!expMsg) return;
+        avatars.forEach(a => {
+          if(!a.cv) return;
+          const pop = document.createElement('span');
+          pop.className = 'pt-coinpop';
+          pop.textContent = expMsg;
+          pop.style.color = expMsg.startsWith('+') ? '#2f8f4e' : '#c2334d';
+          const host = a.el;
+          if(getComputedStyle(host).position === 'static') host.style.position = 'relative';
+          pop.style.left = '70%'; pop.style.top = '14px';
+          host.appendChild(pop);
+          setTimeout(() => pop.remove(), 1500);
+        });
       });
       avatars.forEach(a => {
         if(!a.cv) return;
