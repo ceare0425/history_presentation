@@ -286,7 +286,7 @@ export const PET_INFO = {
   ],
   "lore": "고구려 고분 벽화 속 해에 사는 세 발 까마귀. 다 크면 해를 등에 져요.",
   "rare": true,
-  "unlock": "한국사 👑 ‘광복의 증인’ 칭호 받기"
+  "unlock": "👑 칭호 받기: 한국사 ‘광복의 증인’ 또는 세계사 ‘국민 국가의 개척자’"
  },
  "gumiho": {
   "price": 3000,
@@ -322,7 +322,7 @@ export const PET_INFO = {
   ],
   "lore": "이집트에서 죽은 이의 심장을 저울에 달던 자칼 머리의 신이에요.",
   "rare": true,
-  "unlock": "세계사 👑 ‘고대 문명 순례자’ 칭호 받기"
+  "unlock": "👑 칭호 받기: 세계사 ‘고대 문명 순례자’ 또는 한국사 ‘광복의 증인’+‘민주주의의 증인’ 둘 다"
  },
  "hyeonmu": {
   "price": 3000,
@@ -334,7 +334,7 @@ export const PET_INFO = {
   ],
   "lore": "고구려 강서대묘 벽화의 북쪽 수호신. 거북을 뱀이 휘감고 있어요.",
   "rare": true,
-  "unlock": "한국사 👑 ‘민주주의의 증인’ 칭호 받기"
+  "unlock": "👑 칭호 받기: 한국사 ‘민주주의의 증인’ 또는 세계사 ‘근세의 설계자’"
  },
  "pig": {
   "price": 1500,
@@ -1190,9 +1190,10 @@ function rareProgress(id, d, ext){
   const seen = (room, tid) => !!(ext[room] && ext[room].seen && ext[room].seen[tid]);
   const logCount = (suffix) => ['world', 'korea'].reduce((n, r) => n + Object.keys((ext[r] && ext[r].log) || {}).filter(k => k.endsWith('_' + suffix)).length, 0);
   switch(id){
-    case 'samjogo':  return { ok: seen('korea', 'g_1'), text: seen('korea', 'g_1') ? '달성' : '아직' };
-    case 'hyeonmu':  return { ok: seen('korea', 'g_2'), text: seen('korea', 'g_2') ? '달성' : '아직' };
-    case 'anubis':   return { ok: seen('world', 'g_1'), text: seen('world', 'g_1') ? '달성' : '아직' };
+    // 한 과목만 하는 학생도 열 수 있게, 두 과목 중 어느 쪽 칭호든 받으면 열림
+    case 'samjogo':  { const k = seen('korea', 'g_1'), w = seen('world', 'g_3'); return { ok: k || w, text: (k || w) ? '달성' : '아직' }; }
+    case 'hyeonmu':  { const k = seen('korea', 'g_2'), w = seen('world', 'g_2'); return { ok: k || w, text: (k || w) ? '달성' : '아직' }; }
+    case 'anubis':   { const w = seen('world', 'g_1'), k = seen('korea', 'g_1') && seen('korea', 'g_2'); return { ok: w || k, text: (w || k) ? '달성' : '아직' }; }
     case 'gumiho': {
       const set = new Set();
       ['world', 'korea'].forEach(r => { const e = ext[r] || {}; Object.keys(e.days || {}).forEach(k => set.add(k)); Object.keys(e.histDays || {}).forEach(k => set.add(k)); });
