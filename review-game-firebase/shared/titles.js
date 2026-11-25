@@ -447,6 +447,17 @@ export function mountTitles(deps, opts){
       } else {
         fresh.forEach(t => toast(`🏅 새 칭호! ${t.emoji} ${t.name}`, `${RARITY[t.rarity].label} · ${t.desc}`));
       }
+      // 칭호로 열리는 희귀 펫 안내 (조건은 pets.js의 rareProgress와 같게 유지)
+      const have = id => !!seen[id] || fresh.some(t => t.id === id);
+      const petsOpened = new Set();
+      fresh.forEach(t => {
+        if(room === 'korea' && t.id === 'g_1'){ petsOpened.add('삼족오'); if(have('g_2')) petsOpened.add('아누비스'); }
+        if(room === 'korea' && t.id === 'g_2'){ petsOpened.add('현무'); if(have('g_1')) petsOpened.add('아누비스'); }
+        if(room === 'world' && t.id === 'g_1') petsOpened.add('아누비스');
+        if(room === 'world' && t.id === 'g_2') petsOpened.add('현무');
+        if(room === 'world' && t.id === 'g_3') petsOpened.add('삼족오');
+      });
+      petsOpened.forEach(n => toast(`✦ 희귀 펫 ${n} 해금!`, '🐾 펫 상점의 희귀 펫 탭에서 만나 보세요'));
     }
     syncRep();
     if(overlay) renderBook();

@@ -1440,7 +1440,9 @@ export function mountPets(deps, opts){
   let lastFind = null, xToasted = {}, xSel = null;   // 🗺️ 방금 받은 탐험 선물 목록 · 돌아옴 알림을 띄운 탐험 · 탐험 보낼 펫
   let miniBox = null;                   // 🎮 미니게임 창
   let view = 'all';         // 'all' 펫+상점 한 창 · 'shop' 상점만 · 'care' 펫 키우기만
-  let ext = null;           // 희귀 해금 조건용 칭호 기록 (상점을 열 때 한 번 불러옴)
+  let ext = null;           // 희귀 해금 조건용 칭호 기록 (접속 후 불러오고, 문제를 풀 때 2분마다 다시 불러옴)
+  let extBusy = false, extAt = 0, rareAnn = {};
+  const TITLE_PETS = ['samjogo', 'hyeonmu', 'anubis'];
   let msg = '';
   let shopHint_t = 0;
   let shopHint = '';   // 용품이 없을 때 누르면 뜨는 상점 안내 (상점 바로가기 버튼과 함께)
@@ -2400,21 +2402,38 @@ export function mountPets(deps, opts){
   }
 
   async function loadExt(){
-    if(!ident) return;
+    if(!ident || extBusy) return;
+    extBusy = true;
     const me = ident;
     const rooms = ['world', 'korea'];
     const parts = ['seen', 'days', 'hist/days', 'log'];
     try{
       const snaps = await Promise.all(rooms.flatMap(r => parts.map(p => get(ref(db, `titles/${r}/${me.cls}/${me.name}/${p}`)))));
-      if(me !== ident) return;
+      if(me !== ident){ extBusy = false; return; }
       const out = {};
       rooms.forEach((r, i) => {
         const v = (k) => snaps[i * parts.length + k].val() || {};
         out[r] = { seen: v(0), days: v(1), histDays: v(2), log: v(3) };
       });
       ext = out;
-    }catch(_e){ ext = { world: {}, korea: {} }; }
+    }catch(_e){ ext = { world: {}, korea: {}, _err: true }; }
+    extBusy = false; extAt = Date.now();
+    checkRare();
     render();
+  }
+
+  // 🔓 희귀 펫이 새로 열리면 알림 (칭호로 열리는 펫은 titles.js가 칭호 받는 순간 알려 주므로 여기선 조용히 기록만)
+  // 처음 한 번은 이미 열려 있던 펫을 알리지 않고 기록만 해 둔다(rareInit)
+  function checkRare(){
+    if(!ident || !loaded || !ext || ext._err || isAdminView()) return;
+    const seenMap = data.rareSeen || {};
+    const ids = PET_ORDER.filter(id => PET_INFO[id].rare && !seenMap[id] && !rareAnn[id] && rareProgress(id, data, ext).ok);
+    if(!ids.length && data.rareInit) return;
+    ids.forEach(id => { rareAnn[id] = true; });
+    if(data.rareInit) ids.filter(id => !TITLE_PETS.includes(id)).forEach(id => toast(`✦ 희귀 펫 ${PET_INFO[id].name} 해금!`, '🐾 펫 상점의 희귀 펫 탭에서 만나 보세요'));
+    if(rareAnn._init && !ids.length) return;
+    rareAnn._init = true;
+    tx((cur, now) => { const m = Object.assign({}, cur.rareSeen); ids.forEach(id => { m[id] = now; }); cur.rareSeen = m; cur.rareInit = 1; return cur; });
   }
 
   function setMsg(t){ msg = t; render(); clearTimeout(setMsg._t); setMsg._t = setTimeout(() => { msg = ''; render(); }, 3500); }
@@ -2841,7 +2860,7 @@ export function mountPets(deps, opts){
       name = String(name || '').trim().slice(0, 20);
       if(ident && cls && name && ident.cls === String(cls) && ident.name === name) return;
       if(unsub){ unsub(); unsub = null; }
-      data = {}; loaded = false; lastSig = null; ext = null; readyToasted = {}; quizState = null; quizFb = null; lastFind = null; xToasted = {}; xSel = null; wishToasted = null;
+      data = {}; loaded = false; lastSig = null; ext = null; extBusy = false; rareAnn = {}; readyToasted = {}; quizState = null; quizFb = null; lastFind = null; xToasted = {}; xSel = null; wishToasted = null;
       ident = (cls && name) ? { cls: String(cls), name } : null;
       updateButtons();
       sync(true);
@@ -2859,6 +2878,7 @@ export function mountPets(deps, opts){
         sync();
         updateButtons();
         checkReady();
+        if(!isAdminView() && (!ext || (Date.now() - extAt > 120000))) loadExt(); else checkRare();
         if(overlay) render();
       }, () => { loaded = true; updateButtons(); if(overlay) render(); });
       if(overlay) render();
