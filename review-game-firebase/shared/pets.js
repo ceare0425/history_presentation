@@ -1781,8 +1781,10 @@ export function mountPets(deps, opts){
   function relicFurnOf(placeId){ return Object.entries(DECOR.furn).find(([, it]) => it.relic === placeId) || null; }
   function friendsHtml(now){
     if(!friendCls) friendCls = ident.cls;
-    const grade = ident.cls.split('-')[0];
-    const pick = `<div class="pt-tabs pt-cls">${Array.from({ length: 10 }, (_, i) => `${grade}-${i + 1}`).map(c => `<button type="button" class="pt-tab ${friendCls === c ? 'on' : ''}" data-fcls="${c}">${c.split('-')[1]}반${c === ident.cls ? ' (우리 반)' : ''}</button>`).join('')}</div>`;
+    // 관리자 계정은 다른 학년 친구 방도 갈 수 있다 (학년 선택 줄 추가)
+    const grade = isAdminView() ? friendCls.split('-')[0] : ident.cls.split('-')[0];
+    const gradePick = isAdminView() ? `<div class="pt-tabs pt-cls">${['1', '2', '3'].map(g => `<button type="button" class="pt-tab ${grade === g ? 'on' : ''}" data-fcls="${grade === g ? friendCls : g + '-1'}">${g}학년</button>`).join('')}</div>` : '';
+    const pick = gradePick + `<div class="pt-tabs pt-cls">${Array.from({ length: 10 }, (_, i) => `${grade}-${i + 1}`).map(c => `<button type="button" class="pt-tab ${friendCls === c ? 'on' : ''}" data-fcls="${c}">${c.split('-')[1]}반${c === ident.cls ? ' (우리 반)' : ''}</button>`).join('')}</div>`;
     if(!friends){ if(!friendsBusy) loadFriends(); return pick + `<div class="pt-sec"><p class="pt-note">${clsLabel(friendCls)} 친구 방을 불러오는 중…</p></div>`; }
     if(friendSel){
       const f = friends.find(x => x.name === friendSel);
