@@ -675,7 +675,7 @@ let myCloverUntil = 0;       // '네잎클로버' — 30초간 정답마다 50% 
 let myAnthemNext = 0;        // '팀 응원가' — 남은 2배 정답 수(팀 전체 각자)
 // 🐾 펫 능력 (아이템전 전용 · shared/pets.js PET_ABILITY) — 한 판 동안 쓴 횟수, 선물로 맡아 둔 아이템
 let petGuardUsed = 0, petStreakUsed = 0, petGiftCount = 0, petSpareItem = null, petSpareSince = 0, petAbText = null;
-function petAb(){ if(!itemsOn() || roundState.raid_mode) return null; const a = pets.ability(); return a && !a.sick ? a : null; }
+function petAb(){ if(!itemsOn() || roundState.raid_mode) return null; const a = pets.ability(itemsMode); return a && !a.sick ? a : null; }
 function petAbIs(k){ const a = petAb(); return a && a.key === k ? a : null; }
 function petLong(ms){ const a = petAbIs('extend'); return a ? Math.round(ms * (1 + a.v / 100)) : ms; }    // ⏳ 시간 늘리기
 function petShort(ms){ const a = petAbIs('shorten'); return a ? Math.round(ms * (1 - a.v / 100)) : ms; }  // 💨 털어내기
@@ -1791,7 +1791,7 @@ function renderPetAbLine(){
   if(!line) return;
   let txt = '';
   if(itemsOn() && !roundState.raid_mode){
-    const a = pets.ability();
+    const a = pets.ability(itemsMode);
     if(a && a.sick) txt = `🐾 ${a.petName} — 아파서 능력을 못 써요 (펫 키우기에서 약을 주세요)`;
     else if(a){
       const st = a.key === 'guard' ? `방해 막기 ${Math.max(0, a.v - petGuardUsed)}번 남음`
@@ -1814,7 +1814,7 @@ function renderItemGuide(){
   el('itemGuideIntro').textContent = (rivalGuide ? '⚔️ 라이벌전이라 방해 아이템은 내 라이벌에게만 날아가요. ' : '') + (nanta
     ? '정답을 맞힐 때마다 아이템을 1개 받아요 (최대 1개 보유, 버리기도 가능)'
     : '3연속 정답마다 아이템을 1개 받아요 (최대 1개 보유, 버리기도 가능)')
-    + (()=>{ const a = pets.ability(); return a ? ` · 🐾 내 펫 ${a.petName}의 능력: ${a.icon} ${a.name} — ${a.text}${a.sick ? ' (지금은 아파서 못 써요)' : ''}` : ''; })();
+    + (()=>{ const a = pets.ability(itemsMode); return a ? ` · 🐾 내 펫 ${a.petName}의 능력: ${a.icon} ${a.name} — ${a.text}${a.sick ? ' (지금은 아파서 못 써요)' : ''}` : ''; })();
   const groups = {};
   Object.entries(ITEMS).forEach(([k, it])=>{
     if(k === 'randombox') return;   // 랜덤박스는 스스로 뽑지 못하고 선생님이 뿌릴 때만 받음

@@ -390,7 +390,7 @@ export const PET_INFO = {
 // 세기는 진화 단계(1·2·3단계)마다 오르고, 희귀 펫은 한 단계 더 세다. 아픈 펫은 능력을 못 쓴다.
 // vals[0~3] = 1단계 · 2단계 · 3단계 · 희귀 3단계
 export const PET_ABILITY = {
-  guard:   { icon: '🛡️', name: '수호',       vals: [1, 2, 3, 4],     text: v => `방해 공격을 한 판에 ${v}번까지 막아 줘요` },
+  guard:   { icon: '🛡️', name: '수호',       vals: [1, 2, 3, 4],     text: v => `방해 공격을 한 판에 ${v}번까지 막아 줘요` },   // 희귀 펫(현무·케르베로스)은 아래 RARE_GUARD 사용
   gift:    { icon: '🎁', name: '선물',       vals: [15, 12, 10, 8],  text: v => `정답 ${v}개마다 랜덤 아이템을 하나 더 받아요` },
   extend:  { icon: '⏳', name: '시간 늘리기', vals: [20, 35, 50, 70], text: v => `내가 쓴 아이템 효과 시간이 ${v}% 늘어나요` },
   streak:  { icon: '🔥', name: '연속 지키기', vals: [1, 2, 3, 4],     text: v => `틀려도 연속 정답이 안 끊기게 한 판에 ${v}번 지켜 줘요` },
@@ -407,9 +407,18 @@ export const PET_SKILL = {
   dragon: 'lucky', wyvern: 'lucky', gumiho: 'lucky',
   wolf: 'shorten', anubis: 'shorten', kraken: 'shorten'
 };
-export function petAbility(id, stage){
+// 수호 펫은 방해가 잦은 난타전에 맞춰 모드별로 횟수가 다르다 — [1·2·3단계]. 희귀(현무·케르베로스)가 일반(해치·거북·불가사리)보다 세다
+export const RARE_GUARD = { spicy: [3, 4, 5], nanta: [8, 10, 12] };
+export const NORMAL_GUARD = { spicy: [1, 2, 3], nanta: [4, 6, 8] };
+export function petAbility(id, stage, mode){
   const key = PET_SKILL[id], a = PET_ABILITY[key];
   if(!a) return null;
+  if(key === 'guard'){
+    const G = PET_INFO[id] && PET_INFO[id].rare ? RARE_GUARD : NORMAL_GUARD;
+    const s = Math.min(2, Math.max(0, stage | 0)), sp = G.spicy[s], na = G.nanta[s];
+    const v = mode === 'nanta' ? na : sp;   // 모드를 모르는 화면(상점·펫 카드)은 매운맛 수치를 v로, 설명엔 둘 다 보여 준다
+    return { key, icon: a.icon, name: a.name, v, text: mode ? a.text(v) : `방해 공격을 한 판에 매운맛 ${sp}번 · 난타전 ${na}번까지 막아 줘요` };
+  }
   const tier = Math.min(3, (stage | 0) + (PET_INFO[id] && PET_INFO[id].rare ? 1 : 0));
   return { key, icon: a.icon, name: a.name, v: a.vals[tier], text: a.text(a.vals[tier]) };
 }
@@ -485,6 +494,7 @@ function abilityLadder(id){
   const r = PET_INFO[id] && PET_INFO[id].rare ? 1 : 0;
   const k = PET_SKILL[id];
   const unit = { guard: '번', gift: '개마다', extend: '%', streak: '번', lucky: '%', shorten: '%', quick: '초' }[k];
+  if(k === 'guard'){ const G = r ? RARE_GUARD : NORMAL_GUARD; return `매운맛 ${G.spicy.join(' → ')}${unit} · 난타전 ${G.nanta.join(' → ')}${unit}`; }
   return [0, 1, 2].map(s => (k === 'quick' ? 5 + a.vals[s + r] : a.vals[s + r]) + unit).join(' → ');
 }
 export const PET_ORDER = DATA.pets.map(p => p.id);
@@ -2979,9 +2989,9 @@ export function mountPets(deps, opts){
     react(correct){ avatars.forEach(a => jumpPetCanvas(a.cv, correct)); },
     hasPet(){ return !!activeInfo(); },
     // 아이템전 능력: {key, icon, name, v, text, petName, sick} 또는 null
-    ability(){
+    ability(mode){
       const i = activeInfo(); if(!i) return null;
-      const ab = petAbility(i.id, i.s); if(!ab) return null;
+      const ab = petAbility(i.id, i.s, mode); if(!ab) return null;
       const inf = PET_INFO[i.id];
       return Object.assign(ab, { petName: (inf && inf.names[i.s]) || '', sick: i.m === 'sick' });
     },
