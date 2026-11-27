@@ -1,6 +1,6 @@
 // 새 버전 알림: 이 페이지(와 공용 스크립트)가 배포로 바뀌었으면 화면 아래에 "새로고침" 안내 띠를 띄운다.
 // - 자동으로 새로고침하지 않는다(연습·게임 도중 화면이 초기화되면 안 되므로). 학생이 쉬는 타이밍에 직접 누른다.
-// - 서버에 HEAD 요청만 보내 ETag/Last-Modified가 처음과 달라졌는지 비교한다(본문을 다시 받지 않아 가볍다).
+// - 파일 본문의 해시가 처음과 달라졌는지 비교한다(헤더는 배포마다 바뀌어서 쓰지 않음).
 // 사용: <script src="(상대경로)/shared/update-notice.js" defer></script>
 (function(){
   'use strict';
@@ -18,14 +18,18 @@
   var shown = false;
   var timer = null;
 
-  function sig(res){
-    return res.headers.get('etag') || res.headers.get('last-modified') || null;
+  // GitHub Pages는 어떤 파일이든 배포(푸시)할 때마다 모든 파일의 ETag/Last-Modified를 새로 찍는다.
+  // 그래서 헤더로 비교하면 내용이 그대로인데도 "새 버전" 안내가 뜬다 → 본문을 받아 내용 해시로 비교한다.
+  function hash(text){
+    var h = 5381;
+    for(var i = 0; i < text.length; i++){ h = ((h * 33) ^ text.charCodeAt(i)) >>> 0; }
+    return text.length + ':' + h;
   }
   async function fetchSig(url){
     try{
-      var res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+      var res = await fetch(url, { cache: 'no-store' });
       if(!res.ok) return null;
-      return sig(res);
+      return hash(await res.text());
     }catch(_e){ return null; }
   }
 
